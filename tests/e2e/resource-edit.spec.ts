@@ -71,7 +71,7 @@ test('S6: 삭제 취소 → 화면 유지와 포커스 복귀', async ({ page })
   await expect(deleteButton).toBeFocused()
 })
 
-test('S7: 삭제 확인 → 목록에서 제거', async ({ page }) => {
+test('S7: 삭제 확인 → 목록·직접 URL에서 제거', async ({ page }) => {
   await page.goto('/notices/resources/1')
   await page.getByRole('button', { name: '삭제하기' }).click()
   await page.getByRole('button', { name: '확인', exact: true }).click()
@@ -80,6 +80,11 @@ test('S7: 삭제 확인 → 목록에서 제거', async ({ page }) => {
   await expect(
     page.getByTestId('resource-row').filter({ hasText: '근무지침요령 1' }),
   ).toHaveCount(0)
+
+  await page.goto('/notices/resources/1')
+  await expect(
+    page.getByRole('heading', { name: '자료를 찾을 수 없습니다.' }),
+  ).toBeVisible()
 })
 
 test('S8: 존재하지 않는 자료 → 복구 UI', async ({ page }) => {
@@ -119,20 +124,38 @@ test('S10: 저장 더블클릭 → 동일 ID 한 건만 저장', async ({ page }
   expect(savedCount).toBe(1)
 })
 
-test('S11: 저장 실패 → 예외 모달 표시 후 화면 유지', async ({ page }) => {
+test('S11: 저장·삭제 실패 → 예외 모달 표시 후 화면 유지', async ({ page }) => {
   await page.goto('/notices/resources/1')
+
+  // 저장 실패 주입
   await page.evaluate(() =>
     localStorage.setItem('toyvillage:resources:fail', 'update'),
   )
   await page.getByLabel(/제목/).fill('실패할 수정')
   await page.getByRole('button', { name: '저장하기' }).click()
 
-  const dialog = page.getByRole('alertdialog', {
+  const saveDialog = page.getByRole('alertdialog', {
     name: '저장에 실패하였습니다',
   })
-  await expect(dialog).toBeVisible()
-  await dialog.getByRole('button', { name: '확인' }).click()
-  await expect(dialog).toBeHidden()
+  await expect(saveDialog).toBeVisible()
+  await saveDialog.getByRole('button', { name: '확인' }).click()
+  await expect(saveDialog).toBeHidden()
+  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
+  await expect(page.getByLabel(/제목/)).toHaveValue('실패할 수정')
+
+  // 삭제 실패 주입
+  await page.evaluate(() =>
+    localStorage.setItem('toyvillage:resources:fail', 'delete'),
+  )
+  await page.getByRole('button', { name: '삭제하기' }).click()
+  await page.getByRole('button', { name: '확인', exact: true }).click()
+
+  const deleteDialog = page.getByRole('alertdialog', {
+    name: '삭제에 실패하였습니다',
+  })
+  await expect(deleteDialog).toBeVisible()
+  await deleteDialog.getByRole('button', { name: '확인' }).click()
+  await expect(deleteDialog).toBeHidden()
   await expect(page).toHaveURL(/\/notices\/resources\/1$/)
   await expect(page.getByLabel(/제목/)).toHaveValue('실패할 수정')
 })
