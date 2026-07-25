@@ -14,7 +14,9 @@ description: >
 ## 오케스트레이션 (Claude·Codex 공통)
 
 - **자동 실행**은 저장소 스크립트 계약을 쓴다: 토큰 매핑 `yarn harness:map-tokens <feature>`, 게이트 확인 `yarn harness:gate <feature>`, 검증 `yarn verify`, 반복 `yarn harness:loop`, e2e `yarn verify:e2e <feature>`. Figma는 MCP(`get_figma_data`/`download_figma_images`)로 접근한다.
-- 흐름: Figma 라이브 추출 → 시나리오 초안·컴포넌트맵 → 퍼블리싱 → `yarn verify` 고치기 루프 → 승인 시나리오 e2e 변환·실행.
+- 흐름: Figma 라이브 추출 ‖ 시나리오 초안·컴포넌트맵(병렬) → **② 승인 게이트** → 퍼블리싱 → `yarn verify` 고치기 루프 → 승인 시나리오 e2e 변환 → `--freeze` → `yarn verify:e2e`.
+- **퍼블리싱(③) 진입 전 `yarn harness:gate <feature>`가 통과(승인 sentinel 존재)해야 한다 — 실패면 하드 STOP.** 게이트가 통과하기 전에는 퍼블리싱을 시작하지 않는다.
+- 기능 테스트(⑤)는 승인 시나리오를 `tests/e2e/<feature>.spec.ts`로 변환만 한 뒤 `yarn harness:approve <feature> --freeze`로 e2eHash를 동결하고 `yarn verify:e2e <feature>`를 실행한다(게이트를 먼저 재확인 후 Playwright).
 - 산출물 경로 규약: feature별 인스턴스는 항상 `harness/artifacts/<feature>.*`, 승인 sentinel은 `harness/approvals/<feature>.approved.json` (RUNBOOK ①·② 참조).
 
 ## 사람 게이트 (자동 통과 금지)
