@@ -55,11 +55,11 @@
 - When: action을 다시 실행한다.
 - Then: 요청은 한 번만 전송된다.
 
-### S11: 저장/삭제 예외 모달 (⚠️ fault injection 필요)
+### S11: 저장/삭제 예외 모달
 - Given: 저장 또는 삭제 요청이 실패한다.
 - When: 실패 응답을 받는다.
-- Then: 예외 모달(`ErrorDialog`)이 `저장하지 못했습니다...` / `삭제하지 못했습니다...`를 표시하고, `확인` 시 모달을 닫으며 현재 URL·입력을 유지한다.
-- 비고: mock은 정상 성공하므로 e2e로 검증하려면 실패 주입 훅이 필요하다. 개발자가 e2e 포함 여부를 결정한다. (Figma 1039:50 시각 디테일은 rate limit 해제 후 확정)
+- Then: 예외 모달(`ErrorDialog`)이 `저장에 실패하였습니다` / `삭제에 실패하였습니다`를 표시하고, `확인` 시 모달을 닫으며 현재 URL·입력을 유지한다.
+- 비고: mock은 `resourceFailStorageKey`(`update`|`delete`) 플래그로 저장·삭제 실패를 주입하며, e2e(S11)는 저장(update) 실패로 예외 모달을 검증한다. (Figma 1039:50 시각 디테일은 rate limit 해제 후 확정)
 
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 resource-edit.approved.json의 scenarioIds에 적는다.
