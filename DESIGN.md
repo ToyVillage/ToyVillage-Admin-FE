@@ -7,16 +7,16 @@
 - Primary product surfaces: 토이빌리지 관리자 웹의 공지사항, 휴관일 관리, 자료실, 단체 예약 현황
 - Evidence reviewed:
   - `README.md`
-  - `harness/design-rules.md`
-  - `harness/specs/notice-list.spec.md`
-  - `harness/specs/notice-create.spec.md`
-  - `harness/specs/notice-edit.spec.md`
-  - `harness/specs/resources-list.spec.md`
-  - `harness/specs/close-schedule.spec.md`
-  - `harness/specs/close-schedule-edit.spec.md`
-  - `harness/specs/operating-hours-edit.spec.md`
-  - `harness/artifacts/notice-list.figma.txt`
-  - `harness/artifacts/operating-hours-edit.figma.txt`
+  - `harness/publishing/design-rules.md`
+  - `harness/publishing/specs/notice-list.spec.md`
+  - `harness/publishing/specs/notice-create.spec.md`
+  - `harness/publishing/specs/notice-edit.spec.md`
+  - `harness/publishing/specs/resources-list.spec.md`
+  - `harness/publishing/specs/close-schedule.spec.md`
+  - `harness/publishing/specs/close-schedule-edit.spec.md`
+  - `harness/publishing/specs/operating-hours-edit.spec.md`
+  - `harness/artifacts/publishing/notice-list.figma.txt`
+  - `harness/artifacts/publishing/operating-hours-edit.figma.txt`
   - Figma `2114:1329` 휴관일 생성 기본 화면
   - Figma `2413:2955`, `2413:3046` 휴관일 생성 검증 오류 화면
   - Figma `2456:5047` 날짜별 영업시간 수정 화면
@@ -29,7 +29,7 @@
   - `src/pages/notices/**`
   - `src/features/sidebar/**`
 
-이 문서는 저장소 공통 디자인 계약이다. 기능별 행동과 예외 처리는 `harness/specs/*.spec.md`가 더 구체적인 source of truth이며, Figma는 배치와 시각 세부사항의 근거로 사용한다.
+이 문서는 저장소 공통 디자인 계약이다. 기능별 행동과 예외 처리는 `harness/publishing/specs/*.spec.md`가 더 구체적인 source of truth이며, Figma는 배치와 시각 세부사항의 근거로 사용한다.
 
 ## Brand
 
