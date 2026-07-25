@@ -77,7 +77,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - 성공 → 자료 query(`['resources']`)를 갱신하고 `/notices/resources`로 이동한다. 목록에는 같은 ID가 하나만 존재하고 수정값이 보인다.
 - 실패 → URL과 모든 입력을 보존하고 예외 모달(`ErrorDialog`)로 `저장에 실패하였습니다`를 표시한다. 확인 시 모달을 닫고 현재 입력을 유지한다.
 
-## 삭제![alt text](image.png)
+## 삭제
 
 - `삭제하기` → 삭제 확인 dialog를 표시한다.
 - 취소 또는 Escape → 삭제하지 않고 dialog를 닫아 `삭제하기`로 포커스를 복귀한다.
