@@ -62,7 +62,7 @@ export function ResourceForm({
     mutationFn: (input: UpdateResourceInput) =>
       initialResource
         ? updateMockResource({ id: initialResource.id, input })
-        : createMockResource({ title: input.title, fileType: input.fileType }),
+        : createMockResource(input),
   })
   const deleteMutation = useMutation({
     mutationFn: () => {

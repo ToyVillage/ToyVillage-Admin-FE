@@ -8,7 +8,11 @@ export interface Resource {
   attachments?: string[]
 }
 
-export type CreateResourceInput = Pick<Resource, 'fileType' | 'title'>
+export interface CreateResourceInput {
+  title: string
+  fileType: FileType
+  attachments: string[]
+}
 
 export interface UpdateResourceInput {
   title: string
