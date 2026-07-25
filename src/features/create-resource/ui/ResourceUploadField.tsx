@@ -16,25 +16,39 @@ const fileTypeIcon: Record<string, string> = {
 }
 
 interface AttachedFile {
-  file: File
   id: string
+  name: string
+  file?: File
 }
 
 interface ResourceUploadFieldProps {
+  initialFileNames?: string[]
   onFilesChange?: (hasFiles: boolean) => void
+  onFileNamesChange?: (fileNames: string[]) => void
 }
 
 // Figma "upload file" — 점선 드롭존(드래그/클릭, 최대 50MB, 다중 파일).
 // 파일이 없으면 아무것도 없다가, 올리면 드롭존 위에 "첨부자료" 칩 목록을 보여준다.
-export function ResourceUploadField({ onFilesChange }: ResourceUploadFieldProps) {
+// 수정 모드에서는 initialFileNames 로 기존 첨부(파일 객체 없음)를 복원한다.
+export function ResourceUploadField({
+  initialFileNames = [],
+  onFilesChange,
+  onFileNamesChange,
+}: ResourceUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const [files, setFiles] = useState<AttachedFile[]>([])
+  const [files, setFiles] = useState<AttachedFile[]>(() =>
+    initialFileNames.map((name, index) => ({
+      id: `existing:${index}:${name}`,
+      name,
+    })),
+  )
   const [isDragging, setIsDragging] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     onFilesChange?.(files.length > 0)
-  }, [files.length, onFilesChange])
+    onFileNamesChange?.(files.map(({ name }) => name))
+  }, [files, onFileNamesChange, onFilesChange])
 
   function addFiles(fileList: FileList | File[]) {
     const incomingFiles = Array.from(fileList)
@@ -54,7 +68,7 @@ export function ResourceUploadField({ onFilesChange }: ResourceUploadFieldProps)
         continue
       }
       knownIds.add(id)
-      nextFiles.push({ file, id })
+      nextFiles.push({ file, id, name: file.name })
     }
 
     if (oversizedFile) {
@@ -82,10 +96,13 @@ export function ResourceUploadField({ onFilesChange }: ResourceUploadFieldProps)
   }
 
   function handleDownload(attachedFile: AttachedFile) {
-    const url = URL.createObjectURL(attachedFile.file)
+    const source =
+      attachedFile.file ??
+      new Blob([`${attachedFile.name}\n`], { type: 'text/plain' })
+    const url = URL.createObjectURL(source)
     const link = document.createElement('a')
     link.href = url
-    link.download = attachedFile.file.name
+    link.download = attachedFile.name
     link.click()
     URL.revokeObjectURL(url)
   }
@@ -101,15 +118,15 @@ export function ResourceUploadField({ onFilesChange }: ResourceUploadFieldProps)
           <AttachmentTitle>첨부자료</AttachmentTitle>
           <FileList>
             {files.map((attachedFile) => {
-              const kind = fileKind(attachedFile.file.name)
+              const kind = fileKind(attachedFile.name)
 
               return (
                 <FileChip key={attachedFile.id}>
                   <FileTypeIcon src={fileTypeIcon[kind]} alt="" />
-                  <FileName>{attachedFile.file.name}</FileName>
+                  <FileName>{attachedFile.name}</FileName>
                   <IconButton
                     type="button"
-                    aria-label={`${attachedFile.file.name} 다운로드`}
+                    aria-label={`${attachedFile.name} 다운로드`}
                     onClick={() => handleDownload(attachedFile)}
                   >
                     <ActionIcon src={downloadIcon} alt="" />
@@ -117,7 +134,7 @@ export function ResourceUploadField({ onFilesChange }: ResourceUploadFieldProps)
                   <RemoveButton
                     type="button"
                     data-remove="true"
-                    aria-label={`${attachedFile.file.name} 삭제`}
+                    aria-label={`${attachedFile.name} 삭제`}
                     onClick={() => handleRemove(attachedFile.id)}
                   >
                     <RemoveXIcon viewBox="0 0 24 24" aria-hidden="true">
