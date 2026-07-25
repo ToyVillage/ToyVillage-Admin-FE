@@ -21,7 +21,7 @@ paths: src/pages/notices/guide/CreateCloseSchedulePage.tsx, src/features/create-
 - 날짜 누락 오류: Figma `2413:2955`
 - 제목 누락 오류: Figma `2413:3046`
 - 생성 진입점과 목록 복귀 화면: Figma `1596:450`
-- 공통 UI 원칙과 구현 제약은 `DESIGN.md`, 목록 행동은 `harness/specs/close-schedule.spec.md`를 따른다.
+- 공통 UI 원칙과 구현 제약은 `DESIGN.md`, 목록 행동은 `harness/publishing/specs/close-schedule.spec.md`를 따른다.
 
 ## 목적
 

@@ -2,7 +2,7 @@
 
 # Scenario Draft — <feature>
 
-출처: `harness/specs/<feature>.spec.md` (행동명세가 source of truth)
+출처: `harness/publishing/specs/<feature>.spec.md` (행동명세가 source of truth)
 상태: draft (게이트 승인 전)
 
 ## 핵심 시나리오

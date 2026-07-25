@@ -16,7 +16,7 @@ paths: src/pages/notices/notice/NoticeDetailPage.tsx, src/features/create-notice
 - 수정 화면 기준: Figma `1787:1603`
 - 기준 캡처: `.omx/artifacts/visual-ralph/notice-edit/reference.png` (1920×1377)
 - 공통 디자인 계약: `DESIGN.md`
-- 공지 생성 필드·검증 계약: `harness/specs/notice-create.spec.md`
+- 공지 생성 필드·검증 계약: `harness/publishing/specs/notice-create.spec.md`
 - 기존 라우트: `src/app/App.tsx`의 `/notices/list/:id`
 
 Figma 구조 API는 Starter 플랜 호출 한도로 사용할 수 없었고, 같은 노드의 원본 크기 캡처는 정상 확보했다. 아래 시각 수치는 캡처와 기존 생성 폼의 일치하는 치수를 근거로 한다.

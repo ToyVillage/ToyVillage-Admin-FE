@@ -17,7 +17,7 @@ paths: src/pages/notices/resources/CreateResourcePage.tsx, src/features/create-r
 - Status: Draft
 - 생성 화면: Figma `1602:736`
 - 첨부자료 칩(파일 배지·다운로드·삭제): Figma `2125:1778`
-- 목록/진입점·검색·페이지네이션: Figma `2114:1400`, `harness/specs/resources-list.spec.md`
+- 목록/진입점·검색·페이지네이션: Figma `2114:1400`, `harness/publishing/specs/resources-list.spec.md`
 - 공통 검증/이탈 모달은 공지 생성과 동일 컴포넌트(`ValidationDialog`, `LeaveConfirmationDialog`)를 재사용
 - 라우트: `src/app/App.tsx` (`/notices/resources/create`)
 

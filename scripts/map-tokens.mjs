@@ -5,9 +5,9 @@
 // px/rgba/font size/weight/spacing/radius는 구현 참고값이며 토큰 후보로 제안하지 않는다.
 //
 // 사용: node scripts/map-tokens.mjs <feature>
-//   입력:  harness/artifacts/<feature>.figma.txt   (에이전트가 get_figma_data 결과를 저장)
-//   출력:  harness/artifacts/<feature>.token-candidates.json
-//          harness/artifacts/<feature>.token-diff.report.md
+//   입력:  harness/artifacts/publishing/<feature>.figma.txt
+//   출력:  harness/artifacts/publishing/<feature>.token-candidates.json
+//          harness/artifacts/publishing/<feature>.token-diff.report.md
 // tokens.ts 는 절대 수정하지 않는다.
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
@@ -21,7 +21,7 @@ if (!feature) {
   process.exit(1)
 }
 
-const artifactsDir = join(root, 'harness', 'artifacts')
+const artifactsDir = join(root, 'harness', 'artifacts', 'publishing')
 const figmaPath = join(artifactsDir, `${feature}.figma.txt`)
 const tokensPath = join(root, 'src', 'shared', 'theme', 'tokens.ts')
 

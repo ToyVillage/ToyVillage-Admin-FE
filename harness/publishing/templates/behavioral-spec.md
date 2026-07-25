@@ -1,4 +1,4 @@
-<!-- 복사해서 harness/specs/<feature>.spec.md 로 저장 후 채운다. 개발자가 작성하는 유일한 필수 입력. -->
+<!-- 복사해서 harness/publishing/specs/<feature>.spec.md 로 저장 후 채운다. 개발자가 작성하는 유일한 필수 입력. -->
 
 ---
 feature: <feature-slug>          # 예: notice-list

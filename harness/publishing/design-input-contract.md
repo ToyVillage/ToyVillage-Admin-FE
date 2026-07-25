@@ -32,7 +32,7 @@ Claude / Codex 모두 이 문서를 SSOT로 읽는다. (설계 문서의 툴 이
 1. `map-tokens.mjs`가 `get_figma_data` 응답에서 **raw 값을 수집·중복제거**해 후보 목록을 만든다:
    - 의미 토큰 후보: solid hex color, 공통 font family
    - 직접 구현값: px 치수·간격·반경·font size/weight, `rgba()`/`hsla()`와 alpha hex
-2. 후보를 `harness/artifacts/<feature>.token-candidates.json` + `<feature>.token-diff.report.md`로 출력한다.
+2. 후보를 `harness/artifacts/publishing/<feature>.token-candidates.json` + `<feature>.token-diff.report.md`로 출력한다.
 3. **의미 이름은 자동으로 붙이지 않는다.** 개발자가 중간 확인 게이트(`figma-review.md`)에서 solid color/font family 후보에만 시맨틱 이름(`color.primary` 등)을 부여한다.
 4. px·spacing·radius·font size/weight·breakpoint·z-index·shadow·alpha color는 tokens.ts에 추가하지 않고 해당 Emotion 스타일에 직접 작성한다.
 5. 기존 `src/shared/theme/tokens.ts`와 대조하되 **기존 의미 토큰 우선**, 차이는 diff로 보고한다. `map-tokens.mjs`는 **tokens.ts를 절대 쓰지 않는다**(읽기 전용).
@@ -50,5 +50,5 @@ Claude / Codex 모두 이 문서를 SSOT로 읽는다. (설계 문서의 툴 이
 ## 5. MCP 사용 불가 시 (STOP-and-report)
 
 Figma MCP가 다운/미인증이면 **하드 STOP** 후 개발자에게 보고한다. 대체 경로:
-- 개발자가 `harness/specs/<feature>.spec.md`에 구조/토큰을 수동 기재 → 그 값으로 퍼블리싱 진행.
+- 개발자가 `harness/publishing/specs/<feature>.spec.md`에 구조/토큰을 수동 기재 → 그 값으로 퍼블리싱 진행.
 - 자동 토큰 추출 단계는 건너뛴다(수동 토큰).

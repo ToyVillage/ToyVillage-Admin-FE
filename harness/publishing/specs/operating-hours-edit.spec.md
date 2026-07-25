@@ -14,9 +14,9 @@ paths: src/pages/notices/guide, src/features/edit-operating-hours, src/entities/
 - Status: Active
 - Last refreshed: 2026-07-17
 - Figma 기본 화면: `2456:5047`
-- 로컬 추출본: `harness/artifacts/operating-hours-edit.figma.txt`
+- 로컬 추출본: `harness/artifacts/publishing/operating-hours-edit.figma.txt`
 - 기준 viewport: 1920×1080
-- 공통 UI 원칙과 구현 제약은 `DESIGN.md`, 캘린더 진입 동작은 `harness/specs/close-schedule.spec.md`를 따른다.
+- 공통 UI 원칙과 구현 제약은 `DESIGN.md`, 캘린더 진입 동작은 `harness/publishing/specs/close-schedule.spec.md`를 따른다.
 
 > 이 화면은 휴관 일정의 기간·제목을 수정하는 화면이 아니다. 휴관일 관리 캘린더에서 선택한 날짜의 영업 시작·종료 시간을 수정한다.
 
@@ -66,7 +66,7 @@ Figma 관찰값:
 - 시·분: 32px Medium, 오전·오후: 18px Medium
 - `저장하기`: x 1497px, y 464px, 123×61px
 
-색상은 `src/shared/theme/tokens.ts`의 기존 의미 토큰에 매핑한다. px·간격·radius·font-size는 `DESIGN.md`와 `harness/design-rules.md`에 따라 사용하는 Emotion 스타일에 직접 작성한다.
+색상은 `src/shared/theme/tokens.ts`의 기존 의미 토큰에 매핑한다. px·간격·radius·font-size는 `DESIGN.md`와 `harness/publishing/design-rules.md`에 따라 사용하는 Emotion 스타일에 직접 작성한다.
 
 ## 초기 데이터와 표시
 

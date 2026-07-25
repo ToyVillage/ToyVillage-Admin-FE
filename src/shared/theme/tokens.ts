@@ -1,6 +1,6 @@
 // 제품 의미가 있는 solid color와 공통 font family만 둔다.
 // px/rgba/spacing/radius/layout 같은 컴포넌트 구현값은 Emotion 스타일에 직접 작성한다.
-// 자세한 계약은 harness/design-rules.md와 design-input-contract.md를 따른다.
+// 자세한 계약은 harness/shared/code-rules.md와 harness/publishing/design-input-contract.md를 따른다.
 export const tokens = {
   color: {
     primary: '#FF8181', // 핑크 강조 (활성 탭/포인트)

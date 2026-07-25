@@ -6,9 +6,9 @@
 - `scripts/gate-check.mjs <feature>`가 통과해야 한다(sentinel 존재). 없으면 **STOP** — 퍼블리싱 금지.
 
 ## 입력 (우선순위)
-1. `harness/specs/<feature>.spec.md` — **행동명세가 source of truth** (Figma만으로 판단 금지).
+1. `harness/publishing/specs/<feature>.spec.md` — **행동명세가 source of truth** (Figma만으로 판단 금지).
 2. 확정 의미 토큰(solid color/font family) + `theme.ts`(`color→colors` 투영).
-3. `harness/artifacts/<feature>.component-map.md` — 노드→컴포넌트 매핑.
+3. `harness/artifacts/publishing/<feature>.component-map.md` — 노드→컴포넌트 매핑.
 4. `get_figma_data` 구조/값(레이아웃·텍스트·간격) — 시각 참조.
 
 ## 규칙 (design-rules.md 전체 준수)

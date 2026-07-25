@@ -18,8 +18,8 @@ paths: src/pages/notices/notice/CreateNoticePage.tsx, src/features/create-notice
 - 목록과 생성 진입점: Figma `1541:1442`
 - 공통 검증 모달 시각 규격: Figma `2413:2955`, `2413:3046`
 - 작성 중 이탈 확인 모달: Figma `2431:2235`
-- 로컬 Figma 추출물: `harness/artifacts/notice-list.figma.txt`
-- 목록 행동: `harness/specs/notice-list.spec.md`
+- 로컬 Figma 추출물: `harness/artifacts/publishing/notice-list.figma.txt`
+- 목록 행동: `harness/publishing/specs/notice-list.spec.md`
 - 공통 UI 원칙과 구현 제약: `DESIGN.md`
 - 현재 라우트와 스텁: `src/app/App.tsx`, `src/pages/notices/notice/CreateNoticePage.tsx`
 

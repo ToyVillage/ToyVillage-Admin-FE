@@ -21,7 +21,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - 업로드 드롭존: Figma `2052:1802`
 - 제목/분류 폼: Figma `2114:1206`, `2114:1686`
 - 예외(에러) 모달: Figma `1039:50` — ⚠️ Figma API rate limit(Starter 플랜)으로 라이브 추출 보류. 해제 후 정확한 시각 디테일 반영.
-- 생성 필드·검증·업로드 계약: `harness/specs/resource-create.spec.md` (생성 폼과 동일 컴포넌트를 mode로 재사용)
+- 생성 필드·검증·업로드 계약: `harness/publishing/specs/resource-create.spec.md` (생성 폼과 동일 컴포넌트를 mode로 재사용)
 - 공통 이탈/삭제/검증 모달은 공지와 동일 컴포넌트(`LeaveConfirmationDialog`, `DeleteConfirmationDialog`, `ValidationDialog`) 재사용
 - 예외 모달은 신규 공용 컴포넌트 `ErrorDialog`(shared/ui)로 두어 notice/resource/schedule 수정에서 공통 사용. 시각 언어는 기존 `LeaveConfirmationDialog`(제목 `정말 나가시겠습니까?` + 설명 `저장하지 않고 돌아갈 시 / 입력된 정보가 삭제됩니다`)를 참고한다.
 - 라우트: `src/app/App.tsx`의 `/notices/resources/:id`
@@ -93,7 +93,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - props: `ErrorDialog { title, onConfirm }`.
 - 동작: Escape 또는 `확인` → `onConfirm`으로 닫는다. 열릴 때 확인 버튼 포커스, 닫힐 때 호출 control로 포커스 복귀. app root `inert`/`aria-hidden` 처리(기존 다이얼로그와 동일).
 - 사용처: 자료 저장·삭제 실패. notice/schedule 수정에서도 동일 컴포넌트를 재사용할 수 있게 shared/ui에 둔다.
-- 검증: mock은 항상 성공하므로, 예외 모달 경로 e2e(S11)는 `localStorage` 키 `toyvillage:resources:fail`(`update`|`delete`)로 실패를 1회 주입한다. 실제 API 연동(`/api-integration`) 시 이 훅을 제거한다.
+- 검증: mock은 항상 성공하므로, 예외 모달 경로 e2e(S11)는 `localStorage` 키 `toyvillage:resources:fail`(`update`|`delete`)로 실패를 1회 주입한다. 실제 API 연동(`/api`) 시 이 훅을 제거한다.
 
 ## 이탈 보호
 
@@ -117,7 +117,7 @@ interface UpdateResourceInput {
 - 삭제 endpoint 후보: `DELETE /resources/:id`
 - query key: `['resources']`, 단건은 `['resources', id]`
 - 현재 슬라이스는 localStorage 기반 mock으로 대체한다. 수정값은 ID로 기본 mock을 override하고 삭제 ID는 별도 tombstone으로 유지한다(공지 수정과 동일 패턴).
-- 실제 API 연결과 첨부 업로드/다운로드 계약은 별도 `/api-integration` 슬라이스에서 확정한다.
+- 실제 API 연결과 첨부 업로드/다운로드 계약은 별도 `/api` 슬라이스에서 확정한다.
 
 ## 접근성
 
