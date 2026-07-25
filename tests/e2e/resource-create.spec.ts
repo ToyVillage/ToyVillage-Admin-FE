@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { resourceStorageKey } from '../../src/entities/resource/model/mock'
 
-// 승인된 시나리오(resource-create.approved.json: S1~S7)를 변환한 것.
+// 승인된 시나리오(resource-create.approved.json: S1~S8)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 
 test.beforeEach(async ({ page }) => {
@@ -40,6 +40,11 @@ test('S3: 제목 미입력 생성 → 검증 모달', async ({ page }) => {
 test('S4: 자료 생성 후 목록 반영', async ({ page }) => {
   await page.getByLabel(/제목/).fill('테스트 자료 문서')
   await page.getByRole('radio', { name: 'png' }).check({ force: true })
+  await page.setInputFiles('#resource-files', {
+    name: '시설 안내도.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('png'),
+  })
   await page.getByRole('button', { name: '생성하기' }).click()
   await expect(page).toHaveURL(/\/notices\/resources$/)
   const firstRow = page.getByTestId('resource-row').first()
@@ -75,4 +80,16 @@ test('S7: 작성 중 뒤로가기 → 이탈 확인 모달(취소)', async ({ pa
   await expect(dialog).toBeVisible()
   await dialog.getByRole('button', { name: '취소' }).click()
   await expect(page).toHaveURL(/\/notices\/resources\/create$/)
+})
+
+test('S8: 첨부 미입력 생성 → 검증 모달', async ({ page }) => {
+  await page.getByLabel(/제목/).fill('첨부 없는 자료')
+  await page.getByRole('button', { name: '생성하기' }).click()
+  const dialog = page.getByRole('alertdialog', {
+    name: '이미지 또는 파일을 추가해주세요',
+  })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: '확인' }).click()
+  await expect(dialog).toBeHidden()
+  await expect(page.getByRole('button', { name: '파일 업로드' })).toBeFocused()
 })

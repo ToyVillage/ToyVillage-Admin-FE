@@ -128,7 +128,7 @@ test('S11: 저장 실패 → 예외 모달 표시 후 화면 유지', async ({ p
   await page.getByRole('button', { name: '저장하기' }).click()
 
   const dialog = page.getByRole('alertdialog', {
-    name: '저장하지 못했습니다.',
+    name: '저장에 실패하였습니다',
   })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('button', { name: '확인' }).click()
