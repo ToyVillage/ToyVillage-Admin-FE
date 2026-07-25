@@ -5,6 +5,13 @@ export interface Resource {
   fileType: FileType
   title: string
   date: string
+  attachments?: string[]
 }
 
 export type CreateResourceInput = Pick<Resource, 'fileType' | 'title'>
+
+export interface UpdateResourceInput {
+  title: string
+  fileType: FileType
+  attachments: string[]
+}

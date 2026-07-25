@@ -1,4 +1,9 @@
-export type { Resource, FileType, CreateResourceInput } from './model/types'
+export type {
+  Resource,
+  FileType,
+  CreateResourceInput,
+  UpdateResourceInput,
+} from './model/types'
 export {
   mockResources,
   fileTypeTabs,
@@ -6,7 +11,11 @@ export {
   fileTypeLabel,
   resourceCategories,
   resourceStorageKey,
+  deletedResourceStorageKey,
   getMockResources,
+  getMockResource,
   createMockResource,
+  updateMockResource,
+  deleteMockResource,
 } from './model/mock'
 export { ResourceTable } from './ui/ResourceTable'
