@@ -20,6 +20,13 @@ import { ResourceUploadField } from './ResourceUploadField'
 
 const defaultCategory = resourceCategories[0]
 
+type ValidationField = 'title' | 'file'
+
+const validationMessages: Record<ValidationField, string> = {
+  title: '제목을 입력해 주세요',
+  file: '이미지 또는 파일을 추가해주세요',
+}
+
 interface ResourceFormProps {
   initialResource?: Resource
   onCompleted: () => void
@@ -35,6 +42,7 @@ export function ResourceForm({
   const submittingRef = useRef(false)
   const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
+  const uploadButtonRef = useRef<HTMLButtonElement>(null)
   const isEditing = Boolean(initialResource)
   const initialCategory = initialResource
     ? fileTypeLabel[initialResource.fileType]
@@ -47,7 +55,8 @@ export function ResourceForm({
   const [category, setCategory] = useState<string>(initialCategory)
   const [hasFile, setHasFile] = useState(false)
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
-  const [validationError, setValidationError] = useState(false)
+  const [validationError, setValidationError] =
+    useState<ValidationField | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const mutation = useMutation({
     mutationFn: (input: UpdateResourceInput) =>
@@ -85,28 +94,41 @@ export function ResourceForm({
   ])
 
   const handleConfirm = useCallback(() => {
-    setValidationError(false)
-    requestAnimationFrame(() => titleRef.current?.focus())
-  }, [])
+    const error = validationError
+    setValidationError(null)
+    requestAnimationFrame(() => {
+      if (error === 'file') {
+        uploadButtonRef.current?.focus()
+        return
+      }
+      titleRef.current?.focus()
+    })
+  }, [validationError])
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submittingRef.current) return
 
     if (!title.trim()) {
-      setValidationError(true)
+      setValidationError('title')
       return
     }
 
     const fileType = tabToFileType[category]
     if (!fileType) return
 
+    // 파일 필수 검증(생성·수정 공통). 첨부가 없으면 `이미지 또는 파일을 추가해주세요`.
+    if (attachmentNames.length === 0) {
+      setValidationError('file')
+      return
+    }
+
     const input: UpdateResourceInput = {
       title: title.trim(),
       fileType,
       attachments: attachmentNames,
     }
-    setValidationError(false)
+    setValidationError(null)
     submittingRef.current = true
     mutation.mutate(input, {
       onSuccess: async () => {
@@ -174,6 +196,7 @@ export function ResourceForm({
 
       <ResourceUploadField
         initialFileNames={initialAttachmentNames}
+        uploadButtonRef={uploadButtonRef}
         onFilesChange={setHasFile}
         onFileNamesChange={setAttachmentNames}
       />
@@ -204,7 +227,10 @@ export function ResourceForm({
       </Actions>
 
       {validationError && (
-        <ValidationDialog message="제목을 입력해 주세요" onConfirm={handleConfirm} />
+        <ValidationDialog
+          message={validationMessages[validationError]}
+          onConfirm={handleConfirm}
+        />
       )}
 
       {deleteDialogOpen && (
@@ -220,16 +246,14 @@ export function ResourceForm({
 
       {mutation.isError && (
         <ErrorDialog
-          title="저장하지 못했습니다."
-          description="다시 시도해 주세요."
+          title={isEditing ? '저장에 실패하였습니다' : '생성에 실패했습니다'}
           onConfirm={() => mutation.reset()}
         />
       )}
 
       {deleteMutation.isError && (
         <ErrorDialog
-          title="삭제하지 못했습니다."
-          description="다시 시도해 주세요."
+          title="삭제에 실패하였습니다"
           onConfirm={() => deleteMutation.reset()}
         />
       )}

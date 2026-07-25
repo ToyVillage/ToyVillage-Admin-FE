@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type Ref } from 'react'
 import styled from '@emotion/styled'
 import filePdfIcon from './assets/file-pdf.svg'
 import filePngIcon from './assets/file-png.svg'
@@ -23,6 +23,7 @@ interface AttachedFile {
 
 interface ResourceUploadFieldProps {
   initialFileNames?: string[]
+  uploadButtonRef?: Ref<HTMLButtonElement>
   onFilesChange?: (hasFiles: boolean) => void
   onFileNamesChange?: (fileNames: string[]) => void
 }
@@ -32,6 +33,7 @@ interface ResourceUploadFieldProps {
 // 수정 모드에서는 initialFileNames 로 기존 첨부(파일 객체 없음)를 복원한다.
 export function ResourceUploadField({
   initialFileNames = [],
+  uploadButtonRef,
   onFilesChange,
   onFileNamesChange,
 }: ResourceUploadFieldProps) {
@@ -163,6 +165,7 @@ export function ResourceUploadField({
         onChange={handleChange}
       />
       <DropZone
+        ref={uploadButtonRef}
         type="button"
         aria-label="파일 업로드"
         data-dragging={isDragging}

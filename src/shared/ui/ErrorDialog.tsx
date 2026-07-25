@@ -4,16 +4,13 @@ import styled from '@emotion/styled'
 
 interface ErrorDialogProps {
   title: string
-  description?: string
   onConfirm: () => void
 }
 
-// 예외(에러) 알림 모달. 저장·삭제 실패 등 예외 발생 시 사용한다.
-// 시각 언어는 LeaveConfirmationDialog 를 참고하며, 에러 확인 성격이라 단일 `확인` 버튼만 둔다.
-// 정확한 시각 디테일(Figma 1039:50)은 추후 미세조정한다.
-export function ErrorDialog({ title, description, onConfirm }: ErrorDialogProps) {
+// 예외(에러) 알림 모달. 저장·삭제·생성 실패 등 예외 발생 시 사용한다.
+// Figma 기준 한 줄 제목 + 전체 너비 `확인` 버튼 구성으로, ValidationDialog 와 동일한 시각 언어다.
+export function ErrorDialog({ title, onConfirm }: ErrorDialogProps) {
   const titleId = useId()
-  const descriptionId = useId()
   const confirmRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
@@ -28,7 +25,6 @@ export function ErrorDialog({ title, description, onConfirm }: ErrorDialogProps)
       if (event.key === 'Escape') {
         event.preventDefault()
         onConfirm()
-        return
       }
 
       if (event.key === 'Tab') {
@@ -51,21 +47,11 @@ export function ErrorDialog({ title, description, onConfirm }: ErrorDialogProps)
 
   return createPortal(
     <Overlay>
-      <Dialog
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={description ? descriptionId : undefined}
-      >
-        <Copy>
-          <Title id={titleId}>{title}</Title>
-          {description && <Description id={descriptionId}>{description}</Description>}
-        </Copy>
-        <Actions>
-          <ConfirmButton ref={confirmRef} type="button" onClick={onConfirm}>
-            확인
-          </ConfirmButton>
-        </Actions>
+      <Dialog role="alertdialog" aria-modal="true" aria-labelledby={titleId}>
+        <Message id={titleId}>{title}</Message>
+        <ConfirmButton ref={confirmRef} type="button" onClick={onConfirm}>
+          확인
+        </ConfirmButton>
       </Dialog>
     </Overlay>,
     document.body,
@@ -83,63 +69,38 @@ const Overlay = styled.div`
 
 const Dialog = styled.div`
   display: flex;
-  width: min(calc(100% - 40px * 2), 600px);
-  min-height: 300px;
+  width: min(calc(100% - 40px * 2), 560px);
+  min-height: 320px;
   flex-direction: column;
-  padding: 72px 52px 36px;
+  justify-content: space-between;
+  padding: 40px 20px 20px;
   border-radius: 20px;
-  transform: translateY(-36px);
   background: ${({ theme }) => theme.colors.surface};
-
-  @media (max-height: 480px) {
-    transform: none;
-  }
 `
 
-const Copy = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+const Message = styled.p`
+  margin: 53px 0 0;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
   text-align: center;
 `
 
-const Title = styled.h2`
-  margin: 0;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 28px;
-  font-weight: 500;
-  line-height: 1.2;
-`
-
-const Description = styled.p`
-  margin: 0;
-  color: ${({ theme }) => theme.colors.textGuide};
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.2;
-`
-
-const Actions = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: auto;
-`
-
 const ConfirmButton = styled.button`
-  width: 100px;
-  height: 48px;
+  width: 100%;
+  min-height: 78px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 16px;
   background: ${({ theme }) => theme.colors.text};
   color: ${({ theme }) => theme.colors.surface};
   cursor: pointer;
   font: inherit;
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 500;
 
   &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 3px;
+    outline: 4px solid ${({ theme }) => theme.colors.primary};
+    outline-offset: 4px;
   }
 `
