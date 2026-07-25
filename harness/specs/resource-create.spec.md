@@ -54,4 +54,7 @@ paths: src/pages/notices/resources/CreateResourcePage.tsx, src/features/create-r
 ## 요청 계약 (mock)
 
 - `CreateResourceInput { title, fileType }` → `createMockResource` → 목록 쿼리(`['resources']`) 무효화 후 `/notices/resources` 복귀.
-- 필수: 제목. 미입력 시 검증 모달(`제목을 입력해 주세요`).
+- 필수: 제목, 첨부(이미지 또는 파일) 최소 1개. 검증 순서는 제목 → 첨부.
+  - 제목 미입력 → 검증 모달(`제목을 입력해 주세요`).
+  - 첨부 미입력 → 검증 모달(`이미지 또는 파일을 추가해주세요`), 확인 후 업로드 컨트롤로 포커스.
+- 생성 실패 시 예외 모달(`ErrorDialog`)로 `생성에 실패했습니다`.

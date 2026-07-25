@@ -29,7 +29,7 @@ export function CreateResourcePage() {
     ),
   )
 
-  const handleCreated = useCallback(() => {
+  const handleCompleted = useCallback(() => {
     allowNavigationRef.current = true
     navigate('/notices/resources')
   }, [navigate])
@@ -43,7 +43,7 @@ export function CreateResourcePage() {
           </BackIcon>
           뒤로가기
         </BackLink>
-        <ResourceForm onCreated={handleCreated} onDirtyChange={setIsDirty} />
+        <ResourceForm onCompleted={handleCompleted} onDirtyChange={setIsDirty} />
       </Content>
       {blocker.state === 'blocked' && (
         <LeaveConfirmationDialog

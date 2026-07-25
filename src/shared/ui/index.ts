@@ -9,3 +9,4 @@ export type {
 export { LinkButton } from './LinkButton'
 export { DeleteConfirmationDialog } from './DeleteConfirmationDialog'
 export { ValidationDialog } from './ValidationDialog'
+export { ErrorDialog } from './ErrorDialog'

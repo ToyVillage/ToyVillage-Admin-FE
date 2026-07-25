@@ -1,62 +1,142 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createMockResource,
+  deleteMockResource,
+  fileTypeLabel,
   resourceCategories,
   tabToFileType,
-  type CreateResourceInput,
+  updateMockResource,
+  type Resource,
+  type UpdateResourceInput,
 } from '@/entities/resource'
-import { ValidationDialog } from '@/shared/ui'
+import {
+  DeleteConfirmationDialog,
+  ErrorDialog,
+  ValidationDialog,
+} from '@/shared/ui'
 import { ResourceUploadField } from './ResourceUploadField'
 
 const defaultCategory = resourceCategories[0]
 
+type ValidationField = 'title' | 'file'
+
+const validationMessages: Record<ValidationField, string> = {
+  title: '제목을 입력해 주세요',
+  file: '이미지 또는 파일을 추가해주세요',
+}
+
 interface ResourceFormProps {
-  onCreated: () => void
+  initialResource?: Resource
+  onCompleted: () => void
   onDirtyChange: (isDirty: boolean) => void
 }
 
-export function ResourceForm({ onCreated, onDirtyChange }: ResourceFormProps) {
+export function ResourceForm({
+  initialResource,
+  onCompleted,
+  onDirtyChange,
+}: ResourceFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
+  const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState<string>(defaultCategory)
+  const uploadButtonRef = useRef<HTMLButtonElement>(null)
+  const isEditing = Boolean(initialResource)
+  const initialCategory = initialResource
+    ? fileTypeLabel[initialResource.fileType]
+    : defaultCategory
+  const initialAttachmentNames = useMemo(
+    () => initialResource?.attachments ?? [],
+    [initialResource?.attachments],
+  )
+  const [title, setTitle] = useState(initialResource?.title ?? '')
+  const [category, setCategory] = useState<string>(initialCategory)
   const [hasFile, setHasFile] = useState(false)
-  const [validationError, setValidationError] = useState(false)
-  const mutation = useMutation({ mutationFn: createMockResource })
+  const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
+  const [validationError, setValidationError] =
+    useState<ValidationField | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const mutation = useMutation({
+    mutationFn: (input: UpdateResourceInput) =>
+      initialResource
+        ? updateMockResource({ id: initialResource.id, input })
+        : createMockResource(input),
+  })
+  const deleteMutation = useMutation({
+    mutationFn: () => {
+      if (!initialResource) throw new Error('Resource not found')
+      return deleteMockResource(initialResource.id)
+    },
+  })
 
   useEffect(() => {
-    onDirtyChange(
-      Boolean(title || category !== defaultCategory || hasFile),
-    )
-  }, [category, hasFile, onDirtyChange, title])
+    const isDirty = isEditing
+      ? Boolean(
+          title !== (initialResource?.title ?? '') ||
+            category !== initialCategory ||
+            !sameStringArray(attachmentNames, initialAttachmentNames),
+        )
+      : Boolean(title || category !== defaultCategory || hasFile)
+
+    onDirtyChange(isDirty)
+  }, [
+    attachmentNames,
+    category,
+    hasFile,
+    initialAttachmentNames,
+    initialCategory,
+    initialResource,
+    isEditing,
+    onDirtyChange,
+    title,
+  ])
 
   const handleConfirm = useCallback(() => {
-    setValidationError(false)
-    requestAnimationFrame(() => titleRef.current?.focus())
-  }, [])
+    const error = validationError
+    setValidationError(null)
+    requestAnimationFrame(() => {
+      if (error === 'file') {
+        uploadButtonRef.current?.focus()
+        return
+      }
+      titleRef.current?.focus()
+    })
+  }, [validationError])
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submittingRef.current) return
 
     if (!title.trim()) {
-      setValidationError(true)
+      setValidationError('title')
       return
     }
 
     const fileType = tabToFileType[category]
     if (!fileType) return
 
-    const input: CreateResourceInput = { title: title.trim(), fileType }
-    setValidationError(false)
+    // 파일 필수 검증(생성·수정 공통). 첨부가 없으면 `이미지 또는 파일을 추가해주세요`.
+    if (attachmentNames.length === 0) {
+      setValidationError('file')
+      return
+    }
+
+    const input: UpdateResourceInput = {
+      title: title.trim(),
+      fileType,
+      attachments: attachmentNames,
+    }
+    setValidationError(null)
     submittingRef.current = true
     mutation.mutate(input, {
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: ['resources'] })
-        onCreated()
+        if (initialResource) {
+          queryClient.setQueryData(['resources', initialResource.id], undefined)
+        }
+        onCompleted()
       },
       onError: () => {
         submittingRef.current = false
@@ -64,8 +144,28 @@ export function ResourceForm({ onCreated, onDirtyChange }: ResourceFormProps) {
     })
   }
 
+  function handleDelete() {
+    if (deleteMutation.isPending) return
+
+    deleteMutation.mutate(undefined, {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: ['resources'] })
+        if (initialResource) {
+          queryClient.removeQueries({
+            queryKey: ['resources', initialResource.id],
+          })
+        }
+        onCompleted()
+      },
+      onError: () => {
+        // 실패 시 삭제 확인 다이얼로그를 닫아 ErrorDialog 만 남긴다.
+        setDeleteDialogOpen(false)
+      },
+    })
+  }
+
   return (
-    <Form onSubmit={handleSubmit} noValidate>
+    <Form data-editing={isEditing} onSubmit={handleSubmit} noValidate>
       <TitleCard>
         <Label htmlFor="resource-title">
           제목 <Required aria-hidden="true">*</Required>
@@ -98,30 +198,87 @@ export function ResourceForm({ onCreated, onDirtyChange }: ResourceFormProps) {
         </CategoryOptions>
       </CategoryCard>
 
-      <ResourceUploadField onFilesChange={setHasFile} />
-
-      {mutation.isError && (
-        <SubmitStatus role="status">
-          생성하지 못했습니다. 다시 시도해 주세요.
-        </SubmitStatus>
-      )}
+      <ResourceUploadField
+        initialFileNames={initialAttachmentNames}
+        uploadButtonRef={uploadButtonRef}
+        onFilesChange={setHasFile}
+        onFileNamesChange={setAttachmentNames}
+      />
 
       <Actions>
-        <SubmitButton type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? '생성 중' : '생성하기'}
+        {isEditing && (
+          <DeleteButton
+            ref={deleteButtonRef}
+            type="button"
+            disabled={mutation.isPending || deleteMutation.isPending}
+            onClick={() => setDeleteDialogOpen(true)}
+          >
+            삭제하기
+          </DeleteButton>
+        )}
+        <SubmitButton
+          type="submit"
+          disabled={mutation.isPending || deleteMutation.isPending}
+        >
+          {mutation.isPending
+            ? isEditing
+              ? '저장 중'
+              : '생성 중'
+            : isEditing
+              ? '저장하기'
+              : '생성하기'}
         </SubmitButton>
       </Actions>
 
       {validationError && (
-        <ValidationDialog message="제목을 입력해 주세요" onConfirm={handleConfirm} />
+        <ValidationDialog
+          message={validationMessages[validationError]}
+          onConfirm={handleConfirm}
+        />
+      )}
+
+      {deleteDialogOpen && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={() => {
+            setDeleteDialogOpen(false)
+            requestAnimationFrame(() => deleteButtonRef.current?.focus())
+          }}
+          onConfirm={handleDelete}
+        />
+      )}
+
+      {mutation.isError && (
+        <ErrorDialog
+          title={isEditing ? '저장에 실패하였습니다' : '생성에 실패했습니다'}
+          onConfirm={() => mutation.reset()}
+        />
+      )}
+
+      {deleteMutation.isError && (
+        <ErrorDialog
+          title="삭제에 실패하였습니다"
+          onConfirm={() => deleteMutation.reset()}
+        />
       )}
     </Form>
+  )
+}
+
+function sameStringArray(left: string[], right: string[]) {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
   )
 }
 
 const Form = styled.form`
   width: 100%;
   margin-top: 60px;
+
+  &[data-editing='true'] {
+    margin-top: 0;
+  }
 
   @media (max-width: 980px) {
     margin-top: 40px;
@@ -251,17 +408,36 @@ const CategoryPill = styled.span`
   line-height: 1.2;
 `
 
-const SubmitStatus = styled.p`
-  margin: 16px 0 0;
-  color: ${({ theme }) => theme.colors.danger};
-  font-size: 18px;
-  text-align: right;
-`
-
 const Actions = styled.div`
   display: flex;
   justify-content: flex-end;
+  gap: 24px;
   margin-top: 32px;
+`
+
+const DeleteButton = styled.button`
+  min-width: 123px;
+  height: 61px;
+  padding: 0 16px;
+  border: 2px solid ${({ theme }) => theme.colors.danger};
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.danger};
+  cursor: pointer;
+  font: inherit;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.danger};
+    outline-offset: 3px;
+  }
 `
 
 const SubmitButton = styled.button`
