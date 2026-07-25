@@ -63,7 +63,8 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 
 ## 편집과 검증
 
-- 제목은 필수이며 저장 시 앞뒤 공백을 제거한다. 빈 값이면 생성 화면과 같은 검증 모달(`제목을 입력해 주세요`)과 포커스 복귀를 사용한다.
+- 제목은 필수이며 저장 시 앞뒤 공백을 제거한다. 빈 값이면 검증 모달(`제목을 입력해 주세요`)과 포커스 복귀를 사용한다.
+- 첨부(이미지 또는 파일)는 최소 1개 필수다. 첨부가 없으면 검증 모달(`이미지 또는 파일을 추가해주세요`)을 표시하고 확인 후 업로드 컨트롤로 포커스한다. 검증 순서는 제목 → 첨부.
 - 분류는 pdf/jpg·jpeg/png/기타 중 하나를 단일 선택한다(생성 화면과 동일).
 - 기존 또는 새 첨부를 제거할 수 있고, 새 파일은 클릭 또는 drag-and-drop으로 여러 개 추가할 수 있다.
 - 파일 하나의 최대 크기는 50MB이며 초과 파일은 추가하지 않고 오류를 알린다.
@@ -74,7 +75,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - `저장하기` → 현재 ID와 정규화한 입력으로 수정 요청을 한 번 전송한다.
 - 요청 중에는 중복 제출을 막고 라벨을 `저장 중`으로 바꾼다.
 - 성공 → 자료 query(`['resources']`)를 갱신하고 `/notices/resources`로 이동한다. 목록에는 같은 ID가 하나만 존재하고 수정값이 보인다.
-- 실패 → URL과 모든 입력을 보존하고 예외 모달(`ErrorDialog`)로 `저장하지 못했습니다. 다시 시도해 주세요.`를 표시한다. 확인 시 모달을 닫고 현재 입력을 유지한다.
+- 실패 → URL과 모든 입력을 보존하고 예외 모달(`ErrorDialog`)로 `저장에 실패하였습니다`를 표시한다. 확인 시 모달을 닫고 현재 입력을 유지한다.
 
 ## 삭제![alt text](image.png)
 
@@ -82,13 +83,14 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - 취소 또는 Escape → 삭제하지 않고 dialog를 닫아 `삭제하기`로 포커스를 복귀한다.
 - 확인 → 해당 ID 삭제 요청을 한 번 전송한다.
 - 성공 → 자료 query를 갱신하고 `/notices/resources`로 이동하며 삭제된 자료는 목록과 직접 URL에서 사라진다.
-- 실패 → 현재 화면과 입력을 유지하고 예외 모달(`ErrorDialog`)로 `삭제하지 못했습니다. 다시 시도해 주세요.`를 표시한다. 확인 시 모달을 닫고 현재 화면을 유지한다.
+- 실패 → 현재 화면과 입력을 유지하고 예외 모달(`ErrorDialog`)로 `삭제에 실패하였습니다`를 표시한다. 확인 시 모달을 닫고 현재 화면을 유지한다.
 
 ## 예외(에러) 모달 — `ErrorDialog` (신규 공용, shared/ui)
 
-- Figma `1039:50` 기준. Rate limit 해제 후 정확한 카피·아이콘·치수 확정. 그전까지는 `LeaveConfirmationDialog` 시각 언어로 구현한다.
-- 구조: `role="alertdialog"`, `aria-modal`, overlay `rgba(0,0,0,0.5)`, surface 카드(radius 20px), 제목 + 설명, 단일 `확인` 버튼(에러 확인 성격이므로 취소 없음).
-- props 후보: `ErrorDialog { title, description?, onConfirm }`.
+- Figma `1039:50` 기준. 한 줄 제목 + 전체 너비 `확인` 버튼으로, `ValidationDialog` 와 동일한 시각 언어다(설명 줄 없음).
+- 카피: 저장 실패 `저장에 실패하였습니다`, 삭제 실패 `삭제에 실패하였습니다`, 생성 실패 `생성에 실패했습니다`.
+- 구조: `role="alertdialog"`, `aria-modal`, overlay `rgba(0,0,0,0.5)`, surface 카드(radius 20px), 제목 1줄, 단일 `확인` 버튼(에러 확인 성격이므로 취소 없음).
+- props: `ErrorDialog { title, onConfirm }`.
 - 동작: Escape 또는 `확인` → `onConfirm`으로 닫는다. 열릴 때 확인 버튼 포커스, 닫힐 때 호출 control로 포커스 복귀. app root `inert`/`aria-hidden` 처리(기존 다이얼로그와 동일).
 - 사용처: 자료 저장·삭제 실패. notice/schedule 수정에서도 동일 컴포넌트를 재사용할 수 있게 shared/ui에 둔다.
 - 검증: mock은 항상 성공하므로, 예외 모달 경로 e2e(S11)는 `localStorage` 키 `toyvillage:resources:fail`(`update`|`delete`)로 실패를 1회 주입한다. 실제 API 연동(`/api-integration`) 시 이 훅을 제거한다.
