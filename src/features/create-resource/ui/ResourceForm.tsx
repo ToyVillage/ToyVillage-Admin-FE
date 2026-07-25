@@ -157,6 +157,10 @@ export function ResourceForm({
         }
         onCompleted()
       },
+      onError: () => {
+        // 실패 시 삭제 확인 다이얼로그를 닫아 ErrorDialog 만 남긴다.
+        setDeleteDialogOpen(false)
+      },
     })
   }
 
