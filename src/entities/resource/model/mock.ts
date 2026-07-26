@@ -48,7 +48,7 @@ export const resourceCategories = fileTypeTabs.slice(1)
 
 // 예외 모달(ErrorDialog) 경로 검증용 실패 주입 플래그. mock 은 항상 성공하므로,
 // 이 localStorage 키에 'update' | 'delete' 를 넣으면 해당 요청이 한 번 실패한다.
-// 실제 API 연동(/api-integration) 시 제거한다.
+// 실제 API 연동(/api) 시 제거한다.
 export const resourceFailStorageKey = 'toyvillage:resources:fail'
 
 function nextFailure(): string | null {

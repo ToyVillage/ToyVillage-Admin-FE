@@ -1,0 +1,543 @@
+import assert from 'node:assert/strict'
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+import test from 'node:test'
+import ts from 'typescript'
+import { approveApi } from '../../../scripts/approve-api.mjs'
+import { checkApiGate } from '../../../scripts/api-gate-check.mjs'
+import {
+  parseTaskSpec,
+  sha256File,
+  validateApiContract,
+  validateRealServerConfig,
+} from '../../../scripts/api-harness-lib.mjs'
+import { checkApiPolicy } from '../../../scripts/check-api-policy.mjs'
+import { validateRealRun } from '../../../scripts/run-real-api-scenarios.mjs'
+import { validateRealTestSource } from '../../../scripts/validate-real-api-source.mjs'
+
+const guardedRealFixtureSource = readFileSync(
+  new URL('../../e2e/api-real/real-api-fixture.ts', import.meta.url),
+  'utf8',
+)
+
+async function loadRealApiGuard({ apiBaseUrl, appBaseUrl, allowedMethods }) {
+  const transpiled = ts.transpileModule(guardedRealFixtureSource, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2023,
+    },
+  }).outputText
+  const executable = transpiled.replace(
+    /import\s+\{\s*expect,\s*test as base\s*\}\s+from\s+['"]@playwright\/test['"];?/,
+    'const expect = {}; const base = { extend: (fixtures) => fixtures };',
+  )
+  assert.notEqual(executable, transpiled)
+
+  const previousEnv = {
+    API_E2E_ALLOWED_METHODS: process.env.API_E2E_ALLOWED_METHODS,
+    PLAYWRIGHT_BASE_URL: process.env.PLAYWRIGHT_BASE_URL,
+    VITE_API_BASE_URL: process.env.VITE_API_BASE_URL,
+  }
+  process.env.API_E2E_ALLOWED_METHODS = allowedMethods.join(',')
+  process.env.PLAYWRIGHT_BASE_URL = appBaseUrl
+  process.env.VITE_API_BASE_URL = apiBaseUrl
+
+  try {
+    const encodedSource = Buffer.from(executable).toString('base64')
+    const fixtureModule = await import(
+      `data:text/javascript;base64,${encodedSource}#${Date.now()}`
+    )
+    const [setup] = fixtureModule.test.realApiNetworkGuard
+    let guard
+    await setup(
+      {
+        context: {
+          route: async (_pattern, handler) => {
+            guard = handler
+          },
+        },
+      },
+      async () => {},
+    )
+    assert.equal(typeof guard, 'function')
+    return guard
+  } finally {
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+}
+
+async function runGuard(guard, { method = 'GET', url }) {
+  let continued = false
+  await guard({
+    continue: async () => {
+      continued = true
+    },
+    request: () => ({
+      method: () => method,
+      url: () => url,
+    }),
+  })
+  return continued
+}
+
+function field(overrides = {}) {
+  return {
+    name: 'Authorization',
+    location: 'HEADER',
+    type: 'string',
+    required: true,
+    nullable: false,
+    default: null,
+    example: 'Bearer token',
+    description: 'JWT access token',
+    constraints: [],
+    ...overrides,
+  }
+}
+
+function response(status, { noContent = false } = {}) {
+  return {
+    status,
+    description: 'response',
+    noContent,
+    body: noContent
+      ? null
+      : {
+          type: 'object',
+          nullable: false,
+          description: 'response body',
+          fields: [
+            field({
+              name: 'message',
+              location: 'RESPONSE',
+              example: 'ok',
+              description: 'message',
+            }),
+          ],
+        },
+  }
+}
+
+function validContract() {
+  const authentication = { required: true, type: 'Bearer', roles: ['ADMIN'] }
+  return {
+    apiId: 'NOTICE_CREATE',
+    name: '공지 생성',
+    description: '',
+    method: 'POST',
+    path: '/notices',
+    authentication,
+    contentType: 'application/json',
+    headers: [field()],
+    pathParameters: [],
+    queryParameters: [],
+    requestBody: {
+      required: true,
+      fields: [
+        field({
+          name: 'kind',
+          location: 'BODY',
+          type: 'enum',
+          example: 'NOTICE',
+          description: '공지 분류',
+          allowedValues: ['NOTICE'],
+        }),
+      ],
+      example: { kind: 'NOTICE' },
+    },
+    responses: {
+      success: [response(201)],
+      errors: [response(400)],
+    },
+    source: {
+      notionDatabase: 'notion://api-database',
+      notionDataSource: 'notion://api-data-source',
+      resolvedNotionPage: 'https://notion.so/notice-create',
+      requestedNotionPage: null,
+      checkedAt: '2026-07-25T00:00:00.000Z',
+      apiIdMatchCount: 1,
+      databaseValues: {
+        apiId: 'NOTICE_CREATE',
+        method: 'POST',
+        path: '/notices',
+        authentication,
+      },
+      detailValues: {
+        apiId: 'NOTICE_CREATE',
+        method: 'POST',
+        path: '/notices',
+        authentication,
+      },
+    },
+  }
+}
+
+function clone(value) {
+  return structuredClone(value)
+}
+
+test('valid Contract and explicit 204 No Content pass', () => {
+  const contract = validContract()
+  contract.responses.success = [response(204, { noContent: true })]
+  assert.deepEqual(validateApiContract(contract), [])
+})
+
+test('API ID missing or duplicate match fails', () => {
+  const missing = validContract()
+  missing.apiId = ''
+  assert.match(validateApiContract(missing).join('\n'), /apiId/)
+
+  const duplicate = validContract()
+  duplicate.source.apiIdMatchCount = 2
+  assert.match(validateApiContract(duplicate).join('\n'), /정확히 1/)
+})
+
+test('full path, authentication, nullable, enum, and success response are enforced', () => {
+  const cases = [
+    [
+      (contract) => {
+        contract.path = '/notices?page=1'
+      },
+      /Query String/,
+    ],
+    [
+      (contract) => {
+        delete contract.authentication.required
+      },
+      /authentication.required/,
+    ],
+    [
+      (contract) => {
+        delete contract.requestBody.fields[0].nullable
+      },
+      /nullable/,
+    ],
+    [
+      (contract) => {
+        delete contract.requestBody.fields[0].allowedValues
+      },
+      /allowedValues/,
+    ],
+    [
+      (contract) => {
+        contract.responses.success = []
+      },
+      /responses.success/,
+    ],
+  ]
+
+  for (const [mutate, expected] of cases) {
+    const contract = clone(validContract())
+    mutate(contract)
+    assert.match(validateApiContract(contract).join('\n'), expected)
+  }
+})
+
+test('database and detail page mismatch fails', () => {
+  const contract = validContract()
+  contract.source.detailValues.path = '/other'
+  assert.match(
+    validateApiContract(contract).join('\n'),
+    /database\/detail path 불일치/,
+  )
+})
+
+function write(path, contents) {
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(path, contents)
+}
+
+function fixtureRoot({ realServer = false } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'api-harness-'))
+  const feature = 'create-notice'
+  const artifacts = join(root, 'harness', 'artifacts', 'api')
+  write(
+    join(root, 'harness', 'api', 'specs', `${feature}.spec.md`),
+    `---
+feature: ${feature}
+api_id: NOTICE_CREATE
+target_page: src/pages/notice
+notion_page:
+requires_functional_test: true
+real_server:
+  enabled: ${realServer}
+  environment: ${realServer ? 'staging' : 'none'}
+  base_url: ${realServer ? 'https://staging-api.example.com' : ''}
+  allowed_methods: ${realServer ? '[POST]' : '[]'}
+---
+`,
+  )
+  write(join(artifacts, `${feature}.contract.md`), '# Contract\n')
+  write(
+    join(artifacts, `${feature}.contract.json`),
+    `${JSON.stringify(validContract())}\n`,
+  )
+  write(join(artifacts, `${feature}.implementation-plan.md`), '# Plan\n')
+  write(join(artifacts, `${feature}.test-scenarios.md`), '# Scenarios\n')
+  return { root, feature }
+}
+
+test('approval hashes pass and changed approval source fails the gate', () => {
+  const { root, feature } = fixtureRoot()
+  approveApi({ root, feature, approvedBy: 'developer' })
+  assert.deepEqual(checkApiGate({ root, feature }), [])
+
+  const plan = join(
+    root,
+    'harness',
+    'artifacts',
+    'api',
+    `${feature}.implementation-plan.md`,
+  )
+  writeFileSync(plan, `${readFileSync(plan, 'utf8')}changed\n`)
+  assert.match(
+    checkApiGate({ root, feature }).join('\n'),
+    /runtime implementation plan/,
+  )
+})
+
+test('staging real API test is frozen and verified separately', () => {
+  const { root, feature } = fixtureRoot({ realServer: true })
+  approveApi({ root, feature, approvedBy: 'developer' })
+  const realTest = join(
+    root,
+    'tests',
+    'e2e',
+    'api-real',
+    `${feature}.real.spec.ts`,
+  )
+  write(
+    realTest,
+    "import { test } from './real-api-fixture'\ntest('real', async () => {})\n",
+  )
+  const realFixture = join(
+    root,
+    'tests',
+    'e2e',
+    'api-real',
+    'real-api-fixture.ts',
+  )
+  write(realFixture, guardedRealFixtureSource)
+  approveApi({ root, feature, freezeReal: true })
+
+  assert.deepEqual(checkApiGate({ root, feature, requireRealTest: true }), [])
+  writeFileSync(realFixture, 'export const test = { changed: true }\n')
+  assert.match(
+    checkApiGate({ root, feature, requireRealTest: true }).join('\n'),
+    /real API e2e fixture 승인 해시 불일치/,
+  )
+})
+
+test('--freeze-real rejects executable fixture without a network guard', () => {
+  const { root, feature } = fixtureRoot({ realServer: true })
+  approveApi({ root, feature, approvedBy: 'developer' })
+  const realTest = join(
+    root,
+    'tests',
+    'e2e',
+    'api-real',
+    `${feature}.real.spec.ts`,
+  )
+  write(
+    realTest,
+    "import { test } from './real-api-fixture'\ntest('real', async () => {})\n",
+  )
+  const realFixture = join(
+    root,
+    'tests',
+    'e2e',
+    'api-real',
+    'real-api-fixture.ts',
+  )
+  write(
+    realFixture,
+    "import { test as base } from '@playwright/test'\nexport const test = base.extend({})\n",
+  )
+
+  assert.throws(
+    () => approveApi({ root, feature, freezeReal: true }),
+    /fixture guard invalid.*auto network guard fixture/s,
+  )
+
+  const approvalPath = join(
+    root,
+    'harness',
+    'api',
+    'approvals',
+    `${feature}.approved.json`,
+  )
+  const legacyApproval = JSON.parse(readFileSync(approvalPath, 'utf8'))
+  legacyApproval.realTestHash = sha256File(realTest)
+  legacyApproval.realFixtureHash = sha256File(realFixture)
+  write(approvalPath, `${JSON.stringify(legacyApproval, null, 2)}\n`)
+  assert.match(
+    checkApiGate({ root, feature, requireRealTest: true }).join('\n'),
+    /real API e2e fixture guard/,
+  )
+})
+
+test('API policy checks only explicit source files', () => {
+  const root = mkdtempSync(join(tmpdir(), 'api-policy-'))
+  write(
+    join(root, 'src', 'safe.ts'),
+    "import { api } from './api'\nexport const load = () => api.get('/x')\n",
+  )
+  write(
+    join(root, 'src', 'unsafe.ts'),
+    "import axios from 'axios'\naxios.create({})\n",
+  )
+
+  assert.deepEqual(checkApiPolicy({ root, files: ['src/safe.ts'] }), [])
+  assert.match(
+    checkApiPolicy({ root, files: ['src/unsafe.ts'] }).join('\n'),
+    /새 axios 인스턴스/,
+  )
+})
+
+test('task spec parser preserves real server restrictions', () => {
+  const root = mkdtempSync(join(tmpdir(), 'api-spec-'))
+  const spec = join(root, 'feature.spec.md')
+  write(
+    spec,
+    `---
+feature: feature
+api_id: FEATURE_GET
+target_page: src/pages/feature
+requires_functional_test: true
+real_server:
+  enabled: true
+  environment: production
+  base_url: https://api.example.com
+  allowed_methods: [GET, POST]
+---
+`,
+  )
+
+  assert.deepEqual(parseTaskSpec(spec).realServer, {
+    enabled: true,
+    environment: 'production',
+    baseUrl: 'https://api.example.com',
+    allowedMethods: ['GET', 'POST'],
+  })
+})
+
+test('real server config allows only approved staging HTTPS contract method', () => {
+  const contract = validContract()
+  const staging = {
+    realServer: {
+      enabled: true,
+      environment: 'staging',
+      baseUrl: 'https://staging-api.example.com',
+      allowedMethods: ['POST'],
+    },
+  }
+  assert.deepEqual(validateRealServerConfig(staging, contract), [])
+
+  const unsafe = clone(staging)
+  unsafe.realServer.environment = 'production'
+  unsafe.realServer.baseUrl = 'http://api.example.com'
+  unsafe.realServer.allowedMethods = ['GET']
+  assert.match(
+    validateRealServerConfig(unsafe, contract).join('\n'),
+    /staging 환경|HTTPS|Contract method POST/,
+  )
+})
+
+test('real API source requires guard fixture and rejects response mocks', () => {
+  assert.deepEqual(
+    validateRealTestSource(
+      "import { test } from './real-api-fixture'\ntest('real', async () => {})",
+    ),
+    [],
+  )
+  assert.match(
+    validateRealTestSource(
+      "import { test } from '@playwright/test'\npage.route('**/*', () => {})",
+    ).join('\n'),
+    /real-api-fixture|route mock/,
+  )
+})
+
+test('real API approval and execution enforce the same mock-free source rules', () => {
+  const validSource =
+    "import { test } from './real-api-fixture'\ntest('real', async () => {})\n"
+  const cases = [
+    [
+      "import { test } from '@playwright/test'\ntest('real', async () => {})\n",
+      /real-api-fixture를 사용해야 함/,
+    ],
+    [
+      `${validSource}page.route('**/*', () => {})\n`,
+      /page\/context route mock 사용 금지/,
+    ],
+    [`${validSource}route.fulfill({ status: 200 })\n`, /mock 응답 사용 금지/],
+  ]
+
+  for (const [invalidSource, expected] of cases) {
+    const { root, feature } = fixtureRoot({ realServer: true })
+    approveApi({ root, feature, approvedBy: 'developer' })
+    const realTest = join(
+      root,
+      'tests',
+      'e2e',
+      'api-real',
+      `${feature}.real.spec.ts`,
+    )
+    const realFixture = join(
+      root,
+      'tests',
+      'e2e',
+      'api-real',
+      'real-api-fixture.ts',
+    )
+    write(realTest, invalidSource)
+    write(realFixture, guardedRealFixtureSource)
+
+    assert.throws(
+      () => approveApi({ root, feature, freezeReal: true }),
+      expected,
+    )
+
+    write(realTest, validSource)
+    approveApi({ root, feature, freezeReal: true })
+    write(realTest, invalidSource)
+    assert.match(
+      validateRealRun({ root, feature, confirmed: true }).join('\n'),
+      expected,
+    )
+  }
+})
+
+test('same-origin API requests still enforce the approved method scope', async () => {
+  const guard = await loadRealApiGuard({
+    apiBaseUrl: 'http://localhost:5173/api',
+    appBaseUrl: 'http://localhost:5173',
+    allowedMethods: ['POST'],
+  })
+
+  await assert.rejects(
+    runGuard(guard, {
+      method: 'DELETE',
+      url: 'http://localhost:5173/api/notices/1',
+    }),
+    /승인되지 않은 실제 API method 차단: DELETE \/api\/notices\/1/,
+  )
+  assert.equal(
+    await runGuard(guard, {
+      method: 'POST',
+      url: 'http://localhost:5173/api/notices',
+    }),
+    true,
+  )
+  assert.equal(
+    await runGuard(guard, {
+      method: 'GET',
+      url: 'http://localhost:5173/src/main.tsx',
+    }),
+    true,
+  )
+})

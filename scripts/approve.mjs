@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // approve.mjs — 승인 기록 작성 헬퍼(해시 자동 계산). 손으로 JSON/해시 쓰지 않게.
-// durable 경로 harness/approvals/ 에 sentinel 을 만든다.
+// durable 경로 harness/publishing/approvals/ 에 sentinel 을 만든다.
 //
 // 승인:  node scripts/approve.mjs <feature> --by <name> --scenarios S1,S2
-//        (harness/approvals/<feature>.scenario-draft.md 의 scenarioHash 계산)
+//        (harness/publishing/approvals/<feature>.scenario-draft.md 의 scenarioHash 계산)
 // freeze: node scripts/approve.mjs <feature> --freeze
 //        (tests/e2e/<feature>.spec.ts 의 e2eHash 를 sentinel 에 stamp)
 
@@ -15,7 +15,9 @@ import { dirname, join } from 'node:path'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const feature = process.argv[2]
 if (!feature || feature.startsWith('--')) {
-  console.error('usage: approve.mjs <feature> [--by <name> --scenarios S1,S2 | --freeze]')
+  console.error(
+    'usage: approve.mjs <feature> [--by <name> --scenarios S1,S2 | --freeze]',
+  )
   process.exit(1)
 }
 function arg(name) {
@@ -27,15 +29,23 @@ function sha256(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex')
 }
 
-const approvalsDir = join(root, 'harness', 'approvals')
+const approvalsDir = join(root, 'harness', 'publishing', 'approvals')
 if (!existsSync(approvalsDir)) mkdirSync(approvalsDir, { recursive: true })
 const sentinelPath = join(approvalsDir, `${feature}.approved.json`)
 
 // requires_functional_test
-const specPath = join(root, 'harness', 'specs', `${feature}.spec.md`)
+const specPath = join(
+  root,
+  'harness',
+  'publishing',
+  'specs',
+  `${feature}.spec.md`,
+)
 let requiresFunctional = true
 if (existsSync(specPath)) {
-  const m = readFileSync(specPath, 'utf8').match(/requires_functional_test:\s*(true|false)/)
+  const m = readFileSync(specPath, 'utf8').match(
+    /requires_functional_test:\s*(true|false)/,
+  )
   if (m) requiresFunctional = m[1] === 'true'
 }
 
@@ -52,7 +62,13 @@ if (has('--freeze')) {
   }
   data.e2eHash = sha256(e2ePath)
   writeFileSync(sentinelPath, JSON.stringify(data, null, 2) + '\n')
-  console.log(JSON.stringify({ feature, frozen: true, e2eHash: data.e2eHash.slice(0, 12) }))
+  console.log(
+    JSON.stringify({
+      feature,
+      frozen: true,
+      e2eHash: data.e2eHash.slice(0, 12),
+    }),
+  )
   process.exit(0)
 }
 
@@ -79,11 +95,15 @@ if (requiresFunctional) {
   }
   const draftPath = join(approvalsDir, `${feature}.scenario-draft.md`)
   if (!existsSync(draftPath)) {
-    console.error(`[approve] 승인 시나리오 파일 없음: harness/approvals/${feature}.scenario-draft.md`)
+    console.error(
+      `[approve] 승인 시나리오 파일 없음: harness/publishing/approvals/${feature}.scenario-draft.md`,
+    )
     process.exit(1)
   }
   sentinel.scenarioHash = sha256(draftPath)
 }
 
 writeFileSync(sentinelPath, JSON.stringify(sentinel, null, 2) + '\n')
-console.log(JSON.stringify({ feature, approved: true, scenarioIds, requiresFunctional }))
+console.log(
+  JSON.stringify({ feature, approved: true, scenarioIds, requiresFunctional }),
+)
