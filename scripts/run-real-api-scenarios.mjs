@@ -6,20 +6,9 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { apiPaths, parseTaskSpec, repositoryRoot } from './api-harness-lib.mjs'
 import { checkApiGate } from './api-gate-check.mjs'
+import { validateRealTestSource } from './validate-real-api-source.mjs'
 
-export function validateRealTestSource(source) {
-  const errors = []
-  if (!/from\s+['"]\.\/real-api-fixture['"]/.test(source)) {
-    errors.push('실제 서버 테스트는 real-api-fixture를 사용해야 함')
-  }
-  if (/\b(?:page|context)\.route\s*\(/.test(source)) {
-    errors.push('실제 서버 테스트에서 page/context route mock 사용 금지')
-  }
-  if (/\broute\.fulfill\s*\(/.test(source)) {
-    errors.push('실제 서버 테스트에서 mock 응답 사용 금지')
-  }
-  return errors
-}
+export { validateRealTestSource }
 
 export function validateRealRun({ root, feature, confirmed }) {
   const errors = checkApiGate({

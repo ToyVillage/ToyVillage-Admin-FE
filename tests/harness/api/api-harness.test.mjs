@@ -7,11 +7,17 @@ import { approveApi } from '../../../scripts/approve-api.mjs'
 import { checkApiGate } from '../../../scripts/api-gate-check.mjs'
 import {
   parseTaskSpec,
+  sha256File,
   validateApiContract,
   validateRealServerConfig,
 } from '../../../scripts/api-harness-lib.mjs'
 import { checkApiPolicy } from '../../../scripts/check-api-policy.mjs'
 import { validateRealTestSource } from '../../../scripts/run-real-api-scenarios.mjs'
+
+const guardedRealFixtureSource = readFileSync(
+  new URL('../../e2e/api-real/real-api-fixture.ts', import.meta.url),
+  'utf8',
+)
 
 function field(overrides = {}) {
   return {
@@ -250,8 +256,7 @@ test('staging real API test is frozen and verified separately', () => {
     'api-real',
     'real-api-fixture.ts',
   )
-  write(realFixture, 'export const test = {}\n')
-
+  write(realFixture, guardedRealFixtureSource)
   approveApi({ root, feature, freezeReal: true })
 
   assert.deepEqual(checkApiGate({ root, feature, requireRealTest: true }), [])
@@ -259,6 +264,54 @@ test('staging real API test is frozen and verified separately', () => {
   assert.match(
     checkApiGate({ root, feature, requireRealTest: true }).join('\n'),
     /real API e2e fixture 승인 해시 불일치/,
+  )
+})
+
+test('--freeze-real rejects executable fixture without a network guard', () => {
+  const { root, feature } = fixtureRoot({ realServer: true })
+  approveApi({ root, feature, approvedBy: 'developer' })
+  const realTest = join(
+    root,
+    'tests',
+    'e2e',
+    'api-real',
+    `${feature}.real.spec.ts`,
+  )
+  write(
+    realTest,
+    "import { test } from './real-api-fixture'\ntest('real', async () => {})\n",
+  )
+  const realFixture = join(
+    root,
+    'tests',
+    'e2e',
+    'api-real',
+    'real-api-fixture.ts',
+  )
+  write(
+    realFixture,
+    "import { test as base } from '@playwright/test'\nexport const test = base.extend({})\n",
+  )
+
+  assert.throws(
+    () => approveApi({ root, feature, freezeReal: true }),
+    /fixture guard invalid.*auto network guard fixture/s,
+  )
+
+  const approvalPath = join(
+    root,
+    'harness',
+    'api',
+    'approvals',
+    `${feature}.approved.json`,
+  )
+  const legacyApproval = JSON.parse(readFileSync(approvalPath, 'utf8'))
+  legacyApproval.realTestHash = sha256File(realTest)
+  legacyApproval.realFixtureHash = sha256File(realFixture)
+  write(approvalPath, `${JSON.stringify(legacyApproval, null, 2)}\n`)
+  assert.match(
+    checkApiGate({ root, feature, requireRealTest: true }).join('\n'),
+    /real API e2e fixture guard/,
   )
 })
 

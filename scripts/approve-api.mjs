@@ -15,6 +15,10 @@ import {
   validateRealServerConfig,
   writeJson,
 } from './api-harness-lib.mjs'
+import {
+  validateRealFixtureSource,
+  validateRealTestSource,
+} from './validate-real-api-source.mjs'
 
 export function approveApi({
   root,
@@ -53,14 +57,19 @@ export function approveApi({
         throw new Error(`실제 서버 e2e fixture 없음: ${paths.realFixture}`)
       }
       const testSource = readFileSync(paths.realTest, 'utf8')
-      if (!/from\s+['"]\.\/real-api-fixture['"]/.test(testSource)) {
-        throw new Error('실제 서버 e2e 테스트는 real-api-fixture를 사용해야 함')
+      const testErrors = validateRealTestSource(testSource)
+      if (testErrors.length > 0) {
+        throw new Error(
+          `실제 서버 e2e 테스트 invalid:\n- ${testErrors.join('\n- ')}`,
+        )
       }
-      if (/\b(?:page|context)\.route\s*\(/.test(testSource)) {
-        throw new Error('실제 서버 e2e 테스트에서 route mock 사용 금지')
-      }
-      if (/\broute\.fulfill\s*\(/.test(testSource)) {
-        throw new Error('실제 서버 e2e 테스트에서 mock 응답 사용 금지')
+      const fixtureErrors = validateRealFixtureSource(
+        readFileSync(paths.realFixture, 'utf8'),
+      )
+      if (fixtureErrors.length > 0) {
+        throw new Error(
+          `실제 서버 e2e fixture guard invalid:\n- ${fixtureErrors.join('\n- ')}`,
+        )
       }
       approval.realTestHash = sha256File(paths.realTest)
       approval.realFixtureHash = sha256File(paths.realFixture)

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -13,6 +13,7 @@ import {
   validateApiContract,
   validateRealServerConfig,
 } from './api-harness-lib.mjs'
+import { validateRealFixtureSource } from './validate-real-api-source.mjs'
 
 function compareHash(path, expected, label, errors) {
   if (!existsSync(path)) {
@@ -134,6 +135,13 @@ export function checkApiGate({
         'real API e2e fixture',
         errors,
       )
+      if (existsSync(paths.realFixture)) {
+        errors.push(
+          ...validateRealFixtureSource(
+            readFileSync(paths.realFixture, 'utf8'),
+          ).map((error) => `real API e2e fixture guard: ${error}`),
+        )
+      }
     }
   }
 
