@@ -22,10 +22,16 @@ export const test = base.extend<RealApiFixtures>({
       await context.route('**/*', async (route) => {
         const request = route.request()
         const requestURL = new URL(request.url())
+        const isApprovedApiPath =
+          !apiBasePath ||
+          apiBasePath === '/' ||
+          requestURL.pathname === apiBasePath ||
+          requestURL.pathname.startsWith(`${apiBasePath}/`)
 
         if (
           !['http:', 'https:'].includes(requestURL.protocol) ||
-          requestURL.origin === appURL.origin
+          (requestURL.origin === appURL.origin &&
+            (requestURL.origin !== apiURL.origin || !isApprovedApiPath))
         ) {
           await route.continue()
           return
@@ -35,12 +41,7 @@ export const test = base.extend<RealApiFixtures>({
             `승인되지 않은 외부 origin 요청 차단: ${requestURL.origin}`,
           )
         }
-        if (
-          apiBasePath &&
-          apiBasePath !== '/' &&
-          requestURL.pathname !== apiBasePath &&
-          !requestURL.pathname.startsWith(`${apiBasePath}/`)
-        ) {
+        if (!isApprovedApiPath) {
           throw new Error(
             `승인되지 않은 실제 API base path 요청 차단: ${requestURL.pathname}`,
           )

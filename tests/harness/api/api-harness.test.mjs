@@ -3,6 +3,7 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
+import ts from 'typescript'
 import { approveApi } from '../../../scripts/approve-api.mjs'
 import { checkApiGate } from '../../../scripts/api-gate-check.mjs'
 import {
@@ -18,6 +19,69 @@ const guardedRealFixtureSource = readFileSync(
   new URL('../../e2e/api-real/real-api-fixture.ts', import.meta.url),
   'utf8',
 )
+
+async function loadRealApiGuard({ apiBaseUrl, appBaseUrl, allowedMethods }) {
+  const transpiled = ts.transpileModule(guardedRealFixtureSource, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2023,
+    },
+  }).outputText
+  const executable = transpiled.replace(
+    /import\s+\{\s*expect,\s*test as base\s*\}\s+from\s+['"]@playwright\/test['"];?/,
+    'const expect = {}; const base = { extend: (fixtures) => fixtures };',
+  )
+  assert.notEqual(executable, transpiled)
+
+  const previousEnv = {
+    API_E2E_ALLOWED_METHODS: process.env.API_E2E_ALLOWED_METHODS,
+    PLAYWRIGHT_BASE_URL: process.env.PLAYWRIGHT_BASE_URL,
+    VITE_API_BASE_URL: process.env.VITE_API_BASE_URL,
+  }
+  process.env.API_E2E_ALLOWED_METHODS = allowedMethods.join(',')
+  process.env.PLAYWRIGHT_BASE_URL = appBaseUrl
+  process.env.VITE_API_BASE_URL = apiBaseUrl
+
+  try {
+    const encodedSource = Buffer.from(executable).toString('base64')
+    const fixtureModule = await import(
+      `data:text/javascript;base64,${encodedSource}#${Date.now()}`
+    )
+    const [setup] = fixtureModule.test.realApiNetworkGuard
+    let guard
+    await setup(
+      {
+        context: {
+          route: async (_pattern, handler) => {
+            guard = handler
+          },
+        },
+      },
+      async () => {},
+    )
+    assert.equal(typeof guard, 'function')
+    return guard
+  } finally {
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+}
+
+async function runGuard(guard, { method = 'GET', url }) {
+  let continued = false
+  await guard({
+    continue: async () => {
+      continued = true
+    },
+    request: () => ({
+      method: () => method,
+      url: () => url,
+    }),
+  })
+  return continued
+}
 
 function field(overrides = {}) {
   return {
@@ -394,5 +458,35 @@ test('real API source requires guard fixture and rejects response mocks', () => 
       "import { test } from '@playwright/test'\npage.route('**/*', () => {})",
     ).join('\n'),
     /real-api-fixture|route mock/,
+  )
+})
+
+test('same-origin API requests still enforce the approved method scope', async () => {
+  const guard = await loadRealApiGuard({
+    apiBaseUrl: 'http://localhost:5173/api',
+    appBaseUrl: 'http://localhost:5173',
+    allowedMethods: ['POST'],
+  })
+
+  await assert.rejects(
+    runGuard(guard, {
+      method: 'DELETE',
+      url: 'http://localhost:5173/api/notices/1',
+    }),
+    /승인되지 않은 실제 API method 차단: DELETE \/api\/notices\/1/,
+  )
+  assert.equal(
+    await runGuard(guard, {
+      method: 'POST',
+      url: 'http://localhost:5173/api/notices',
+    }),
+    true,
+  )
+  assert.equal(
+    await runGuard(guard, {
+      method: 'GET',
+      url: 'http://localhost:5173/src/main.tsx',
+    }),
+    true,
   )
 })
