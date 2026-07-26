@@ -39,7 +39,8 @@ API ID로 Notion 명세를 조회해 Contract를 만든 뒤 개발자 승인 후
 - runtime Contract/계획: `harness/artifacts/api/<feature>.*` (Git 비추적)
 - 승인본: `harness/api/approvals/<feature>.*` (Git 추적)
 - 공통 Axios: `src/shared/api/axios.ts`
-- 기능 테스트: 실제 서버 대신 Playwright `page.route()` mock
+- 프론트 기능 테스트: Playwright `page.route()` mock
+- 실제 연동 테스트: 승인된 staging API를 사용하는 직렬 Playwright 테스트
 
 ```bash
 yarn harness:api:validate <feature>
@@ -47,10 +48,17 @@ yarn harness:api:approve <feature> --by <developer>
 yarn harness:api:gate <feature>
 yarn harness:api:policy <feature> <changed-file...>
 yarn verify:api <feature>
+yarn harness:api:approve <feature> --freeze-real
+yarn verify:api:real <feature> --confirm-staging
 yarn test:harness
 ```
 
-API 승인본을 만든 뒤 테스트 파일을 동결할 때는 `yarn harness:api:approve <feature> --freeze`를 실행한다.
+API 승인본을 만든 뒤 Mock 테스트를 동결할 때는
+`yarn harness:api:approve <feature> --freeze`를 실행한다. 실제 서버 테스트는
+task spec의 `real_server`가 승인된 경우에만
+`tests/e2e/api-real/<feature>.real.spec.ts`로 작성하고 `--freeze-real`로
+별도 동결한다. 실제 테스트는 production을 허용하지 않으며 staging 확인
+플래그 없이는 실행되지 않는다.
 
 ---
 

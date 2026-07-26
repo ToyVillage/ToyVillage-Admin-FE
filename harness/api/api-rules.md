@@ -15,4 +15,7 @@
 - 서버 데이터를 Zustand에 복제하지 않는다.
 - 오류를 빈 배열이나 기본 객체로 숨기지 않는다.
 - `any`, `@ts-ignore`, 테스트 삭제, 승인 게이트 우회를 사용하지 않는다.
-- 실제 서버 요청은 수행하지 않는다. 기능 테스트는 Playwright `page.route()` 기반 mock을 우선한다.
+- 기본 기능 테스트는 Playwright `page.route()` 기반 mock으로 실행한다.
+- 실제 서버 테스트는 승인된 staging HTTPS 주소와 허용 method만 사용하며 production을 호출하지 않는다.
+- 실제 서버 테스트는 전용 fixture로 승인되지 않은 외부 origin과 HTTP method를 차단하고 병렬 실행하지 않는다.
+- 등록·수정·삭제 테스트 데이터는 고유 식별자를 사용하고 성공·실패와 무관하게 정리한다.

@@ -14,6 +14,7 @@
     "style-policy": "node scripts/check-style-policy.mjs",
     "verify:e2e": "node scripts/run-scenarios.mjs",
     "verify:api": "node scripts/run-api-scenarios.mjs",
+    "verify:api:real": "node scripts/run-real-api-scenarios.mjs",
     "harness:map-tokens": "node scripts/map-tokens.mjs",
     "harness:verify": "node scripts/verify.mjs",
     "harness:gate": "node scripts/gate-check.mjs",

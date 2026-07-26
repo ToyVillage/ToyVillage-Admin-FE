@@ -7,6 +7,7 @@ requires_functional_test: true
 real_server:
   enabled: false
   environment: none
+  base_url:
   allowed_methods: []
 ---
 

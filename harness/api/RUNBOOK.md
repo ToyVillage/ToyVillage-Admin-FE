@@ -7,8 +7,8 @@
 - 입력: `harness/api/specs/<feature>.spec.md`
 - Prompt: 없음
 - 산출물: 확인된 feature, API ID, 대상 경로
-- 검증: frontmatter 필수 값과 `real_server.enabled: false`
-- STOP: API ID 누락, spec 누락, 실제 서버 요청 허용
+- 검증: frontmatter 필수 값과 `real_server` 설정
+- STOP: API ID 누락, spec 누락, production 환경, staging 외 실제 서버, HTTP 주소, 빈 허용 method
 - 다음 단계: API ID가 하나로 확정됨
 - 승인: 불필요
 
@@ -102,17 +102,30 @@
 - 다음 단계: 모든 정적 검증 exit 0
 - 승인: 불필요
 
-## ⑪ 기능 테스트
+## ⑪ Mock 기반 프론트 기능 테스트
 
 - 입력: 승인 테스트 시나리오, Mock 기반 Playwright 테스트
 - Prompt: 없음
 - 산출물: 테스트 결과
 - 검증: `yarn verify:api <feature>` 통과
-- STOP: 실제 서버 연결 필요, 승인되지 않은 시나리오 필요
+- STOP: 실제 서버 연결 없이는 재현 불가, 승인되지 않은 시나리오 필요
 - 다음 단계: 승인 테스트 해시와 실행 테스트 일치 및 통과
 - 승인: 테스트 파일 freeze 시 승인 기록 갱신 필요
 
-## ⑫ 실패 수정
+## ⑫ Staging 실제 서버 테스트
+
+- 조건: 승인 task spec의 `real_server.enabled: true`
+- 입력: 승인된 staging HTTPS `base_url`, 허용 method, 동결된 `tests/e2e/api-real/<feature>.real.spec.ts`, 테스트 계정/자격증명
+- Prompt: 없음
+- 산출물: 실제 요청·응답을 사용한 Playwright 결과와 테스트 데이터 정리 결과
+- 검증: `yarn harness:api:approve <feature> --freeze-real` 후 `yarn verify:api:real <feature> --confirm-staging` 통과
+- 안전장치: 로컬 프론트엔드만 실행, staging origin 외 요청 차단, 승인 method 외 요청 차단, worker 1, service worker 차단
+- STOP: production 주소, HTTPS가 아닌 주소, 미승인 method, 테스트 계정/자격증명 누락, 테스트 데이터 정리 불가
+- 다음 단계: 실제 서버 호환성 통과 또는 실패 근거 확보
+- 승인: task spec과 실제 서버 테스트 해시 승인 필수
+- 비고: `real_server.enabled: false`이면 실행하지 않고 최종 보고에 `미실행`으로 기록한다. Mock 통과를 실제 연동 통과로 간주하지 않는다.
+
+## ⑬ 실패 수정
 
 - 입력: 최초 실패, 변경 diff
 - Prompt: `prompts/fix-code.md`
@@ -122,12 +135,12 @@
 - 다음 단계: ⑩부터 재검증
 - 승인: 기준 파일 변경 시 ⑧로 돌아감
 
-## ⑬ 최종 결과 보고
+## ⑭ 최종 결과 보고
 
 - 입력: 변경 목록과 전체 검증 결과
 - Prompt: `templates/final-report.md`
 - 산출물: 구현 요약, 검증 증거, 잔여 위험
-- 검증: 실제 서버/Notion 요청이 없었고 미해결 항목이 명시됨
+- 검증: Mock과 staging 실제 서버 결과가 분리되고 production/Notion 요청이 없으며 미해결 항목이 명시됨
 - STOP: 필수 검증 미실행 또는 실패
 - 다음 단계: 작업 종료
 - 승인: 불필요

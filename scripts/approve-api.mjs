@@ -12,20 +12,69 @@ import {
   repositoryRoot,
   sha256File,
   validateApiContract,
+  validateRealServerConfig,
   writeJson,
 } from './api-harness-lib.mjs'
 
-export function approveApi({ root, feature, approvedBy, freeze = false }) {
+export function approveApi({
+  root,
+  feature,
+  approvedBy,
+  freeze = false,
+  freezeReal = false,
+}) {
   const paths = apiPaths(root, feature)
-  if (freeze) {
+  if (freeze && freezeReal) {
+    throw new Error('--freeze와 --freeze-real은 동시에 사용할 수 없음')
+  }
+  if (freeze || freezeReal) {
     if (!existsSync(paths.approval)) throw new Error('기존 API 승인 JSON 없음')
+    const approval = readJson(paths.approval)
+    if (sha256File(paths.spec) !== approval.taskSpecHash) {
+      throw new Error('task spec이 승인 이후 변경됨: 재승인 필요')
+    }
+
+    if (freezeReal) {
+      const spec = parseTaskSpec(paths.spec)
+      const contract = readJson(paths.approvedContractJson)
+      const configErrors = validateRealServerConfig(spec, contract)
+      if (!spec.realServer.enabled) {
+        configErrors.push('real_server.enabled=true 승인 필요')
+      }
+      if (configErrors.length > 0) {
+        throw new Error(
+          `실제 서버 설정 invalid:\n- ${configErrors.join('\n- ')}`,
+        )
+      }
+      if (!existsSync(paths.realTest)) {
+        throw new Error(`실제 서버 e2e 테스트 없음: ${paths.realTest}`)
+      }
+      if (!existsSync(paths.realFixture)) {
+        throw new Error(`실제 서버 e2e fixture 없음: ${paths.realFixture}`)
+      }
+      const testSource = readFileSync(paths.realTest, 'utf8')
+      if (!/from\s+['"]\.\/real-api-fixture['"]/.test(testSource)) {
+        throw new Error('실제 서버 e2e 테스트는 real-api-fixture를 사용해야 함')
+      }
+      if (/\b(?:page|context)\.route\s*\(/.test(testSource)) {
+        throw new Error('실제 서버 e2e 테스트에서 route mock 사용 금지')
+      }
+      if (/\broute\.fulfill\s*\(/.test(testSource)) {
+        throw new Error('실제 서버 e2e 테스트에서 mock 응답 사용 금지')
+      }
+      approval.realTestHash = sha256File(paths.realTest)
+      approval.realFixtureHash = sha256File(paths.realFixture)
+      approval.realTestApprovedAt = new Date().toISOString()
+      writeJson(paths.approval, approval)
+      return approval
+    }
+
     if (!existsSync(paths.test))
       throw new Error(`API e2e 테스트 없음: ${paths.test}`)
     const testSource = readFileSync(paths.test, 'utf8')
     if (!testSource.includes('page.route(')) {
       throw new Error('API e2e 테스트는 page.route() 기반 mock을 사용해야 함')
     }
-    const approval = readJson(paths.approval)
     approval.testHash = sha256File(paths.test)
     approval.testApprovedAt = new Date().toISOString()
     writeJson(paths.approval, approval)
@@ -37,9 +86,6 @@ export function approveApi({ root, feature, approvedBy, freeze = false }) {
   if (spec.feature !== feature)
     throw new Error('task spec feature와 CLI feature 불일치')
   if (!spec.apiId) throw new Error('task spec api_id 누락')
-  if (spec.realServer.enabled || spec.realServer.allowedMethods.length > 0) {
-    throw new Error('실제 서버 요청은 API 하네스 승인 범위가 아님')
-  }
 
   const contract = readJson(paths.contractJson)
   const errors = validateApiContract(contract)
@@ -47,6 +93,12 @@ export function approveApi({ root, feature, approvedBy, freeze = false }) {
     throw new Error(`Contract invalid:\n- ${errors.join('\n- ')}`)
   if (contract.apiId !== spec.apiId)
     throw new Error('task spec와 Contract API ID 불일치')
+  const realServerErrors = validateRealServerConfig(spec, contract)
+  if (realServerErrors.length > 0) {
+    throw new Error(
+      `실제 서버 설정 invalid:\n- ${realServerErrors.join('\n- ')}`,
+    )
+  }
 
   for (const path of [
     paths.contractMarkdown,
@@ -72,6 +124,8 @@ export function approveApi({ root, feature, approvedBy, freeze = false }) {
     planHash: sha256File(paths.approvedPlan),
     scenarioHash: sha256File(paths.approvedScenarios),
     testHash: null,
+    realTestHash: null,
+    realFixtureHash: null,
   }
   writeJson(paths.approval, approval)
   return approval
@@ -82,7 +136,7 @@ function main() {
   const feature = args[0]
   if (!feature || feature.startsWith('--')) {
     console.error(
-      'usage: approve-api.mjs <feature> --by <developer> [--freeze] [--root path]',
+      'usage: approve-api.mjs <feature> --by <developer> [--freeze|--freeze-real] [--root path]',
     )
     process.exit(2)
   }
@@ -93,10 +147,14 @@ function main() {
       feature,
       approvedBy: parseOption(args, '--by'),
       freeze: args.includes('--freeze'),
+      freezeReal: args.includes('--freeze-real'),
     })
-    console.log(
-      `[api-approve] ${args.includes('--freeze') ? 'test frozen' : 'approved'}: ${approval.apiId}`,
-    )
+    const action = args.includes('--freeze-real')
+      ? 'real test frozen'
+      : args.includes('--freeze')
+        ? 'mock test frozen'
+        : 'approved'
+    console.log(`[api-approve] ${action}: ${approval.apiId}`)
   } catch (error) {
     console.error(`[api-approve] ${error.message}`)
     process.exit(1)

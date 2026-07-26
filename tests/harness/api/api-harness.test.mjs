@@ -8,8 +8,10 @@ import { checkApiGate } from '../../../scripts/api-gate-check.mjs'
 import {
   parseTaskSpec,
   validateApiContract,
+  validateRealServerConfig,
 } from '../../../scripts/api-harness-lib.mjs'
 import { checkApiPolicy } from '../../../scripts/check-api-policy.mjs'
+import { validateRealTestSource } from '../../../scripts/run-real-api-scenarios.mjs'
 
 function field(overrides = {}) {
   return {
@@ -178,7 +180,7 @@ function write(path, contents) {
   writeFileSync(path, contents)
 }
 
-function fixtureRoot() {
+function fixtureRoot({ realServer = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'api-harness-'))
   const feature = 'create-notice'
   const artifacts = join(root, 'harness', 'artifacts', 'api')
@@ -191,9 +193,10 @@ target_page: src/pages/notice
 notion_page:
 requires_functional_test: true
 real_server:
-  enabled: false
-  environment: none
-  allowed_methods: []
+  enabled: ${realServer}
+  environment: ${realServer ? 'staging' : 'none'}
+  base_url: ${realServer ? 'https://staging-api.example.com' : ''}
+  allowed_methods: ${realServer ? '[POST]' : '[]'}
 ---
 `,
   )
@@ -223,6 +226,39 @@ test('approval hashes pass and changed approval source fails the gate', () => {
   assert.match(
     checkApiGate({ root, feature }).join('\n'),
     /runtime implementation plan/,
+  )
+})
+
+test('staging real API test is frozen and verified separately', () => {
+  const { root, feature } = fixtureRoot({ realServer: true })
+  approveApi({ root, feature, approvedBy: 'developer' })
+  const realTest = join(
+    root,
+    'tests',
+    'e2e',
+    'api-real',
+    `${feature}.real.spec.ts`,
+  )
+  write(
+    realTest,
+    "import { test } from './real-api-fixture'\ntest('real', async () => {})\n",
+  )
+  const realFixture = join(
+    root,
+    'tests',
+    'e2e',
+    'api-real',
+    'real-api-fixture.ts',
+  )
+  write(realFixture, 'export const test = {}\n')
+
+  approveApi({ root, feature, freezeReal: true })
+
+  assert.deepEqual(checkApiGate({ root, feature, requireRealTest: true }), [])
+  writeFileSync(realFixture, 'export const test = { changed: true }\n')
+  assert.match(
+    checkApiGate({ root, feature, requireRealTest: true }).join('\n'),
+    /real API e2e fixture 승인 해시 불일치/,
   )
 })
 
@@ -257,6 +293,7 @@ requires_functional_test: true
 real_server:
   enabled: true
   environment: production
+  base_url: https://api.example.com
   allowed_methods: [GET, POST]
 ---
 `,
@@ -265,6 +302,44 @@ real_server:
   assert.deepEqual(parseTaskSpec(spec).realServer, {
     enabled: true,
     environment: 'production',
+    baseUrl: 'https://api.example.com',
     allowedMethods: ['GET', 'POST'],
   })
+})
+
+test('real server config allows only approved staging HTTPS contract method', () => {
+  const contract = validContract()
+  const staging = {
+    realServer: {
+      enabled: true,
+      environment: 'staging',
+      baseUrl: 'https://staging-api.example.com',
+      allowedMethods: ['POST'],
+    },
+  }
+  assert.deepEqual(validateRealServerConfig(staging, contract), [])
+
+  const unsafe = clone(staging)
+  unsafe.realServer.environment = 'production'
+  unsafe.realServer.baseUrl = 'http://api.example.com'
+  unsafe.realServer.allowedMethods = ['GET']
+  assert.match(
+    validateRealServerConfig(unsafe, contract).join('\n'),
+    /staging 환경|HTTPS|Contract method POST/,
+  )
+})
+
+test('real API source requires guard fixture and rejects response mocks', () => {
+  assert.deepEqual(
+    validateRealTestSource(
+      "import { test } from './real-api-fixture'\ntest('real', async () => {})",
+    ),
+    [],
+  )
+  assert.match(
+    validateRealTestSource(
+      "import { test } from '@playwright/test'\npage.route('**/*', () => {})",
+    ).join('\n'),
+    /real-api-fixture|route mock/,
+  )
 })

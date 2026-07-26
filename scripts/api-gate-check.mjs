@@ -11,6 +11,7 @@ import {
   repositoryRoot,
   sha256File,
   validateApiContract,
+  validateRealServerConfig,
 } from './api-harness-lib.mjs'
 
 function compareHash(path, expected, label, errors) {
@@ -21,7 +22,12 @@ function compareHash(path, expected, label, errors) {
   }
 }
 
-export function checkApiGate({ root, feature, requireTest = false }) {
+export function checkApiGate({
+  root,
+  feature,
+  requireTest = false,
+  requireRealTest = false,
+}) {
   const paths = apiPaths(root, feature)
   const errors = []
   if (!existsSync(paths.approval)) return [`승인 JSON 없음: ${paths.approval}`]
@@ -48,9 +54,7 @@ export function checkApiGate({ root, feature, requireTest = false }) {
   ) {
     errors.push('API ID 불일치 또는 누락')
   }
-  if (spec.realServer.enabled || spec.realServer.allowedMethods.length > 0) {
-    errors.push('실제 서버 요청이 활성화되어 있음')
-  }
+  errors.push(...validateRealServerConfig(spec, contract))
 
   compareHash(paths.spec, approval.taskSpecHash, 'task spec', errors)
   compareHash(
@@ -107,6 +111,32 @@ export function checkApiGate({ root, feature, requireTest = false }) {
     }
   }
 
+  if (requireRealTest || approval.realTestHash) {
+    if (!spec.realServer.enabled) {
+      errors.push('실제 서버 테스트가 활성화되지 않음')
+    }
+    if (!approval.realTestHash) {
+      errors.push('realTestHash 누락: approve-api --freeze-real 필요')
+    } else {
+      compareHash(
+        paths.realTest,
+        approval.realTestHash,
+        'real API e2e test',
+        errors,
+      )
+    }
+    if (!approval.realFixtureHash) {
+      errors.push('realFixtureHash 누락: approve-api --freeze-real 필요')
+    } else {
+      compareHash(
+        paths.realFixture,
+        approval.realFixtureHash,
+        'real API e2e fixture',
+        errors,
+      )
+    }
+  }
+
   return errors
 }
 
@@ -115,7 +145,7 @@ function main() {
   const feature = args[0]
   if (!feature || feature.startsWith('--')) {
     console.error(
-      'usage: api-gate-check.mjs <feature> [--require-test] [--root path]',
+      'usage: api-gate-check.mjs <feature> [--require-test|--require-real-test] [--root path]',
     )
     process.exit(2)
   }
@@ -124,6 +154,7 @@ function main() {
     root,
     feature,
     requireTest: args.includes('--require-test'),
+    requireRealTest: args.includes('--require-real-test'),
   })
   if (errors.length > 0) {
     console.error(`[api-gate] invalid\n- ${errors.join('\n- ')}`)

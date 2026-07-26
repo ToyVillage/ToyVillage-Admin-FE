@@ -87,9 +87,66 @@ export function parseTaskSpec(path) {
     realServer: {
       enabled: nested('real_server', 'enabled') === 'true',
       environment: nested('real_server', 'environment'),
+      baseUrl: nested('real_server', 'base_url'),
       allowedMethods,
     },
   }
+}
+
+export function validateRealServerConfig(spec, contract) {
+  const errors = []
+  const config = spec.realServer
+
+  if (!config.enabled) {
+    if (config.allowedMethods.length > 0) {
+      errors.push(
+        'real_server.enabled=false이면 allowed_methods는 비어 있어야 함',
+      )
+    }
+    if (config.baseUrl) {
+      errors.push('real_server.enabled=false이면 base_url은 비어 있어야 함')
+    }
+    return errors
+  }
+
+  if (config.environment !== 'staging') {
+    errors.push('실제 서버 테스트는 staging 환경만 허용')
+  }
+
+  let baseUrl
+  try {
+    baseUrl = new URL(config.baseUrl)
+  } catch {
+    errors.push('real_server.base_url: 유효한 절대 URL 필요')
+  }
+  if (baseUrl) {
+    if (baseUrl.protocol !== 'https:') {
+      errors.push('real_server.base_url: staging HTTPS URL만 허용')
+    }
+    if (baseUrl.username || baseUrl.password) {
+      errors.push('real_server.base_url: 자격증명 포함 금지')
+    }
+    if (baseUrl.search || baseUrl.hash) {
+      errors.push('real_server.base_url: query 또는 fragment 포함 금지')
+    }
+  }
+
+  if (config.allowedMethods.length === 0) {
+    errors.push('real_server.allowed_methods: 한 개 이상의 method 필요')
+  }
+  const supportedMethods = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])
+  for (const method of config.allowedMethods) {
+    if (!supportedMethods.has(method)) {
+      errors.push(`real_server.allowed_methods: 허용되지 않은 method ${method}`)
+    }
+  }
+  if (contract?.method && !config.allowedMethods.includes(contract.method)) {
+    errors.push(
+      `real_server.allowed_methods: Contract method ${contract.method} 누락`,
+    )
+  }
+
+  return errors
 }
 
 function requireString(value, path, errors, { allowEmpty = false } = {}) {
@@ -466,5 +523,7 @@ export function apiPaths(root, feature) {
     approvedScenarios: join(approvals, `${feature}.test-scenarios.md`),
     approval: join(approvals, `${feature}.approved.json`),
     test: join(root, 'tests', 'e2e', 'api', `${feature}.spec.ts`),
+    realTest: join(root, 'tests', 'e2e', 'api-real', `${feature}.real.spec.ts`),
+    realFixture: join(root, 'tests', 'e2e', 'api-real', 'real-api-fixture.ts'),
   }
 }
