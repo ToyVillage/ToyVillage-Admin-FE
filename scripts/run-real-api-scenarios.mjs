@@ -8,8 +8,6 @@ import { apiPaths, parseTaskSpec, repositoryRoot } from './api-harness-lib.mjs'
 import { checkApiGate } from './api-gate-check.mjs'
 import { validateRealTestSource } from './validate-real-api-source.mjs'
 
-export { validateRealTestSource }
-
 export function validateRealRun({ root, feature, confirmed }) {
   const errors = checkApiGate({
     root,

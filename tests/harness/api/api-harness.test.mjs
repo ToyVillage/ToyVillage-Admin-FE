@@ -13,7 +13,8 @@ import {
   validateRealServerConfig,
 } from '../../../scripts/api-harness-lib.mjs'
 import { checkApiPolicy } from '../../../scripts/check-api-policy.mjs'
-import { validateRealTestSource } from '../../../scripts/run-real-api-scenarios.mjs'
+import { validateRealRun } from '../../../scripts/run-real-api-scenarios.mjs'
+import { validateRealTestSource } from '../../../scripts/validate-real-api-source.mjs'
 
 const guardedRealFixtureSource = readFileSync(
   new URL('../../e2e/api-real/real-api-fixture.ts', import.meta.url),
@@ -459,6 +460,56 @@ test('real API source requires guard fixture and rejects response mocks', () => 
     ).join('\n'),
     /real-api-fixture|route mock/,
   )
+})
+
+test('real API approval and execution enforce the same mock-free source rules', () => {
+  const validSource =
+    "import { test } from './real-api-fixture'\ntest('real', async () => {})\n"
+  const cases = [
+    [
+      "import { test } from '@playwright/test'\ntest('real', async () => {})\n",
+      /real-api-fixture를 사용해야 함/,
+    ],
+    [
+      `${validSource}page.route('**/*', () => {})\n`,
+      /page\/context route mock 사용 금지/,
+    ],
+    [`${validSource}route.fulfill({ status: 200 })\n`, /mock 응답 사용 금지/],
+  ]
+
+  for (const [invalidSource, expected] of cases) {
+    const { root, feature } = fixtureRoot({ realServer: true })
+    approveApi({ root, feature, approvedBy: 'developer' })
+    const realTest = join(
+      root,
+      'tests',
+      'e2e',
+      'api-real',
+      `${feature}.real.spec.ts`,
+    )
+    const realFixture = join(
+      root,
+      'tests',
+      'e2e',
+      'api-real',
+      'real-api-fixture.ts',
+    )
+    write(realTest, invalidSource)
+    write(realFixture, guardedRealFixtureSource)
+
+    assert.throws(
+      () => approveApi({ root, feature, freezeReal: true }),
+      expected,
+    )
+
+    write(realTest, validSource)
+    approveApi({ root, feature, freezeReal: true })
+    write(realTest, invalidSource)
+    assert.match(
+      validateRealRun({ root, feature, confirmed: true }).join('\n'),
+      expected,
+    )
+  }
 })
 
 test('same-origin API requests still enforce the approved method scope', async () => {
