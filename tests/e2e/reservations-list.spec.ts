@@ -16,6 +16,9 @@ test('S1: 리스트 표시', async ({ page }) => {
     page.getByRole('button', { name: '페이지 권한주기' }),
   ).toBeVisible()
   await expect(page.getByText('상담일', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('checkbox', { name: '전체 예약 선택' }),
+  ).toBeVisible()
   await expect(page.getByRole('searchbox', { name: '예약 검색' })).toBeVisible()
   await expect(page.getByTestId('reservation-row').first()).toBeVisible()
   await expect(page.getByRole('button', { name: '2 페이지' })).toBeVisible()
@@ -80,14 +83,13 @@ test('S6: 선택 후 권한 모달 열기', async ({ page }) => {
   await expect(dialog.getByText('김지환 사원').first()).toBeVisible()
 })
 
-test('S7: 선택 없이 권한 주기 → 안내', async ({ page }) => {
+test('S7: 선택 없으면 권한 주기 비활성화', async ({ page }) => {
   await page.goto('/notices/reservations')
-  await page.getByRole('button', { name: '페이지 권한주기' }).click()
+  const grantButton = page.getByRole('button', { name: '페이지 권한주기' })
+  await expect(grantButton).toBeDisabled()
 
-  const dialog = page.getByRole('alertdialog', { name: '예약을 선택해 주세요' })
-  await expect(dialog).toBeVisible()
-  await dialog.getByRole('button', { name: '확인' }).click()
-  await expect(dialog).toBeHidden()
+  await page.getByRole('checkbox', { name: '행복유치원 선택' }).check()
+  await expect(grantButton).toBeEnabled()
 })
 
 test('S8: 권한 지정 확인 / 취소', async ({ page }) => {
