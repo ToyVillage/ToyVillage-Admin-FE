@@ -26,8 +26,13 @@ export function GrantReservationAccessDialog({
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+  const pendingRef = useRef(pending)
   const [query, setQuery] = useState('')
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
+
+  useEffect(() => {
+    pendingRef.current = pending
+  }, [pending])
 
   const filteredStaff = useMemo(() => {
     const keyword = query.trim().toLowerCase()
@@ -55,6 +60,8 @@ export function GrantReservationAccessDialog({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         event.preventDefault()
+        // 저장(권한 부여) 진행 중에는 취소 버튼과 동일하게 Escape로 닫지 않는다.
+        if (pendingRef.current) return
         onCancel()
         return
       }
