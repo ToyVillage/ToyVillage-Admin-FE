@@ -160,7 +160,7 @@ export function GrantReservationAccessDialog({
           </CancelButton>
           <ConfirmButton
             type="button"
-            disabled={pending}
+            disabled={pending || selectedStaffIds.length === 0}
             onClick={() => onConfirm(selectedStaffIds)}
           >
             {pending ? '저장 중' : '확인'}
