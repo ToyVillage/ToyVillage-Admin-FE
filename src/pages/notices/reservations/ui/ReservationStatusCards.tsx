@@ -40,6 +40,10 @@ export function ReservationStatusCards({
 const Cards = styled.div`
   display: flex;
   gap: 21px;
+
+  @media (max-width: 980px) {
+    flex-wrap: wrap;
+  }
 `
 
 const Card = styled.button<{ $active: boolean }>`
