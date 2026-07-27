@@ -1,8 +1,17 @@
 export type {
   CreateNoticeInput,
   Notice,
+  NoticeListItem,
   UpdateNoticeInput,
 } from './model/types'
+export type {
+  NoticeKind,
+  NoticeQueryAllErrorResponse,
+  NoticeQueryAllRequest,
+  NoticeQueryAllResponse,
+  NoticeQueryAllResponseItem,
+} from './api/types'
+export { getNotices } from './api/noticeApi'
 export {
   createMockNotice,
   deleteMockNotice,

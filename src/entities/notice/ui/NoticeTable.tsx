@@ -4,10 +4,10 @@ import {
   type DataTableSort,
   type DataTablePagination,
 } from '@/shared/ui'
-import type { Notice } from '../model/types'
+import type { NoticeListItem } from '../model/types'
 
 interface NoticeTableProps {
-  notices: Notice[]
+  notices: NoticeListItem[]
   onRowClick?: (id: string) => void
   search?: DataTableSearch
   sort?: DataTableSort

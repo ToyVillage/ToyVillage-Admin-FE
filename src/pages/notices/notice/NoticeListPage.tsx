@@ -2,18 +2,14 @@ import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import {
-  getMockNotices,
-  NoticeTable,
-  mockNotices,
-  noticeCategories,
-} from '@/entities/notice'
+import { getNotices, NoticeTable } from '@/entities/notice'
 import { CreateNoticeButton } from '@/features/create-notice'
 import { CategoryTabs } from './ui/CategoryTabs'
 import type { DataTableSortValue } from '@/shared/ui'
 
-// 한 페이지에 노출할 공지 수(Figma list 컴포넌트 기준). 자료실과 동일.
-const PAGE_SIZE = 4
+const API_PAGE = 0
+const API_PAGE_SIZE = 10
+const TABLE_PAGE_SIZE = 4
 
 export function NoticeListPage() {
   const navigate = useNavigate()
@@ -21,11 +17,20 @@ export function NoticeListPage() {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<DataTableSortValue>('newest')
   const [page, setPage] = useState(1)
-  const { data: allNotices = mockNotices } = useQuery({
-    queryKey: ['notices'],
-    queryFn: getMockNotices,
-    placeholderData: mockNotices,
+  const {
+    data: queryNotices,
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ['notices', { page: API_PAGE, size: API_PAGE_SIZE }],
+    queryFn: () => getNotices({ page: API_PAGE, size: API_PAGE_SIZE }),
   })
+  const allNotices = useMemo(() => queryNotices ?? [], [queryNotices])
+
+  const categories = useMemo(
+    () => ['전체', ...new Set(allNotices.map((notice) => notice.category))],
+    [allNotices],
+  )
 
   const filtered = useMemo(() => {
     const byCategory =
@@ -49,7 +54,7 @@ export function NoticeListPage() {
     )
   }, [active, allNotices, query, sort])
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(filtered.length / TABLE_PAGE_SIZE))
 
   // 탭·검색이 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
   const filterKey = `${active} ${query} ${sort}`
@@ -62,9 +67,30 @@ export function NoticeListPage() {
 
   const notices = useMemo(
     () =>
-      filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+      filtered.slice(
+        (currentPage - 1) * TABLE_PAGE_SIZE,
+        currentPage * TABLE_PAGE_SIZE,
+      ),
     [filtered, currentPage],
   )
+
+  if (isPending) {
+    return (
+      <StatePage>
+        <StateCard role="status">공지사항을 불러오는 중입니다.</StateCard>
+      </StatePage>
+    )
+  }
+
+  if (isError) {
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          공지사항을 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
+  }
 
   return (
     <Page>
@@ -78,7 +104,7 @@ export function NoticeListPage() {
         </Header>
 
         <CategoryTabs
-          categories={noticeCategories}
+          categories={categories}
           active={active}
           onSelect={setActive}
         />
@@ -141,4 +167,23 @@ const Subtitle = styled.p`
   font-size: 32px;
   font-weight: 500;
   line-height: 1.2;
+`
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  width: min(100%, 560px);
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
 `
