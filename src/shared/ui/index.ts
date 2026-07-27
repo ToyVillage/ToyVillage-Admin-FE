@@ -1,9 +1,13 @@
 export { DataTable } from './DataTable'
 export type {
   DataTableRow,
+  DataTableColumn,
+  DataTableCellVariant,
   DataTableSearch,
   DataTableSort,
+  DataTableSortOption,
   DataTableSortValue,
+  DataTableSelection,
   DataTablePagination,
 } from './DataTable'
 export { LinkButton } from './LinkButton'
