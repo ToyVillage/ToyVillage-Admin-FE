@@ -97,6 +97,12 @@ export function NoticeReservationsPage() {
     setPrevFilterKey(filterKey)
     setPage(1)
   }
+  // 상태 탭이 바뀌면 이전 상태의 선택이 남지 않도록 선택을 초기화한다.
+  const [prevActive, setPrevActive] = useState(active)
+  if (prevActive !== active) {
+    setPrevActive(active)
+    setSelectedIds([])
+  }
   const currentPage = Math.min(page, pageCount)
 
   const pageReservations = useMemo(
