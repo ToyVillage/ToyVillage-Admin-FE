@@ -92,7 +92,7 @@ interface Reservation {
   status: ReservationStatus
   consultDate: string   // 상담일 2026.07.02
   reserveDate: string   // 예약일 2026.07.13
-  reserveTime: string   // 예약 시간 13:01
+  reserveTime: string   // 예약 시간 13 : 01 (Figma 표기)
   groupName: string     // 단체명 대구어린이집
   region: string        // 지역 대구광역시
   headcount: number      // 인원 18
