@@ -15,7 +15,7 @@ import {
   type ReservationStatus,
 } from '@/entities/reservation'
 import { GrantReservationAccessDialog } from '@/features/grant-reservation-access'
-import { ValidationDialog } from '@/shared/ui'
+import { ErrorDialog, ValidationDialog } from '@/shared/ui'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 
 // 한 페이지에 노출할 예약 수(Figma list 기준). 공지/자료와 동일.
@@ -149,6 +149,10 @@ export function NoticeReservationsPage() {
           setAccessDialogOpen(false)
           setSelectedIds([])
         },
+        // 실패 시 모달을 열어둔 채(재시도) 예외 모달로 알린다. onSuccess 정리 로직은 유지.
+        onError: () => {
+          setAccessDialogOpen(true)
+        },
       },
     )
   }
@@ -215,6 +219,13 @@ export function NoticeReservationsPage() {
           pending={grantMutation.isPending}
           onCancel={() => setAccessDialogOpen(false)}
           onConfirm={handleGrantConfirm}
+        />
+      )}
+
+      {grantMutation.isError && (
+        <ErrorDialog
+          title="권한 부여에 실패했습니다"
+          onConfirm={() => grantMutation.reset()}
         />
       )}
     </Page>
