@@ -1,0 +1,332 @@
+{
+  "apiId": "NOTICE_QUERY_ALL",
+  "name": "공지사항 전체 조회",
+  "description": "공지사항을 전체 조회하는 기능",
+  "method": "GET",
+  "path": "/notice",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "USER",
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "Bearer access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [],
+  "queryParameters": [
+    {
+      "name": "page",
+      "location": "query",
+      "type": "integer",
+      "required": true,
+      "nullable": false,
+      "default": 0,
+      "example": 0,
+      "description": "0부터 시작하는 페이지 번호",
+      "constraints": [
+        "minimum 0"
+      ]
+    },
+    {
+      "name": "size",
+      "location": "query",
+      "type": "integer",
+      "required": true,
+      "nullable": false,
+      "default": 10,
+      "example": 10,
+      "description": "페이지 크기",
+      "constraints": [
+        "positive integer"
+      ]
+    }
+  ],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "공지사항 목록",
+        "body": {
+          "type": "array<object>",
+          "nullable": false,
+          "description": "공지사항 목록. 결과가 없으면 빈 배열",
+          "fields": [
+            {
+              "name": "id",
+              "location": "response",
+              "type": "number",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "공지사항 ID",
+              "constraints": []
+            },
+            {
+              "name": "title",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "공지사항 제목",
+              "description": "공지사항 제목",
+              "constraints": []
+            },
+            {
+              "name": "kind",
+              "location": "response",
+              "type": "enum",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "공지사항 분류",
+              "description": "공지사항 분류",
+              "constraints": [
+                "사용자 결정으로 임시 단일 값 고정"
+              ],
+              "allowedValues": [
+                "공지사항 분류"
+              ]
+            },
+            {
+              "name": "createAt",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-07-04",
+              "description": "공지사항 생성일",
+              "constraints": [
+                "YYYY-MM-DD"
+              ]
+            }
+          ]
+        },
+        "noContent": false
+      }
+    ],
+    "errors": [
+      {
+        "status": 401,
+        "description": "만료된 토큰",
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "인증 오류",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "만료된 토큰입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "response",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 401,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "response",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "오류 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        },
+        "noContent": false
+      },
+      {
+        "status": 403,
+        "description": "접근 권한 없음",
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "권한 오류",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "접근할 수 있는 권한이 없습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "response",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 403,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "response",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "오류 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        },
+        "noContent": false
+      },
+      {
+        "status": 500,
+        "description": "예상하지 못한 서버 오류",
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "서버 오류",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "예상하지 못한 에러가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "response",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "response",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "오류 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        },
+        "noContent": false
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "https://app.notion.com/p/392bfdfeff94801597c3e8a1d2173825",
+    "notionDataSource": "collection://392bfdfe-ff94-8042-bc6e-000bcd5da71f",
+    "resolvedNotionPage": "https://app.notion.com/p/392bfdfeff94803692deef24a3408890",
+    "requestedNotionPage": "https://app.notion.com/p/392bfdfeff94803692deef24a3408890",
+    "checkedAt": "2026-07-27T00:00:00+09:00",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "NOTICE_QUERY_ALL",
+      "method": "GET",
+      "path": "/notice",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "USER",
+          "ADMIN"
+        ]
+      }
+    },
+    "detailValues": {
+      "apiId": "NOTICE_QUERY_ALL",
+      "method": "GET",
+      "path": "/notice",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "USER",
+          "ADMIN"
+        ]
+      }
+    }
+  }
+}
