@@ -1,0 +1,19 @@
+{
+  "feature": "reservations-list",
+  "approvedAt": "2026-07-27T11:30:31.308Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10"
+  ],
+  "scenarioHash": "09ede0282531ea0398e3e52b5963985e96f95abf1eaf9fb60d27465098fd91ab",
+  "e2eHash": "773dbb3e98512e8a559f80f37487d50b4711f76e1b6328826b0861ef7c04addd"
+}

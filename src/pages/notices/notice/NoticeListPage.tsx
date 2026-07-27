@@ -94,7 +94,7 @@ export function NoticeListPage() {
           }}
           sort={{
             value: sort,
-            onChange: setSort,
+            onChange: (value) => setSort(value as DataTableSortValue),
             ariaLabel: '공지 날짜 정렬',
           }}
           pagination={{ page: currentPage, pageCount, onChange: setPage }}
