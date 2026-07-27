@@ -15,7 +15,7 @@ import {
   type ReservationStatus,
 } from '@/entities/reservation'
 import { GrantReservationAccessDialog } from '@/features/grant-reservation-access'
-import { ErrorDialog, ValidationDialog } from '@/shared/ui'
+import { ErrorDialog } from '@/shared/ui'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 
 // 한 페이지에 노출할 예약 수(Figma list 기준). 공지/자료와 동일.
@@ -37,7 +37,6 @@ export function NoticeReservationsPage() {
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [accessDialogOpen, setAccessDialogOpen] = useState(false)
-  const [selectionError, setSelectionError] = useState(false)
 
   const { data: allReservations = mockReservations } = useQuery({
     queryKey: ['reservations'],
@@ -132,14 +131,6 @@ export function NoticeReservationsPage() {
     )
   }
 
-  function handleGrantClick() {
-    if (selectedIds.length === 0) {
-      setSelectionError(true)
-      return
-    }
-    setAccessDialogOpen(true)
-  }
-
   function handleGrantConfirm(staffIds: string[]) {
     grantMutation.mutate(
       { reservationIds: selectedIds, staffIds },
@@ -174,7 +165,11 @@ export function NoticeReservationsPage() {
             onSelect={setActive}
           />
           {hasData && (
-            <GrantButton type="button" onClick={handleGrantClick}>
+            <GrantButton
+              type="button"
+              disabled={selectedIds.length === 0}
+              onClick={() => setAccessDialogOpen(true)}
+            >
               페이지 권한주기
             </GrantButton>
           )}
@@ -204,13 +199,6 @@ export function NoticeReservationsPage() {
           }
         />
       </Content>
-
-      {selectionError && (
-        <ValidationDialog
-          message="예약을 선택해 주세요"
-          onConfirm={() => setSelectionError(false)}
-        />
-      )}
 
       {accessDialogOpen && (
         <GrantReservationAccessDialog
@@ -289,6 +277,11 @@ const GrantButton = styled.button`
   font-size: 24px;
   font-weight: 600;
   line-height: 1.2;
+
+  &:disabled {
+    background: ${({ theme }) => theme.colors.textFaint};
+    cursor: default;
+  }
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.accent};

@@ -9,8 +9,10 @@ import chevronIcon from './assets/chevron-left.svg'
 const checkboxBox =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M2.66667 24C1.93333 24 1.30556 23.7389 0.783333 23.2167C0.261111 22.6944 0 22.0667 0 21.3333V2.66667C0 1.93333 0.261111 1.30556 0.783333 0.783333C1.30556 0.261111 1.93333 0 2.66667 0H21.3333C22.0667 0 22.6944 0.261111 23.2167 0.783333C23.7389 1.30556 24 1.93333 24 2.66667V21.3333C24 22.0667 23.7389 22.6944 23.2167 23.2167C22.6944 23.7389 22.0667 24 21.3333 24H2.66667ZM2.66667 21.3333H21.3333V2.66667H2.66667V21.3333Z' fill='%231F1F1F'/%3E%3C/svg%3E\")"
 
-const checkboxCheck =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231F1F1F' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E\")"
+// 선택된 체크박스(Figma): 24 박스를 통짜(안쪽 hole 없음) 파란(#4952FF)으로 채워
+// 보더-채움 사이 seam(흰 선)을 없애고, 그 위에 흰 체크를 얹는다.
+const checkboxChecked =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M2.66667 24C1.93333 24 1.30556 23.7389 0.783333 23.2167C0.261111 22.6944 0 22.0667 0 21.3333V2.66667C0 1.93333 0.261111 1.30556 0.783333 0.783333C1.30556 0.261111 1.93333 0 2.66667 0H21.3333C22.0667 0 22.6944 0.261111 23.2167 0.783333C23.7389 1.30556 24 1.93333 24 2.66667V21.3333C24 22.0667 23.7389 22.6944 23.2167 23.2167C22.6944 23.7389 22.0667 24 21.3333 24H2.66667Z' fill='%234952FF'/%3E%3Cpath d='M9.54961 18L3.84961 12.3L5.27461 10.875L9.54961 15.15L18.7246 5.97498L20.1496 7.39998L9.54961 18Z' fill='white'/%3E%3C/svg%3E\")"
 
 // 도메인 무관 프레젠테이션 테이블. 컬럼 설정으로 헤더/셀을 기술하고,
 // 선택(체크박스)·정렬 옵션·검색·페이지네이션을 주입받는다. 도메인→row 매핑은 엔티티가 담당한다.
@@ -56,7 +58,8 @@ export interface DataTableSort {
   ariaLabel?: string
 }
 
-// 행 다중 선택(체크박스 컬럼). 지정 시 헤더/행 앞에 체크박스가 붙는다.
+// 행 다중 선택(체크박스 컬럼). 지정 시 헤더와 각 행 앞에 체크박스가 붙는다.
+// 헤더 체크박스는 현재 표시된 행 전체를 선택/해제한다.
 export interface DataTableSelection {
   selectedIds: string[]
   onToggle: (id: string) => void
@@ -115,6 +118,10 @@ export function DataTable({
   const pageNumbers = pagination
     ? Array.from({ length: pagination.pageCount }, (_, i) => i + 1)
     : []
+  const allSelected =
+    selection != null &&
+    rows.length > 0 &&
+    rows.every((r) => selection.selectedIds.includes(r.id))
 
   useEffect(() => {
     if (!sortOpen) return
@@ -140,8 +147,16 @@ export function DataTable({
   return (
     <Table>
       <Header>
-        {/* Figma 헤더에는 전체선택 체크박스가 없다. 컬럼 정렬용 스페이서만 둔다. */}
-        {selection && <SelectHeadCell aria-hidden="true" />}
+        {selection && (
+          <SelectHeadCell>
+            <Checkbox
+              type="checkbox"
+              aria-label={selection.allLabel ?? '전체 선택'}
+              checked={allSelected}
+              onChange={selection.onToggleAll}
+            />
+          </SelectHeadCell>
+        )}
         {columns.map((column) => (
           <HeadCell key={column.key} $width={column.width}>
             {column.header}
@@ -491,9 +506,7 @@ const Checkbox = styled.input`
   cursor: pointer;
 
   &:checked {
-    background:
-      ${checkboxCheck} center / 18px no-repeat,
-      ${checkboxBox} center / 24px no-repeat;
+    background: ${checkboxChecked} center / 24px no-repeat;
   }
 
   &:focus-visible {
