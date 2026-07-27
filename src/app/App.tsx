@@ -21,7 +21,10 @@ import {
   NoticeGuidePage,
   OperatingHoursPage,
 } from '@/pages/notices/guide'
-import { NoticeReservationsPage } from '@/pages/notices/reservations'
+import {
+  NoticeReservationsPage,
+  ReservationDetailPage,
+} from '@/pages/notices/reservations'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 
 function AppLayout() {
@@ -71,6 +74,10 @@ const router = createBrowserRouter([
       {
         path: '/notices/reservations',
         element: <NoticeReservationsPage />,
+      },
+      {
+        path: '/notices/reservations/:id',
+        element: <ReservationDetailPage />,
       },
     ],
   },
