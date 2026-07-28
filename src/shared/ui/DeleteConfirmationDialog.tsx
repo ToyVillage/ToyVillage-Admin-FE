@@ -112,11 +112,11 @@ const Overlay = styled.div`
 
 const Dialog = styled.div`
   display: flex;
-  width: min(calc(100% - 40px * 2), 560px);
-  min-height: 320px;
+  width: min(calc(100% - 40px * 2), 600px);
+  min-height: 309px;
   flex-direction: column;
   justify-content: space-between;
-  padding: 40px 20px 20px;
+  padding: 40px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
 `
@@ -125,7 +125,6 @@ const Copy = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 20px;
   text-align: center;
 `
 
@@ -151,16 +150,17 @@ const Description = styled.p`
 
 const Actions = styled.div`
   display: flex;
-  gap: 12px;
+  justify-content: center;
+  gap: 16px;
 `
 
 const DialogButton = styled.button`
-  min-height: 78px;
-  flex: 1;
-  border-radius: 12px;
+  width: 100px;
+  height: 48px;
+  border-radius: 8px;
   cursor: pointer;
   font: inherit;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 500;
 
   &:disabled {
