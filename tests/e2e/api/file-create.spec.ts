@@ -1,3 +1,12 @@
+import {
+  closeSync,
+  ftruncateSync,
+  mkdtempSync,
+  openSync,
+  rmSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { expect, test, type Page, type Route } from '@playwright/test'
 
 const fileApiPath = /\/api\/file(?:\?.*)?$/
@@ -176,25 +185,28 @@ test('S4: 성공 응답 형식이 Contract와 다르면 공지를 생성하지 �
 
 test('S5: 50MB를 초과한 파일은 API 요청 전에 거부한다', async ({ page }) => {
   let uploadRequestCount = 0
+  const temporaryDirectory = mkdtempSync(join(tmpdir(), 'file-create-'))
+  const oversizedFilePath = join(temporaryDirectory, 'oversized.bin')
+  const fileDescriptor = openSync(oversizedFilePath, 'w')
+  ftruncateSync(fileDescriptor, 50 * 1024 * 1024 + 1)
+  closeSync(fileDescriptor)
 
-  await page.route(fileApiPath, async (route) => {
-    uploadRequestCount += 1
-    await route.abort()
-  })
+  try {
+    await page.route(fileApiPath, async (route) => {
+      uploadRequestCount += 1
+      await route.abort()
+    })
 
-  await page.goto('/notices/list/create')
-  await uploadFiles(page, [
-    {
-      name: 'oversized.bin',
-      mimeType: 'application/octet-stream',
-      buffer: Buffer.alloc(50 * 1024 * 1024 + 1),
-    },
-  ])
+    await page.goto('/notices/list/create')
+    await page.getByLabel('첨부파일 선택').setInputFiles(oversizedFilePath)
 
-  await expect(page.getByRole('alert')).toContainText(
-    'oversized.bin은 50MB를 초과해 첨부할 수 없습니다.',
-  )
-  expect(uploadRequestCount).toBe(0)
+    await expect(page.getByRole('alert')).toContainText(
+      'oversized.bin은 50MB를 초과해 첨부할 수 없습니다.',
+    )
+    expect(uploadRequestCount).toBe(0)
+  } finally {
+    rmSync(temporaryDirectory, { recursive: true, force: true })
+  }
 })
 
 test('S6: 업로드 중 연속 submit에도 파일과 공지를 한 번만 생성한다', async ({

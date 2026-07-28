@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { uploadFile } from '@/entities/file'
 import {
   createNotice,
   deleteNotice,
@@ -57,6 +58,7 @@ export function NoticeForm({
   const [content, setContent] = useState(initialNotice?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
   const [validationError, setValidationError] = useState<FieldName | null>(null)
   const mutation = useMutation({
     mutationFn: async (input: UpdateNoticeInput) => {
@@ -72,10 +74,17 @@ export function NoticeForm({
         return
       }
 
+      const files: string[] = []
+      for (const attachmentFile of attachmentFiles) {
+        const uploadedFile = await uploadFile({ files: attachmentFile })
+        files.push(uploadedFile.key)
+      }
+
       await createNotice({
         title: input.title,
         kind: 'ALL',
         content: input.content,
+        files,
       })
     },
   })
@@ -272,6 +281,7 @@ export function NoticeForm({
         initialFileNames={initialAttachmentNames}
         onFilesChange={setHasAttachments}
         onFileNamesChange={setAttachmentNames}
+        onFileObjectsChange={setAttachmentFiles}
       />
 
       {mutation.isError && (

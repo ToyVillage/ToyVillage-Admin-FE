@@ -63,12 +63,24 @@
         "example": "공지사항 내용",
         "description": "공지사항 내용",
         "constraints": []
+      },
+      {
+        "name": "files",
+        "location": "body",
+        "type": "array<string>",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": ["file-key-1"],
+        "description": "FILE_CREATE 응답 key 목록",
+        "constraints": ["첨부파일이 없으면 빈 배열"]
       }
     ],
     "example": {
       "title": "공지사항 제목",
       "kind": "ALL",
-      "content": "공지사항 내용"
+      "content": "공지사항 내용",
+      "files": ["file-key-1", "file-key-2"]
     }
   },
   "responses": {
@@ -329,7 +341,7 @@
     "notionDataSource": "collection://392bfdfe-ff94-8042-bc6e-000bcd5da71f",
     "resolvedNotionPage": "https://app.notion.com/p/392bfdfeff948095b9dcc0b918607afd",
     "requestedNotionPage": null,
-    "checkedAt": "2026-07-28T16:02:02+09:00",
+    "checkedAt": "2026-07-28T19:40:11+09:00",
     "apiIdMatchCount": 1,
     "databaseValues": {
       "apiId": "NOTICE_CREATE",

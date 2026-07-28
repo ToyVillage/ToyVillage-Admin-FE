@@ -10,6 +10,7 @@ export interface NoticeCreateRequest {
   title: string
   kind: NoticeCreateKind
   content: string
+  files: string[]
 }
 
 export interface NoticeCreateResponse {

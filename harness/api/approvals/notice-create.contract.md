@@ -7,7 +7,9 @@
 - Notion data source: `collection://392bfdfe-ff94-8042-bc6e-000bcd5da71f`
 - Resolved page: `https://app.notion.com/p/392bfdfeff948095b9dcc0b918607afd`
 - Requested page: 없음
-- Checked at: `2026-07-28T16:02:02+09:00`
+- Checked at: `2026-07-28T19:40:11+09:00`
+- Supplemental request example:
+  `https://app.notion.com/p/3a8bfdfeff9480e38f94da6eeb3b9b64`
 
 ## Basic Information
 
@@ -42,6 +44,7 @@
 | `title`   | string | true     | false    | `공지사항 제목` | 없음           |
 | `kind`    | enum   | true     | false    | `ALL`           | `ALL`          |
 | `content` | string | true     | false    | `공지사항 내용` | 없음           |
+| `files`   | array<string> | true | false | `[]`, `["file-key-1"]` | 없음 |
 
 ## Request Example
 
@@ -49,7 +52,8 @@
 {
   "title": "공지사항 제목",
   "kind": "ALL",
-  "content": "공지사항 내용"
+  "content": "공지사항 내용",
+  "files": ["file-key-1", "file-key-2"]
 }
 ```
 
@@ -76,15 +80,20 @@
 
 ## Validation and Constraints
 
-- Request Body의 `title`, `kind`, `content`는 모두 required, nullable false
+- Request Body의 `title`, `kind`, `content`, `files`는 모두 required,
+  nullable false
 - `kind` Allowed Values는 백엔드 enum `ALL(kindName: "전체")` 확인 후 `ALL`
   하나만 고정
-- 첨부파일은 Request Body에 포함하지 않는다.
+- `files`는 FILE_CREATE 성공 response의 `key` 배열이다.
+- 첨부파일이 없으면 `files: []`를 전달한다.
 
 ## Notes
 
 - Notion에 누락된 `kind` 실제 값은 2026-07-28 백엔드 enum 확인으로 `ALL`로
   동결했다.
+- API ID가 없는 보조 `post 예시` 페이지의 `files` 명세를 2026-07-28 사용자
+  결정으로 NOTICE_CREATE Contract에 동결했다.
+- FILE_CREATE Contract와 함께 승인·구현한다.
 - 실제 서버 테스트는 비활성화한다.
 - 백엔드 명세가 보완되면 임시 동결값을 재검토한다.
 
