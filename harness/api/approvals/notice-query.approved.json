@@ -1,0 +1,15 @@
+{
+  "feature": "notice-query",
+  "apiId": "NOTICE_QUERY",
+  "approvedAt": "2026-07-28T11:38:28.486Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "5b17b8ec1e93751dd5bc44ef86068aebd74a4613a80cd37a484102671aca7cc7",
+  "contractHash": "0e95067d8ab91f0f09ccf2213a6d651bd935d8826c46c929a578d262d1b1ba84",
+  "contractMarkdownHash": "a197111ca958db3b98c2900b0038c272ea4aa6c3a37e8739404f02e6b30e553b",
+  "planHash": "6e892e76b9630c5bcdfe046bafedcdb57a27237157d2f73b31b2c69084b2f428",
+  "scenarioHash": "855b7b8a8a99f313553a87201df7401cd48debc17c7a139fe7a7211c509f1171",
+  "testHash": "2874b5b534d8f2225aa5b9c8ebe3c5b02a755ce682089aeebbbe55d8017ea02f",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-28T11:38:57.929Z"
+}

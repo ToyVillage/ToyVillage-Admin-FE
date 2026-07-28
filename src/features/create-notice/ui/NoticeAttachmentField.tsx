@@ -14,12 +14,14 @@ interface NoticeAttachmentFieldProps {
   initialFileNames?: string[]
   onFilesChange?: (hasFiles: boolean) => void
   onFileNamesChange?: (fileNames: string[]) => void
+  onFileObjectsChange?: (files: File[]) => void
 }
 
 export function NoticeAttachmentField({
   initialFileNames = [],
   onFilesChange,
   onFileNamesChange,
+  onFileObjectsChange,
 }: NoticeAttachmentFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<AttachedFile[]>(() =>
@@ -34,7 +36,8 @@ export function NoticeAttachmentField({
   useEffect(() => {
     onFilesChange?.(files.length > 0)
     onFileNamesChange?.(files.map(({ name }) => name))
-  }, [files, onFileNamesChange, onFilesChange])
+    onFileObjectsChange?.(files.flatMap(({ file }) => (file ? [file] : [])))
+  }, [files, onFileNamesChange, onFileObjectsChange, onFilesChange])
 
   function addFiles(fileList: FileList | File[]) {
     const incomingFiles = Array.from(fileList)
@@ -59,7 +62,9 @@ export function NoticeAttachmentField({
     }
 
     if (oversizedFile) {
-      setErrorMessage(`${oversizedFile.name}은 50MB를 초과해 첨부할 수 없습니다.`)
+      setErrorMessage(
+        `${oversizedFile.name}은 50MB를 초과해 첨부할 수 없습니다.`,
+      )
     } else if (duplicateFile) {
       setErrorMessage(`${duplicateFile.name}은 이미 첨부된 파일입니다.`)
     } else {

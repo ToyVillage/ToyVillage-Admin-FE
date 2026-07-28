@@ -8,18 +8,30 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import { getMockNotice } from '@/entities/notice'
+import { getNotice, isNoticeNotFoundError } from '@/entities/notice'
 import { LeaveConfirmationDialog, NoticeForm } from '@/features/create-notice'
 
 export function NoticeDetailPage() {
   const { id = '' } = useParams()
+  const noticeId = parseNoticeId(id)
   const navigate = useNavigate()
   const allowNavigationRef = useRef(false)
   const [isDirty, setIsDirty] = useState(false)
-  const { data: notice, isPending } = useQuery({
+  const {
+    data: notice,
+    error,
+    isError,
+    isPending,
+  } = useQuery({
     queryKey: ['notices', id],
-    queryFn: () => getMockNotice(id),
-    enabled: Boolean(id),
+    queryFn: () => {
+      if (noticeId === null) {
+        throw new Error('공지사항 ID가 올바르지 않습니다.')
+      }
+
+      return getNotice({ id: noticeId })
+    },
+    enabled: noticeId !== null,
   })
   const blocker = useBlocker(
     useCallback(
@@ -47,6 +59,20 @@ export function NoticeDetailPage() {
     navigate('/notices/list')
   }, [navigate])
 
+  const isNotFound =
+    noticeId === null || (isError && isNoticeNotFoundError(error))
+
+  if (isNotFound) {
+    return (
+      <StatePage>
+        <StateCard>
+          <StateTitle>공지사항을 찾을 수 없습니다.</StateTitle>
+          <BackLink to="/notices/list">공지사항 목록으로 돌아가기</BackLink>
+        </StateCard>
+      </StatePage>
+    )
+  }
+
   if (isPending) {
     return (
       <StatePage>
@@ -55,11 +81,12 @@ export function NoticeDetailPage() {
     )
   }
 
-  if (!notice) {
+  if (isError || !notice) {
     return (
       <StatePage>
-        <StateCard>
-          <StateTitle>공지사항을 찾을 수 없습니다.</StateTitle>
+        <StateCard role="alert">
+          <StateTitle>공지사항을 불러오지 못했습니다.</StateTitle>
+          <StateDescription>다시 시도해 주세요.</StateDescription>
           <BackLink to="/notices/list">공지사항 목록으로 돌아가기</BackLink>
         </StateCard>
       </StatePage>
@@ -84,6 +111,13 @@ export function NoticeDetailPage() {
       )}
     </Page>
   )
+}
+
+function parseNoticeId(value: string): number | null {
+  if (!/^\d+$/.test(value)) return null
+
+  const id = Number(value)
+  return Number.isSafeInteger(id) && id > 0 ? id : null
 }
 
 const Page = styled.main`
@@ -126,6 +160,10 @@ const StateTitle = styled.h1`
   margin: 0;
   font-size: 28px;
   font-weight: 600;
+`
+
+const StateDescription = styled.p`
+  margin: 12px 0 0;
 `
 
 const BackLink = styled(Link)`

@@ -7,6 +7,8 @@ export interface Notice {
   attachments?: string[]
 }
 
+export type NoticeListItem = Pick<Notice, 'id' | 'category' | 'title' | 'date'>
+
 export type CreateNoticeInput = Pick<Notice, 'category' | 'title' | 'content'>
 
 export type UpdateNoticeInput = Pick<

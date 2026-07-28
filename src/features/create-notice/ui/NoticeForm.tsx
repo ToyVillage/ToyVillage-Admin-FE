@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { uploadFile } from '@/entities/file'
 import {
-  createMockNotice,
-  deleteMockNotice,
-  updateMockNotice,
+  createNotice,
+  deleteNotice,
   type Notice,
   type UpdateNoticeInput,
+  updateNotice,
 } from '@/entities/notice'
 import { DeleteConfirmationDialog, ValidationDialog } from '@/shared/ui'
 import { NoticeAttachmentField } from './NoticeAttachmentField'
@@ -35,6 +36,7 @@ export function NoticeForm({
 }: NoticeFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
+  const deletingRef = useRef(false)
   const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const teamAddButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
@@ -56,17 +58,40 @@ export function NoticeForm({
   const [content, setContent] = useState(initialNotice?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
   const [validationError, setValidationError] = useState<FieldName | null>(null)
   const mutation = useMutation({
-    mutationFn: (input: UpdateNoticeInput) =>
-      initialNotice
-        ? updateMockNotice({ id: initialNotice.id, input })
-        : createMockNotice(input),
+    mutationFn: async (input: UpdateNoticeInput) => {
+      if (initialNotice) {
+        await updateNotice({
+          id: Number(initialNotice.id),
+          input: {
+            title: input.title,
+            kind: 'ALL',
+            content: input.content,
+          },
+        })
+        return
+      }
+
+      const files: string[] = []
+      for (const attachmentFile of attachmentFiles) {
+        const uploadedFile = await uploadFile({ files: attachmentFile })
+        files.push(uploadedFile.fileKey)
+      }
+
+      await createNotice({
+        title: input.title,
+        kind: 'ALL',
+        content: input.content,
+        files,
+      })
+    },
   })
   const deleteMutation = useMutation({
     mutationFn: () => {
       if (!initialNotice) throw new Error('Notice not found')
-      return deleteMockNotice(initialNotice.id)
+      return deleteNotice({ id: Number(initialNotice.id) })
     },
   })
   const isEditing = Boolean(initialNotice)
@@ -149,8 +174,9 @@ export function NoticeForm({
   }
 
   function handleDelete() {
-    if (deleteMutation.isPending) return
+    if (deletingRef.current || deleteMutation.isPending) return
 
+    deletingRef.current = true
     deleteMutation.mutate(undefined, {
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: ['notices'] })
@@ -158,6 +184,11 @@ export function NoticeForm({
           queryClient.removeQueries({ queryKey: ['notices', initialNotice.id] })
         }
         onCompleted()
+      },
+      onError: () => {
+        deletingRef.current = false
+        setDeleteDialogOpen(false)
+        requestAnimationFrame(() => deleteButtonRef.current?.focus())
       },
     })
   }
@@ -250,6 +281,7 @@ export function NoticeForm({
         initialFileNames={initialAttachmentNames}
         onFilesChange={setHasAttachments}
         onFileNamesChange={setAttachmentNames}
+        onFileObjectsChange={setAttachmentFiles}
       />
 
       {mutation.isError && (

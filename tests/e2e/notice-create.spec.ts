@@ -1,13 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
-import { noticeStorageKey } from '../../src/entities/notice/model/mock'
+
+const noticeApiPath = /\/api\/notice(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/notices/list/create')
-  await page.evaluate(
-    (storageKey) => localStorage.removeItem(storageKey),
-    noticeStorageKey,
-  )
-  await page.reload()
 })
 
 test('S2: 생성 폼 표시', async ({ page }) => {
@@ -140,6 +136,7 @@ test('내용 입력은 수동 크기 조절 없이 입력량에 맞춰 높이가
 test('S4: 빈 폼은 제목 오류 모달을 표시하고 확인 후 첫 입력에 포커스한다', async ({
   page,
 }) => {
+  const getCreateRequestCount = await trackNoticeCreateRequests(page)
   await page.setViewportSize({ width: 1920, height: 1080 })
   await page.getByRole('button', { name: '생성하기' }).click()
 
@@ -156,7 +153,7 @@ test('S4: 빈 폼은 제목 오류 모달을 표시하고 확인 후 첫 입력�
   await dialog.getByRole('button', { name: '확인' }).click()
   await expect(dialog).toBeHidden()
   await expect(page.getByLabel(/제목/)).toBeFocused()
-  expect(await readStoredNoticeCount(page)).toBe(0)
+  expect(getCreateRequestCount()).toBe(0)
 })
 
 test('S5: 제목만 입력하면 내용 오류 모달을 표시한다', async ({ page }) => {
@@ -172,6 +169,7 @@ test('S5: 제목만 입력하면 내용 오류 모달을 표시한다', async ({
 test('S6: 제목과 내용 오류를 화면 순서대로 모달로 검증한다', async ({
   page,
 }) => {
+  const getCreateRequestCount = await trackNoticeCreateRequests(page)
   await page.getByLabel(/제목/).fill('   ')
   await page.getByLabel(/내용/).fill('\n   ')
   await page.getByRole('button', { name: '생성하기' }).click()
@@ -186,19 +184,27 @@ test('S6: 제목과 내용 오류를 화면 순서대로 모달로 검증한다'
   await expect(dialog).toContainText('내용을 입력해 주세요')
   await dialog.getByRole('button', { name: '확인' }).click()
   await expect(page.getByLabel(/내용/)).toBeFocused()
-  expect(await readStoredNoticeCount(page)).toBe(0)
+  expect(getCreateRequestCount()).toBe(0)
 })
 
 test('S7: 유효한 값으로 생성하면 목록에서 확인할 수 있다', async ({ page }) => {
+  const getCreateRequestCount = await mockSuccessfulNoticeCreate(
+    page,
+    '새 공지사항',
+  )
   await fillValidNotice(page, '새 공지사항')
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/list$/)
   await expect(page.getByText('새 공지사항')).toHaveCount(1)
-  expect(await readStoredNoticeCount(page)).toBe(1)
+  expect(getCreateRequestCount()).toBe(1)
 })
 
 test('S8: 연속 제출해도 공지를 한 번만 생성한다', async ({ page }) => {
+  const getCreateRequestCount = await mockSuccessfulNoticeCreate(
+    page,
+    '한 번만 생성할 공지',
+  )
   await fillValidNotice(page, '한 번만 생성할 공지')
 
   await page.getByRole('button', { name: '생성하기' }).evaluate((button) => {
@@ -212,19 +218,13 @@ test('S8: 연속 제출해도 공지를 한 번만 생성한다', async ({ page 
   })
 
   await expect(page).toHaveURL(/\/notices\/list$/)
-  expect(await readStoredNoticeCount(page)).toBe(1)
+  expect(getCreateRequestCount()).toBe(1)
 })
 
-test('S9: 저장 실패 시 입력을 보존하고 다시 제출할 수 있다', async ({
+test('S9: API 저장 실패 시 입력을 보존하고 다시 제출할 수 있다', async ({
   page,
 }) => {
-  await page.evaluate((storageKey) => {
-    const originalSetItem = Storage.prototype.setItem
-    Storage.prototype.setItem = function setItem(key, value) {
-      if (key === storageKey) throw new DOMException('저장 실패')
-      originalSetItem.call(this, key, value)
-    }
-  }, noticeStorageKey)
+  await mockFailedNoticeCreate(page)
 
   await addTeam(page, '팀 이름1')
   await fillValidNotice(page, '보존할 공지')
@@ -275,6 +275,10 @@ test('팀을 선택해도 핑크로 강조하지 않는다', async ({ page }) =>
 })
 
 test('선택한 팀을 삭제하면 전체 분류로 돌아간다', async ({ page }) => {
+  const getCreateRequestCount = await mockSuccessfulNoticeCreate(
+    page,
+    '제목 입력',
+  )
   await page.getByLabel(/제목/).fill('제목 입력')
   await page.getByLabel(/내용/).fill('공지 내용')
   await addTeam(page, '팀 이름1')
@@ -288,6 +292,7 @@ test('선택한 팀을 삭제하면 전체 분류로 돌아간다', async ({ pag
   await page.getByRole('button', { name: '생성하기' }).click()
   await expect(page).toHaveURL(/\/notices\/list$/)
   await expect(page.getByText('제목 입력')).toHaveCount(1)
+  expect(getCreateRequestCount()).toBe(1)
 })
 
 test('팀 추가 버튼을 누르면 팀 이름 입력 모달을 표시하고 취소할 수 있다', async ({
@@ -518,9 +523,67 @@ function filePayload(name: string, mimeType: string) {
   }
 }
 
-async function readStoredNoticeCount(page: Page): Promise<number> {
-  return page.evaluate((storageKey) => {
-    const value = localStorage.getItem(storageKey)
-    return value ? JSON.parse(value).length : 0
-  }, noticeStorageKey)
+async function trackNoticeCreateRequests(page: Page) {
+  let createRequestCount = 0
+
+  await page.route(noticeApiPath, async (route) => {
+    if (route.request().method() === 'POST') createRequestCount += 1
+    await route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: '예상하지 못한 에러가 발생했습니다.',
+        status: 500,
+        timestamp: '2026-07-28T12:00:00',
+        description: '에러 설명',
+      }),
+    })
+  })
+
+  return () => createRequestCount
+}
+
+async function mockSuccessfulNoticeCreate(page: Page, title: string) {
+  let createRequestCount = 0
+
+  await page.route(noticeApiPath, async (route) => {
+    if (route.request().method() === 'POST') {
+      createRequestCount += 1
+      await route.fulfill({
+        status: 201,
+        body: '',
+      })
+      return
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 7,
+          title,
+          kind: '공지사항 분류',
+          createAt: '2026-07-28',
+        },
+      ]),
+    })
+  })
+
+  return () => createRequestCount
+}
+
+async function mockFailedNoticeCreate(page: Page) {
+  await page.route(noticeApiPath, async (route) => {
+    await route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: '예상하지 못한 에러가 발생했습니다.',
+        status: 500,
+        timestamp: '2026-07-28T12:00:00',
+        description: '에러 설명',
+      }),
+    })
+  })
 }
