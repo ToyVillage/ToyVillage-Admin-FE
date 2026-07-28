@@ -1,15 +1,15 @@
 {
   "feature": "documents-delete",
   "apiId": "DOCUMENTS_DELETE",
-  "approvedAt": "2026-07-28T17:31:53.436Z",
+  "approvedAt": "2026-07-28T18:26:41.754Z",
   "approvedBy": "kimjihwan8",
   "taskSpecHash": "459f16ff52674e88d0885419646b7e410a83ab30491e2ff22f815f54dd0c3d76",
   "contractHash": "71b9151fead2b12175d4eb4b1cfc03d8fad93da4cb9c9c8d2d75e2f7cbb25ae2",
   "contractMarkdownHash": "754a6107ddbc7ff9b346088abe609eabb8afc1b3eec1b59802c48221cadb2cfe",
-  "planHash": "bfea022db70d6fabd92afa7ba6907e1d114fc4b4b43160f24a4dc2ed1dd69089",
+  "planHash": "94e2a4ebd42ec482147e00458098e0cc6b6f6799b699c031a6bd6e504ed0d3f1",
   "scenarioHash": "c70b65936c637070506eecab1e6d0bc4eedeb71621c43fbfb451ea0e179d4eff",
   "testHash": "35910f1a1b7f19492ec47285609b0bb3f4cd5b7f38a6ea35f473ac6c45b2e186",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-07-28T17:31:53.894Z"
+  "testApprovedAt": "2026-07-28T18:26:42.215Z"
 }
