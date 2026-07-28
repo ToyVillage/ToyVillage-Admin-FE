@@ -10,9 +10,9 @@ import {
   type RemoveAccessInput,
   type Staff,
 } from '@/entities/reservation'
-import { DeleteConfirmationDialog } from '@/shared/ui'
 import { ReservationAccessCard } from './ui/ReservationAccessCard'
 import { ReservationBackLink } from './ui/ReservationBackLink'
+import { RemoveAccessConfirmDialog } from './ui/RemoveAccessConfirmDialog'
 
 export function ReservationDetailPage() {
   const { id = '' } = useParams()
@@ -97,7 +97,7 @@ export function ReservationDetailPage() {
       </Content>
 
       {removalTarget && (
-        <DeleteConfirmationDialog
+        <RemoveAccessConfirmDialog
           pending={removeMutation.isPending}
           onCancel={() => setRemovalTarget(null)}
           onConfirm={confirmRemove}
