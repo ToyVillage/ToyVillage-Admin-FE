@@ -138,6 +138,7 @@ export function GrantReservationAccessDialog({
                 <StaffName>{member.name} 사원</StaffName>
                 <ToggleButton
                   type="button"
+                  $added={added}
                   aria-pressed={added}
                   aria-label={
                     added ? `${member.name} 권한 추가됨` : `${member.name} 추가`
@@ -145,9 +146,15 @@ export function GrantReservationAccessDialog({
                   onClick={() => toggleStaff(member.id)}
                 >
                   <ToggleImage
+                    className="toggle-img"
                     src={added ? staffAddedIcon : staffAddIcon}
                     alt=""
                   />
+                  {added && (
+                    <CancelLabel className="cancel-label" aria-hidden="true">
+                      취소하기
+                    </CancelLabel>
+                  )}
                 </ToggleButton>
               </StaffItem>
             )
@@ -276,7 +283,8 @@ const StaffName = styled.span`
   font-weight: 500;
 `
 
-const ToggleButton = styled.button`
+const ToggleButton = styled.button<{ $added?: boolean }>`
+  position: relative;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
@@ -290,12 +298,45 @@ const ToggleButton = styled.button`
     outline-offset: 2px;
     border-radius: 23px;
   }
+
+  /* 추가 완료(added) 상태에서 호버하면 빨간 "취소하기"로 바뀐다.
+     이미지는 흐름에서 제거하고 취소하기 라벨을 콘텐츠 폭으로 표시해,
+     글자 수가 적은 만큼 버튼 가로가 더 짧아진다. */
+  ${({ $added }) =>
+    $added
+      ? `
+    &:hover .toggle-img,
+    &:focus-visible .toggle-img {
+      display: none;
+    }
+    &:hover .cancel-label,
+    &:focus-visible .cancel-label {
+      display: inline-flex;
+    }
+  `
+      : ''}
 `
 
 const ToggleImage = styled.img`
   display: block;
   height: 46px;
   width: auto;
+`
+
+const CancelLabel = styled.span`
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.danger};
+  border-radius: 100px;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.danger};
+  font-size: 22px;
+  font-weight: 500;
+  line-height: normal;
+  white-space: nowrap;
 `
 
 const Actions = styled.div`

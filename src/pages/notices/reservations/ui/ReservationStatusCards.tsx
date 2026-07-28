@@ -76,6 +76,7 @@ const Label = styled.span<{ $active: boolean }>`
   font-size: 22px;
   font-weight: 500;
   line-height: 1.2;
+  white-space: nowrap;
   text-align: center;
 `
 
