@@ -9,9 +9,9 @@ test('S1: 리스트 표시', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: '단체예약 현황' }),
   ).toBeVisible()
-  await expect(page.getByRole('button', { name: /심사대기/ })).toBeVisible()
-  await expect(page.getByRole('button', { name: /승인 완료/ })).toBeVisible()
-  await expect(page.getByRole('button', { name: /반려/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /사전답사 전/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /사전답사 완료/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /방문 완료/ })).toBeVisible()
   await expect(
     page.getByRole('button', { name: '페이지 권한주기' }),
   ).toBeVisible()
@@ -24,13 +24,13 @@ test('S1: 리스트 표시', async ({ page }) => {
   await expect(page.getByRole('button', { name: '2 페이지' })).toBeVisible()
 })
 
-test('S2: 상태 필터 (반려)', async ({ page }) => {
+test('S2: 상태 필터 (방문 완료)', async ({ page }) => {
   await page.goto('/notices/reservations')
-  await page.getByRole('button', { name: /반려/ }).click()
+  await page.getByRole('button', { name: /방문 완료/ }).click()
 
   await expect(page.getByText('한빛어린이집')).toBeVisible()
   await expect(page.getByText('대구어린이집')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /반려/ })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: /방문 완료/ })).toHaveAttribute(
     'aria-pressed',
     'true',
   )
