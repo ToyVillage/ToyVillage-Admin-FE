@@ -11,6 +11,11 @@ export default defineConfig({
         target: 'https://api-stag.toyvillage.kr',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyRequest) => {
+            proxyRequest.removeHeader('origin')
+          })
+        },
       },
     },
   },
