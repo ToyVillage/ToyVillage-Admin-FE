@@ -43,6 +43,7 @@ test('S1: JSON body로 공지를 한 번 생성하고 갱신된 목록으로 이
     title: 'API 생성 공지',
     kind: 'ALL',
     content: 'API 생성 내용',
+    files: [],
   })
 })
 
