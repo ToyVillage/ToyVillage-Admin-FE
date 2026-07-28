@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   createCloseSchedule,
-  deleteMockCloseSchedule,
+  deleteCloseSchedule,
   updateMockCloseSchedule,
   type CloseSchedule,
   type CreateCloseScheduleInput,
@@ -53,7 +53,7 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
     },
   })
   const isEditing = Boolean(initialSchedule)
-  const deleteMutation = useMutation({ mutationFn: deleteMockCloseSchedule })
+  const deleteMutation = useMutation({ mutationFn: deleteCloseSchedule })
   const isPending = mutation.isPending || deleteMutation.isPending
 
   const handleConfirm = useCallback(() => {
@@ -84,18 +84,25 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
     if (!initialSchedule || deletingRef.current) return
 
     deletingRef.current = true
-    deleteMutation.mutate(initialSchedule.id, {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['close-schedules'] })
-        navigate('/notices/guide')
+    deleteMutation.mutate(
+      { id: Number(initialSchedule.id) },
+      {
+        onSuccess: async () => {
+          await queryClient.invalidateQueries({ queryKey: ['close-schedules'] })
+          queryClient.removeQueries({
+            queryKey: ['close-schedules', initialSchedule.id],
+            exact: true,
+          })
+          navigate('/notices/guide')
+        },
+        onError: () => {
+          deletingRef.current = false
+          setDeleteError(true)
+          setDeleteDialogOpen(false)
+          requestAnimationFrame(() => deleteButtonRef.current?.focus())
+        },
       },
-      onError: () => {
-        deletingRef.current = false
-        setDeleteError(true)
-        setDeleteDialogOpen(false)
-        requestAnimationFrame(() => deleteButtonRef.current?.focus())
-      },
-    })
+    )
   }, [deleteMutation, initialSchedule, navigate, queryClient])
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

@@ -3,6 +3,8 @@ import type { CloseSchedule, CreateCloseScheduleInput } from '../model/types'
 import type {
   CloseDateCreateRequest,
   CloseDateCreateResponse,
+  CloseDateDeleteRequest,
+  CloseDateDeleteResponse,
   CloseDateQueryAllResponseItem,
   CloseDateQueryByDateRequest,
 } from './types'
@@ -12,6 +14,26 @@ export async function createCloseSchedule(
 ): Promise<CloseDateCreateResponse> {
   const request = toCloseDateCreateRequest(input)
   await api.post<CloseDateCreateResponse>('/close-day', request)
+}
+
+export async function deleteCloseSchedule({
+  id,
+}: CloseDateDeleteRequest): Promise<CloseDateDeleteResponse> {
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error('휴관일 삭제 요청 ID가 올바르지 않습니다.')
+  }
+
+  const { data, status } = await api.delete<unknown>(`/close-day/${id}`)
+
+  if (status !== 201) {
+    throw new Error('휴관일 삭제 응답 상태가 올바르지 않습니다.')
+  }
+
+  if (!isCloseDateDeleteResponse(data)) {
+    throw new Error('휴관일 삭제 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data
 }
 
 export async function getCloseSchedules(): Promise<CloseSchedule[]> {
@@ -104,6 +126,15 @@ function isCloseDateQueryAllResponseItem(
     isDateKey(schedule.endCloseTime) &&
     schedule.startCloseTime <= schedule.endCloseTime
   )
+}
+
+function isCloseDateDeleteResponse(
+  value: unknown,
+): value is CloseDateDeleteResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  const response = value as Record<string, unknown>
+  return typeof response.message === 'string'
 }
 
 function isDateKey(value: unknown): value is string {

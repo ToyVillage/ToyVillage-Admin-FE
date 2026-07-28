@@ -13,6 +13,21 @@ export interface CloseDateCreateErrorResponse {
   description: string
 }
 
+export interface CloseDateDeleteRequest {
+  id: number
+}
+
+export interface CloseDateDeleteResponse {
+  message: string
+}
+
+export interface CloseDateDeleteErrorResponse {
+  message: string
+  status: number
+  timestamp: string
+  description: string
+}
+
 export interface CloseDateQueryAllResponseItem {
   id: number
   title: string
