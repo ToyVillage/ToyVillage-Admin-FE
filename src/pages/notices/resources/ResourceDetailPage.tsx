@@ -1,14 +1,13 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import {
-  Link,
   useBeforeUnload,
   useBlocker,
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import { getMockResource } from '@/entities/resource'
+import { getDocument } from '@/entities/resource'
 import { LeaveConfirmationDialog } from '@/features/create-notice'
 import { ResourceForm } from '@/features/create-resource'
 
@@ -17,10 +16,17 @@ export function ResourceDetailPage() {
   const navigate = useNavigate()
   const allowNavigationRef = useRef(false)
   const [isDirty, setIsDirty] = useState(false)
-  const { data: resource, isPending } = useQuery({
+
+  // 상세 진입 시 페이지 상단으로 스크롤한다.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  const { data: resource } = useQuery({
     queryKey: ['resources', id],
-    queryFn: () => getMockResource(id),
+    queryFn: () => getDocument({ id: Number(id) }),
     enabled: Boolean(id),
+    retry: false,
   })
   const blocker = useBlocker(
     useCallback(
@@ -48,31 +54,15 @@ export function ResourceDetailPage() {
     navigate('/notices/resources')
   }, [navigate])
 
-  if (isPending) {
-    return (
-      <StatePage>
-        <StateCard role="status">자료를 불러오는 중입니다.</StateCard>
-      </StatePage>
-    )
-  }
-
-  if (!resource) {
-    return (
-      <StatePage>
-        <StateCard>
-          <StateTitle>자료를 찾을 수 없습니다.</StateTitle>
-          <BackLink to="/notices/resources">자료실 목록으로 돌아가기</BackLink>
-        </StateCard>
-      </StatePage>
-    )
-  }
-
+  // 로딩 중에는 빈 폼(수정 레이아웃)을 먼저 보여주고, 데이터가 오면 값이 채워진
+  // 폼으로 교체한다(key 변경으로 재마운트). 별도의 '찾을 수 없음' 화면은 두지 않는다.
   return (
     <Page>
       <Content>
         <ResourceForm
-          key={resource.id}
+          key={resource?.id ?? 'loading'}
           initialResource={resource}
+          editing
           onCompleted={handleCompleted}
           onDirtyChange={setIsDirty}
         />
@@ -101,48 +91,5 @@ const Content = styled.div`
 
   @media (max-width: 980px) {
     padding-top: 96px;
-  }
-`
-
-const StatePage = styled.main`
-  display: grid;
-  min-height: 100vh;
-  padding: 32px;
-  place-items: center;
-  background: ${({ theme }) => theme.colors.background};
-  font-family: ${({ theme }) => theme.font.body};
-`
-
-const StateCard = styled.section`
-  width: min(100%, 560px);
-  padding: 48px;
-  border-radius: 20px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 22px;
-  text-align: center;
-`
-
-const StateTitle = styled.h1`
-  margin: 0;
-  font-size: 28px;
-  font-weight: 600;
-`
-
-const BackLink = styled(Link)`
-  display: inline-flex;
-  min-height: 48px;
-  align-items: center;
-  margin-top: 28px;
-  padding: 0 20px;
-  border-radius: 8px;
-  background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.surface};
-  font-size: 18px;
-  text-decoration: none;
-
-  &:focus-visible {
-    outline: 3px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 3px;
   }
 `
