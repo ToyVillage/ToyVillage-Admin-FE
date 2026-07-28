@@ -88,11 +88,18 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
       { id: Number(initialSchedule.id) },
       {
         onSuccess: async () => {
-          await queryClient.invalidateQueries({ queryKey: ['close-schedules'] })
+          queryClient.setQueryData<CloseSchedule[]>(
+            ['close-schedules'],
+            (schedules) =>
+              schedules?.filter(
+                (schedule) => schedule.id !== initialSchedule.id,
+              ),
+          )
           queryClient.removeQueries({
             queryKey: ['close-schedules', initialSchedule.id],
             exact: true,
           })
+          await queryClient.invalidateQueries({ queryKey: ['close-schedules'] })
           navigate('/notices/guide')
         },
         onError: () => {
