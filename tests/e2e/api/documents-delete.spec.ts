@@ -54,7 +54,7 @@ async function openDeleteAndConfirm(page: Page) {
   await dialog.getByRole('button', { name: '확인' }).click()
 }
 
-test('S1: 삭제 성공(200) → DELETE 요청, 삭제된 id 재조회 없음, 목록 복귀', async ({
+test('S1: 삭제 성공(200) → 목록 복귀, 재진입 시 캐시 없이 신규 요청', async ({
   page,
 }) => {
   let deleteCalled = false
@@ -81,13 +81,22 @@ test('S1: 삭제 성공(200) → DELETE 요청, 삭제된 id 재조회 없음, �
     }
     await route.fallback()
   })
-  await page.goto('/notices/resources/1')
-  await openDeleteAndConfirm(page)
 
+  // 1. 상세 진입 → 데이터 도착 후 폼 표시 확인
+  await page.goto('/notices/resources/1')
+  await expect(page.getByLabel(/제목/)).toHaveValue('삭제할 자료')
+  expect(detailGetCount).toBe(1)
+
+  // 2. 삭제 → 목록 복귀, 삭제 직후 상세 재조회 없음
+  await openDeleteAndConfirm(page)
   await expect(page).toHaveURL(/\/notices\/resources$/)
   expect(deleteCalled).toBe(true)
-  // 삭제 후 상세 쿼리를 무효화하지 않으므로 상세 GET 은 최초 1회뿐이어야 한다(404 방지).
   expect(detailGetCount).toBe(1)
+
+  // 3. 삭제된 id 로 상세 재진입 → gcTime:0 으로 캐시가 제거됨 → 신규 GET 발생(stale 없음)
+  await page.goto('/notices/resources/1')
+  await expect(page.getByLabel(/제목/)).toHaveValue('삭제할 자료')
+  expect(detailGetCount).toBe(2)
 })
 
 test('S2: 404 존재하지 않는 자료 → 삭제 실패 다이얼로그', async ({ page }) => {

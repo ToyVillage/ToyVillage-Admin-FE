@@ -27,6 +27,9 @@ export function ResourceDetailPage() {
     queryFn: () => getDocument({ id: Number(id) }),
     enabled: Boolean(id),
     retry: false,
+    // 상세 페이지를 떠나는 즉시 캐시를 제거한다. 삭제 후 재진입 시 stale 데이터가
+    // 표시되지 않고 항상 신규 요청을 보낸다.
+    gcTime: 0,
   })
   const blocker = useBlocker(
     useCallback(
