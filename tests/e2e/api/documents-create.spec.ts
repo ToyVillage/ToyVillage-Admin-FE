@@ -81,8 +81,47 @@ test('S1: 업로드 후 등록 성공(201) → 목록 복귀, files=업로드 ke
   expect(requestBody.files).toEqual([uploadedFileKey])
 })
 
-test('S2~S4: 서버 400 → 생성 실패 다이얼로그', async ({ page }) => {
-  // 프론트 자체 검증(제목/파일)을 통과한 요청에 대해 서버 400 을 주입한다.
+test('S2: 제목 미입력 → 요청 미발생 + 검증 다이얼로그', async ({ page }) => {
+  let postCalled = false
+  await page.route('**/documents', async (route) => {
+    if (route.request().method() === 'POST') postCalled = true
+    await route.fallback()
+  })
+  // 파일만 첨부(업로드)하고 제목은 비운다.
+  await page.getByRole('radio', { name: 'pdf' }).check({ force: true })
+  await page.setInputFiles('#resource-files', {
+    name: '테스트.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('pdf'),
+  })
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  await expect(page.getByRole('alertdialog')).toContainText(
+    '제목을 입력해 주세요',
+  )
+  expect(postCalled).toBe(false)
+  await expect(page).toHaveURL(/\/notices\/resources\/create$/)
+})
+
+test('S3: 파일 미첨부 → 요청 미발생 + 검증 다이얼로그', async ({ page }) => {
+  let postCalled = false
+  await page.route('**/documents', async (route) => {
+    if (route.request().method() === 'POST') postCalled = true
+    await route.fallback()
+  })
+  // 제목만 입력하고 파일은 첨부하지 않는다.
+  await page.getByLabel(/제목/).fill('연동 테스트 자료')
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  await expect(page.getByRole('alertdialog')).toContainText(
+    '이미지 또는 파일을 추가해주세요',
+  )
+  expect(postCalled).toBe(false)
+  await expect(page).toHaveURL(/\/notices\/resources\/create$/)
+})
+
+test('S4: 유효 입력 + 서버 400 → 생성 실패 다이얼로그', async ({ page }) => {
+  // 프론트 검증을 통과한 요청에 route로 400을 주입한다.
   await routeStatus(page, 400, '자료 제목은 비어있을 수 없습니다.')
   await fillValidForm(page)
   await page.getByRole('button', { name: '생성하기' }).click()
