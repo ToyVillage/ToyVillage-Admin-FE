@@ -1,0 +1,310 @@
+{
+  "apiId": "DOCUMENTS_QUERY",
+  "name": "자료실 자료 상세조회 기능",
+  "description": "자료실의 자료를 id로 상세조회하는 기능",
+  "method": "GET",
+  "path": "/documents/{id}",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": ["USER", "ADMIN"]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "액세스 토큰",
+      "constraints": ["Bearer 스킴"]
+    }
+  ],
+  "pathParameters": [
+    {
+      "name": "id",
+      "location": "path",
+      "type": "integer",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": 1,
+      "description": "자료 id",
+      "constraints": ["정수"]
+    }
+  ],
+  "queryParameters": [],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 201,
+        "description": "자료 상세 (명세 표기상 201)",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "자료 상세",
+          "fields": [
+            {
+              "name": "id",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "자료 id",
+              "constraints": []
+            },
+            {
+              "name": "title",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "자료 제목",
+              "description": "자료 제목",
+              "constraints": []
+            },
+            {
+              "name": "type",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "PDF",
+              "description": "자료 타입",
+              "constraints": []
+            },
+            {
+              "name": "createdAt",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "생성 일시",
+              "constraints": []
+            },
+            {
+              "name": "files",
+              "location": "body",
+              "type": "array<object>",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": [{ "fileName": "파일 이름", "fileKey": "파일 키" }],
+              "description": "첨부 파일 목록 (fileName: string, fileKey: string)",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 401,
+        "description": "만료된 토큰",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "만료된 토큰입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 401,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "에러 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "에러 설명",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 404,
+        "description": "존재하지 않는 자료",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "존재하지 않는 자료입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 404,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "에러 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "에러 설명",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "서버 오류",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "예상하지 못한 에러가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "에러 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "에러 설명",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "e58e8d82-a450-822f-885e-01958a22bd25",
+    "notionDataSource": "a34e8d82-a450-82f4-8abe-07079f4f2841",
+    "resolvedNotionPage": "https://app.notion.com/p/345e8d82a45083208dbb81c3cdeef04e",
+    "requestedNotionPage": null,
+    "checkedAt": "2026-07-29T00:00:00.000Z",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "DOCUMENTS_QUERY",
+      "method": "GET",
+      "path": "/documents/{id}",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": ["USER", "ADMIN"]
+      }
+    },
+    "detailValues": {
+      "apiId": "DOCUMENTS_QUERY",
+      "method": "GET",
+      "path": "/documents/{id}",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": ["USER", "ADMIN"]
+      }
+    }
+  }
+}
