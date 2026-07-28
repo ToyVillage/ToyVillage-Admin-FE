@@ -14,9 +14,9 @@ export const reservationsEmptyStorageKey = 'toyvillage:reservations:empty'
 
 // 상태 라벨(카운트 카드/필터).
 export const reservationStatusLabel: Record<ReservationStatus, string> = {
-  pending: '심사대기',
-  approved: '승인 완료',
-  rejected: '반려',
+  pending: '사전답사 전',
+  approved: '사전답사 완료',
+  rejected: '방문 완료',
 }
 
 // 카운트 카드 노출 순서.
