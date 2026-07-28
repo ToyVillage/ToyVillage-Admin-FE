@@ -5,6 +5,9 @@ export type {
   UpdateNoticeInput,
 } from './model/types'
 export type {
+  NoticeCreateErrorResponse,
+  NoticeCreateRequest,
+  NoticeCreateResponse,
   NoticeKind,
   NoticeQueryErrorResponse,
   NoticeQueryAllErrorResponse,
@@ -14,7 +17,12 @@ export type {
   NoticeQueryRequest,
   NoticeQueryResponse,
 } from './api/types'
-export { getNotice, getNotices, isNoticeNotFoundError } from './api/noticeApi'
+export {
+  createNotice,
+  getNotice,
+  getNotices,
+  isNoticeNotFoundError,
+} from './api/noticeApi'
 export {
   createMockNotice,
   deleteMockNotice,

@@ -5,6 +5,23 @@ export interface NoticeQueryAllRequest {
 
 export type NoticeKind = '공지사항 분류'
 
+export interface NoticeCreateRequest {
+  title: string
+  kind: NoticeKind
+  content: string
+}
+
+export interface NoticeCreateResponse {
+  message: string
+}
+
+export interface NoticeCreateErrorResponse {
+  message: string
+  status: number
+  timestamp: string
+  description: string
+}
+
 export interface NoticeQueryAllResponseItem {
   id: number
   title: string

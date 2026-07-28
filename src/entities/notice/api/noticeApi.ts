@@ -1,6 +1,11 @@
 import { api } from '@/shared/api/axios'
 import type { Notice, NoticeListItem } from '../model/types'
-import type { NoticeQueryAllRequest, NoticeQueryRequest } from './types'
+import type {
+  NoticeCreateRequest,
+  NoticeCreateResponse,
+  NoticeQueryAllRequest,
+  NoticeQueryRequest,
+} from './types'
 
 interface NoticeQueryAllRuntimeItem {
   id: number | string
@@ -11,6 +16,18 @@ interface NoticeQueryAllRuntimeItem {
 
 interface NoticeQueryRuntimeItem extends NoticeQueryAllRuntimeItem {
   content: string
+}
+
+export async function createNotice(
+  input: NoticeCreateRequest,
+): Promise<NoticeCreateResponse> {
+  const { data } = await api.post<unknown>('/notice', input)
+
+  if (!isNoticeCreateResponse(data)) {
+    throw new Error('공지사항 생성 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data
 }
 
 export async function getNotices(
@@ -98,4 +115,10 @@ function isNoticeQueryResponse(
   return (
     isNoticeQueryAllResponseItem(notice) && typeof notice.content === 'string'
   )
+}
+
+function isNoticeCreateResponse(value: unknown): value is NoticeCreateResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  return typeof (value as Record<string, unknown>).message === 'string'
 }

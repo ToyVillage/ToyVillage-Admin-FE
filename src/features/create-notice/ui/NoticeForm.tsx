@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  createMockNotice,
+  createNotice,
   deleteMockNotice,
   updateMockNotice,
   type Notice,
@@ -58,10 +58,18 @@ export function NoticeForm({
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
   const [validationError, setValidationError] = useState<FieldName | null>(null)
   const mutation = useMutation({
-    mutationFn: (input: UpdateNoticeInput) =>
-      initialNotice
-        ? updateMockNotice({ id: initialNotice.id, input })
-        : createMockNotice(input),
+    mutationFn: async (input: UpdateNoticeInput) => {
+      if (initialNotice) {
+        await updateMockNotice({ id: initialNotice.id, input })
+        return
+      }
+
+      await createNotice({
+        title: input.title,
+        kind: '공지사항 분류',
+        content: input.content,
+      })
+    },
   })
   const deleteMutation = useMutation({
     mutationFn: () => {
