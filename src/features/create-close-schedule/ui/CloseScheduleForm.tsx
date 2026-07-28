@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   createCloseSchedule,
   deleteCloseSchedule,
-  updateMockCloseSchedule,
+  updateCloseSchedule,
   type CloseSchedule,
   type CreateCloseScheduleInput,
 } from '@/entities/close-schedule'
@@ -45,7 +45,10 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
   const mutation = useMutation({
     mutationFn: async (input: CreateCloseScheduleInput) => {
       if (initialSchedule) {
-        await updateMockCloseSchedule({ id: initialSchedule.id, ...input })
+        await updateCloseSchedule({
+          id: Number(initialSchedule.id),
+          input,
+        })
         return
       }
 

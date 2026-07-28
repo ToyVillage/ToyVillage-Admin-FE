@@ -12,6 +12,7 @@ export {
   deleteCloseSchedule,
   getCloseSchedules,
   getCloseSchedulesByDate,
+  updateCloseSchedule,
 } from './api/closeScheduleApi'
 export type {
   CloseDateCreateErrorResponse,
@@ -27,6 +28,9 @@ export type {
   CloseDateQueryByDateRequest,
   CloseDateQueryByDateResponse,
   CloseDateQueryByDateResponseItem,
+  CloseDateUpdateErrorResponse,
+  CloseDateUpdateRequest,
+  CloseDateUpdateResponse,
 } from './api/types'
 export type {
   CloseSchedule,

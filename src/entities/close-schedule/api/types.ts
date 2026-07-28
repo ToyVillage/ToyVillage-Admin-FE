@@ -13,6 +13,23 @@ export interface CloseDateCreateErrorResponse {
   description: string
 }
 
+export interface CloseDateUpdateRequest {
+  title: string
+  startCloseTime: string
+  endCloseTime: string
+}
+
+export interface CloseDateUpdateResponse {
+  message: string
+}
+
+export interface CloseDateUpdateErrorResponse {
+  message: string
+  status: number
+  timestamp: string
+  description: string
+}
+
 export interface CloseDateDeleteRequest {
   id: number
 }
