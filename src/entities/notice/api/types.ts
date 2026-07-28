@@ -20,3 +20,22 @@ export interface NoticeQueryAllErrorResponse {
   timestamp: string
   description: string
 }
+
+export interface NoticeQueryRequest {
+  id: number
+}
+
+export interface NoticeQueryResponse {
+  id: number
+  title: string
+  kind: NoticeKind
+  content: string
+  createAt: string
+}
+
+export interface NoticeQueryErrorResponse {
+  message: string
+  status: number
+  timestamp: string
+  description: string
+}
