@@ -66,7 +66,7 @@ export function NoticeForm({
 
       await createNotice({
         title: input.title,
-        kind: '공지사항 분류',
+        kind: 'ALL',
         content: input.content,
       })
     },

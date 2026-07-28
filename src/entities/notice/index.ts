@@ -6,6 +6,7 @@ export type {
 } from './model/types'
 export type {
   NoticeCreateErrorResponse,
+  NoticeCreateKind,
   NoticeCreateRequest,
   NoticeCreateResponse,
   NoticeKind,

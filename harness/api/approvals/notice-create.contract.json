@@ -7,9 +7,7 @@
   "authentication": {
     "required": true,
     "type": "Bearer",
-    "roles": [
-      "ADMIN"
-    ]
+    "roles": ["ADMIN"]
   },
   "contentType": "application/json",
   "headers": [
@@ -22,9 +20,7 @@
       "default": null,
       "example": "Bearer <access-token>",
       "description": "Bearer access token",
-      "constraints": [
-        "Bearer scheme"
-      ]
+      "constraints": ["Bearer scheme"]
     }
   ],
   "pathParameters": [],
@@ -50,14 +46,12 @@
         "required": true,
         "nullable": false,
         "default": null,
-        "example": "공지사항 분류",
+        "example": "ALL",
         "description": "공지사항 분류",
         "constraints": [
-          "사용자 결정으로 임시 단일 값 고정"
+          "백엔드 enum ALL(kindName: \"전체\") 확인 후 ALL 단일 값 고정"
         ],
-        "allowedValues": [
-          "공지사항 분류"
-        ]
+        "allowedValues": ["ALL"]
       },
       {
         "name": "content",
@@ -73,7 +67,7 @@
     ],
     "example": {
       "title": "공지사항 제목",
-      "kind": "공지사항 분류",
+      "kind": "ALL",
       "content": "공지사항 내용"
     }
   },
@@ -344,9 +338,7 @@
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": [
-          "ADMIN"
-        ]
+        "roles": ["ADMIN"]
       }
     },
     "detailValues": {
@@ -356,9 +348,7 @@
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": [
-          "ADMIN"
-        ]
+        "roles": ["ADMIN"]
       }
     }
   }

@@ -3,11 +3,12 @@ export interface NoticeQueryAllRequest {
   size: number
 }
 
+export type NoticeCreateKind = 'ALL'
 export type NoticeKind = '공지사항 분류'
 
 export interface NoticeCreateRequest {
   title: string
-  kind: NoticeKind
+  kind: NoticeCreateKind
   content: string
 }
 

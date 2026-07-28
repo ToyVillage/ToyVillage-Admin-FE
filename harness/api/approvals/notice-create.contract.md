@@ -11,21 +11,21 @@
 
 ## Basic Information
 
-| API ID | Name | Description | Method | Full Path | Content-Type |
-| --- | --- | --- | --- | --- | --- |
+| API ID          | Name               | Description              | Method | Full Path | Content-Type       |
+| --------------- | ------------------ | ------------------------ | ------ | --------- | ------------------ |
 | `NOTICE_CREATE` | 공지사항 추가 기능 | 공지사항을 추가하는 기능 | `POST` | `/notice` | `application/json` |
 
 ## Authentication and Authorization
 
-| Required | Type | Roles |
-| --- | --- | --- |
-| true | Bearer | `ADMIN` |
+| Required | Type   | Roles   |
+| -------- | ------ | ------- |
+| true     | Bearer | `ADMIN` |
 
 ## Request Headers
 
-| Name | Type | Required | Nullable | Example |
-| --- | --- | --- | --- | --- |
-| `Authorization` | string | true | false | `Bearer <access-token>` |
+| Name            | Type   | Required | Nullable | Example                 |
+| --------------- | ------ | -------- | -------- | ----------------------- |
+| `Authorization` | string | true     | false    | `Bearer <access-token>` |
 
 ## Path Parameters
 
@@ -37,18 +37,18 @@
 
 ## Request Body
 
-| Name | Type | Required | Nullable | Example | Allowed Values |
-| --- | --- | --- | --- | --- | --- |
-| `title` | string | true | false | `공지사항 제목` | 없음 |
-| `kind` | enum | true | false | `공지사항 분류` | `공지사항 분류` |
-| `content` | string | true | false | `공지사항 내용` | 없음 |
+| Name      | Type   | Required | Nullable | Example         | Allowed Values |
+| --------- | ------ | -------- | -------- | --------------- | -------------- |
+| `title`   | string | true     | false    | `공지사항 제목` | 없음           |
+| `kind`    | enum   | true     | false    | `ALL`           | `ALL`          |
+| `content` | string | true     | false    | `공지사항 내용` | 없음           |
 
 ## Request Example
 
 ```json
 {
   "title": "공지사항 제목",
-  "kind": "공지사항 분류",
+  "kind": "ALL",
   "content": "공지사항 내용"
 }
 ```
@@ -77,12 +77,14 @@
 ## Validation and Constraints
 
 - Request Body의 `title`, `kind`, `content`는 모두 required, nullable false
-- `kind` Allowed Values는 사용자 결정에 따라 임시로 `공지사항 분류` 하나만 고정
+- `kind` Allowed Values는 백엔드 enum `ALL(kindName: "전체")` 확인 후 `ALL`
+  하나만 고정
 - 첨부파일은 Request Body에 포함하지 않는다.
 
 ## Notes
 
-- Notion 누락값은 2026-07-28 사용자 결정으로 임시 동결했다.
+- Notion에 누락된 `kind` 실제 값은 2026-07-28 백엔드 enum 확인으로 `ALL`로
+  동결했다.
 - 실제 서버 테스트는 비활성화한다.
 - 백엔드 명세가 보완되면 임시 동결값을 재검토한다.
 

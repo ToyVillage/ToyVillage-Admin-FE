@@ -6,7 +6,7 @@
 - Mock request: `POST /api/notice`
 - Request headers: `Content-Type: application/json`, `Authorization: Bearer ...`
 - Request body:
-  `{"title":"API 생성 공지","kind":"공지사항 분류","content":"API 생성 내용"}`
+  `{"title":"API 생성 공지","kind":"ALL","content":"API 생성 내용"}`
 - Mock response: HTTP 201, `{"message":"공지 생성 성공"}`
 - 후속 Mock request: `GET /api/notice?page=0&size=10`
 - 후속 Mock response: 생성된 공지를 포함한 HTTP 200 목록
