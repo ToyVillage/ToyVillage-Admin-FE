@@ -5,7 +5,7 @@
 - 목적: 유효한 입력을 Contract body로 전송하고 성공 이동한다.
 - Mock request: `POST /api/close-day`, JSON body에 `title`,
   `startCloseTime`, `endCloseTime`만 포함
-- Mock response: HTTP 200, `{ "message": "휴관일이 생성되었습니다." }`
+- Mock response: HTTP 200, response body 없음
 - 사용자 동작: 생성 폼에 유효한 값 입력 후 `생성하기` 클릭
 - 기대 결과: POST 1회, `/notices/guide` 이동, 전체 조회 query 재실행
 
@@ -25,19 +25,20 @@
 - 사용자 동작: 유효한 입력 후 `생성하기` 클릭
 - 기대 결과: 생성 화면 유지, 입력값 보존, 생성 실패 상태 표시
 
-## Mock S4 — 잘못된 성공 응답
+## Mock S4 — 실제 성공 응답 body 호환
 
-- 목적: Contract 밖의 성공 body를 성공으로 처리하지 않는다.
+- 목적: 실제 생성이 완료된 HTTP 200을 response body 검증 때문에 실패로
+  오판하지 않는다.
 - Mock request: `POST /api/close-day`
-- Mock response: HTTP 200, `message`가 없거나 string이 아닌 body
+- Mock response: HTTP 200, 프론트가 사용하지 않는 body
 - 사용자 동작: 유효한 입력 후 `생성하기` 클릭
-- 기대 결과: 생성 화면 유지, 실패 상태 표시, 목록 이동 없음
+- 기대 결과: `/notices/guide`로 이동하고 갱신된 목록 표시
 
 ## Mock S5 — 중복 제출 방지
 
 - 목적: pending 중 동일 생성 요청이 중복 전송되지 않는다.
 - Mock request: 지연된 `POST /api/close-day`
-- Mock response: HTTP 200 Contract 성공 body
+- Mock response: HTTP 200
 - 사용자 동작: `생성하기`를 빠르게 반복 실행
 - 기대 결과: POST 1회, pending 중 버튼 disabled와 `생성 중`, 성공 후 이동
 

@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
-  createMockCloseSchedule,
+  createCloseSchedule,
   deleteMockCloseSchedule,
   updateMockCloseSchedule,
   type CloseSchedule,
@@ -43,10 +43,14 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteError, setDeleteError] = useState(false)
   const mutation = useMutation({
-    mutationFn: (input: CreateCloseScheduleInput) =>
-      initialSchedule
-        ? updateMockCloseSchedule({ id: initialSchedule.id, ...input })
-        : createMockCloseSchedule(input),
+    mutationFn: async (input: CreateCloseScheduleInput) => {
+      if (initialSchedule) {
+        await updateMockCloseSchedule({ id: initialSchedule.id, ...input })
+        return
+      }
+
+      await createCloseSchedule(input)
+    },
   })
   const isEditing = Boolean(initialSchedule)
   const deleteMutation = useMutation({ mutationFn: deleteMockCloseSchedule })

@@ -3,8 +3,8 @@
 ## 승인 기준
 
 - Content-Type은 사용자 결정으로 `application/json`으로 동결한다.
-- request, success response, error response 필드는 required, nullable false로
-  동결한다.
+- request와 error response 필드는 required, nullable false로 동결한다.
+- 성공은 HTTP 200 status로 판단하고 성공 response body는 사용하지 않는다.
 - 날짜는 `YYYY-MM-DD`, 종료일은 시작일과 같거나 이후로 동결한다.
 - 실제 서버 테스트는 disabled이다.
 
@@ -31,7 +31,7 @@
 - `createCloseSchedule()`은 공통 Axios로 `POST /close-day`를 호출한다.
 - 도메인 입력을 `startCloseTime`, `endCloseTime`으로 매핑한다.
 - 날짜 형식, 실제 날짜, 날짜 순서와 trim된 title을 검증한다.
-- 성공 body의 `message`가 non-null string인지 런타임 검증한다.
+- HTTP 200이면 성공으로 처리하고 response body는 읽거나 검증하지 않는다.
 
 ## Query/Mutation과 캐시
 

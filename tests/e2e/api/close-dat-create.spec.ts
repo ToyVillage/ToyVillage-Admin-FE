@@ -88,10 +88,15 @@ test('S3: HTTP 500이면 입력을 보존하고 목록으로 이동하지 않는
   )
 })
 
-test('S4: Contract와 다른 성공 응답을 생성 성공으로 처리하지 않는다', async ({
+test('S4: HTTP 200이면 성공 응답 body와 무관하게 생성 성공으로 처리한다', async ({
   page,
 }) => {
   await page.route(apiPath, async (route) => {
+    if (route.request().method() !== 'POST') {
+      await fulfillCloseScheduleList(route, '응답 body 호환 휴관일')
+      return
+    }
+
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -104,16 +109,12 @@ test('S4: Contract와 다른 성공 응답을 생성 성공으로 처리하지 �
     page,
     '2026-07-10',
     '2026-07-11',
-    '잘못된 응답 휴관일',
+    '응답 body 호환 휴관일',
   )
   await page.getByRole('button', { name: '생성하기' }).click()
 
-  await expectCreateFailure(
-    page,
-    '2026-07-10',
-    '2026-07-11',
-    '잘못된 응답 휴관일',
-  )
+  await expect(page).toHaveURL(/\/notices\/guide$/)
+  await expect(page.getByText('응답 body 호환 휴관일')).toBeVisible()
 })
 
 test('S5: pending 중 중복 제출을 막고 생성 상태를 표시한다', async ({
@@ -217,8 +218,6 @@ async function expectCreateFailure(
 async function fulfillCreateSuccess(route: Route) {
   await route.fulfill({
     status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ message: '휴관일이 생성되었습니다.' }),
   })
 }
 

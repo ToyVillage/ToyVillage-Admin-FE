@@ -77,25 +77,8 @@
       {
         "status": 200,
         "description": "휴관일 생성 성공",
-        "body": {
-          "type": "object",
-          "nullable": false,
-          "description": "휴관일 생성 결과",
-          "fields": [
-            {
-              "name": "message",
-              "location": "response",
-              "type": "string",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "휴관일이 생성되었습니다.",
-              "description": "생성 성공 메시지",
-              "constraints": []
-            }
-          ]
-        },
-        "noContent": false
+        "body": null,
+        "noContent": true
       }
     ],
     "errors": [

@@ -1,9 +1,18 @@
 import { api } from '@/shared/api/axios'
-import type { CloseSchedule } from '../model/types'
+import type { CloseSchedule, CreateCloseScheduleInput } from '../model/types'
 import type {
+  CloseDateCreateRequest,
+  CloseDateCreateResponse,
   CloseDateQueryAllResponseItem,
   CloseDateQueryByDateRequest,
 } from './types'
+
+export async function createCloseSchedule(
+  input: CreateCloseScheduleInput,
+): Promise<CloseDateCreateResponse> {
+  const request = toCloseDateCreateRequest(input)
+  await api.post<CloseDateCreateResponse>('/close-day', request)
+}
 
 export async function getCloseSchedules(): Promise<CloseSchedule[]> {
   const { data, status } = await api.get<unknown>('/close-day')
@@ -39,6 +48,30 @@ export async function getCloseSchedulesByDate({
   }
 
   return data.map(toCloseSchedule)
+}
+
+function toCloseDateCreateRequest(
+  input: CreateCloseScheduleInput,
+): CloseDateCreateRequest {
+  const title = input.title.trim()
+
+  if (!title) {
+    throw new Error('휴관일 제목이 올바르지 않습니다.')
+  }
+
+  if (!isDateKey(input.startDate) || !isDateKey(input.endDate)) {
+    throw new Error('휴관일 생성 요청 날짜가 올바르지 않습니다.')
+  }
+
+  if (input.startDate > input.endDate) {
+    throw new Error('휴관일 종료일은 시작일과 같거나 이후여야 합니다.')
+  }
+
+  return {
+    title,
+    startCloseTime: input.startDate,
+    endCloseTime: input.endDate,
+  }
 }
 
 function toCloseSchedule(schedule: CloseDateQueryAllResponseItem) {

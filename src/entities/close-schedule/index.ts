@@ -8,10 +8,14 @@ export {
   updateMockCloseSchedule,
 } from './model/mock'
 export {
+  createCloseSchedule,
   getCloseSchedules,
   getCloseSchedulesByDate,
 } from './api/closeScheduleApi'
 export type {
+  CloseDateCreateErrorResponse,
+  CloseDateCreateRequest,
+  CloseDateCreateResponse,
   CloseDateQueryAllErrorResponse,
   CloseDateQueryAllResponse,
   CloseDateQueryAllResponseItem,
