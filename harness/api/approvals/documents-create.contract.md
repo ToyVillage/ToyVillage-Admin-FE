@@ -82,9 +82,9 @@ required: true
 
 ## Notes
 
-- `files` 항목은 파일 업로드(FILE_CREATE) 결과 "file key"이다. 파일 이름이 아니다.
+- `files` 항목은 파일 업로드(FILE_CREATE, `uploadFile` → `POST /file`) 응답의 `fileKey`이다(파일 이름 아님). 폼은 파일 첨부 즉시 업로드해 얻은 `fileKey`를 보관했다가 생성 요청에 그 키 목록을 전송한다.
+- `type` enum(`PDF`/`JPEG/JPG`/`PNG`/`OTHER`) ↔ 프론트 `FileType`(`pdf`/`jpg`/`png`/`etc`) 매핑 확정.
 
 ## Backend Questions
 
-1. `files`에 넣을 "file key"는 어떤 API/필드로 확보하는가? (FILE_CREATE 응답의 어떤 값인지 확인 필요 — 현재 폼은 파일 이름만 보유)
-2. request `type` enum 값(`PDF`, `JPEG/JPG`, `PNG`, `OTHER`)과 프론트 `FileType`(`pdf`/`jpg`/`png`/`etc`) 매핑을 확정해도 되는가?
+없음 (파일 키 확보 방식과 enum 매핑 모두 확정됨)
