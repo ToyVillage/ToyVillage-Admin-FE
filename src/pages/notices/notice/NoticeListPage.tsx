@@ -28,7 +28,9 @@ export function NoticeListPage() {
   const allNotices = useMemo(() => queryNotices ?? [], [queryNotices])
 
   const categories = useMemo(
-    () => ['전체', ...new Set(allNotices.map((notice) => notice.category))],
+    () => [
+      ...new Set(['전체', ...allNotices.map((notice) => notice.category)]),
+    ],
     [allNotices],
   )
 

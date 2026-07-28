@@ -20,13 +20,16 @@ export async function getNotices(
 
   return data.map((notice) => ({
     id: String(notice.id),
-    category:
-      typeof notice.kind === 'string' && notice.kind.trim()
-        ? notice.kind
-        : '미분류',
+    category: normalizeNoticeCategory(notice.kind),
     title: notice.title,
     date: typeof notice.createAt === 'string' ? notice.createAt : '',
   }))
+}
+
+function normalizeNoticeCategory(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return '미분류'
+
+  return value.trim().toUpperCase() === 'ALL' ? '전체' : value
 }
 
 function isNoticeQueryAllResponse(
