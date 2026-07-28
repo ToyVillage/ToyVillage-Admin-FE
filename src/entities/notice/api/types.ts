@@ -42,6 +42,21 @@ export interface NoticeUpdateErrorResponse {
   description: string
 }
 
+export interface NoticeDeleteRequest {
+  id: number
+}
+
+export interface NoticeDeleteResponse {
+  message: string
+}
+
+export interface NoticeDeleteErrorResponse {
+  message: string
+  status: number
+  timestamp: string
+  description: string
+}
+
 export interface NoticeQueryAllResponseItem {
   id: number
   title: string

@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createNotice,
-  deleteMockNotice,
+  deleteNotice,
   type Notice,
   type UpdateNoticeInput,
   updateNotice,
@@ -35,6 +35,7 @@ export function NoticeForm({
 }: NoticeFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
+  const deletingRef = useRef(false)
   const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const teamAddButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
@@ -81,7 +82,7 @@ export function NoticeForm({
   const deleteMutation = useMutation({
     mutationFn: () => {
       if (!initialNotice) throw new Error('Notice not found')
-      return deleteMockNotice(initialNotice.id)
+      return deleteNotice({ id: Number(initialNotice.id) })
     },
   })
   const isEditing = Boolean(initialNotice)
@@ -164,8 +165,9 @@ export function NoticeForm({
   }
 
   function handleDelete() {
-    if (deleteMutation.isPending) return
+    if (deletingRef.current || deleteMutation.isPending) return
 
+    deletingRef.current = true
     deleteMutation.mutate(undefined, {
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: ['notices'] })
@@ -173,6 +175,11 @@ export function NoticeForm({
           queryClient.removeQueries({ queryKey: ['notices', initialNotice.id] })
         }
         onCompleted()
+      },
+      onError: () => {
+        deletingRef.current = false
+        setDeleteDialogOpen(false)
+        requestAnimationFrame(() => deleteButtonRef.current?.focus())
       },
     })
   }

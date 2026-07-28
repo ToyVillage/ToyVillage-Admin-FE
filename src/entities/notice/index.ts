@@ -9,6 +9,9 @@ export type {
   NoticeCreateKind,
   NoticeCreateRequest,
   NoticeCreateResponse,
+  NoticeDeleteErrorResponse,
+  NoticeDeleteRequest,
+  NoticeDeleteResponse,
   NoticeKind,
   NoticeQueryErrorResponse,
   NoticeQueryAllErrorResponse,
@@ -24,6 +27,7 @@ export type {
 } from './api/types'
 export {
   createNotice,
+  deleteNotice,
   getNotice,
   getNotices,
   isNoticeNotFoundError,

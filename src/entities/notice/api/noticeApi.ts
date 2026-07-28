@@ -3,6 +3,8 @@ import type { Notice, NoticeListItem } from '../model/types'
 import type {
   NoticeCreateRequest,
   NoticeCreateResponse,
+  NoticeDeleteRequest,
+  NoticeDeleteResponse,
   NoticeQueryAllRequest,
   NoticeQueryRequest,
   NoticeUpdateRequest,
@@ -47,6 +49,22 @@ export async function updateNotice({
 
   if (!isNoticeMessageResponse(data)) {
     throw new Error('공지사항 수정 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data
+}
+
+export async function deleteNotice({
+  id,
+}: NoticeDeleteRequest): Promise<NoticeDeleteResponse> {
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error('공지사항 ID가 올바르지 않습니다.')
+  }
+
+  const { data } = await api.delete<unknown>(`/notice/${id}`)
+
+  if (!isNoticeMessageResponse(data)) {
+    throw new Error('공지사항 삭제 응답 형식이 올바르지 않습니다.')
   }
 
   return data
@@ -141,7 +159,7 @@ function isNoticeQueryResponse(
 
 function isNoticeMessageResponse(
   value: unknown,
-): value is NoticeCreateResponse | NoticeUpdateResponse {
+): value is NoticeCreateResponse | NoticeUpdateResponse | NoticeDeleteResponse {
   if (typeof value !== 'object' || value === null) return false
 
   return typeof (value as Record<string, unknown>).message === 'string'
