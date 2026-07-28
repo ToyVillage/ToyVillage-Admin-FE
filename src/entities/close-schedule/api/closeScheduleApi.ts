@@ -41,7 +41,7 @@ export async function updateCloseSchedule({
   const request: CloseDateUpdateRequest = toCloseDateRequest(input)
   const { data, status } = await api.put<unknown>(`/close-day/${id}`, request)
 
-  if (status !== 201) {
+  if (status !== 200 && status !== 201) {
     throw new Error('휴관일 수정 응답 상태가 올바르지 않습니다.')
   }
 
