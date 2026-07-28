@@ -51,4 +51,4 @@ real_server:
 # 비고 및 제약
 
 - 실제 서버 테스트는 하지 않는다 (`real_server.enabled: false`). Mock 기반 Playwright 테스트만 수행.
-- `files`는 "file key" 문자열 목록으로, 파일 업로드(FILE_CREATE) 결과 키를 의미한다. 현재 폼은 파일 "이름"만 보유하므로 실제 키 확보 방식은 백엔드 질문으로 분리한다.
+- `files`는 "file key" 문자열 목록이다. 폼은 파일 첨부 즉시 FILE_CREATE(`uploadFile`)로 업로드해 얻은 `fileKey`를 보관했다가, 생성 요청 시 그 키 목록을 전송한다.
