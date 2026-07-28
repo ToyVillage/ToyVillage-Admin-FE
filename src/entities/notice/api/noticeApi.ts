@@ -1,6 +1,13 @@
 import { api } from '@/shared/api/axios'
 import type { NoticeListItem } from '../model/types'
-import type { NoticeQueryAllRequest, NoticeQueryAllResponseItem } from './types'
+import type { NoticeQueryAllRequest } from './types'
+
+interface NoticeQueryAllRuntimeItem {
+  id: number | string
+  title: string
+  kind?: unknown
+  createAt?: unknown
+}
 
 export async function getNotices(
   params: NoticeQueryAllRequest,
@@ -13,29 +20,34 @@ export async function getNotices(
 
   return data.map((notice) => ({
     id: String(notice.id),
-    category: notice.kind,
+    category:
+      typeof notice.kind === 'string' && notice.kind.trim()
+        ? notice.kind
+        : '미분류',
     title: notice.title,
-    date: notice.createAt,
+    date: typeof notice.createAt === 'string' ? notice.createAt : '',
   }))
 }
 
 function isNoticeQueryAllResponse(
   value: unknown,
-): value is NoticeQueryAllResponseItem[] {
+): value is NoticeQueryAllRuntimeItem[] {
   return Array.isArray(value) && value.every(isNoticeQueryAllResponseItem)
 }
 
 function isNoticeQueryAllResponseItem(
   value: unknown,
-): value is NoticeQueryAllResponseItem {
+): value is NoticeQueryAllRuntimeItem {
   if (typeof value !== 'object' || value === null) return false
 
   const notice = value as Record<string, unknown>
+  const hasValidId =
+    (typeof notice.id === 'number' && Number.isFinite(notice.id)) ||
+    (typeof notice.id === 'string' && notice.id.trim().length > 0)
+
   return (
-    Number.isInteger(notice.id) &&
+    hasValidId &&
     typeof notice.title === 'string' &&
-    notice.kind === '공지사항 분류' &&
-    typeof notice.createAt === 'string' &&
-    /^\d{4}-\d{2}-\d{2}$/.test(notice.createAt)
+    notice.title.trim().length > 0
   )
 }
