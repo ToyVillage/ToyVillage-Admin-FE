@@ -1,0 +1,15 @@
+{
+  "feature": "documents-query-all",
+  "apiId": "DOCUMENTS_QUERY_ALL",
+  "approvedAt": "2026-07-28T16:37:35.023Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "14df996b3a5fd8b20afb9d6722539379e4f9574a9250c462359c911a300b8c42",
+  "contractHash": "d3c0cc803e79a8f6d682e4bfb444fed1a2724312d60d74628af53edde5efa5e2",
+  "contractMarkdownHash": "408ffb501efc0f1bb597675dd5c9c7ed03bc69540d784d493f8763da54c1ffb2",
+  "planHash": "7a6ac87b8086c399c2a3944fe504453cf8988d0533d9829924231b1a22e96e44",
+  "scenarioHash": "758d1b3c1b6f8cadb438154a4c11273feba2f49f43744d3922b38fdc04c54386",
+  "testHash": "8ef43ecc9fb624575d1e5497c59eadc3331aab81b3b3ad9fdb626b4b17ae4983",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-28T16:37:54.937Z"
+}
