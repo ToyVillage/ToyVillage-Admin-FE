@@ -1,0 +1,15 @@
+{
+  "feature": "notice-create",
+  "apiId": "NOTICE_CREATE",
+  "approvedAt": "2026-07-28T07:10:44.583Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "dc3dea54224f5834f043c5fe7d5b6b9bd24c8ff7768169787b4d0a16bf67f34f",
+  "contractHash": "75e2fe08d369722587adc1b99cf95f7aa97b2e58de1a64202b00f3ce2f95dfac",
+  "contractMarkdownHash": "339e54307d5499fd4e3dde51ab9cd9b107d1eb64a8e70bc6181951957ee9919e",
+  "planHash": "53a4ec9da806de813a22e1a2c4f5de1959e821582a1d5e76384cd93e2d6c490f",
+  "scenarioHash": "58a0ae153e258645017a28c0236a5c7d28ef9c84c5ca8835a9eb906a5e748af2",
+  "testHash": "01be859e529d9c3060f17fa13c64ca0d03eec0d6c60825fa1866fb7c98a75214",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-28T07:11:41.290Z"
+}
