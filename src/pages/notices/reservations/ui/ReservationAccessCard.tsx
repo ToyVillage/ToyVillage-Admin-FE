@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import styled from '@emotion/styled'
 import type { Staff } from '@/entities/reservation'
+import searchIcon from '@/shared/ui/assets/search.svg'
 import shieldIcon from './assets/shield.svg'
 
 interface ReservationAccessCardProps {
@@ -32,10 +33,7 @@ export function ReservationAccessCard({
       <Body>
         <SearchBar>
           <SearchLead>
-            <SearchGlyph viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </SearchGlyph>
+            <SearchIcon src={searchIcon} alt="" aria-hidden="true" />
             <VisuallyHiddenLabel htmlFor={searchId}>
               검색할 직원 이름
             </VisuallyHiddenLabel>
@@ -154,14 +152,11 @@ const SearchLead = styled.div`
   gap: 8px;
 `
 
-const SearchGlyph = styled.svg`
+const SearchIcon = styled.img`
+  display: block;
   width: 26px;
   height: 26px;
   flex: 0 0 26px;
-  fill: none;
-  stroke: ${({ theme }) => theme.colors.textFaint};
-  stroke-width: 2;
-  stroke-linecap: round;
 `
 
 const SearchInput = styled.input`
