@@ -20,8 +20,8 @@ interface NoticeQueryAllRuntimeItem {
 
 interface NoticeQueryRuntimeItem extends NoticeQueryAllRuntimeItem {
   content: string
-  createdAt: string
-  files: NoticeQueryRuntimeFile[]
+  createdAt?: string
+  files?: NoticeQueryRuntimeFile[]
 }
 
 interface NoticeQueryRuntimeFile {
@@ -108,8 +108,8 @@ export async function getNotice({ id }: NoticeQueryRequest): Promise<Notice> {
     category: normalizeNoticeCategory(data.kind),
     title: data.title,
     content: data.content,
-    date: data.createdAt,
-    attachments: data.files.map(({ fileName }) => fileName),
+    date: data.createdAt ?? '',
+    attachments: data.files?.map(({ fileName }) => fileName),
   }
 }
 
@@ -161,9 +161,10 @@ function isNoticeQueryResponse(
   return (
     isNoticeQueryAllResponseItem(notice) &&
     typeof notice.content === 'string' &&
-    typeof notice.createdAt === 'string' &&
-    Array.isArray(notice.files) &&
-    notice.files.every(isNoticeQueryFileResponse)
+    (notice.createdAt === undefined || typeof notice.createdAt === 'string') &&
+    (notice.files === undefined ||
+      (Array.isArray(notice.files) &&
+        notice.files.every(isNoticeQueryFileResponse)))
   )
 }
 
@@ -173,9 +174,7 @@ function isNoticeQueryFileResponse(
   if (typeof value !== 'object' || value === null) return false
 
   const file = value as Record<string, unknown>
-  return (
-    typeof file.fileName === 'string' && typeof file.fileKey === 'string'
-  )
+  return typeof file.fileName === 'string' && typeof file.fileKey === 'string'
 }
 
 function isNoticeMessageResponse(
