@@ -1,0 +1,14 @@
+{
+  "feature": "close-dat-create",
+  "apiId": "CLOSE_DAT_CREATE",
+  "approvedAt": "2026-07-28T13:06:09.264Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "1dea3dfbbb935a84f850572cdc3f7586faae3cd7a2df0f5f37f6ca6275fa74e1",
+  "contractHash": "db2346a73c8bb4c7e6785b63b2cd1adcf134dc651c2b4c4f76990de23998dbf2",
+  "contractMarkdownHash": "efc67760d303c8715f51baba2c66fe0c9b636a13a81ab78f14d6f9da226e9e59",
+  "planHash": "71db1ad83c09eaeffb6bd35d33392c965b8c8b5cc614aa556ee855563350d020",
+  "scenarioHash": "e1355e103177141a5e25fc72f86b321ce3891ee2697b9bc5dafa8e6d5d293ef4",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}
