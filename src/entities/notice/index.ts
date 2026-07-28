@@ -29,6 +29,7 @@ export type {
 export {
   createNotice,
   deleteNotice,
+  getAllNotices,
   getNotice,
   getNotices,
   isNoticeNotFoundError,

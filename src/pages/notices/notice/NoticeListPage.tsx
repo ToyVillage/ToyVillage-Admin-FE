@@ -2,12 +2,11 @@ import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { getNotices, NoticeTable } from '@/entities/notice'
+import { getAllNotices, NoticeTable } from '@/entities/notice'
 import { CreateNoticeButton } from '@/features/create-notice'
 import { CategoryTabs } from './ui/CategoryTabs'
 import type { DataTableSortValue } from '@/shared/ui'
 
-const API_PAGE = 0
 const API_PAGE_SIZE = 10
 const TABLE_PAGE_SIZE = 4
 
@@ -22,8 +21,8 @@ export function NoticeListPage() {
     isPending,
     isError,
   } = useQuery({
-    queryKey: ['notices', { page: API_PAGE, size: API_PAGE_SIZE }],
-    queryFn: () => getNotices({ page: API_PAGE, size: API_PAGE_SIZE }),
+    queryKey: ['notices', 'all', { size: API_PAGE_SIZE }],
+    queryFn: () => getAllNotices({ size: API_PAGE_SIZE }),
   })
   const allNotices = useMemo(() => queryNotices ?? [], [queryNotices])
 

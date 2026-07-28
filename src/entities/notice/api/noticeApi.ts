@@ -92,6 +92,38 @@ export async function getNotices(
   }))
 }
 
+export async function getAllNotices({
+  size,
+}: Pick<NoticeQueryAllRequest, 'size'>): Promise<NoticeListItem[]> {
+  if (!Number.isSafeInteger(size) || size <= 0) {
+    throw new Error('공지사항 페이지 크기가 올바르지 않습니다.')
+  }
+
+  const allNotices: NoticeListItem[] = []
+  const noticeIds = new Set<string>()
+
+  for (let page = 0; ; page += 1) {
+    const notices = await getNotices({ page, size })
+
+    if (notices.length > size) {
+      throw new Error('공지사항 페이지 응답 크기가 올바르지 않습니다.')
+    }
+
+    for (const notice of notices) {
+      if (noticeIds.has(notice.id)) {
+        throw new Error('공지사항 페이지 응답에 중복 항목이 있습니다.')
+      }
+
+      noticeIds.add(notice.id)
+      allNotices.push(notice)
+    }
+
+    if (notices.length < size) {
+      return allNotices
+    }
+  }
+}
+
 export async function getNotice({ id }: NoticeQueryRequest): Promise<Notice> {
   if (!Number.isSafeInteger(id) || id <= 0) {
     throw new Error('공지사항 ID가 올바르지 않습니다.')
