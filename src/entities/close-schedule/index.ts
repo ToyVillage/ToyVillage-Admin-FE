@@ -7,6 +7,12 @@ export {
   mockCloseSchedules,
   updateMockCloseSchedule,
 } from './model/mock'
+export { getCloseSchedules } from './api/closeScheduleApi'
+export type {
+  CloseDateQueryAllErrorResponse,
+  CloseDateQueryAllResponse,
+  CloseDateQueryAllResponseItem,
+} from './api/types'
 export type {
   CloseSchedule,
   CreateCloseScheduleInput,
