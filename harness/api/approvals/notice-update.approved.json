@@ -1,0 +1,14 @@
+{
+  "feature": "notice-update",
+  "apiId": "NOTICE_UPDATE",
+  "approvedAt": "2026-07-28T09:02:02.679Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "62616ff2e22ce40ede3f9bb010522e3b66d3745066c3e6d22324e78bc34961af",
+  "contractHash": "017355d5beef71ebf2377eb2e29c8e3516e7106333f5874d04acbc18ebf3ac73",
+  "contractMarkdownHash": "08c946999ea5a353d96231abc56ff5aa3505c65d6e3ed3bc559d94e1ea774ebf",
+  "planHash": "698d051b7c476218534e66695780ff966c37e5b7cbb3c1f0627f8a89974ad61a",
+  "scenarioHash": "bdb2a819ca63e390fc15b0c62de56dad7ebd561fc3a56e62d467acd23ba30e23",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}
