@@ -11,7 +11,7 @@ paths: src/pages/notices/reservations, src/entities/reservation
 
 ## 상태와 근거
 
-- Status: Draft
+- Status: Approved (kimjihwan8 승인, 시나리오 S1–S6)
 - 상세 화면 기준: Figma `1631:875` ("reservation detail")
 - 리스트에서 행 클릭 → `/notices/reservations/:id` 로 진입(리스트 spec `reservations-list` S5의 이동 대상)
 - 라우트: `src/app/App.tsx`의 `/notices/reservations/:id` (현재 `ReservationDetailPage` 스텁 → 본 슬라이스에서 구현)
