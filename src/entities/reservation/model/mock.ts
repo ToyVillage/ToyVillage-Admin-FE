@@ -1,6 +1,8 @@
 import type {
   GrantAccessInput,
+  RemoveAccessInput,
   Reservation,
+  ReservationDetail,
   ReservationStatus,
   Staff,
 } from './types'
@@ -12,9 +14,9 @@ export const reservationsEmptyStorageKey = 'toyvillage:reservations:empty'
 
 // 상태 라벨(카운트 카드/필터).
 export const reservationStatusLabel: Record<ReservationStatus, string> = {
-  pending: '심사대기',
-  approved: '승인 완료',
-  rejected: '반려',
+  pending: '사전답사 전',
+  approved: '사전답사 완료',
+  rejected: '방문 완료',
 }
 
 // 카운트 카드 노출 순서.
@@ -40,17 +42,36 @@ export const mockReservations: Reservation[] = [
 ]
 
 export const mockStaff: Staff[] = [
-  { id: 's1', name: '김지환' },
-  { id: 's2', name: '이서연' },
-  { id: 's3', name: '박민준' },
-  { id: 's4', name: '최유나' },
-  { id: 's5', name: '정하람' },
-  { id: 's6', name: '김지환' },
-  { id: 's7', name: '이서연' },
-  { id: 's8', name: '박민준' },
-  { id: 's9', name: '최유나' },
-  { id: 's10', name: '정하람' },
+  { id: 's1', name: '김지환', role: '과장' },
+  { id: 's2', name: '이서연', role: '대리' },
+  { id: 's3', name: '박민준', role: '사원' },
+  { id: 's4', name: '최유나', role: '팀장' },
+  { id: 's5', name: '정하람', role: '주임' },
+  { id: 's6', name: '홍길동', role: '과장' },
+  { id: 's7', name: '이서연', role: '대리' },
+  { id: 's8', name: '박민준', role: '사원' },
+  { id: 's9', name: '최유나', role: '팀장' },
+  { id: 's10', name: '정하람', role: '주임' },
 ]
+
+// 상세 페이지 확장 필드(목록 mock 위에 덧붙이는 상세 정보). 실제 필드 계약은 /api 슬라이스에서 확정.
+type ReservationDetailExtras = Omit<ReservationDetail, keyof Reservation>
+
+const reservationDetailExtras: Record<string, ReservationDetailExtras> = {
+  '1': { reserveTimeEnd: '15 : 00', reserverName: '이승현', regionDetail: '대구광역시 수성구 범어동', admissionFee: 200000, surveyStatus: '답사 완료', guideCount: 3, guideContact: '010-7753-9698' },
+  '2': { reserveTimeEnd: '12 : 00', reserverName: '김도윤', regionDetail: '서울특별시 강남구 역삼동', admissionFee: 260000, surveyStatus: '답사 대기', guideCount: 4, guideContact: '010-2244-1830' },
+  '3': { reserveTimeEnd: '15 : 30', reserverName: '박서준', regionDetail: '부산광역시 해운대구 우동', admissionFee: 180000, surveyStatus: '답사 완료', guideCount: 2, guideContact: '010-9981-2213' },
+  '4': { reserveTimeEnd: '13 : 00', reserverName: '이하은', regionDetail: '인천광역시 연수구 송도동', admissionFee: 300000, surveyStatus: '답사 대기', guideCount: 5, guideContact: '010-3390-7742' },
+  '5': { reserveTimeEnd: '11 : 15', reserverName: '정예린', regionDetail: '광주광역시 서구 치평동', admissionFee: 220000, surveyStatus: '답사 완료', guideCount: 3, guideContact: '010-5567-1094' },
+  '6': { reserveTimeEnd: '15 : 00', reserverName: '조현우', regionDetail: '대전광역시 유성구 장동', admissionFee: 240000, surveyStatus: '답사 완료', guideCount: 3, guideContact: '010-8842-6610' },
+  '7': { reserveTimeEnd: '16 : 30', reserverName: '한지민', regionDetail: '울산광역시 남구 삼산동', admissionFee: 190000, surveyStatus: '답사 완료', guideCount: 2, guideContact: '010-4471-9928' },
+  '8': { reserveTimeEnd: '11 : 45', reserverName: '오세훈', regionDetail: '경기도 성남시 분당구', admissionFee: 320000, surveyStatus: '답사 대기', guideCount: 4, guideContact: '010-6613-2287' },
+  '9': { reserveTimeEnd: '17 : 40', reserverName: '유가은', regionDetail: '강원도 춘천시 석사동', admissionFee: 150000, surveyStatus: '답사 반려', guideCount: 2, guideContact: '010-7729-3345' },
+  '10': { reserveTimeEnd: '14 : 10', reserverName: '신동현', regionDetail: '충청북도 청주시 흥덕구', admissionFee: 280000, surveyStatus: '답사 반려', guideCount: 4, guideContact: '010-1102-8846' },
+}
+
+// 권한 직원이 지정되지 않은 예약에 기본 노출할 직원(mock 시드).
+const defaultAccessStaffIds = ['s6', 's1']
 
 export async function getMockReservations(): Promise<Reservation[]> {
   if (localStorage.getItem(reservationsEmptyStorageKey)) return []
@@ -65,6 +86,39 @@ export async function getMockReservation(
 
 export async function getMockStaff(): Promise<Staff[]> {
   return [...mockStaff]
+}
+
+// 상세 페이지용 단건 조회(목록 예약 + 상세 확장 필드).
+export async function getMockReservationDetail(
+  id: string,
+): Promise<ReservationDetail | null> {
+  const base = mockReservations.find((reservation) => reservation.id === id)
+  const extras = reservationDetailExtras[id]
+  if (!base || !extras) return null
+  return { ...base, ...extras }
+}
+
+// 예약 페이지에 접근 권한을 가진 직원 목록. 지정 기록이 없으면 mock 시드를 노출한다.
+export async function getMockReservationAccess(
+  reservationId: string,
+): Promise<Staff[]> {
+  const stored = readAccessMap()
+  const ids = stored[reservationId] ?? defaultAccessStaffIds
+  return ids
+    .map((staffId) => mockStaff.find((member) => member.id === staffId))
+    .filter((member): member is Staff => Boolean(member))
+}
+
+// 예약 페이지 권한에서 직원 한 명을 제거한다(교체 경계). 실 저장은 /api 슬라이스에서 확정.
+export async function removeMockReservationAccess(
+  input: RemoveAccessInput,
+): Promise<void> {
+  const stored = readAccessMap()
+  const current = stored[input.reservationId] ?? defaultAccessStaffIds
+  stored[input.reservationId] = current.filter(
+    (staffId) => staffId !== input.staffId,
+  )
+  localStorage.setItem(reservationAccessStorageKey, JSON.stringify(stored))
 }
 
 // 선택 예약에 접근 가능한 직원을 지정한다. 실제 저장은 /api 슬라이스에서 확정하고,
