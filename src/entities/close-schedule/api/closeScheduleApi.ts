@@ -1,6 +1,9 @@
 import { api } from '@/shared/api/axios'
 import type { CloseSchedule } from '../model/types'
-import type { CloseDateQueryAllResponseItem } from './types'
+import type {
+  CloseDateQueryAllResponseItem,
+  CloseDateQueryByDateRequest,
+} from './types'
 
 export async function getCloseSchedules(): Promise<CloseSchedule[]> {
   const { data, status } = await api.get<unknown>('/close-day')
@@ -13,12 +16,38 @@ export async function getCloseSchedules(): Promise<CloseSchedule[]> {
     throw new Error('휴관일 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  return data.map((schedule) => ({
+  return data.map(toCloseSchedule)
+}
+
+export async function getCloseSchedulesByDate({
+  date,
+}: CloseDateQueryByDateRequest): Promise<CloseSchedule[]> {
+  if (!isDateKey(date)) {
+    throw new Error('휴관일 날짜별 조회 요청 날짜가 올바르지 않습니다.')
+  }
+
+  const { data, status } = await api.get<unknown>('/close-day', {
+    params: { date },
+  })
+
+  if (status !== 200) {
+    throw new Error('휴관일 날짜별 조회 응답 상태가 올바르지 않습니다.')
+  }
+
+  if (!isCloseDateQueryAllResponse(data)) {
+    throw new Error('휴관일 날짜별 조회 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data.map(toCloseSchedule)
+}
+
+function toCloseSchedule(schedule: CloseDateQueryAllResponseItem) {
+  return {
     id: String(schedule.id),
     title: schedule.title,
     startDate: schedule.startCloseTime,
     endDate: schedule.endCloseTime,
-  }))
+  }
 }
 
 function isCloseDateQueryAllResponse(

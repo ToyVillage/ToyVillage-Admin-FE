@@ -13,3 +13,15 @@ export interface CloseDateQueryAllErrorResponse {
   timestamp: string
   description: string
 }
+
+export interface CloseDateQueryByDateRequest {
+  date: string
+}
+
+export type CloseDateQueryByDateResponseItem =
+  CloseDateQueryAllResponseItem
+
+export type CloseDateQueryByDateResponse = CloseDateQueryByDateResponseItem[]
+
+export type CloseDateQueryByDateErrorResponse =
+  CloseDateQueryAllErrorResponse
