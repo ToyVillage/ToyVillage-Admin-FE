@@ -42,4 +42,4 @@
 
 ## Contract 밖 (범위 제외)
 
-- FILE_CREATE(파일 업로드) 연동, 실제 서버 테스트(`real_server.enabled: false`).
+- 실제 서버 테스트(`real_server.enabled: false`)만 제외한다. FILE_CREATE(파일 업로드)는 D1에 따라 이 작업에 포함된다.
