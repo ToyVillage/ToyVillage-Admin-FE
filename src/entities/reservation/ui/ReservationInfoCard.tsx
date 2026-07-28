@@ -106,6 +106,10 @@ const CardHeader = styled.div`
   padding: 0 40px;
   background: ${({ theme }) => theme.colors.tableHeader};
   color: ${({ theme }) => theme.colors.textStrong};
+
+  @media (max-width: 980px) {
+    padding: 0 24px;
+  }
 `
 
 const HeaderIcon = styled.img`
@@ -120,6 +124,10 @@ const CardTitle = styled.h2`
   font-size: 20px;
   font-weight: 600;
   line-height: 1.2;
+
+  @media (max-width: 980px) {
+    font-size: 18px;
+  }
 `
 
 const Body = styled.div`
@@ -127,6 +135,11 @@ const Body = styled.div`
   flex-direction: column;
   gap: 24px;
   padding: 36px 40px 40px;
+
+  @media (max-width: 980px) {
+    gap: 20px;
+    padding: 28px 24px 32px;
+  }
 `
 
 const TopRow = styled.div`
