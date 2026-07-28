@@ -28,7 +28,8 @@ real_server:
 # 기대 성공 동작
 
 - `/notices/list/:id` 진입 시 URL의 공지사항 ID로 단일 조회 API를 호출한다.
-- 서버가 반환한 `title`, `kind`, `content`, `createAt`을 기존 상세 폼에 표시한다.
+- 서버가 반환한 `title`, `kind`, `content`, `createdAt`과
+  `files[].fileName`을 기존 상세 폼에 표시한다.
 - 기존 수정·삭제 mock mutation은 이번 조회 API 범위 밖이므로 변경하지 않는다.
 
 # 기대 오류 동작
@@ -50,4 +51,6 @@ real_server:
 
 - 실제 서버 테스트는 비활성화한다.
 - `NOTICE_QUERY`는 조회만 연동하며 수정·삭제 API는 연결하지 않는다.
+- 상세 응답의 `files`는 백엔드 PR #94의 `NoticeDetailResponse`와
+  `FileResponse` 구조를 따른다.
 - 개발자 승인 전 API 코드와 테스트 코드를 작성하지 않는다.

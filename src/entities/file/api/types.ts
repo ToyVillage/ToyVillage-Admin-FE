@@ -3,8 +3,7 @@ export interface FileCreateRequest {
 }
 
 export interface FileCreateResponse {
-  key: string
-  fileUrl: string
+  fileKey: string
 }
 
 export interface FileCreateErrorResponse {

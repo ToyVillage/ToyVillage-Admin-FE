@@ -20,18 +20,23 @@ interface NoticeQueryAllRuntimeItem {
 
 interface NoticeQueryRuntimeItem extends NoticeQueryAllRuntimeItem {
   content: string
+  createdAt: string
+  files: NoticeQueryRuntimeFile[]
+}
+
+interface NoticeQueryRuntimeFile {
+  fileName: string
+  fileKey: string
 }
 
 export async function createNotice(
   input: NoticeCreateRequest,
 ): Promise<NoticeCreateResponse> {
-  const { data } = await api.post<unknown>('/notice', input)
+  const { status } = await api.post<NoticeCreateResponse>('/notice', input)
 
-  if (!isNoticeMessageResponse(data)) {
-    throw new Error('공지사항 생성 응답 형식이 올바르지 않습니다.')
+  if (status !== 200 && status !== 201) {
+    throw new Error('공지사항 생성 응답 상태가 올바르지 않습니다.')
   }
-
-  return data
 }
 
 export async function updateNotice({
@@ -103,7 +108,8 @@ export async function getNotice({ id }: NoticeQueryRequest): Promise<Notice> {
     category: normalizeNoticeCategory(data.kind),
     title: data.title,
     content: data.content,
-    date: typeof data.createAt === 'string' ? data.createAt : '',
+    date: data.createdAt,
+    attachments: data.files.map(({ fileName }) => fileName),
   }
 }
 
@@ -153,13 +159,28 @@ function isNoticeQueryResponse(
   const notice = value as Record<string, unknown>
 
   return (
-    isNoticeQueryAllResponseItem(notice) && typeof notice.content === 'string'
+    isNoticeQueryAllResponseItem(notice) &&
+    typeof notice.content === 'string' &&
+    typeof notice.createdAt === 'string' &&
+    Array.isArray(notice.files) &&
+    notice.files.every(isNoticeQueryFileResponse)
+  )
+}
+
+function isNoticeQueryFileResponse(
+  value: unknown,
+): value is NoticeQueryRuntimeFile {
+  if (typeof value !== 'object' || value === null) return false
+
+  const file = value as Record<string, unknown>
+  return (
+    typeof file.fileName === 'string' && typeof file.fileKey === 'string'
   )
 }
 
 function isNoticeMessageResponse(
   value: unknown,
-): value is NoticeCreateResponse | NoticeUpdateResponse | NoticeDeleteResponse {
+): value is NoticeUpdateResponse | NoticeDeleteResponse {
   if (typeof value !== 'object' || value === null) return false
 
   return typeof (value as Record<string, unknown>).message === 'string'

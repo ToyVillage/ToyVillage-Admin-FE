@@ -15,7 +15,8 @@ FILE_CREATE와 갱신 NOTICE_CREATE의 end-to-end 기대값을 함께 동결한�
   `Authorization: Bearer ...`
 - Request body: `files` part 하나, `notice.pdf`, 50MB 이하
 - Mock response: HTTP 201,
-  `{"key":"notice-key.pdf","fileUrl":"/files/notice-key.pdf"}`
+  `{"fileKey":"notice-key.pdf"}`
+- 후속 NOTICE_CREATE Mock response: HTTP 200, response body 없음
 - 사용자 동작: 공지 제목·내용을 입력하고 파일 하나를 선택한 뒤 생성 submit
 - 기대 결과: FILE_CREATE가 정확히 한 번 호출되고 `/api/notice` request의
   `files`는 `["notice-key.pdf"]`
@@ -24,10 +25,10 @@ FILE_CREATE와 갱신 NOTICE_CREATE의 end-to-end 기대값을 함께 동결한�
 
 - 목적: UI의 다중 선택과 API의 요청당 단일 파일 규칙을 함께 지킨다.
 - Mock request: 선택 파일이 2개면 `POST /api/file` 2회
-- Mock response: 각 요청에 HTTP 201과 서로 다른 `key`, `fileUrl`
+- Mock response: 각 요청에 HTTP 201과 서로 다른 `fileKey`
 - 사용자 동작: 파일 두 개를 한 번에 선택하고 생성 submit
 - 기대 결과: 요청마다 `files` part가 정확히 하나이며 `/api/notice` request의
-  `files`는 선택 순서의 key 두 개
+  `files`는 선택 순서의 fileKey 두 개
 
 ## Mock S3 — 업로드 요청 오류
 
@@ -40,10 +41,10 @@ FILE_CREATE와 갱신 NOTICE_CREATE의 end-to-end 기대값을 함께 동결한�
 
 ## Mock S4 — 성공 응답 형식 위반
 
-- 목적: HTTP 201 body의 `key` 또는 `fileUrl`이 없거나 string이 아니면
+- 목적: HTTP 201 body의 `fileKey`가 없거나 string이 아니면
   성공 처리하지 않는다.
 - Mock request: `POST /api/file`
-- Mock response: HTTP 201, `{"key":123}`
+- Mock response: HTTP 201, `{"fileKey":123}`
 - 사용자 동작: 유효한 공지 입력과 파일을 선택하고 생성 submit
 - 기대 결과: 공지 생성 request와 성공 이동 없음, 오류 상태 표시
 

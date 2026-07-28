@@ -14,6 +14,7 @@ export type {
   NoticeDeleteResponse,
   NoticeKind,
   NoticeQueryErrorResponse,
+  NoticeQueryFileResponse,
   NoticeQueryAllErrorResponse,
   NoticeQueryAllRequest,
   NoticeQueryAllResponse,

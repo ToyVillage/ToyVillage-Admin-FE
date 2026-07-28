@@ -551,8 +551,7 @@ async function mockSuccessfulNoticeCreate(page: Page, title: string) {
       createRequestCount += 1
       await route.fulfill({
         status: 201,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: '공지 생성 성공' }),
+        body: '',
       })
       return
     }

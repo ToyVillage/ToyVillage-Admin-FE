@@ -77,7 +77,7 @@ export function NoticeForm({
       const files: string[] = []
       for (const attachmentFile of attachmentFiles) {
         const uploadedFile = await uploadFile({ files: attachmentFile })
-        files.push(uploadedFile.key)
+        files.push(uploadedFile.fileKey)
       }
 
       await createNotice({

@@ -4,9 +4,10 @@
 
 - 목적: route ID로 API를 호출하고 상세 폼에 응답을 표시한다.
 - Mock request: `GET /api/notice/7`
-- Mock response: HTTP 200, `id`, `title`, `kind`, `content`, `createAt`
+- Mock response: HTTP 200, `id`, `title`, `kind`, `content`, `createdAt`,
+  `files: [{"fileName":"notice.pdf","fileKey":"notice-key.pdf"}]`
 - 사용자 동작: `/notices/list/7` 진입
-- 기대 결과: 요청 path 확인, 제목·분류·내용 표시
+- 기대 결과: 요청 path 확인, 제목·분류·내용·`notice.pdf` 첨부 chip 표시
 
 ## Mock S2 — 존재하지 않는 공지
 

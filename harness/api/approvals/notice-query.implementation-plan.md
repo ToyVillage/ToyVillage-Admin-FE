@@ -2,7 +2,8 @@
 
 ## 승인 기준
 
-- `notice-query-all`과 동일한 누락값 결정 및 HTTP 500 backtick 무시를 사용자 승인 기준으로 동결한다.
+- HTTP 500 backtick 무시와 백엔드 PR #94의 `createdAt`,
+  `files: FileResponse[]` 상세 응답을 사용자 승인 기준으로 동결한다.
 - 실제 서버 테스트는 disabled이다.
 
 ## 재사용할 기존 코드
@@ -27,7 +28,9 @@
 - `getNotice({ id })`는 공통 Axios 인스턴스로 `/notice/{id}`를 호출한다.
 - unknown 응답을 Contract 필드로 검증한 뒤 기존 `Notice`로 매핑한다.
 - `id`는 API integer에서 라우트·도메인용 string으로 변환한다.
-- `kind`는 category, `createAt`은 date로 매핑한다.
+- `kind`는 category, `createdAt`은 date로 매핑한다.
+- `files` 각 항목의 `fileName`, `fileKey`를 검증하고 `fileName` 목록을
+  `Notice.attachments`로 매핑한다.
 
 ## Query와 오류
 
@@ -39,7 +42,8 @@
 
 ## UI 연결
 
-- 성공한 조회 결과를 기존 `NoticeForm`의 `initialNotice`로 전달한다.
+- 첨부파일명을 포함한 조회 결과를 기존 `NoticeForm`의 `initialNotice`로
+  전달해 첨부 chip을 표시한다.
 - 이탈 방지, 목록 이동, 수정·삭제 mock mutation은 유지한다.
 
 ## 검증 순서

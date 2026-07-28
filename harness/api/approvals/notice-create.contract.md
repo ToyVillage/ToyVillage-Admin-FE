@@ -59,15 +59,10 @@
 
 ## Success Responses
 
-### HTTP 201
+### HTTP 200 또는 201
 
-```json
-{
-  "message": "공지 생성 성공"
-}
-```
-
-- response body와 `message`는 required, nullable false
+- Response Body: 없음
+- 실제 서버의 `200 OK`와 문서의 `201`을 생성 성공으로 판단한다.
 
 ## Error Responses
 
@@ -84,7 +79,7 @@
   nullable false
 - `kind` Allowed Values는 백엔드 enum `ALL(kindName: "전체")` 확인 후 `ALL`
   하나만 고정
-- `files`는 FILE_CREATE 성공 response의 `key` 배열이다.
+- `files`는 FILE_CREATE 성공 response의 `fileKey` 배열이다.
 - 첨부파일이 없으면 `files: []`를 전달한다.
 
 ## Notes
@@ -93,6 +88,11 @@
   동결했다.
 - API ID가 없는 보조 `post 예시` 페이지의 `files` 명세를 2026-07-28 사용자
   결정으로 NOTICE_CREATE Contract에 동결했다.
+- 실제 생성 성공 뒤 목록에서 생성 데이터가 확인됐지만 기존 성공 body 검증으로
+  프론트가 실패 처리한 증거에 따라 성공 response body는 사용하지 않는다.
+- 실제 서버에서 확인한 `200 OK`와 문서에 명시된 `201`을 모두 성공 status로
+  동결했다.
+- FILE_CREATE 응답은 백엔드 머지 PR #36의 실제 DTO인 `fileKey`를 사용한다.
 - FILE_CREATE Contract와 함께 승인·구현한다.
 - 실제 서버 테스트는 비활성화한다.
 - 백엔드 명세가 보완되면 임시 동결값을 재검토한다.

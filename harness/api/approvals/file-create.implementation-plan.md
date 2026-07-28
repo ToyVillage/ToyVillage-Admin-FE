@@ -12,7 +12,7 @@ FILE_CREATE와 `files: string[]`을 추가한 NOTICE_CREATE가 함께 검토 가
 - FILE_CREATE `POST /file`은 요청당 browser `File` 하나를 `files` part로
   전송한다.
 - UI에서 여러 파일을 선택하면 submit 시 파일 수만큼 요청을 순차 실행한다.
-- response `key`, `fileUrl`은 required, nullable false string으로 검증한다.
+- response `fileKey`는 required, nullable false string으로 검증한다.
 - 파일 하나라도 실패하면 공지 생성 request를 실행하지 않는다.
 - 자료실 업로드는 변경하지 않는다.
 - 실제 서버 테스트는 disabled다.
@@ -42,21 +42,21 @@ FILE_CREATE와 `files: string[]`을 추가한 NOTICE_CREATE가 함께 검토 가
 ## 타입과 API 함수
 
 - `FileCreateRequest`: `files: File`
-- `FileCreateResponse`: `key: string`, `fileUrl: string`
+- `FileCreateResponse`: `fileKey: string`
 - `FileCreateErrorResponse`: `message`, `status`, `timestamp`, `description`
 - `uploadFile({ files })`
   - `FormData` 생성
   - `formData.append('files', files)`
   - 공통 `api.post<unknown>('/file', formData)` 호출
-  - `key`, `fileUrl` runtime 검증 후 반환
+  - `fileKey` runtime 검증 후 반환
 - multipart boundary 보존을 위해 `Content-Type`을 수동 설정하지 않는다.
 
 ## Query/Mutation과 캐시
 
 - FILE_CREATE 전용 query cache는 만들지 않는다.
 - 공지 create mutation에서 선택 파일을 순차 업로드한다.
-- 모든 upload response의 `key`를 선택 순서대로 수집한다.
-- NOTICE_CREATE에 `files: keys`를 생성 request에 포함한다.
+- 모든 upload response의 `fileKey`를 선택 순서대로 수집한다.
+- NOTICE_CREATE에 `files: fileKeys`를 생성 request에 포함한다.
 - 업로드 또는 공지 생성 실패 시 `['notices']`를 무효화하지 않는다.
 - 공지 생성 성공 시 기존 `['notices']` 무효화를 유지한다.
 

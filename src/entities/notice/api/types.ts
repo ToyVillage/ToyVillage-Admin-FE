@@ -13,9 +13,7 @@ export interface NoticeCreateRequest {
   files: string[]
 }
 
-export interface NoticeCreateResponse {
-  message: string
-}
+export type NoticeCreateResponse = void
 
 export interface NoticeCreateErrorResponse {
   message: string
@@ -78,12 +76,18 @@ export interface NoticeQueryRequest {
   id: number
 }
 
+export interface NoticeQueryFileResponse {
+  fileName: string
+  fileKey: string
+}
+
 export interface NoticeQueryResponse {
   id: number
   title: string
   kind: NoticeKind
   content: string
-  createAt: string
+  createdAt: string
+  files: NoticeQueryFileResponse[]
 }
 
 export interface NoticeQueryErrorResponse {

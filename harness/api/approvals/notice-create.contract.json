@@ -72,7 +72,7 @@
         "nullable": false,
         "default": null,
         "example": ["file-key-1"],
-        "description": "FILE_CREATE 응답 key 목록",
+        "description": "FILE_CREATE 응답 fileKey 목록",
         "constraints": ["첨부파일이 없으면 빈 배열"]
       }
     ],
@@ -86,27 +86,16 @@
   "responses": {
     "success": [
       {
+        "status": 200,
+        "description": "공지 생성 성공 (실제 서버)",
+        "body": null,
+        "noContent": true
+      },
+      {
         "status": 201,
-        "description": "공지 생성 성공",
-        "body": {
-          "type": "object",
-          "nullable": false,
-          "description": "공지 생성 결과",
-          "fields": [
-            {
-              "name": "message",
-              "location": "response",
-              "type": "string",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "공지 생성 성공",
-              "description": "생성 성공 메시지",
-              "constraints": []
-            }
-          ]
-        },
-        "noContent": false
+        "description": "공지 생성 성공 (문서)",
+        "body": null,
+        "noContent": true
       }
     ],
     "errors": [

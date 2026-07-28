@@ -29,7 +29,7 @@ real_server:
 # 기대 성공 동작
 
 - 유효한 공지사항 입력으로 생성 API를 한 번 호출한다.
-- 첨부파일은 FILE_CREATE로 파일별 업로드하고 반환된 key 배열을 `files`로
+- 첨부파일은 FILE_CREATE로 파일별 업로드하고 반환된 fileKey 배열을 `files`로
   전달한다.
 - 첨부파일이 없으면 `files: []`를 전달한다.
 - 성공하면 공지사항 목록 query를 갱신하고 `/notices/list`로 이동한다.
@@ -54,6 +54,8 @@ real_server:
 # 비고 및 제약
 
 - `NOTICE_CREATE` 등록만 연동하며 공지 수정·삭제 API는 연결하지 않는다.
+- 생성 성공은 response body가 아니라 실제 서버의 `200` 또는 문서의 `201`
+  status로 판단한다.
 - 요청 필드와 Content-Type은 Contract에 명시된 값만 사용한다.
 - 첨부파일 업로드는 승인된 FILE_CREATE Contract와 함께 구현한다.
 - 자료실 파일 업로드는 이번 범위에서 제외한다.

@@ -34,9 +34,9 @@ real_server:
 # 기대 성공 동작
 
 - 공지 생성 submit 시 선택한 파일마다 `POST /file`을 한 번씩 호출한다.
-- 성공한 응답의 `key`와 `fileUrl`을 해당 파일에 보존한다.
+- 성공한 응답의 `fileKey`를 해당 파일에 보존한다.
 - 모든 파일 업로드가 성공해야 공지 생성 후속 동작으로 넘어간다.
-- 업로드된 key 목록을 공지 생성 request에 연결하려면 NOTICE_CREATE Contract의
+- 업로드된 fileKey 목록을 공지 생성 request에 연결하려면 NOTICE_CREATE Contract의
   `files` 필드 승인이 선행되어야 한다.
 
 # 기대 오류 동작
@@ -64,6 +64,5 @@ real_server:
 - 자료실 업로드는 연결하지 않는다.
 - 실제 서버 테스트는 비활성화한다.
 - 개발자 승인 전 API 코드와 테스트 코드를 작성하지 않는다.
-- 현재 승인된 NOTICE_CREATE Contract에는 `files`가 없으므로, 업로드 key를
-  공지 생성 request에 포함하는 구현은 NOTICE_CREATE Contract 갱신과 재승인
-  전에는 수행하지 않는다.
+- 업로드 fileKey를 포함하는 NOTICE_CREATE Contract와 함께 승인 상태를
+  유지한다.

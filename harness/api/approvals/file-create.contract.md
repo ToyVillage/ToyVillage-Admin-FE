@@ -8,6 +8,8 @@
 - Resolved page: `https://app.notion.com/p/3a6bfdfeff9480fab18bc0b5bbc20b5b`
 - Requested page: 없음
 - Checked at: `2026-07-28T19:33:56+09:00`
+- Backend implementation:
+  `https://github.com/ToyVillage/ToyVillage-WebSite-BE/pull/36`
 
 ## Basic Information
 
@@ -57,12 +59,11 @@ files=<binary>
 
 ```json
 {
-  "key": "1931797c-89c0-4392-83d9-3cfe9abf0998image_name.png",
-  "fileUrl": ""
+  "fileKey": "1931797c-89c0-4392-83d9-3cfe9abf0998image_name.png"
 }
 ```
 
-- response body와 `key`, `fileUrl`은 required, nullable false
+- response body와 `fileKey`는 required, nullable false
 
 ## Error Responses
 
@@ -86,6 +87,8 @@ files=<binary>
 - Header, request, response의 Required/Nullable은 2026-07-28 사용자 결정으로
   기존 API Contract 규칙과 동일하게 동결했다.
 - multipart `file`은 하네스 타입의 `object`로 정규화한다.
+- Notion의 `key`, `fileUrl` 예시는 백엔드 머지 PR #36의 현재 구현과
+  불일치한다. 프론트는 실제 DTO의 `fileKey`만 사용한다.
 - 실제 서버 테스트는 비활성화한다.
 - 자료실 업로드는 범위 밖이다.
 

@@ -8,6 +8,8 @@
 - Resolved page: `https://app.notion.com/p/392bfdfeff94803d8009ca9ec7920250`
 - Requested page: `https://app.notion.com/p/392bfdfeff94803d8009ca9ec7920250`
 - Checked at: `2026-07-28T15:29:24+09:00`
+- Backend implementation:
+  `https://github.com/ToyVillage/ToyVillage-WebSite-BE/pull/94`
 
 ## Basic Information
 
@@ -55,11 +57,18 @@
   "title": "공지사항 제목",
   "kind": "공지사항 분류",
   "content": "공지사항 내용",
-  "createAt": "2026-07-04"
+  "createdAt": "2026-07-04",
+  "files": [
+    {
+      "fileName": "notice.pdf",
+      "fileKey": "1931797c-89c0-4392-83d9-3cfe9abf0998notice.pdf"
+    }
+  ]
 }
 ```
 
 - 응답 객체와 모든 필드는 required, nullable false
+- `files` 각 항목의 `fileName`, `fileKey`는 required, nullable false string
 - `kind` Allowed Values는 사용자 결정에 따라 임시로 `공지사항 분류` 하나만 고정
 
 ## Error Responses
@@ -74,14 +83,16 @@
 ## Validation and Constraints
 
 - `id`는 양의 integer이다.
-- `createAt`은 `YYYY-MM-DD` 문자열이다.
+- `createdAt`은 `YYYY-MM-DD` 문자열이다.
 
 ## Notes
 
 - Notion 누락값은 2026-07-28 사용자 결정으로 `notice-query-all` 승인 조건과 동일하게 동결했다.
 - HTTP 500 예시의 불필요한 backtick은 문서 오타로 무시한다.
+- Notion의 `createAt`과 첨부 누락은 백엔드 PR #94의 현재
+  `NoticeDetailResponse`와 불일치한다. 프론트는 `createdAt`과
+  `files: FileResponse[]`를 사용한다.
 
 ## Backend Questions
 
 1. `kind`의 실제 전체 enum 값
-2. `id`와 `createAt`의 구조화된 타입·제약

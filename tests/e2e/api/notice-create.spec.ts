@@ -21,8 +21,7 @@ test('S1: JSON body로 공지를 한 번 생성하고 갱신된 목록으로 이
       createRequestHeaders = request.headers()
       await route.fulfill({
         status: 201,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: '공지 생성 성공' }),
+        body: '',
       })
       return
     }
@@ -84,8 +83,7 @@ test('S4: 연속 submit에도 생성 요청은 한 번만 전송한다', async (
       await responseGate
       await route.fulfill({
         status: 201,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: '공지 생성 성공' }),
+        body: '',
       })
       return
     }
@@ -112,22 +110,27 @@ test('S4: 연속 submit에도 생성 요청은 한 번만 전송한다', async (
   expect(createRequestCount).toBe(1)
 })
 
-test('S5: HTTP 201 응답이 Contract와 다르면 성공 처리하지 않는다', async ({
-  page,
-}) => {
+test('S5: 실제 서버의 HTTP 200도 생성 성공으로 처리한다', async ({ page }) => {
   await page.route(noticeApiPath, async (route) => {
-    await route.fulfill({
-      status: 201,
-      contentType: 'application/json',
-      body: JSON.stringify({ result: 'ok' }),
-    })
+    if (route.request().method() === 'POST') {
+      await route.fulfill({
+        status: 200,
+        body: '',
+      })
+      return
+    }
+
+    await fulfillNoticeList(route, 'HTTP 200 생성 공지')
   })
 
   await page.goto('/notices/list/create')
-  await fillNotice(page, '잘못된 응답 공지', '잘못된 응답 내용')
+  await fillNotice(page, 'HTTP 200 생성 공지', 'HTTP 200 생성 내용')
   await page.getByRole('button', { name: '생성하기' }).click()
 
-  await expectCreateFailure(page, '잘못된 응답 공지', '잘못된 응답 내용')
+  await expect(page).toHaveURL(/\/notices\/list$/)
+  await expect(page.getByTestId('notice-row')).toContainText(
+    'HTTP 200 생성 공지',
+  )
 })
 
 async function fillNotice(page: Page, title: string, content: string) {

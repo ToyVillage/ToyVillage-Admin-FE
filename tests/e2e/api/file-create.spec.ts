@@ -12,7 +12,7 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 const fileApiPath = /\/api\/file(?:\?.*)?$/
 const noticeApiPath = /\/api\/notice(?:\?.*)?$/
 
-test('S1: 파일 하나를 multipart로 업로드하고 key를 공지 생성에 전달한다', async ({
+test('S1: 파일 하나를 multipart로 업로드하고 fileKey를 공지 생성에 전달한다', async ({
   page,
 }) => {
   let uploadRequestCount = 0
@@ -158,7 +158,7 @@ test('S4: 성공 응답 형식이 Contract와 다르면 공지를 생성하지 �
     await route.fulfill({
       status: 201,
       contentType: 'application/json',
-      body: JSON.stringify({ key: 123 }),
+      body: JSON.stringify({ fileKey: 123 }),
     })
   })
   await page.route(noticeApiPath, async (route) => {
@@ -283,19 +283,18 @@ async function expectCreateFailure(page: Page, title: string, content: string) {
   await expect(page.getByRole('button', { name: '생성하기' })).toBeEnabled()
 }
 
-async function fulfillUpload(route: Route, key: string) {
+async function fulfillUpload(route: Route, fileKey: string) {
   await route.fulfill({
     status: 201,
     contentType: 'application/json',
-    body: JSON.stringify({ key, fileUrl: `/files/${key}` }),
+    body: JSON.stringify({ fileKey }),
   })
 }
 
 async function fulfillNoticeCreate(route: Route) {
   await route.fulfill({
-    status: 201,
-    contentType: 'application/json',
-    body: JSON.stringify({ message: '공지 생성 성공' }),
+    status: 200,
+    body: '',
   })
 }
 

@@ -7,8 +7,10 @@
   동결한다.
 - `kind`는 백엔드 enum `ALL(kindName: "전체")` 확인 후 승인 Contract에서
   `ALL` 단일 값을 사용한다.
-- 성공·오류 response body와 필드는 required 또는 nullable false로 동결한다.
-- `files`는 FILE_CREATE response key 배열이며 첨부가 없으면 `[]`다.
+- 성공은 HTTP 200 또는 201 status로 판단하고 성공 response body는 사용하지
+  않는다.
+- 오류 response body와 필드는 required 또는 nullable false로 동결한다.
+- `files`는 FILE_CREATE response fileKey 배열이며 첨부가 없으면 `[]`다.
 - FILE_CREATE와 NOTICE_CREATE 승인을 모두 통과한 뒤 구현한다.
 - 실제 서버 테스트는 disabled이다.
 
@@ -40,9 +42,9 @@
   `NoticeCreateErrorResponse`를 분리해 정의한다.
 - `NoticeCreateRequest`는 `title`, `kind`, `content`, `files`를 포함한다.
 - `createNotice(input)`은 공통 Axios 인스턴스로 `POST /notice`를 호출한다.
-- HTTP 201 response를 `unknown`으로 받은 뒤 non-null string `message`를
-  검증해 `NoticeCreateResponse`로 반환한다.
-- 응답 형식이 Contract와 다르면 명시적 오류를 발생시킨다.
+- `createNotice(input)`은 HTTP 200 또는 201이면 성공하며 response body는
+  읽거나 검증하지 않는다.
+- 그 외 status는 Axios 오류 또는 Contract 위반으로 처리한다.
 - FILE_CREATE 타입/API 함수는 file-create 승인 계획을 따른다.
 
 ## Query/Mutation과 캐시
@@ -51,7 +53,7 @@
 - 생성 분기에서 `createMockNotice` 대신 `createNotice`를 호출한다.
 - 수정 분기는 기존 `updateMockNotice`를 유지한다.
 - 생성 request는 trim된 `title`, 고정 `kind: 'ALL'`, trim된 `content`,
-  FILE_CREATE response `key` 배열을 전달한다.
+  FILE_CREATE response `fileKey` 배열을 전달한다.
 - 첨부파일명과 UI category 문자열은 Contract 밖이므로 request에서 제외한다.
 - 첨부가 없으면 업로드 요청 없이 `files: []`로 NOTICE_CREATE를 호출한다.
 - 새 파일은 선택 순서대로 순차 업로드하며 하나라도 실패하면 NOTICE_CREATE를

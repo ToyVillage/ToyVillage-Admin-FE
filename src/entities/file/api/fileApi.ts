@@ -20,7 +20,5 @@ function isFileCreateResponse(value: unknown): value is FileCreateResponse {
   if (typeof value !== 'object' || value === null) return false
 
   const response = value as Record<string, unknown>
-  return (
-    typeof response.key === 'string' && typeof response.fileUrl === 'string'
-  )
+  return typeof response.fileKey === 'string'
 }

@@ -14,7 +14,13 @@ test('S1: route ID로 상세 조회하고 기존 폼에 표시한다', async ({ 
         title: 'API 상세 공지',
         kind: '공지사항 분류',
         content: 'API에서 조회한 공지사항 내용입니다.',
-        createAt: '2026-07-28',
+        createdAt: '2026-07-28',
+        files: [
+          {
+            fileName: 'notice.pdf',
+            fileKey: 'notice-key.pdf',
+          },
+        ],
       }),
     })
   })
@@ -26,6 +32,9 @@ test('S1: route ID로 상세 조회하고 기존 폼에 표시한다', async ({ 
     'API에서 조회한 공지사항 내용입니다.',
   )
   await expect(page.getByRole('radio', { name: '공지사항 분류' })).toBeChecked()
+  await expect(
+    page.getByRole('group', { name: '첨부파일' }).getByText('notice.pdf'),
+  ).toBeVisible()
   expect(requestURLs).toHaveLength(1)
   expect(new URL(requestURLs[0]).pathname).toBe('/api/notice/7')
 })

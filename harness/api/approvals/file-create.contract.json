@@ -55,7 +55,7 @@
           "description": "업로드된 파일 정보",
           "fields": [
             {
-              "name": "key",
+              "name": "fileKey",
               "location": "response",
               "type": "string",
               "required": true,
@@ -63,17 +63,6 @@
               "default": null,
               "example": "1931797c-89c0-4392-83d9-3cfe9abf0998image_name.png",
               "description": "업로드된 파일 key",
-              "constraints": []
-            },
-            {
-              "name": "fileUrl",
-              "location": "response",
-              "type": "string",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "",
-              "description": "업로드된 파일 URL",
               "constraints": []
             }
           ]

@@ -105,7 +105,7 @@
               "constraints": []
             },
             {
-              "name": "createAt",
+              "name": "createdAt",
               "location": "response",
               "type": "string",
               "required": true,
@@ -115,6 +115,24 @@
               "description": "공지사항 생성일",
               "constraints": [
                 "YYYY-MM-DD"
+              ]
+            },
+            {
+              "name": "files",
+              "location": "response",
+              "type": "array<object>",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": [
+                {
+                  "fileName": "notice.pdf",
+                  "fileKey": "1931797c-89c0-4392-83d9-3cfe9abf0998notice.pdf"
+                }
+              ],
+              "description": "공지사항에 연결된 첨부파일 목록",
+              "constraints": [
+                "각 항목은 required non-null string fileName과 fileKey를 포함"
               ]
             }
           ]
