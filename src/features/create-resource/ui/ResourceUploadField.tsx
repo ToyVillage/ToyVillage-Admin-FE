@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type Ref } from 'react'
 import styled from '@emotion/styled'
+import { uploadFile } from '@/entities/file'
 import filePdfIcon from './assets/file-pdf.svg'
 import filePngIcon from './assets/file-png.svg'
 import fileJpgIcon from './assets/file-jpg.svg'
@@ -19,30 +20,47 @@ interface AttachedFile {
   id: string
   name: string
   file?: File
+  fileKey?: string
 }
 
 interface ResourceUploadFieldProps {
   initialFileNames?: string[]
+  // 수정 모드: 기존 파일을 이름+키로 복원해 재전송용 fileKey 를 그대로 보존한다.
+  initialFiles?: { fileName: string; fileKey: string }[]
   uploadButtonRef?: Ref<HTMLButtonElement>
+  // true 이면 파일을 첨부하는 즉시 업로드(FILE_CREATE)해 fileKey 를 확보한다.
+  uploadOnAttach?: boolean
   onFilesChange?: (hasFiles: boolean) => void
   onFileNamesChange?: (fileNames: string[]) => void
+  onFileKeysChange?: (fileKeys: string[]) => void
+  onUploadingChange?: (uploading: boolean) => void
 }
 
 // Figma "upload file" — 점선 드롭존(드래그/클릭, 최대 50MB, 다중 파일).
 // 파일이 없으면 아무것도 없다가, 올리면 드롭존 위에 "첨부자료" 칩 목록을 보여준다.
-// 수정 모드에서는 initialFileNames 로 기존 첨부(파일 객체 없음)를 복원한다.
+// 수정 모드에서는 initialFiles(이름+키)로 기존 첨부를 복원한다.
 export function ResourceUploadField({
   initialFileNames = [],
+  initialFiles,
   uploadButtonRef,
+  uploadOnAttach = false,
   onFilesChange,
   onFileNamesChange,
+  onFileKeysChange,
+  onUploadingChange,
 }: ResourceUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<AttachedFile[]>(() =>
-    initialFileNames.map((name, index) => ({
-      id: `existing:${index}:${name}`,
-      name,
-    })),
+    initialFiles && initialFiles.length > 0
+      ? initialFiles.map(({ fileName, fileKey }, index) => ({
+          id: `existing:${index}:${fileName}`,
+          name: fileName,
+          fileKey,
+        }))
+      : initialFileNames.map((name, index) => ({
+          id: `existing:${index}:${name}`,
+          name,
+        })),
   )
   const [isDragging, setIsDragging] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -50,7 +68,40 @@ export function ResourceUploadField({
   useEffect(() => {
     onFilesChange?.(files.length > 0)
     onFileNamesChange?.(files.map(({ name }) => name))
-  }, [files, onFileNamesChange, onFilesChange])
+    onFileKeysChange?.(files.flatMap(({ fileKey }) => (fileKey ? [fileKey] : [])))
+    onUploadingChange?.(
+      uploadOnAttach && files.some(({ file, fileKey }) => file && !fileKey),
+    )
+  }, [
+    files,
+    onFileKeysChange,
+    onFileNamesChange,
+    onFilesChange,
+    onUploadingChange,
+    uploadOnAttach,
+  ])
+
+  // 첨부 즉시 각 파일을 업로드해 fileKey 를 채운다. 실패한 파일은 목록에서 제거한다.
+  async function uploadNewFiles(newFiles: AttachedFile[]) {
+    await Promise.all(
+      newFiles.map(async (attachedFile) => {
+        if (!attachedFile.file) return
+        try {
+          const { fileKey } = await uploadFile({ files: attachedFile.file })
+          setFiles((currentFiles) =>
+            currentFiles.map((current) =>
+              current.id === attachedFile.id ? { ...current, fileKey } : current,
+            ),
+          )
+        } catch {
+          setFiles((currentFiles) =>
+            currentFiles.filter((current) => current.id !== attachedFile.id),
+          )
+          setErrorMessage('파일 업로드에 실패했습니다. 다시 시도해 주세요.')
+        }
+      }),
+    )
+  }
 
   function addFiles(fileList: FileList | File[]) {
     const incomingFiles = Array.from(fileList)
@@ -83,6 +134,7 @@ export function ResourceUploadField({
 
     if (nextFiles.length > 0) {
       setFiles((currentFiles) => [...currentFiles, ...nextFiles])
+      if (uploadOnAttach) void uploadNewFiles(nextFiles)
     }
   }
 
