@@ -5,6 +5,8 @@ import type {
   NoticeCreateResponse,
   NoticeQueryAllRequest,
   NoticeQueryRequest,
+  NoticeUpdateRequest,
+  NoticeUpdateResponse,
 } from './types'
 
 interface NoticeQueryAllRuntimeItem {
@@ -23,8 +25,28 @@ export async function createNotice(
 ): Promise<NoticeCreateResponse> {
   const { data } = await api.post<unknown>('/notice', input)
 
-  if (!isNoticeCreateResponse(data)) {
+  if (!isNoticeMessageResponse(data)) {
     throw new Error('공지사항 생성 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data
+}
+
+export async function updateNotice({
+  id,
+  input,
+}: {
+  id: number
+  input: NoticeUpdateRequest
+}): Promise<NoticeUpdateResponse> {
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error('공지사항 ID가 올바르지 않습니다.')
+  }
+
+  const { data } = await api.put<unknown>(`/notice/${id}`, input)
+
+  if (!isNoticeMessageResponse(data)) {
+    throw new Error('공지사항 수정 응답 형식이 올바르지 않습니다.')
   }
 
   return data
@@ -117,7 +139,9 @@ function isNoticeQueryResponse(
   )
 }
 
-function isNoticeCreateResponse(value: unknown): value is NoticeCreateResponse {
+function isNoticeMessageResponse(
+  value: unknown,
+): value is NoticeCreateResponse | NoticeUpdateResponse {
   if (typeof value !== 'object' || value === null) return false
 
   return typeof (value as Record<string, unknown>).message === 'string'

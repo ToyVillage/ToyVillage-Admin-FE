@@ -17,12 +17,17 @@ export type {
   NoticeQueryAllResponseItem,
   NoticeQueryRequest,
   NoticeQueryResponse,
+  NoticeUpdateErrorResponse,
+  NoticeUpdateKind,
+  NoticeUpdateRequest,
+  NoticeUpdateResponse,
 } from './api/types'
 export {
   createNotice,
   getNotice,
   getNotices,
   isNoticeNotFoundError,
+  updateNotice,
 } from './api/noticeApi'
 export {
   createMockNotice,

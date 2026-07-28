@@ -23,6 +23,25 @@ export interface NoticeCreateErrorResponse {
   description: string
 }
 
+export type NoticeUpdateKind = 'ALL'
+
+export interface NoticeUpdateRequest {
+  title: string
+  kind: NoticeUpdateKind
+  content: string
+}
+
+export interface NoticeUpdateResponse {
+  message: string
+}
+
+export interface NoticeUpdateErrorResponse {
+  message: string
+  status: number
+  timestamp: string
+  description: string
+}
+
 export interface NoticeQueryAllResponseItem {
   id: number
   title: string

@@ -4,9 +4,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createNotice,
   deleteMockNotice,
-  updateMockNotice,
   type Notice,
   type UpdateNoticeInput,
+  updateNotice,
 } from '@/entities/notice'
 import { DeleteConfirmationDialog, ValidationDialog } from '@/shared/ui'
 import { NoticeAttachmentField } from './NoticeAttachmentField'
@@ -60,7 +60,14 @@ export function NoticeForm({
   const mutation = useMutation({
     mutationFn: async (input: UpdateNoticeInput) => {
       if (initialNotice) {
-        await updateMockNotice({ id: initialNotice.id, input })
+        await updateNotice({
+          id: Number(initialNotice.id),
+          input: {
+            title: input.title,
+            kind: 'ALL',
+            content: input.content,
+          },
+        })
         return
       }
 
