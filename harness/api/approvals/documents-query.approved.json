@@ -1,9 +1,9 @@
 {
   "feature": "documents-query",
   "apiId": "DOCUMENTS_QUERY",
-  "approvedAt": "2026-07-28T17:23:30.939Z",
+  "approvedAt": "2026-07-29T16:15:38.918Z",
   "approvedBy": "kimjihwan8",
-  "taskSpecHash": "f7a33602ca8fe33095f2f390e78cdfbb98e01b0c2dc4e33c04466250d2399cd8",
+  "taskSpecHash": "4cba0c0d8f4b356154b4282fbeb9f2e4a394869050d7d890fc380d3a96339456",
   "contractHash": "97e68c82e32f3e29373d0266c56af592f80e4850dc01912fbd4b524153330801",
   "contractMarkdownHash": "852756b413be5b7120a7b417fef31d5350330a59eb24cfa9efc859194bc58357",
   "planHash": "59808ce6a273249046a32c0b63008014c66a410a3e590a281dbccac3384a1362",
@@ -11,5 +11,5 @@
   "testHash": "68255eb0e5433433cb91d1487ce31d388a179b9f552cfa60ffc69ad8a4dc95f7",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-07-28T17:23:31.393Z"
+  "testApprovedAt": "2026-07-29T16:15:39.378Z"
 }
