@@ -5,21 +5,25 @@
 - Resolved: https://app.notion.com/p/10ce8d82a45082e482df8153ce781768 / Checked at 2026-07-29
 
 ## Basic Information
+
 | API ID | Name | Method | Full Path | Content-Type |
 | ------ | ---- | ------ | --------- | ------------ |
 | DOCUMENTS_UPDATE | 자료실 자료 수정 기능 | PUT | /documents/{id} | application/json |
 
 ## Authentication
+
 | Required | Type | Roles |
 | -------- | ---- | ----- |
 | true | Bearer | ADMIN |
 
 ## Request Headers
+
 | Name | Required | Example |
 | ---- | -------- | ------- |
 | Authorization | true | `Bearer <access-token>` |
 
 ## Path Parameters
+
 | Name | Type | Required | Example |
 | ---- | ---- | -------- | ------- |
 | id | integer | true | 1 |
@@ -28,6 +32,7 @@
 없음
 
 ## Request Body (required)
+
 | Name | Type | Required | Allowed | Description |
 | ---- | ---- | -------- | ------- | ----------- |
 | title | string | true | — | 비어 있을 수 없음 |
@@ -41,6 +46,7 @@
 ```
 
 ## Error Responses
+
 | Status | 대표 message |
 | ------ | ------------ |
 | 400 | 자료 제목은 비어있을 수 없습니다. (외 2) |
