@@ -14,7 +14,7 @@ Playwright `page.route()` mock. 대상: `PUT /documents/{id}`. 상세는 `GET /d
 - S6. 401 만료된 토큰 → 저장 실패 다이얼로그, 목록 미이동(상세 URL 유지).
 
 ## 부가
-- S5. 저장 중 버튼 disabled('저장 중').
+- S8. 저장 중 버튼 disabled('저장 중').
 
 ## 정리
 - Mock 은 서버 상태를 만들지 않음. 실제 서버 테스트 미실행(`real_server.enabled: false`).

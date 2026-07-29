@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// 승인된 시나리오(documents-update.test-scenarios.md: S1~S5)를 mock 으로 변환한 것.
+// 승인된 시나리오(documents-update.test-scenarios.md: S1~S8)를 mock 으로 변환한 것.
 // 상세(GET /documents/{id})로 편집 폼을 띄운 뒤 PUT /documents/{id}로 수정한다.
 // 실제 서버는 호출하지 않는다.
 
