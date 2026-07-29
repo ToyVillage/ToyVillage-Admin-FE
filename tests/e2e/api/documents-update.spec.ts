@@ -105,6 +105,61 @@ test('S4: 500 → 저장 실패 다이얼로그', async ({ page }) => {
   await expect(page.getByRole('alertdialog')).toContainText('저장에 실패')
 })
 
+test('S5: 새 파일 추가 → 기존 키 + 새 업로드 키 병합 전송(파일 손실 없음)', async ({
+  page,
+}) => {
+  let putBody: { files?: unknown } = {}
+  await page.route('**/file', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({ fileKey: 'new-key' }),
+    })
+  })
+  await routePut(page, {
+    status: 201,
+    body: { message: '자료 수정 성공' },
+    onBody: (body) => {
+      putBody = body as typeof putBody
+    },
+  })
+  await page.goto('/notices/resources/1')
+  await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
+
+  // 새 파일 첨부 → 즉시 업로드(new-key)
+  await page.setInputFiles('#resource-files', {
+    name: '추가.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('add'),
+  })
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  await expect(page).toHaveURL(/\/notices\/resources$/)
+  expect(putBody.files).toEqual(['key-1', 'key-2', 'new-key'])
+})
+
+test('S7: 기존 파일 제거 → 남은 키만 전송', async ({ page }) => {
+  let putBody: { files?: unknown } = {}
+  await routePut(page, {
+    status: 201,
+    body: { message: '자료 수정 성공' },
+    onBody: (body) => {
+      putBody = body as typeof putBody
+    },
+  })
+  await page.goto('/notices/resources/1')
+  await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
+
+  // 기존 첨부 '안내.png'(key-2) 제거
+  await page.getByText('안내.png').hover()
+  await page.getByRole('button', { name: '안내.png 삭제' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  await expect(page).toHaveURL(/\/notices\/resources$/)
+  expect(putBody.files).toEqual(['key-1'])
+})
+
 test('S6: 401 만료된 토큰 → 저장 실패 다이얼로그, 목록 미이동', async ({ page }) => {
   await routePut(page, {
     status: 401,
