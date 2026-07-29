@@ -11,6 +11,7 @@ Playwright `page.route()` mock. 대상: `DELETE /documents/{id}`. 상세는 `GET
 ## 오류
 - S2. 404 존재하지 않는 자료 → 삭제 실패 다이얼로그.
 - S3. 500 → 삭제 실패 다이얼로그.
+- S4. 401 만료된 토큰 → 삭제 실패 다이얼로그, 목록 미이동(상세 URL 유지).
 
 ## 정리
 - Mock 은 서버 상태를 만들지 않음. 실제 서버 테스트 미실행(`real_server.enabled: false`).

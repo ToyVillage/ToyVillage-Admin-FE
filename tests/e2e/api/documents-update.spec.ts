@@ -104,3 +104,16 @@ test('S4: 500 → 저장 실패 다이얼로그', async ({ page }) => {
 
   await expect(page.getByRole('alertdialog')).toContainText('저장에 실패')
 })
+
+test('S6: 401 만료된 토큰 → 저장 실패 다이얼로그, 목록 미이동', async ({ page }) => {
+  await routePut(page, {
+    status: 401,
+    body: errorBody(401, '만료된 토큰입니다.'),
+  })
+  await page.goto('/notices/resources/1')
+  await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  await expect(page.getByRole('alertdialog')).toContainText('저장에 실패')
+  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
+})

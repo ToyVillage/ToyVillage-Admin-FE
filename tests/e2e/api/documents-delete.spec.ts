@@ -120,3 +120,15 @@ test('S3: 500 → 삭제 실패 다이얼로그', async ({ page }) => {
 
   await expect(page.getByRole('alertdialog')).toContainText('삭제에 실패')
 })
+
+test('S4: 401 만료된 토큰 → 삭제 실패 다이얼로그, 목록 미이동', async ({ page }) => {
+  await routeDelete(page, {
+    status: 401,
+    body: errorBody(401, '만료된 토큰입니다.'),
+  })
+  await page.goto('/notices/resources/1')
+  await openDeleteAndConfirm(page)
+
+  await expect(page.getByRole('alertdialog')).toContainText('삭제에 실패')
+  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
+})
