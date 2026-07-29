@@ -16,6 +16,19 @@ export interface CreateDocumentResponse {
 export async function createDocument(
   body: CreateDocumentRequest,
 ): Promise<CreateDocumentResponse> {
-  const { data } = await api.post<CreateDocumentResponse>('/documents', body)
+  const { data } = await api.post<unknown>('/documents', body)
+
+  if (!isMessageResponse(data)) {
+    throw new Error('자료 등록 응답 형식이 올바르지 않습니다.')
+  }
+
   return data
+}
+
+function isMessageResponse(value: unknown): value is CreateDocumentResponse {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as Record<string, unknown>).message === 'string'
+  )
 }
