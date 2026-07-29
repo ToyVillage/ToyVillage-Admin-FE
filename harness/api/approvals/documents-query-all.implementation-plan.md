@@ -12,7 +12,7 @@
    - `getDocuments`, `getAllDocuments`, 타입 `DocumentsQueryAllRequest`/`DocumentOrderDirection`, `documentTypeToFileType` export.
 4. `src/pages/notices/resources/ResourceListPage.tsx` (수정)
    - 서버 사이드 페이지네이션: `useQuery({ queryKey: ['resources','list',{ page, size: 10, keyword }], queryFn: () => getDocuments({ page: page-1, size: 10, keyword, orderDirection: 'DESC' }), placeholderData: prev })`. page 이동 시 자동 재요청.
-   - 응답에 총개수가 없어 `hasNextPage = pageItems.length === 10`로 다음 페이지 유무 판단, `pageCount = hasNextPage ? page+1 : page`(백엔드 총개수 확정 시 정식 번호로 전환).
+   - 응답에 총개수가 없어(배열만) `hasNextPage = pageItems.length === 10`로 다음 페이지 유무 판단, `pageCount = hasNextPage ? page+1 : page`. 마지막 페이지가 정확히 10개면 빈 다음 페이지가 노출될 수 있으므로, 조회 성공 응답이 빈 배열이고 1페이지가 아니면 직전 페이지로 자동 복귀(`replace`)해 고착을 막는다(백엔드 총개수 확정 시 정식 번호로 전환).
    - keyword 는 서버 파라미터. 자료 타입 탭은 API 필터가 없어 현재 페이지 내 임시 클라이언트 필터('전체' 우선, 타입은 백엔드 파라미터 요청 대상).
    - 디자인에 로딩/오류 화면이 없으므로 상태 카드 없이 빈 목록만 렌더. 빈 상태 높이 `EMPTY_MIN_HEIGHT`.
 

@@ -28,12 +28,12 @@ export function ResourceListPage() {
   // 페이지 번호는 URL(?page=)에 둔다. 상세로 갔다가 뒤로가기 하면 그 페이지가 복원된다.
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const setPage = useCallback(
-    (next: number) => {
+    (next: number, options?: { replace?: boolean }) => {
       setSearchParams((prev) => {
         const params = new URLSearchParams(prev)
         params.set('page', String(next))
         return params
-      })
+      }, options)
     },
     [setSearchParams],
   )
@@ -70,6 +70,15 @@ export function ResourceListPage() {
       setPage(1)
     }
   }, [filterKey, setPage])
+
+  // 마지막 페이지가 정확히 size(10)개면 빈 다음 페이지가 노출될 수 있다(응답에 총개수가
+  // 없어 사전 판단 불가). 조회 성공 응답이 빈 배열이고 1페이지가 아니면 이전 페이지로
+  // 되돌려 빈 페이지에 고착되지 않게 한다.
+  useEffect(() => {
+    if (data && data.length === 0 && page > 1) {
+      setPage(page - 1, { replace: true })
+    }
+  }, [data, page, setPage])
 
   // 자료 타입 탭은 API 필터 파라미터가 없어 현재 페이지 내 클라이언트 필터로 임시 처리한다.
   // (정식 타입 필터는 백엔드 type 파라미터 추가 후 서버 페이지네이션으로 전환)

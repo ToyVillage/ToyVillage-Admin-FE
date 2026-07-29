@@ -16,6 +16,13 @@ const fullPage = Array.from({ length: 10 }, (_, index) => ({
   createdAt: '2026-06-30T10:00:00.000',
 }))
 
+const fullPageB = Array.from({ length: 10 }, (_, index) => ({
+  id: index + 11,
+  title: `자료 ${index + 11}`,
+  type: 'PDF',
+  createdAt: '2026-06-20T09:00:00.000',
+}))
+
 const secondPage = [
   { id: 11, title: '마지막 자료', type: 'PNG', createdAt: '2026-06-20T09:00:00.000' },
 ]
@@ -99,4 +106,34 @@ test('S5: 다음 페이지 이동 시 page 파라미터로 재요청', async ({ 
 
   await expect(page.getByText('마지막 자료')).toBeVisible()
   expect(requestedPages).toContain('1')
+})
+
+test('S6: 마지막 페이지(정확히 10개)에서 다음 클릭 → 빈 응답 시 이전 페이지 복귀(고착 없음)', async ({
+  page,
+}) => {
+  const requestedPages: (string | null)[] = []
+  await page.route('**/documents*', async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback()
+    const requestedPage = new URL(route.request().url()).searchParams.get('page')
+    requestedPages.push(requestedPage)
+    const body =
+      requestedPage === '0' ? fullPage : requestedPage === '1' ? fullPageB : []
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(body),
+    })
+  })
+  await page.goto('/notices/resources')
+  await expect(page.getByText('자료 1', { exact: true })).toBeVisible()
+
+  // 2페이지(정확히 10개)로 이동
+  await page.getByRole('button', { name: '다음 페이지' }).click()
+  await expect(page.getByText('자료 11', { exact: true })).toBeVisible()
+
+  // 3페이지 요청 → 빈 응답 → 2페이지로 자동 복귀(빈 페이지에 고착되지 않음)
+  await page.getByRole('button', { name: '다음 페이지' }).click()
+  await expect(page).toHaveURL(/page=2/)
+  await expect(page.getByText('자료 11', { exact: true })).toBeVisible()
+  expect(requestedPages).toContain('2')
 })
