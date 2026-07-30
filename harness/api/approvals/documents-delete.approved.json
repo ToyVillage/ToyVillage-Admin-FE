@@ -1,0 +1,15 @@
+{
+  "feature": "documents-delete",
+  "apiId": "DOCUMENTS_DELETE",
+  "approvedAt": "2026-07-29T16:08:35.795Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "459f16ff52674e88d0885419646b7e410a83ab30491e2ff22f815f54dd0c3d76",
+  "contractHash": "71b9151fead2b12175d4eb4b1cfc03d8fad93da4cb9c9c8d2d75e2f7cbb25ae2",
+  "contractMarkdownHash": "754a6107ddbc7ff9b346088abe609eabb8afc1b3eec1b59802c48221cadb2cfe",
+  "planHash": "94e2a4ebd42ec482147e00458098e0cc6b6f6799b699c031a6bd6e504ed0d3f1",
+  "scenarioHash": "9119b44dc9937a02d22c14220999770e558789e8be45e45f9e8365a05b1abcb3",
+  "testHash": "e1ac536980bb83c5d1f77e8c263eea7efb4df5c62bd6e483b0ac36429d245263",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-29T16:08:36.255Z"
+}

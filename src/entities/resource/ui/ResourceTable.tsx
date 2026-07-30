@@ -12,6 +12,7 @@ interface ResourceTableProps {
   search?: DataTableSearch
   pagination?: DataTablePagination
   emptyLabel?: string
+  emptyMinHeight?: number
 }
 
 // Resource → DataTable row 매핑. 표현은 shared/ui/DataTable 재사용.
@@ -21,6 +22,7 @@ export function ResourceTable({
   search,
   pagination,
   emptyLabel,
+  emptyMinHeight,
 }: ResourceTableProps) {
   return (
     <DataTable
@@ -35,6 +37,7 @@ export function ResourceTable({
       search={search}
       pagination={pagination}
       emptyLabel={emptyLabel}
+      emptyMinHeight={emptyMinHeight}
     />
   )
 }
