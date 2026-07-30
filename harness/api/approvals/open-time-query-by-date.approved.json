@@ -1,0 +1,15 @@
+{
+  "feature": "open-time-query-by-date",
+  "apiId": "OPEN_TIME_QUERY_BY_DATE",
+  "approvedAt": "2026-07-30T07:26:29.384Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "bb835b532b0dd32262e781234858ceec66af7570de3e686666e2679598e09f66",
+  "contractHash": "8ba2739339fcff51e4e36ac1e854554afa541bd1c229609cc635ae5d546131fa",
+  "contractMarkdownHash": "37740d0a09cda8e938e2bb615e7b0c6d0dc5f513dd35671340d6aac71db900a1",
+  "planHash": "33dd3a82253df32cd5fe3e248fad8625700cf8344e89c6d480402d54db8f1898",
+  "scenarioHash": "128cb983dccab43406b56677370e8d3c6258c81b5f1e687743f5eeeeee0bec89",
+  "testHash": "66538c9f40060d2fccb8507190a8d4709e12c9858e3b88c1e88c7b190f7d00df",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-30T07:27:38.265Z"
+}
