@@ -6,9 +6,9 @@ test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표�
   page,
 }) => {
   const requests: string[] = []
+  page.on('request', (request) => requests.push(request.url()))
 
   await page.route(openTimeApiPath, async (route) => {
-    requests.push(route.request().url())
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -40,10 +40,16 @@ test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표�
       .getByRole('button', { name: '오후' }),
   ).toHaveAttribute('aria-pressed', 'true')
 
-  expect(requests).toHaveLength(1)
-  const request = new URL(requests[0])
+  const openTimeRequests = requests.filter((url) =>
+    openTimeApiPath.test(new URL(url).pathname + new URL(url).search),
+  )
+  expect(openTimeRequests).toHaveLength(1)
+  const request = new URL(openTimeRequests[0])
   expect(request.pathname).toBe('/api/open-time/date')
   expect(request.searchParams.get('date')).toBe('2026-07-01')
+  expect(
+    requests.some((url) => new URL(url).pathname === '/api/close-day'),
+  ).toBe(false)
   await expect(page.getByText(/휴관 일정:/)).toHaveCount(0)
 })
 

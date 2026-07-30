@@ -1,7 +1,5 @@
 import styled from '@emotion/styled'
-import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
-import { getCloseSchedulesByDate } from '@/entities/close-schedule'
 import { OperatingHoursForm } from '@/features/edit-operating-hours'
 import { GuideBackLink } from './ui/GuideBackLink'
 
@@ -15,16 +13,6 @@ export function OperatingHoursPage() {
 }
 
 function OperatingHoursDetail({ date }: { date: string }) {
-  const {
-    data: schedules = [],
-    isError,
-    isPending,
-  } = useQuery({
-    queryKey: ['close-schedules', 'by-date', date],
-    queryFn: () => getCloseSchedulesByDate({ date }),
-  })
-  const firstSchedule = schedules[0]
-
   return (
     <Page>
       <Content>
@@ -32,22 +20,7 @@ function OperatingHoursDetail({ date }: { date: string }) {
           <GuideBackLink />
         </BackRow>
         <Title>{formatTitle(date)}</Title>
-        {isPending ? (
-          <QueryStatus role="status">
-            휴관일을 조회하는 중입니다.
-          </QueryStatus>
-        ) : isError ? (
-          <QueryStatus role="alert">
-            휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
-          </QueryStatus>
-        ) : (
-          <>
-            {firstSchedule && (
-              <ScheduleSummary>휴관 일정: {firstSchedule.title}</ScheduleSummary>
-            )}
-            <OperatingHoursForm date={date} />
-          </>
-        )}
+        <OperatingHoursForm date={date} />
       </Content>
     </Page>
   )
@@ -96,21 +69,4 @@ const Title = styled.h1`
   font-size: 60px;
   font-weight: 600;
   line-height: 1.2;
-`
-
-const ScheduleSummary = styled.p`
-  margin: 16px 0 0;
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 24px;
-  font-weight: 500;
-`
-
-const QueryStatus = styled.p`
-  margin: 32px 0 0;
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 22px;
-
-  &[role='alert'] {
-    color: ${({ theme }) => theme.colors.danger};
-  }
 `

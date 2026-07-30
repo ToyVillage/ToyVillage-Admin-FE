@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
-  getMockOperatingHours,
+  getOperatingHoursByDate,
   updateMockOperatingHours,
   type OperatingHours,
 } from '@/entities/operating-hours'
@@ -22,12 +22,28 @@ interface OperatingHoursEditorProps {
 }
 
 export function OperatingHoursForm({ date }: OperatingHoursFormProps) {
-  const { data: hours, isPending } = useQuery({
+  const {
+    data: hours,
+    isError,
+    isPending,
+  } = useQuery({
     queryKey: ['operating-hours', date],
-    queryFn: () => getMockOperatingHours(date),
+    queryFn: () => getOperatingHoursByDate({ date }),
   })
 
-  if (isPending || !hours) return null
+  if (isPending) {
+    return (
+      <QueryStatus role="status">영업시간을 조회하는 중입니다.</QueryStatus>
+    )
+  }
+
+  if (isError || !hours) {
+    return (
+      <QueryStatus role="alert">
+        영업시간을 불러오지 못했습니다. 다시 시도해 주세요.
+      </QueryStatus>
+    )
+  }
 
   return (
     <OperatingHoursEditor
@@ -164,6 +180,16 @@ function toMinutes(value: string) {
 const Form = styled.form`
   width: 100%;
   margin-top: 32px;
+`
+
+const QueryStatus = styled.p`
+  margin: 32px 0 0;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+
+  &[role='alert'] {
+    color: ${({ theme }) => theme.colors.danger};
+  }
 `
 
 const Fields = styled.div`
