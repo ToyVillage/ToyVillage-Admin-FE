@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  createMockResource,
-  deleteMockResource,
+  createDocument,
+  deleteDocument,
   fileTypeLabel,
+  fileTypeToDocumentType,
   resourceCategories,
   tabToFileType,
-  updateMockResource,
+  updateDocument,
   type Resource,
   type UpdateResourceInput,
 } from '@/entities/resource'
@@ -29,12 +30,15 @@ const validationMessages: Record<ValidationField, string> = {
 
 interface ResourceFormProps {
   initialResource?: Resource
+  // 상세(수정) 화면에서 데이터 로딩 전에도 수정 레이아웃을 유지하기 위한 강제 플래그.
+  editing?: boolean
   onCompleted: () => void
   onDirtyChange: (isDirty: boolean) => void
 }
 
 export function ResourceForm({
   initialResource,
+  editing,
   onCompleted,
   onDirtyChange,
 }: ResourceFormProps) {
@@ -43,7 +47,9 @@ export function ResourceForm({
   const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const uploadButtonRef = useRef<HTMLButtonElement>(null)
-  const isEditing = Boolean(initialResource)
+  const isEditing = editing ?? Boolean(initialResource)
+  // 수정 레이아웃이지만 아직 데이터가 없는 로딩 상태(제출/삭제 비활성).
+  const isLoadingPlaceholder = isEditing && !initialResource
   const initialCategory = initialResource
     ? fileTypeLabel[initialResource.fileType]
     : defaultCategory
@@ -51,23 +57,45 @@ export function ResourceForm({
     () => initialResource?.attachments ?? [],
     [initialResource?.attachments],
   )
+  const initialFileKeys = useMemo(
+    () => initialResource?.attachmentFiles?.map(({ fileKey }) => fileKey) ?? [],
+    [initialResource?.attachmentFiles],
+  )
   const [title, setTitle] = useState(initialResource?.title ?? '')
   const [category, setCategory] = useState<string>(initialCategory)
   const [hasFile, setHasFile] = useState(false)
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
+  // 첨부 시 업로드해 둔 file key(수정 시 기존 키 포함). 요청 body 의 files 로 전달한다.
+  const [fileKeys, setFileKeys] = useState<string[]>(initialFileKeys)
+  const [isUploading, setIsUploading] = useState(false)
   const [validationError, setValidationError] =
     useState<ValidationField | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const mutation = useMutation({
-    mutationFn: (input: UpdateResourceInput) =>
-      initialResource
-        ? updateMockResource({ id: initialResource.id, input })
-        : createMockResource(input),
+    mutationFn: async (input: UpdateResourceInput) => {
+      // 첨부 시 이미 업로드해 둔 file key(수정은 기존 키 포함)를 그대로 보낸다.
+      if (initialResource) {
+        await updateDocument({
+          id: Number(initialResource.id),
+          body: {
+            title: input.title,
+            type: fileTypeToDocumentType[input.fileType],
+            files: fileKeys,
+          },
+        })
+        return
+      }
+      await createDocument({
+        title: input.title,
+        type: fileTypeToDocumentType[input.fileType],
+        files: fileKeys,
+      })
+    },
   })
   const deleteMutation = useMutation({
     mutationFn: () => {
       if (!initialResource) throw new Error('Resource not found')
-      return deleteMockResource(initialResource.id)
+      return deleteDocument({ id: Number(initialResource.id) })
     },
   })
 
@@ -108,6 +136,8 @@ export function ResourceForm({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submittingRef.current) return
+    // 업로드가 끝나기 전에는 제출하지 않는다(아직 file key 가 없음).
+    if (isUploading) return
 
     if (!title.trim()) {
       setValidationError('title')
@@ -132,10 +162,9 @@ export function ResourceForm({
     submittingRef.current = true
     mutation.mutate(input, {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['resources'] })
-        if (initialResource) {
-          queryClient.setQueryData(['resources', initialResource.id], undefined)
-        }
+        // 목록만 무효화한다. 상세 쿼리(['resources', id])까지 무효화하면 아직 떠 있는
+        // 상세 페이지가 재조회를 일으킨다.
+        await queryClient.invalidateQueries({ queryKey: ['resources', 'list'] })
         onCompleted()
       },
       onError: () => {
@@ -149,12 +178,8 @@ export function ResourceForm({
 
     deleteMutation.mutate(undefined, {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['resources'] })
-        if (initialResource) {
-          queryClient.removeQueries({
-            queryKey: ['resources', initialResource.id],
-          })
-        }
+        // 목록만 무효화한다. 상세 쿼리를 무효화하면 삭제된 id 를 다시 GET 해 404 가 난다.
+        await queryClient.invalidateQueries({ queryKey: ['resources', 'list'] })
         onCompleted()
       },
       onError: () => {
@@ -200,9 +225,13 @@ export function ResourceForm({
 
       <ResourceUploadField
         initialFileNames={initialAttachmentNames}
+        initialFiles={initialResource?.attachmentFiles}
         uploadButtonRef={uploadButtonRef}
+        uploadOnAttach
         onFilesChange={setHasFile}
         onFileNamesChange={setAttachmentNames}
+        onFileKeysChange={setFileKeys}
+        onUploadingChange={setIsUploading}
       />
 
       <Actions>
@@ -210,7 +239,11 @@ export function ResourceForm({
           <DeleteButton
             ref={deleteButtonRef}
             type="button"
-            disabled={mutation.isPending || deleteMutation.isPending}
+            disabled={
+              mutation.isPending ||
+              deleteMutation.isPending ||
+              isLoadingPlaceholder
+            }
             onClick={() => setDeleteDialogOpen(true)}
           >
             삭제하기
@@ -218,15 +251,22 @@ export function ResourceForm({
         )}
         <SubmitButton
           type="submit"
-          disabled={mutation.isPending || deleteMutation.isPending}
+          disabled={
+            mutation.isPending ||
+            deleteMutation.isPending ||
+            isUploading ||
+            isLoadingPlaceholder
+          }
         >
-          {mutation.isPending
-            ? isEditing
-              ? '저장 중'
-              : '생성 중'
-            : isEditing
-              ? '저장하기'
-              : '생성하기'}
+          {isUploading
+            ? '업로드 중'
+            : mutation.isPending
+              ? isEditing
+                ? '저장 중'
+                : '생성 중'
+              : isEditing
+                ? '저장하기'
+                : '생성하기'}
         </SubmitButton>
       </Actions>
 

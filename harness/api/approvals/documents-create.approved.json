@@ -1,0 +1,15 @@
+{
+  "feature": "documents-create",
+  "apiId": "DOCUMENTS_CREATE",
+  "approvedAt": "2026-07-28T18:22:21.666Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "847490511c5ad84e4f285308cd5bcd8818ed9ed80f60f9de7f1c29ebb28146b2",
+  "contractHash": "d2e537fb6ef59d9ee29e4b91eceb3577428612ed4a67542bea746e96ca5d27e3",
+  "contractMarkdownHash": "ef7bb8383ec2586441400adbfc6961aca757772cd0738fb3eddc53a121c12f8d",
+  "planHash": "3462a915501364015700cea6097a812d9a51537e09ed4e1a63f5f682350b6077",
+  "scenarioHash": "526dccf932ca09a474f7c4a1d7c1720679831d738895c216f75a82b8bfa0c42a",
+  "testHash": "0314d33964267660e91fd5846911eca8652692a623b52ec83ba54d21e7b8a0d6",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-28T18:22:22.187Z"
+}
