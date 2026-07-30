@@ -22,7 +22,7 @@ export function ResourceDetailPage() {
     window.scrollTo(0, 0)
   }, [])
 
-  const { data: resource } = useQuery({
+  const { data: resource, isError } = useQuery({
     queryKey: ['resources', id],
     queryFn: () => getDocument({ id: Number(id) }),
     enabled: Boolean(id),
@@ -31,6 +31,15 @@ export function ResourceDetailPage() {
     // 표시되지 않고 항상 신규 요청을 보낸다.
     gcTime: 0,
   })
+
+  // 상세 조회가 실패하면(잘못된 id·404·네트워크) resource 가 영영 undefined 로 남아
+  // 제출·삭제가 비활성화된 빈 폼에 고착된다. 별도 '찾을 수 없음' 화면은 디자인에 없으므로
+  // 목록으로 되돌려 보낸다. (이탈 차단은 우회한다.)
+  useEffect(() => {
+    if (!isError) return
+    allowNavigationRef.current = true
+    navigate('/notices/resources', { replace: true })
+  }, [isError, navigate])
   const blocker = useBlocker(
     useCallback(
       ({ currentLocation, nextLocation }) =>
