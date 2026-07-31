@@ -48,8 +48,8 @@ function isOpenTimeQueryByDateResponseItem(
   const hours = value as Record<string, unknown>
 
   return (
-    Number.isSafeInteger(hours.id) &&
-    Number(hours.id) > 0 &&
+    (hours.id === null ||
+      (Number.isSafeInteger(hours.id) && Number(hours.id) > 0)) &&
     isDateKey(hours.openDate) &&
     isTime(hours.startOpenTime) &&
     isTime(hours.endOpenTime)

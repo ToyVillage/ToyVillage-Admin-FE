@@ -3,7 +3,7 @@ export interface OpenTimeQueryByDateRequest {
 }
 
 export interface OpenTimeQueryByDateResponseItem {
-  id: number
+  id: number | null
   openDate: string
   startOpenTime: string
   endOpenTime: string
