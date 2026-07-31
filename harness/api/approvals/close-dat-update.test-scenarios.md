@@ -75,9 +75,9 @@
 
 ## Mock S8 — 승인되지 않은 성공 Status 거부
 
-- 목적: body가 맞더라도 HTTP 200을 Contract 성공으로 처리하지 않는다.
+- 목적: body가 맞더라도 HTTP 202를 Contract 성공으로 처리하지 않는다.
 - Mock request: `PUT /api/close-day/7`
-- Mock response: HTTP 200,
+- Mock response: HTTP 202,
   `{"message":"휴관일이 수정되었습니다."}`
 - 사용자 동작: 유효한 입력으로 수정 제출
 - 기대 결과: 수정 화면에 머물고 오류 상태를 표시하며 목록으로 이동하지 않음

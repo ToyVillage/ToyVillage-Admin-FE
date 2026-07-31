@@ -192,10 +192,10 @@ test('S7: HTTP 201 body가 Contract와 다르면 성공 처리하지 않는다',
   )
 })
 
-test('S8: HTTP 200은 승인된 성공 Status가 아니므로 거부한다', async ({
+test('S8: HTTP 202는 승인된 성공 Status가 아니므로 거부한다', async ({
   page,
 }) => {
-  await mockUpdateResponse(page, 200, {
+  await mockUpdateResponse(page, 202, {
     message: '휴관일이 수정되었습니다.',
   })
 
