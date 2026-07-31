@@ -41,13 +41,11 @@ function OperatingHoursDetail({ date }: { date: string }) {
             휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
           </QueryStatus>
         ) : (
-          <>
-            {firstSchedule && (
-              <ScheduleSummary>휴관 일정: {firstSchedule.title}</ScheduleSummary>
-            )}
-            <OperatingHoursForm date={date} />
-          </>
+          firstSchedule && (
+            <ScheduleSummary>휴관 일정: {firstSchedule.title}</ScheduleSummary>
+          )
         )}
+        <OperatingHoursForm date={date} />
       </Content>
     </Page>
   )
