@@ -69,8 +69,8 @@
 }
 ```
 
-- response body와 `message`는 nullable false
-- `message`는 required
+- response body는 nullable false
+- `message`는 required, nullable false인 string
 
 ## Error Responses
 
