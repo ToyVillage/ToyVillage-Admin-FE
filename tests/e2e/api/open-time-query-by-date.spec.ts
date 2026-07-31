@@ -1,12 +1,24 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 const openTimeApiPath = /\/api\/open-time\/date(?:\?.*)?$/
+const closeDayApiPath = /\/api\/close-day(?:\?.*)?$/
+
+async function mockEmptyCloseDays(page: Page) {
+  await page.route(closeDayApiPath, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: '[]',
+    })
+  })
+}
 
 test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표시한다', async ({
   page,
 }) => {
   const requests: string[] = []
   page.on('request', (request) => requests.push(request.url()))
+  await mockEmptyCloseDays(page)
 
   await page.route(openTimeApiPath, async (route) => {
     await route.fulfill({
@@ -47,13 +59,18 @@ test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표�
   const request = new URL(openTimeRequests[0])
   expect(request.pathname).toBe('/api/open-time/date')
   expect(request.searchParams.get('date')).toBe('2026-07-01')
-  expect(
-    requests.some((url) => new URL(url).pathname === '/api/close-day'),
-  ).toBe(false)
+  const closeDayRequest = requests.find(
+    (url) => new URL(url).pathname === '/api/close-day',
+  )
+  expect(closeDayRequest).toBeDefined()
+  if (!closeDayRequest) throw new Error('휴관일 날짜별 조회 요청이 없습니다.')
+  expect(new URL(closeDayRequest).searchParams.get('date')).toBe('2026-07-01')
   await expect(page.getByText(/휴관 일정:/)).toHaveCount(0)
 })
 
 test('S2: 서버 오류를 기본 영업시간으로 숨기지 않는다', async ({ page }) => {
+  await mockEmptyCloseDays(page)
+
   await page.route(openTimeApiPath, async (route) => {
     await route.fulfill({
       status: 500,
@@ -76,6 +93,8 @@ test('S2: 서버 오류를 기본 영업시간으로 숨기지 않는다', async
 })
 
 test('S3: Contract 필수 필드가 누락된 응답을 거부한다', async ({ page }) => {
+  await mockEmptyCloseDays(page)
+
   await page.route(openTimeApiPath, async (route) => {
     await route.fulfill({
       status: 200,

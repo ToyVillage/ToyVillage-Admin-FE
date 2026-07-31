@@ -17,7 +17,15 @@
 - 사용자 동작: `/notices/guide/hours/2026-07-14` 진입
 - 기대 결과: 기존 영업시간 상세 UI 표시, 휴관 일정 보조 정보 없음
 
-## Mock S3 — 서버 오류
+## Mock S3 — 정의되지 않은 HTTP 404
+
+- 목적: Contract에서 제거한 HTTP 404를 빈 결과로 해석하지 않는다.
+- Mock request: `GET /api/close-day?date=2026-07-13`
+- Mock response: HTTP 404
+- 사용자 동작: 날짜 상세 화면 진입
+- 기대 결과: 휴관일 조회 실패 alert 표시, 영업시간 입력 폼 미표시
+
+## Mock S4 — 서버 오류
 
 - 목적: 오류를 빈 배열로 숨기지 않는다.
 - Mock request: `GET /api/close-day?date=2026-07-13`
@@ -25,7 +33,7 @@
 - 사용자 동작: 날짜 상세 화면 진입
 - 기대 결과: 휴관일 조회 실패 alert 표시, 영업시간 입력 폼 미표시
 
-## Mock S4 — 잘못된 route date
+## Mock S5 — 잘못된 route date
 
 - 목적: 유효하지 않은 날짜를 서버로 보내지 않는다.
 - Mock request: 없음
@@ -33,7 +41,7 @@
 - 사용자 동작: `/notices/guide/hours/2026-02-30` 진입
 - 기대 결과: API 요청 없이 `/notices/guide`로 replace 이동
 
-## Mock S5 — 잘못된 성공 응답
+## Mock S6 — 잘못된 성공 응답
 
 - 목적: Contract 밖의 응답을 상세 데이터로 사용하지 않는다.
 - Mock request: `GET /api/close-day?date=2026-07-13`

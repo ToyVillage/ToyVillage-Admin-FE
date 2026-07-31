@@ -73,7 +73,6 @@
 
 - HTTP 400: 잘못된 요청
 - HTTP 401: 만료된 토큰
-- HTTP 404: 휴관일을 찾을 수 없음
 - HTTP 500: 예상하지 못한 서버 오류
 - 공통 필드: `message`, `status`, `timestamp`, `description`
 - 공통 필드는 required, nullable false
@@ -90,12 +89,14 @@
 - Notion query parameter 하위 문서의 `/logs`는 2026-07-28 사용자 결정으로
   오타로 처리하고 database endpoint `/close-day`를 사용한다.
 - Notion의 성공 상태 `201`은 사용자 결정으로 `200`으로 동결한다.
-- 결과 없음은 사용자 결정으로 HTTP 200의 빈 배열 `[]`로 동결한다.
+- 조회 결과 없음은 사용자 결정으로 HTTP 200의 빈 배열 `[]`로 동결한다.
+- HTTP 404는 Contract 응답에서 제거하며, 서버가 반환하더라도 빈 결과가 아닌
+  정의되지 않은 HTTP 오류로 처리한다.
 - Notion에 누락된 Required/Nullable은 같은 응답 구조의 기존 승인 Contract와
   사용자 결정을 기준으로 required, nullable false로 동결한다.
 - Path Parameters와 Request Body는 사용자 결정으로 없음으로 동결한다.
 
 ## Backend Questions
 
-1. Notion의 `/logs`, 성공 상태 `201`, 누락된 Required/Nullable과 빈 결과
-   동작을 위 승인 Contract에 맞게 정정한다.
+1. Notion의 `/logs`, 성공 상태 `201`, 누락된 Required/Nullable과 조회 결과
+   없음에 대한 HTTP 404 정의를 위 승인 Contract에 맞게 정정한다.

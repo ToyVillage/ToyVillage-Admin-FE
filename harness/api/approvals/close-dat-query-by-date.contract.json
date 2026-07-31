@@ -225,62 +225,6 @@
         "noContent": false
       },
       {
-        "status": 404,
-        "description": "휴관일을 찾을 수 없음",
-        "body": {
-          "type": "object",
-          "nullable": false,
-          "description": "조회 오류",
-          "fields": [
-            {
-              "name": "message",
-              "location": "response",
-              "type": "string",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "해당 휴관일을 찾을수없습니다.",
-              "description": "오류 메시지",
-              "constraints": []
-            },
-            {
-              "name": "status",
-              "location": "response",
-              "type": "integer",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": 404,
-              "description": "HTTP 상태 코드",
-              "constraints": []
-            },
-            {
-              "name": "timestamp",
-              "location": "response",
-              "type": "datetime",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "2026-02-06T19:56:53.62201",
-              "description": "오류 발생 시각",
-              "constraints": []
-            },
-            {
-              "name": "description",
-              "location": "response",
-              "type": "string",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "에러 설명",
-              "description": "오류 설명",
-              "constraints": []
-            }
-          ]
-        },
-        "noContent": false
-      },
-      {
         "status": 500,
         "description": "예상하지 못한 서버 오류",
         "body": {

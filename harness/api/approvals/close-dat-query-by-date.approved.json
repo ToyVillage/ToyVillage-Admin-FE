@@ -1,15 +1,15 @@
 {
   "feature": "close-dat-query-by-date",
   "apiId": "CLOSE_DAT_QUERY_BY_DATE",
-  "approvedAt": "2026-07-28T12:47:19.457Z",
+  "approvedAt": "2026-07-31T06:52:14.823Z",
   "approvedBy": "yunho",
   "taskSpecHash": "b15d08f06c2e4c384730576659f4b71f242d2ef31fb1a6ced8a7a9c5389c81e5",
-  "contractHash": "5b0298aaf9540d1c5188bdbe411774aefc82315a08d982deb1885fa2efa953d5",
-  "contractMarkdownHash": "25cbe607a5f1ef855abf538e40472580c746f01c4c5c75752ea0bd560eb721f1",
-  "planHash": "83d1232cafb1a943b7dbfef9e11561ab90239b26d0568c8f2a003802623beb60",
-  "scenarioHash": "1a39379ca7f6ac5510aa399151863eadfd0c90fc554f4d8e9814c4b24dc91252",
-  "testHash": "d8c0dbe44790d043c97fe9ede1a55ecb4e17c090ca011c9171c957c9a91d7d8f",
+  "contractHash": "ab359269260bb9e26520da553dcb42c415ce7d3a8c8274f9579e45666a441ede",
+  "contractMarkdownHash": "52a5463a943d81a23641978b126a6bf15ea4fd89c7d582140fe9b7f73678c6e8",
+  "planHash": "7a5b96898621252dc4128482290add12228a924ae247885930b428ae6fc3433c",
+  "scenarioHash": "1e8a57e012b56efe2bd0ebf2a4ecec0235f130b8e26e43c0d5a1f60e0c43f685",
+  "testHash": "f9ae0502e49c536d465274a916849ab1458ce9c78a7e88b68397025d69cd1269",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-07-28T12:52:05.785Z"
+  "testApprovedAt": "2026-07-31T07:48:49.829Z"
 }

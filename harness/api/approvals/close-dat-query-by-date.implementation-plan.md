@@ -5,6 +5,8 @@
 - 요청은 `GET /close-day?date=YYYY-MM-DD`이다.
 - `/logs`는 사용자 결정으로 Notion 오타로 처리한다.
 - 성공 status는 `200`, 결과 없음은 `[]`이다.
+- HTTP `404`는 Contract에 정의하지 않으며, 반환되면 빈 결과가 아닌 조회
+  오류로 처리한다.
 - 응답과 오류 필드는 required, nullable false이다.
 - 실제 서버 테스트는 disabled이다.
 
