@@ -1,0 +1,15 @@
+{
+  "feature": "close-dat-query-all",
+  "apiId": "CLOSE_DAT_QUERY_ALL",
+  "approvedAt": "2026-07-28T12:29:46.364Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "13744e2ca526c6fded193cee96fa99b5494cacff588233ae95cf5aac87cc5b3b",
+  "contractHash": "d33a540536fbfd0df44ea976c464b37083d924839bc95bbae430a04439682d42",
+  "contractMarkdownHash": "a71ce1477be371bcc6f5e1b14d60ec05e2351c8767f99e5dfd5513443a7c948d",
+  "planHash": "f61ac63b31cec7bcfa4924c88ea233454943b9b7b70843bd086d9aee369a5c8a",
+  "scenarioHash": "7c90c6d544ba9d87f24f133ce67aadf8c96a0e5e07a014e320cebd0d55ddc780",
+  "testHash": "34267ad8c145723f6ee7f438337e29a558f0b944cfc8c1aeb41394c227ca1b00",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-28T12:32:20.346Z"
+}

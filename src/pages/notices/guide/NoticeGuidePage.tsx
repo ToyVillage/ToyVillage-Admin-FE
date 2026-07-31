@@ -3,8 +3,7 @@ import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
-  getMockCloseSchedules,
-  mockCloseSchedules,
+  getCloseSchedules,
   type CloseSchedule,
 } from '@/entities/close-schedule'
 import { CreateCloseScheduleButton } from '@/features/create-close-schedule'
@@ -25,10 +24,13 @@ export function NoticeGuidePage() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
   const [query, setQuery] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
-  const { data: schedules = mockCloseSchedules } = useQuery({
+  const {
+    data: schedules = [],
+    isError,
+    isPending,
+  } = useQuery({
     queryKey: ['close-schedules'],
-    queryFn: getMockCloseSchedules,
-    placeholderData: mockCloseSchedules,
+    queryFn: getCloseSchedules,
   })
 
   const monthSchedules = useMemo(
@@ -125,7 +127,15 @@ export function NoticeGuidePage() {
               </FilterNotice>
             )}
 
-            {filteredSchedules.length > 0 ? (
+            {isPending ? (
+              <QueryStatus role="status">
+                휴관일을 불러오는 중입니다.
+              </QueryStatus>
+            ) : isError ? (
+              <QueryStatus role="alert">
+                휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
+              </QueryStatus>
+            ) : filteredSchedules.length > 0 ? (
               <CardList aria-label="휴관 일정 목록">
                 {filteredSchedules.map((schedule) => (
                   <ScheduleCard
@@ -449,6 +459,17 @@ const FilterNotice = styled.p`
   color: #848491;
   font-size: 18px;
   font-weight: 500;
+`
+
+const QueryStatus = styled.p`
+  margin: 24px 0 0;
+  padding: 24px 40px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textSub};
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.4;
 `
 
 const CardList = styled.div`

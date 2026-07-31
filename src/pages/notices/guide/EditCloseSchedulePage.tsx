@@ -1,14 +1,30 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
-import { getMockCloseSchedule } from '@/entities/close-schedule'
+import {
+  getCloseSchedules,
+  type CloseSchedule,
+} from '@/entities/close-schedule'
 import { CloseScheduleForm } from '@/features/create-close-schedule'
 import { CloseScheduleFormPage } from './ui/CloseScheduleFormPage'
 
 export function EditCloseSchedulePage() {
   const { id } = useParams()
+  const queryClient = useQueryClient()
   const { data: schedule, isPending } = useQuery({
     queryKey: ['close-schedules', id],
-    queryFn: () => getMockCloseSchedule(id ?? ''),
+    queryFn: async () => {
+      const cachedSchedules = queryClient.getQueryData<CloseSchedule[]>([
+        'close-schedules',
+      ])
+      const cachedSchedule = cachedSchedules?.find(
+        (schedule) => schedule.id === id,
+      )
+
+      if (cachedSchedule) return cachedSchedule
+
+      const schedules = await getCloseSchedules()
+      return schedules.find((schedule) => schedule.id === id)
+    },
     enabled: Boolean(id),
   })
 

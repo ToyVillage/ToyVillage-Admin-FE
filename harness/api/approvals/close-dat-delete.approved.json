@@ -1,0 +1,15 @@
+{
+  "feature": "close-dat-delete",
+  "apiId": "CLOSE_DAT_DELETE",
+  "approvedAt": "2026-07-31T07:56:15.724Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "ac97ae3f8e8b84779f6b806891edeadc79061c907823df2a1e56618d7227029f",
+  "contractHash": "b9397a336423c8bcb6e1765efc6e784001ca27e37e0734beac20fa5c076ec5e5",
+  "contractMarkdownHash": "43dc3decebe26ada33647fc7d12ca5c904fcd2ac310897f4d0400081a4d84bf9",
+  "planHash": "8e307c30e4498cfc1577cd529cff690d880509be5645db17238c6dfe2f455d31",
+  "scenarioHash": "796d3ab73308b977de81bf590a6035e158e6ffd93349a72dbacdfd95673ac7d4",
+  "testHash": "26a52dc0341627943197cac09975ba727fc195cbc2a7bb0e525bbd85f3c1887a",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-31T07:56:16.859Z"
+}
