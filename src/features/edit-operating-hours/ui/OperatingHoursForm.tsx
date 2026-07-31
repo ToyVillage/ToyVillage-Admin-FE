@@ -1,10 +1,7 @@
-import { useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import {
   getOperatingHoursByDate,
-  updateMockOperatingHours,
   type OperatingHours,
 } from '@/entities/operating-hours'
 import {
@@ -54,91 +51,19 @@ export function OperatingHoursForm({ date }: OperatingHoursFormProps) {
 }
 
 function OperatingHoursEditor({ initialHours }: OperatingHoursEditorProps) {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const submittingRef = useRef(false)
-  const [openingTime, setOpeningTime] = useState(() =>
-    from24HourTime(initialHours.opensAt),
-  )
-  const [closingTime, setClosingTime] = useState(() =>
-    from24HourTime(initialHours.closesAt),
-  )
-  const [validationError, setValidationError] = useState('')
-  const mutation = useMutation({ mutationFn: updateMockOperatingHours })
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (submittingRef.current) return
-
-    if (!isValidTime(openingTime) || !isValidTime(closingTime)) {
-      setValidationError('시간을 확인해 주세요')
-      return
-    }
-
-    const opensAt = to24HourTime(openingTime)
-    const closesAt = to24HourTime(closingTime)
-    if (toMinutes(closesAt) <= toMinutes(opensAt)) {
-      setValidationError('영업 종료 시간은 시작 시간보다 늦어야 합니다')
-      return
-    }
-
-    setValidationError('')
-    submittingRef.current = true
-    mutation.mutate(
-      { date: initialHours.date, opensAt, closesAt },
-      {
-        onSuccess: async () => {
-          await queryClient.invalidateQueries({
-            queryKey: ['operating-hours', initialHours.date],
-          })
-          navigate('/notices/guide')
-        },
-        onError: () => {
-          submittingRef.current = false
-        },
-      },
-    )
-  }
-
-  function handleEnterSubmit(event: React.KeyboardEvent<HTMLFormElement>) {
-    if (
-      event.key !== 'Enter' ||
-      event.nativeEvent.isComposing ||
-      event.target instanceof HTMLButtonElement ||
-      mutation.isPending
-    ) {
-      return
-    }
-
-    event.preventDefault()
-    event.currentTarget.requestSubmit()
-  }
+  const openingTime = from24HourTime(initialHours.opensAt)
+  const closingTime = from24HourTime(initialHours.closesAt)
 
   return (
-    <Form onSubmit={handleSubmit} onKeyDown={handleEnterSubmit} noValidate>
+    <ReadOnlySection aria-label="영업시간" aria-readonly="true">
       <Fields>
-        <OperatingTimeField
-          label="영업 시작"
-          value={openingTime}
-          onChange={setOpeningTime}
-        />
-        <OperatingTimeField
-          label="영업 종료"
-          value={closingTime}
-          onChange={setClosingTime}
-        />
+        <OperatingTimeField label="영업 시작" value={openingTime} readOnly />
+        <OperatingTimeField label="영업 종료" value={closingTime} readOnly />
       </Fields>
-      <Actions>
-        <SaveButton type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? '저장 중' : '저장하기'}
-        </SaveButton>
-      </Actions>
-      {(validationError || mutation.isError) && (
-        <Status role="status">
-          {validationError || '저장하지 못했습니다. 다시 시도해 주세요.'}
-        </Status>
-      )}
-    </Form>
+      <ReadOnlyNotice role="note">
+        운영시간 수정은 현재 지원되지 않습니다.
+      </ReadOnlyNotice>
+    </ReadOnlySection>
   )
 }
 
@@ -154,30 +79,7 @@ function from24HourTime(value: string): TimeParts {
   }
 }
 
-function to24HourTime(value: TimeParts) {
-  const hour = (Number(value.hour) % 12) + (value.meridiem === 'PM' ? 12 : 0)
-  return `${String(hour).padStart(2, '0')}:${value.minute.padStart(2, '0')}`
-}
-
-function isValidTime(value: TimeParts) {
-  const hour = Number(value.hour)
-  const minute = Number(value.minute)
-  return (
-    /^\d{1,2}$/.test(value.hour) &&
-    /^\d{1,2}$/.test(value.minute) &&
-    hour >= 1 &&
-    hour <= 12 &&
-    minute >= 0 &&
-    minute <= 59
-  )
-}
-
-function toMinutes(value: string) {
-  const [hour, minute] = value.split(':').map(Number)
-  return hour * 60 + minute
-}
-
-const Form = styled.form`
+const ReadOnlySection = styled.section`
   width: 100%;
   margin-top: 32px;
 `
@@ -201,34 +103,9 @@ const Fields = styled.div`
   }
 `
 
-const Actions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 32px;
-`
-
-const SaveButton = styled.button`
-  width: 123px;
-  height: 61px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 8px;
-  background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.surface};
-  cursor: pointer;
-  font: inherit;
-  font-size: 24px;
-  font-weight: 600;
-
-  &:disabled {
-    cursor: wait;
-    opacity: 0.6;
-  }
-`
-
-const Status = styled.p`
-  margin: 8px 0 0;
-  color: ${({ theme }) => theme.colors.danger};
+const ReadOnlyNotice = styled.p`
+  margin: 16px 0 0;
+  color: ${({ theme }) => theme.colors.textStrong};
   font-size: 18px;
   text-align: right;
 `
