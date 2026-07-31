@@ -24,6 +24,7 @@
 - `src/entities/close-schedule/api/types.ts`
 - `src/entities/close-schedule/api/closeScheduleApi.ts`
 - `src/entities/close-schedule/index.ts`
+- `src/pages/notices/guide/EditCloseSchedulePage.tsx`
 - `src/features/create-close-schedule/ui/CloseScheduleForm.tsx`
 - `tests/e2e/api/close-dat-update.spec.ts`
 
@@ -43,6 +44,12 @@
 
 ## Query/Mutation과 캐시
 
+- `EditCloseSchedulePage`는 route ID와 일치하는 휴관일을 기존
+  `['close-schedules']` API 목록 캐시에서 먼저 찾는다.
+- 목록 캐시가 없으면 승인된 `getCloseSchedules()`로 실제 목록을 조회한 뒤
+  route ID가 일치하는 항목을 선택한다.
+- 상세 초기값에 `getMockCloseSchedule` 또는 localStorage mock을 사용하지
+  않으며, 승인되지 않은 단일 조회 endpoint도 추가하지 않는다.
 - 수정이므로 기존 `useMutation`을 유지한다.
 - 수정 분기에서 `updateMockCloseSchedule` 대신 `updateCloseSchedule`을
   호출하고 생성 분기는 기존 `createCloseSchedule`을 유지한다.
@@ -66,7 +73,7 @@
 1. `yarn harness:api:validate close-dat-update`
 2. `yarn harness:api:gate close-dat-update`
 3. 변경 소스 대상
-   `yarn harness:api:policy close-dat-update src/entities/close-schedule/api/types.ts src/entities/close-schedule/api/closeScheduleApi.ts src/entities/close-schedule/index.ts src/features/create-close-schedule/ui/CloseScheduleForm.tsx tests/e2e/api/close-dat-update.spec.ts`
+   `yarn harness:api:policy close-dat-update src/entities/close-schedule/api/types.ts src/entities/close-schedule/api/closeScheduleApi.ts src/entities/close-schedule/index.ts src/pages/notices/guide/EditCloseSchedulePage.tsx src/features/create-close-schedule/ui/CloseScheduleForm.tsx`
 4. `yarn lint`
 5. `yarn typecheck`
 6. `yarn build`

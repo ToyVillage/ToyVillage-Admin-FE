@@ -153,6 +153,53 @@ test('S8: HTTP 200은 승인된 성공 Status가 아니므로 거부한다', asy
   await expectDeleteFailure(page, 7)
 })
 
+test('S9: 새 URL 새로고침은 실제 목록 조회 값을 삭제한다', async ({ page }) => {
+  let listRequestCount = 0
+  let deleteRequestCount = 0
+
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      'toyvillage:close-schedules',
+      JSON.stringify([
+        {
+          id: '7',
+          title: 'localStorage mock 삭제 대상',
+          startDate: '2026-01-01',
+          endDate: '2026-01-02',
+        },
+      ]),
+    )
+  })
+  await page.route(closeScheduleApiPath, async (route) => {
+    listRequestCount += 1
+    await fulfillCloseScheduleList(route, [
+      {
+        ...createCloseSchedule(),
+        title: 'API 삭제 대상',
+        startCloseTime: '2026-08-01',
+        endCloseTime: '2026-08-02',
+      },
+    ])
+  })
+  await page.route(closeScheduleDetailApiPath, async (route) => {
+    deleteRequestCount += 1
+    await fulfillDeleteSuccess(route)
+  })
+
+  await page.goto('/notices/guide/7/edit')
+  await expect(page.getByLabel(/제목/)).toHaveValue('API 삭제 대상')
+  await page.reload()
+
+  await expect(page.getByLabel('시작일')).toHaveValue('2026-08-01')
+  await expect(page.getByLabel('종료일')).toHaveValue('2026-08-02')
+  await expect(page.getByLabel(/제목/)).toHaveValue('API 삭제 대상')
+  await confirmDelete(page)
+
+  await expect(page).toHaveURL(/\/notices\/guide$/)
+  expect(deleteRequestCount).toBe(1)
+  await expect.poll(() => listRequestCount).toBeGreaterThanOrEqual(3)
+})
+
 async function openDeleteTarget(page: Page, id = 7) {
   await page.goto('/notices/guide')
   await page

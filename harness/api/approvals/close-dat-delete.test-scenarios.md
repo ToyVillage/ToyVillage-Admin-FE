@@ -77,6 +77,17 @@
 - 사용자 동작: 수정 화면에서 삭제 확인
 - 기대 결과: 수정 화면에 머물고 오류 상태를 표시하며 목록으로 이동하지 않음
 
+## Mock S9 — 새로고침 직접 진입 상세 조회
+
+- 목적: 목록 캐시가 없는 수정 URL 새로고침에서도 mock 상세가 아니라 실제
+  전체 조회 API 결과를 삭제 대상 폼에 표시한다.
+- 사전 Mock request: `GET /api/close-day`
+- 사전 Mock response: HTTP 200,
+  `[{"id":7,"title":"API 삭제 대상","startCloseTime":"2026-08-01","endCloseTime":"2026-08-02"}]`
+- 사용자 동작: `/notices/guide/7/edit`에 직접 진입한 뒤 페이지를 새로고침
+- 기대 결과: GET 결과의 날짜와 제목이 표시되고, 해당 실제 데이터에 대한
+  삭제 동작을 시작할 수 있음
+
 ## Staging R1
 
 - 실행 여부: disabled
@@ -94,6 +105,7 @@
 - 삭제 API는 공통 Axios와 기존 인증 interceptor를 사용
 - loading/error/success 상태가 숨겨지지 않음
 - 실패 시 localStorage mock 삭제로 fallback하지 않음
+- 상세 초기값 조회도 localStorage mock으로 fallback하지 않음
 - 생성·조회·수정 API 동작은 이번 범위에서 변경하지 않음
 - 단일 조회 API를 추측해 호출하지 않음
 - Staging 실제 서버 테스트는 실행하지 않음

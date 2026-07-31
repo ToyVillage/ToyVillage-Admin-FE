@@ -90,6 +90,17 @@
 - 사용자 동작: 빈 날짜, 빈 제목, 종료일이 시작일보다 빠른 입력으로 제출
 - 기대 결과: 기존 validation dialog 표시, PUT 0회
 
+## Mock S10 — 새로고침 직접 진입 상세 조회
+
+- 목적: 목록 캐시가 없는 수정 URL 새로고침에서도 mock 상세가 아니라 실제
+  전체 조회 API 결과로 폼을 초기화한다.
+- 사전 Mock request: `GET /api/close-day`
+- 사전 Mock response: HTTP 200,
+  `[{"id":7,"title":"API 상세 휴관일","startCloseTime":"2026-08-01","endCloseTime":"2026-08-02"}]`
+- 사용자 동작: `/notices/guide/7/edit`에 직접 진입한 뒤 페이지를 새로고침
+- 기대 결과: GET 결과의 날짜와 제목이 수정 폼에 표시되고 localStorage mock
+  값은 표시되지 않음
+
 ## Staging R1
 
 - 실행 여부: disabled
@@ -108,6 +119,7 @@
 - loading/error/success 상태가 숨겨지지 않음
 - 수정 성공 때만 `['close-schedules']` 캐시 무효화
 - 실패 시 localStorage mock 수정으로 fallback하지 않음
+- 상세 초기값 조회도 localStorage mock으로 fallback하지 않음
 - 생성·조회·삭제 API 동작은 이번 범위에서 변경하지 않음
 - 단일 조회 API를 추측해 호출하지 않음
 - Staging 실제 서버 테스트는 실행하지 않음

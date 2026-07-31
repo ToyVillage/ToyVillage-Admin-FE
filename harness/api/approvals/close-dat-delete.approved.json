@@ -1,15 +1,15 @@
 {
   "feature": "close-dat-delete",
   "apiId": "CLOSE_DAT_DELETE",
-  "approvedAt": "2026-07-28T14:35:08.663Z",
+  "approvedAt": "2026-07-31T07:56:15.724Z",
   "approvedBy": "yunho",
   "taskSpecHash": "ac97ae3f8e8b84779f6b806891edeadc79061c907823df2a1e56618d7227029f",
   "contractHash": "b9397a336423c8bcb6e1765efc6e784001ca27e37e0734beac20fa5c076ec5e5",
   "contractMarkdownHash": "43dc3decebe26ada33647fc7d12ca5c904fcd2ac310897f4d0400081a4d84bf9",
-  "planHash": "d48e469ddf56f6dcfb195bdda1937d9e7d624d4388d2b5ec7d2e2e0dcb2cdac2",
-  "scenarioHash": "2d63675e0802cbe471b203b88f87fe336ffe932e577fee2bc38e2a68e3217f4b",
-  "testHash": "fc1f8bca3dc78e374dba3c2576066500dab5b72a485167479180139c2ae6fffc",
+  "planHash": "8e307c30e4498cfc1577cd529cff690d880509be5645db17238c6dfe2f455d31",
+  "scenarioHash": "796d3ab73308b977de81bf590a6035e158e6ffd93349a72dbacdfd95673ac7d4",
+  "testHash": "26a52dc0341627943197cac09975ba727fc195cbc2a7bb0e525bbd85f3c1887a",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-07-28T14:38:34.807Z"
+  "testApprovedAt": "2026-07-31T07:56:16.859Z"
 }

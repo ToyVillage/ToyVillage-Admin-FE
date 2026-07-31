@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
 import {
-  getMockCloseSchedule,
+  getCloseSchedules,
   type CloseSchedule,
 } from '@/entities/close-schedule'
 import { CloseScheduleForm } from '@/features/create-close-schedule'
@@ -20,7 +20,10 @@ export function EditCloseSchedulePage() {
         (schedule) => schedule.id === id,
       )
 
-      return cachedSchedule ?? getMockCloseSchedule(id ?? '')
+      if (cachedSchedule) return cachedSchedule
+
+      const schedules = await getCloseSchedules()
+      return schedules.find((schedule) => schedule.id === id)
     },
     enabled: Boolean(id),
   })

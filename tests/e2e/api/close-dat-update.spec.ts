@@ -247,6 +247,58 @@ test('S9: 잘못된 입력은 API 호출 전에 차단한다', async ({ page }) 
   expect(updateRequestCount).toBe(0)
 })
 
+test('S10: 새 URL 새로고침은 실제 목록 조회 값으로 수정한다', async ({
+  page,
+}) => {
+  let listRequestCount = 0
+  let updateRequestBody: unknown
+
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      'toyvillage:close-schedules',
+      JSON.stringify([
+        {
+          id: '7',
+          title: 'localStorage mock 휴관일',
+          startDate: '2026-01-01',
+          endDate: '2026-01-02',
+        },
+      ]),
+    )
+  })
+  await page.route(closeScheduleApiPath, async (route) => {
+    listRequestCount += 1
+    await fulfillCloseScheduleList(route, [
+      createCloseSchedule(7, {
+        title: 'API 상세 휴관일',
+        startCloseTime: '2026-08-01',
+        endCloseTime: '2026-08-02',
+      }),
+    ])
+  })
+  await page.route(closeScheduleDetailApiPath, async (route) => {
+    updateRequestBody = route.request().postDataJSON()
+    await fulfillUpdateSuccess(route)
+  })
+
+  await page.goto('/notices/guide/7/edit')
+  await expect(page.getByLabel(/제목/)).toHaveValue('API 상세 휴관일')
+  await page.reload()
+
+  await expect(page.getByLabel('시작일')).toHaveValue('2026-08-01')
+  await expect(page.getByLabel('종료일')).toHaveValue('2026-08-02')
+  await expect(page.getByLabel(/제목/)).toHaveValue('API 상세 휴관일')
+  await page.getByRole('button', { name: '수정하기' }).click()
+
+  await expect(page).toHaveURL(/\/notices\/guide$/)
+  expect(updateRequestBody).toEqual({
+    title: 'API 상세 휴관일',
+    startCloseTime: '2026-08-01',
+    endCloseTime: '2026-08-02',
+  })
+  await expect.poll(() => listRequestCount).toBeGreaterThanOrEqual(3)
+})
+
 async function openUpdateTarget(page: Page, id = 7) {
   await page.goto('/notices/guide')
   await page
