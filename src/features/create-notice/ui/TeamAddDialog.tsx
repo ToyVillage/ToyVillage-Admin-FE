@@ -159,7 +159,7 @@ const Input = styled.input`
   font-size: 18px;
 
   &::placeholder {
-    color: ${({ theme }) => theme.colors.text};
+    color: ${({ theme }) => theme.colors.textFaint};
     opacity: 1;
   }
 `
