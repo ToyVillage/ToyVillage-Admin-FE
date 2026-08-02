@@ -258,9 +258,15 @@ export function NoticeForm({
       </CategoryCard>
 
       <ContentCard>
-        <VisuallyHiddenLabel htmlFor="notice-content">
-          내용 <Required aria-hidden="true">*</Required>
-        </VisuallyHiddenLabel>
+        {isEditing ? (
+          <Label htmlFor="notice-content">
+            상세 업무 내용 <Required aria-hidden="true">*</Required>
+          </Label>
+        ) : (
+          <VisuallyHiddenLabel htmlFor="notice-content">
+            내용 <Required aria-hidden="true">*</Required>
+          </VisuallyHiddenLabel>
+        )}
         <ContentInput
           ref={contentRef}
           id="notice-content"
