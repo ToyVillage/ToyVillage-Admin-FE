@@ -223,14 +223,11 @@ export function NoticeForm({
                   checked={category === option}
                   onChange={(event) => setCategory(event.target.value)}
                 />
-                <CategoryPill data-has-remove={option !== '전체'}>
-                  {categoryDisplayName(option)}
-                </CategoryPill>
+                <CategoryPill>{categoryDisplayName(option)}</CategoryPill>
               </CategorySelectLabel>
               {option !== '전체' && (
                 <CategoryRemove
                   type="button"
-                  data-hover-reveal={isEditing ? undefined : 'true'}
                   aria-label={`${categoryDisplayName(option)} 삭제`}
                   onClick={() => {
                     const nextCategories = categories.filter(
@@ -492,29 +489,6 @@ const CategoryOption = styled.div`
   align-items: center;
   border-radius: 999px;
   background: ${({ theme }) => theme.colors.background};
-
-  &:hover > [data-hover-reveal='true'],
-  &:focus-within > [data-hover-reveal='true'] {
-    position: static;
-    width: 20px;
-    height: 20px;
-    overflow: visible;
-    clip: auto;
-    clip-path: none;
-    pointer-events: auto;
-    opacity: 1;
-  }
-
-  &:hover span[data-has-remove='true'],
-  &:focus-within span[data-has-remove='true'] {
-    padding-right: 8px;
-  }
-
-  @media (hover: none) {
-    span[data-has-remove='true'] {
-      padding-right: 8px;
-    }
-  }
 `
 
 const CategorySelectLabel = styled.label`
