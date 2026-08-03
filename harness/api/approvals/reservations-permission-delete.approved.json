@@ -1,0 +1,15 @@
+{
+  "feature": "reservations-permission-delete",
+  "apiId": "RESERVATION_PERMISSION_DELETE",
+  "approvedAt": "2026-08-03T10:22:13.232Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "e162cacc2fad0a4c4220f06005ec7a963fec98176c77612095b7c9d5bbc1315b",
+  "contractHash": "fb94893ab7a864254af83bc9d57c7ef7ea7b650a04a7420051beee0daf694ce3",
+  "contractMarkdownHash": "f388c17ed5e8e08c3b32ed91bf8d2dd0a588da85af7b069928201c52d2b3279c",
+  "planHash": "05e0d7719137c63819f847a6d5b19fdc9f7de8ea2bfe9160144337370859ef3b",
+  "scenarioHash": "989e22d64ff4b2658965fbebf49c51a1e55d926976f940256384e308e7de492f",
+  "testHash": "966dc84e4607621adab8d6080865ddd8102e972642cbb6ba4481513cb7b00d6e",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-08-03T10:22:13.688Z"
+}
