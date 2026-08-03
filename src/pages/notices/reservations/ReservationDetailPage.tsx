@@ -4,8 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import {
   ReservationInfoCard,
-  getMockReservationAccess,
   getReservation,
+  getReservationPermissions,
   removeMockReservationAccess,
   type RemoveAccessInput,
   type Staff,
@@ -29,8 +29,9 @@ export function ReservationDetailPage() {
 
   const { data: accessStaff = [] } = useQuery({
     queryKey: ['reservations', id, 'access'],
-    queryFn: () => getMockReservationAccess(id),
+    queryFn: () => getReservationPermissions(Number(id)),
     enabled: Boolean(id),
+    retry: false,
   })
 
   const removeMutation = useMutation({

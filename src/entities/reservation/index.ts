@@ -25,5 +25,6 @@ export {
   isReservationNotFoundError,
   type ReservationQueryRequest,
 } from './api/getReservation'
+export { getReservationPermissions } from './api/getReservationPermissions'
 export { ReservationTable } from './ui/ReservationTable'
 export { ReservationInfoCard } from './ui/ReservationInfoCard'
