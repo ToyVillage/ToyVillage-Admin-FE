@@ -4,10 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import {
   ReservationInfoCard,
+  deleteReservationPermission,
   getReservation,
   getReservationPermissions,
-  removeMockReservationAccess,
-  type RemoveAccessInput,
   type Staff,
 } from '@/entities/reservation'
 import { ReservationAccessCard } from './ui/ReservationAccessCard'
@@ -35,7 +34,8 @@ export function ReservationDetailPage() {
   })
 
   const removeMutation = useMutation({
-    mutationFn: (input: RemoveAccessInput) => removeMockReservationAccess(input),
+    mutationFn: (userId: string) =>
+      deleteReservationPermission({ reservationId: Number(id), userId }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['reservations', id, 'access'],
@@ -59,7 +59,7 @@ export function ReservationDetailPage() {
 
   function confirmRemove() {
     if (removalTarget) {
-      removeMutation.mutate({ reservationId: id, staffId: removalTarget.id })
+      removeMutation.mutate(removalTarget.id)
     }
   }
 
