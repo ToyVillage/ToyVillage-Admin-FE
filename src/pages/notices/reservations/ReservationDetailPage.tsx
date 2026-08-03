@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom'
 import {
   ReservationInfoCard,
   getMockReservationAccess,
-  getMockReservationDetail,
+  getReservation,
   removeMockReservationAccess,
   type RemoveAccessInput,
   type Staff,
@@ -22,8 +22,9 @@ export function ReservationDetailPage() {
 
   const { data: reservation, isPending: reservationPending } = useQuery({
     queryKey: ['reservations', id],
-    queryFn: () => getMockReservationDetail(id),
+    queryFn: () => getReservation({ id: Number(id) }),
     enabled: Boolean(id),
+    retry: false,
   })
 
   const { data: accessStaff = [] } = useQuery({

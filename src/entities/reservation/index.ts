@@ -20,5 +20,10 @@ export {
   grantMockReservationAccess,
   removeMockReservationAccess,
 } from './model/mock'
+export {
+  getReservation,
+  isReservationNotFoundError,
+  type ReservationQueryRequest,
+} from './api/getReservation'
 export { ReservationTable } from './ui/ReservationTable'
 export { ReservationInfoCard } from './ui/ReservationInfoCard'
