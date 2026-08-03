@@ -1,0 +1,15 @@
+{
+  "feature": "reservations-query",
+  "apiId": "RESERVATION_QUERY",
+  "approvedAt": "2026-08-03T09:54:47.211Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "f3e5711e2a5bd1b66627df75f256c1de8508c402f5b4fda6f4cd6fe8640a074a",
+  "contractHash": "f8623213d37f5aec448c08fdbcf056d24623aa1a6574c413eeab9df89a71624e",
+  "contractMarkdownHash": "6f7302abc916026086175812cd1517e6924c39d544742392c1091194a3f7cbb9",
+  "planHash": "83853a1e5fd653b4abe1d67258f4d76ffc16926d817ad1692b760815d01713c4",
+  "scenarioHash": "b4d5ccf59e6501d07184bf4aba5336071a8bc5ce8312a571f81b3cbb10eac10b",
+  "testHash": "c1a990fa7df05c340463f37a1d75e2ec51062dd48dc8865664bd4dcaa16118cd",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-08-03T09:57:11.908Z"
+}
