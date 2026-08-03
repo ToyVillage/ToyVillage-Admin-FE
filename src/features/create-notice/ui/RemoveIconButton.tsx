@@ -29,17 +29,6 @@ const Button = styled.button`
   color: ${({ theme }) => theme.colors.textGuide};
   cursor: pointer;
 
-  &[data-hover-reveal='true'] {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    pointer-events: none;
-    opacity: 0;
-  }
-
   &:hover {
     color: ${({ theme }) => theme.colors.danger};
   }
@@ -47,19 +36,6 @@ const Button = styled.button`
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.textGuide};
     outline-offset: 2px;
-  }
-
-  @media (hover: none) {
-    &[data-hover-reveal='true'] {
-      position: static;
-      width: 20px;
-      height: 20px;
-      overflow: visible;
-      clip: auto;
-      clip-path: none;
-      pointer-events: auto;
-      opacity: 1;
-    }
   }
 `
 

@@ -128,7 +128,6 @@ export function NoticeAttachmentField({
                     </IconButton>
                     <RemoveIconButton
                       type="button"
-                      data-hover-reveal="true"
                       aria-label={`${attachedFile.name} 삭제`}
                       onClick={() => handleRemove(attachedFile.id)}
                     />
@@ -229,18 +228,6 @@ const FileChip = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.dialogBorder};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.textStrong};
-
-  &:hover > [data-hover-reveal='true'],
-  &:focus-within > [data-hover-reveal='true'] {
-    position: static;
-    width: 20px;
-    height: 20px;
-    overflow: visible;
-    clip: auto;
-    clip-path: none;
-    pointer-events: auto;
-    opacity: 1;
-  }
 `
 
 const FileBadge = styled.span`
