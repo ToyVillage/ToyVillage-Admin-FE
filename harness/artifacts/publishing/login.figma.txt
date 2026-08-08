@@ -1,0 +1,103 @@
+Figma live extraction
+sourceTool: official Figma MCP get_design_context + download_assets
+fileKey: fkbMQaiPeIufKzjXXoWAPS
+nodeId: 3584:4577
+frame: login
+width: 1920px
+height: 1080px
+background: #F5F5F7
+
+Login card
+nodeId: 3584:4780
+position: x=600px y=118px
+width: 720px
+height: 843px
+background: #FFFFFF
+borderRadius: 20px
+
+Brand block
+nodeId: 3584:4781
+position: x=198px y=52px
+width: 324px
+gap: 12px
+logo nodeId: 3584:4775
+logo source: Figma raw image export from node 3584:4775
+logo sha256: 00f7a3a7d6edb395290fc9a9df6bde11df725e409ea346296c2b3c2d30ad7841
+logo width: 136px
+logo height: 114px
+
+Title
+nodeId: 3584:4777
+text: 로그인
+fontFamily: "Wanted Sans"
+fontWeight: 700
+fontSize: 40px
+color: #000000
+
+Description
+nodeId: 3584:4778
+text: 토이빌리지 관리자에 로그인 하고\n토이빌리지의 업무들을 관리하세요
+fontFamily: "Wanted Sans"
+fontWeight: 500
+fontSize: 24px
+color: #848491
+
+Username field
+container nodeId: 3584:4794
+position: x=40px y=324px
+width: 640px
+gap: 8px
+label: 아이디
+label fontFamily: "Wanted Sans"
+label fontWeight: 600
+label fontSize: 22px
+input nodeId: 3584:4782
+input height: 64px
+input padding: 20px 16px
+input background: #F5F5F7
+input borderRadius: 8px
+placeholder: 아이디를 입력해주세요
+placeholder fontFamily: "Wanted Sans"
+placeholder fontWeight: 500
+placeholder fontSize: 20px
+placeholder color: #848491
+
+Password field
+instance nodeId: 3587:4811
+component nodeId: 3587:4808
+position: x=40px y=454px
+width: 640px
+gap: 8px
+label: 비밀번호
+label fontFamily: "Wanted Sans"
+label fontWeight: 600
+label fontSize: 22px
+input nodeId: 3584:4804
+input height: 64px
+input padding: 18px 16px
+input background: #F5F5F7
+input borderRadius: 8px
+placeholder: 비밀번호를 입력해주세요
+placeholder fontFamily: "Wanted Sans"
+placeholder fontWeight: 500
+placeholder fontSize: 20px
+placeholder color: #848491
+visibility icon nodeId: 3584:4790
+visibility icon source: Figma SVG export from node 3584:4790
+visibility icon sha256: c9fb3619f1aa70e435ebb349a3b903caa7efe2bbeed1437ba2c7f598f48426df
+visibility icon size: 28px
+
+Login button
+nodeId: 3584:4792
+position: x=40px y=712px
+width: 640px
+height: 79px
+padding: 23px 190px
+background: #000000
+borderTop: 1px #C6C6CE
+borderRadius: 12px
+text: 로그인
+text color: #FFFFFF
+fontFamily: "Wanted Sans"
+fontWeight: 500
+fontSize: 28px
