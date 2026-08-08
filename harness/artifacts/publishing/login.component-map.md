@@ -8,7 +8,7 @@
 | `3584:4780` | FRAME | 로그인 카드 레이아웃 | page 내부 | 별도 컴포넌트 분리 없음 | — |
 | `3584:4775` | ROUNDED_RECTANGLE/IMAGE | 토이빌리지 로고 | page asset | Figma export | `alt` |
 | `3584:4794` | FRAME | 아이디 field | feature form 내부 | native `label` + `input` | `value`, `onChange`, `error` |
-| `3587:4811` | INSTANCE | 비밀번호 field | feature form 내부 | Figma instance 구조 재사용 | `value`, `visible`, `onChange`, `onToggle`, `error` |
+| `3587:4808` | INSTANCE | 비밀번호 field | feature form 내부 | Figma instance 구조 재사용 | `value`, `visible`, `onChange`, `onToggle`, `error` |
 | `3584:4790` | IMAGE-SVG | `PasswordVisibilityButton` 아이콘 | feature asset | Figma SVG | 상태별 accessible name |
 | `3584:4792` | FRAME | 로그인 submit button | feature form 내부 | native `button` | `isPending` |
 
