@@ -1,5 +1,5 @@
-const imgMdiEyeOff = "https://www.figma.com/api/mcp/asset/f2b4db51-fb1c-495c-9d41-6a837f1553b0.svg";
-const imgImage22 = "https://www.figma.com/api/mcp/asset/df45f269-92db-4a73-94df-f8093383a223.png";
+const imgMdiEyeOff = "https://www.figma.com/api/mcp/asset/6e8c2736-cc4f-4d78-824d-5bc29dc9c9d4.svg";
+const imgImage22 = "https://www.figma.com/api/mcp/asset/ebe81863-8be4-4c37-ab6b-361b6e6f2ae8.png";
 
 type Component5Props = {
   className?: string;
