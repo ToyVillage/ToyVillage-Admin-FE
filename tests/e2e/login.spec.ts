@@ -13,7 +13,7 @@ test('S1: 로그인 화면을 표시하고 전역 사이드바는 제외한다',
   await expect(page.getByRole('img', { name: '토이빌리지' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible()
   await expect(
-    page.getByText('토이빌리지 관리자에 로그인 하고'),
+    page.getByText('토이빌리지 관리자에 로그인하고'),
   ).toBeVisible()
   await expect(page.getByLabel('아이디')).toBeVisible()
   await expect(passwordInput(page)).toBeVisible()

@@ -37,7 +37,7 @@ export default function Login() {
               로그인
             </p>
             <div className="font-['Wanted_Sans:Medium'] leading-[0] relative shrink-0 text-[#848491] text-[24px] w-full" data-node-id="3584:4778">
-              <p className="leading-[normal] mb-0">토이빌리지 관리자에 로그인 하고</p>
+              <p className="leading-[normal] mb-0">토이빌리지 관리자에 로그인하고</p>
               <p className="leading-[normal]">토이빌리지의 업무들을 관리하세요</p>
             </div>
           </div>

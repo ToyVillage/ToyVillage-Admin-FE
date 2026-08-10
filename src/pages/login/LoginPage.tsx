@@ -18,7 +18,7 @@ export function LoginPage() {
           <HeadingGroup>
             <Title>로그인</Title>
             <Description>
-              토이빌리지 관리자에 로그인 하고
+              토이빌리지 관리자에 로그인하고
               <br />
               토이빌리지의 업무들을 관리하세요
             </Description>
