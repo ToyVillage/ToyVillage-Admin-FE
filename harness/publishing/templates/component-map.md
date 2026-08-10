@@ -16,6 +16,7 @@
 > import 방향은 eslint.config.js가 강제하지만, "어느 레이어에 두느냐"는 위 의미 기준으로 정한다.
 
 ## 매핑
+
 | Figma 노드 | type | → 코드 | 레이어 | 재사용? | props |
 |-----------|------|--------|--------|---------|-------|
 | #1541:1470 | FRAME | NoticeHeader | pages/features | new? | title, subtitle |
