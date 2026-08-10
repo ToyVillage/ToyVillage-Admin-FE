@@ -49,6 +49,7 @@ test('S3: 아이디가 비어 있으면 아이디 오류와 포커스를 연결�
   const username = page.getByLabel('아이디')
   await expect(username).toBeFocused()
   await expect(username).toHaveAttribute('aria-invalid', 'true')
+  await expect(username).toHaveCSS('border-color', 'rgb(255, 49, 49)')
   await expect(page.getByText('아이디를 입력해주세요')).toBeVisible()
   await expectLoginSubmissionCount(page, 0)
 })

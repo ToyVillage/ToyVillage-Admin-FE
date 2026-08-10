@@ -189,6 +189,10 @@ const Input = styled.input`
   &:focus-visible {
     border-color: ${({ theme }) => theme.colors.accent};
   }
+
+  &[aria-invalid='true']:focus-visible {
+    border-color: ${({ theme }) => theme.colors.danger};
+  }
 `
 
 const PasswordInputBox = styled.div`
