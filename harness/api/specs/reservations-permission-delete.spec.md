@@ -2,7 +2,7 @@
 feature: reservations-permission-delete
 api_id: RESERVATION_PERMISSION_DELETE
 target_page: src/pages/notices/reservations/ReservationDetailPage.tsx
-notion_page: https://app.notion.com/p/e33e8d82a450838cbdd201d2c33c5919?v=ea1e8d82a45083a0911688655531f149
+notion_page: https://app.notion.com/p/82ee8d82a450837bb9108120100d422b?v=671e8d82a450833883bf08d6d4c1a18a
 requires_functional_test: true
 real_server:
   enabled: false
@@ -23,9 +23,9 @@ real_server:
 # 연동할 API
 
 - API ID: `RESERVATION_PERMISSION_DELETE`
-- `DELETE /reservation/permission/{reservationId}/{userId}`
+- `DELETE /reservation/permission/{reservationId}/{appAdminId}`
 - 인증: Bearer, 접근권한 ADMIN
-- 응답 200: `{ message }`
+- 응답 204: No Content (본문 없음)
 
 # 기대 성공 동작
 
@@ -33,7 +33,7 @@ real_server:
 
 # 기대 오류 동작
 
-- 400/401/404/500 시 목록을 임의로 바꾸지 않고 다이얼로그를 유지한다.
+- 401/403/404/500 시 목록을 임의로 바꾸지 않고 다이얼로그를 유지한다.
 
 # 캐시 갱신 기대
 
@@ -46,4 +46,4 @@ real_server:
 # 비고 및 제약
 
 - 실제 서버 테스트 비활성화(`real_server.enabled: false`).
-- **임시 매핑(B) / 선행 의존:** 삭제에는 `userId`가 필요하나 권한 목록(RESERVATION_PERMISSION_QUERY_ALL)이 `name`만 주고 `userId`를 주지 않는다. 현재 목록 매핑의 합성 id(`perm-<index>`)를 그대로 path에 전달하므로, 백엔드가 목록 응답에 실제 `userId`를 넣기 전까지는 실제 서버에서 삭제가 성립하지 않는다. 구현/뮤테이션 배선과 Mock 검증만 완료한다.
+- 개정 명세(2026-08-10 "API 명세서 1")에서 path param이 `userId` → `appAdminId`로 바뀌고 응답이 `200 {message}` → `204 No Content`로 변경됐다. 권한 목록이 이제 `appAdminId`를 주므로 실제 삭제가 성립한다(이전 선행 의존 해소). 오류도 400 제거, 403 추가.
