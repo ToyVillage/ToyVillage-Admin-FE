@@ -2,7 +2,7 @@
 feature: reservations-permission-query-all
 api_id: RESERVATION_PERMISSION_QUERY_ALL
 target_page: src/pages/notices/reservations/ReservationDetailPage.tsx
-notion_page: https://app.notion.com/p/e33e8d82a450838cbdd201d2c33c5919?v=ea1e8d82a45083a0911688655531f149
+notion_page: https://app.notion.com/p/82ee8d82a450837bb9108120100d422b?v=671e8d82a450833883bf08d6d4c1a18a
 requires_functional_test: true
 real_server:
   enabled: false
@@ -23,9 +23,9 @@ real_server:
 # 연동할 API
 
 - API ID: `RESERVATION_PERMISSION_QUERY_ALL`
-- `GET /reseravtion/permission/{reservationId}` (※ 명세 오타: `reseravtion`)
+- `GET /reservation/permission/{reservationId}` (PathVariable `reservationId`: LONG)
 - 인증: Bearer, 접근권한 ADMIN
-- 응답 200: `[{ name }]` (직원명 배열, 빈 배열 가능)
+- 응답 200: `[{ appAdminId, name }]` (직원 계정 배열, 빈 배열 가능)
 
 # 기대 성공 동작
 
@@ -46,6 +46,5 @@ real_server:
 # 비고 및 제약
 
 - 실제 서버 테스트 비활성화(`real_server.enabled: false`).
-- **엔드포인트 오타(백엔드 확인 필요):** `/reseravtion/...` → `/reservation/...` 로 추정(같은 리소스의 CREATE/DELETE는 `/reservation/permission/...` 사용). 계약·구현은 명세 문자열 그대로 반영하고, 오타 확정 시 1줄 수정.
-- **임시 매핑(B):** 응답에 직원 `id`/`role`이 없어 `id`는 합성(`perm-<index>`), `role`은 미표시. 권한 제거(RESERVATION_PERMISSION_DELETE)는 `userId`가 필요하나 이 응답이 주지 않으므로 별도 과제로 남긴다.
-- **명세 결함:** 상세의 Response 설명("Admin→전체 예약 / User→열람분")과 Header("Admin 또는 User 허용")는 다른 API(전체조회)에서 복붙된 것으로 보이며, DB 접근권한은 ADMIN이다.
+- 개정 명세(2026-08-10 "API 명세서 1")에서 이전 오타(`reseravtion`)가 `/reservation/permission/{reservationId}`로 정정되고, 응답에 `appAdminId`가 추가됐다. `id`는 `appAdminId`로 매핑(이전 합성 id 제거). `role`은 여전히 응답에 없어 미표시.
+- `appAdminId`는 권한 제거(RESERVATION_PERMISSION_DELETE)의 path에 그대로 사용된다.
