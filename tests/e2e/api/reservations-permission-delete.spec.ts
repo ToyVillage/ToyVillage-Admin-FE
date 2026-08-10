@@ -1,22 +1,22 @@
 import { expect, test, type Page } from '@playwright/test'
 
 // 승인된 시나리오(reservations-permission-delete.test-scenarios.md: S1~S2)를 mock 으로 변환한 것.
-// 대상: DELETE /reservation/permission/{reservationId}/{userId}. 상세 진입 시 예약 상세·권한 목록도
+// 대상: DELETE /reservation/permission/{reservationId}/{appAdminId}. 상세 진입 시 예약 상세·권한 목록도
 // 호출되므로 함께 mock 한다. 실제 서버는 호출하지 않는다.
 
 const reservationDetail = {
-  id: 7,
+  counselDate: '2026-07-02',
+  visitDate: '2026-07-13',
+  visitTime: '13:01:00',
+  exitTime: '15:00:00',
   reservationName: '차은우',
-  leaderCount: 3,
   reservationCount: 20,
-  location: '대전광역시 유성구',
-  visitDate: '2026-07-12T09:41:00.123',
-  exitTime: '11:00:00',
-  visitSiteDate: '2026-07-01T10:00:00.000',
-  visitSiteTime: '10:00:00',
-  visitSiteExitTime: '11:00:00',
-  visitSiteCount: 3,
+  location: '대전광역시 유성구 장동',
+  title: '대덕소프트웨어마이스터고',
   money: 200000,
+  status: '사전답사 완료',
+  leaderCount: 3,
+  leaderPhoneNumber: '010-7753-9698',
 }
 
 async function routeReservationDetail(page: Page) {
@@ -37,10 +37,10 @@ test('S1: 제거 성공 → DELETE 호출 후 목록에서 사라지고 다이�
 
   // 첫 조회는 직원 1명, 삭제 후 재조회는 빈 목록.
   let permissionCalls = 0
-  await page.route(/\/api\/reseravtion\/permission\/\d+/, async (route) => {
+  await page.route(/\/api\/reservation\/permission\/\d+$/, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
     permissionCalls += 1
-    const body = permissionCalls === 1 ? [{ name: '이서연' }] : []
+    const body = permissionCalls === 1 ? [{ appAdminId: 11, name: '이서연' }] : []
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -52,11 +52,8 @@ test('S1: 제거 성공 → DELETE 호출 후 목록에서 사라지고 다이�
   await page.route(/\/api\/reservation\/permission\/\d+\/\S+/, async (route) => {
     if (route.request().method() !== 'DELETE') return route.fallback()
     deleteHit = true
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ message: '단체예약 삭제가 완료되었습니다.' }),
-    })
+    // 204 No Content(본문 없음).
+    await route.fulfill({ status: 204 })
   })
 
   await page.goto('/notices/reservations/7')
@@ -74,12 +71,12 @@ test('S1: 제거 성공 → DELETE 호출 후 목록에서 사라지고 다이�
 test('S2: DELETE 500 → 목록 유지, 확인 다이얼로그 유지', async ({ page }) => {
   await routeReservationDetail(page)
 
-  await page.route(/\/api\/reseravtion\/permission\/\d+/, async (route) => {
+  await page.route(/\/api\/reservation\/permission\/\d+$/, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([{ name: '이서연' }]),
+      body: JSON.stringify([{ appAdminId: 11, name: '이서연' }]),
     })
   })
 
@@ -89,10 +86,10 @@ test('S2: DELETE 500 → 목록 유지, 확인 다이얼로그 유지', async ({
       status: 500,
       contentType: 'application/json',
       body: JSON.stringify({
-        message: '예상하지 못한 에러가 발생했습니다.',
+        message: '내부 서버 오류가 발생했습니다.',
         status: 500,
-        timestamp: '2026-02-06T19:56:53.62201',
-        description: '에러 설명',
+        timestamp: '2026-08-08T12:00:00',
+        description: '내부 서버 오류가 발생했습니다.',
       }),
     })
   })
