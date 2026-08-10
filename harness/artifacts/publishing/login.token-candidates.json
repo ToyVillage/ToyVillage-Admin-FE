@@ -1,0 +1,122 @@
+{
+  "feature": "login",
+  "tokenCandidates": {
+    "colors": [
+      {
+        "value": "#F5F5F7",
+        "count": 4,
+        "matched": true
+      },
+      {
+        "value": "#848491",
+        "count": 4,
+        "matched": true
+      },
+      {
+        "value": "#C6C6CE",
+        "count": 2,
+        "matched": true
+      },
+      {
+        "value": "#FFFFFF",
+        "count": 1,
+        "matched": true
+      },
+      {
+        "value": "#000000",
+        "count": 1,
+        "matched": true
+      }
+    ],
+    "fontFamilies": [
+      {
+        "value": "Wanted Sans",
+        "count": 7,
+        "matched": false
+      }
+    ]
+  },
+  "directValues": {
+    "alphaColors": [],
+    "fontSizes": [
+      {
+        "value": "22px",
+        "count": 2
+      },
+      {
+        "value": "20px",
+        "count": 2
+      },
+      {
+        "value": "40px",
+        "count": 1
+      },
+      {
+        "value": "24px",
+        "count": 1
+      },
+      {
+        "value": "28px",
+        "count": 1
+      }
+    ],
+    "fontWeights": [
+      {
+        "value": "500",
+        "count": 4
+      },
+      {
+        "value": "600",
+        "count": 2
+      },
+      {
+        "value": "700",
+        "count": 1
+      }
+    ],
+    "spacing": [
+      {
+        "value": "16px",
+        "count": 4
+      },
+      {
+        "value": "8px",
+        "count": 3
+      },
+      {
+        "value": "20px",
+        "count": 2
+      },
+      {
+        "value": "18px",
+        "count": 2
+      },
+      {
+        "value": "190px",
+        "count": 1
+      },
+      {
+        "value": "23px",
+        "count": 1
+      },
+      {
+        "value": "12px",
+        "count": 1
+      }
+    ],
+    "radius": [
+      {
+        "value": "8px",
+        "count": 2
+      },
+      {
+        "value": "20px",
+        "count": 1
+      },
+      {
+        "value": "12px",
+        "count": 1
+      }
+    ]
+  }
+}

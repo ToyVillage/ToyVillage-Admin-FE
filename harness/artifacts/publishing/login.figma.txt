@@ -1,0 +1,114 @@
+const imgMdiEyeOff = "https://www.figma.com/api/mcp/asset/6e8c2736-cc4f-4d78-824d-5bc29dc9c9d4.svg";
+const imgImage22 = "https://www.figma.com/api/mcp/asset/ebe81863-8be4-4c37-ab6b-361b6e6f2ae8.png";
+
+type Component5Props = {
+  className?: string;
+  property1?: "Frame 428";
+};
+
+function Component5({ className, property1 = "Frame 428" }: Component5Props) {
+  return (
+    <div className={className || "content-stretch flex flex-col gap-[8px] items-start relative w-[640px]"} data-node-id="3587:4808">
+      <p className="[word-break:break-word] font-['Wanted_Sans:SemiBold'] leading-[normal] not-italic relative shrink-0 text-[22px] text-black w-full" data-node-id="3584:4803">
+        비밀번호
+      </p>
+      <div className="bg-[#f5f5f7] content-stretch flex items-center justify-between overflow-clip px-[16px] py-[18px] relative rounded-[8px] shrink-0 w-full" data-node-id="3584:4804">
+        <p className="[word-break:break-word] font-['Wanted_Sans:Medium'] leading-[normal] not-italic relative shrink-0 text-[#848491] text-[20px] text-center whitespace-nowrap" data-node-id="3584:4805">
+          비밀번호를 입력해주세요
+        </p>
+        <div className="relative shrink-0 size-[28px]" data-node-id="3584:4790" data-name="mdi:eye-off">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMdiEyeOff} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <div className="bg-[#f5f5f7] relative size-full" data-node-id="3584:4577" data-name="login">
+      <div className="absolute bg-white h-[843px] left-[600px] overflow-clip rounded-[20px] top-[118px] w-[720px]" data-node-id="3584:4780">
+        <div className="absolute content-stretch flex flex-col gap-[12px] items-center left-[198px] top-[52px] w-[324px]" data-node-id="3584:4781">
+          <div className="h-[114px] relative shrink-0 w-[136px]" data-node-id="3584:4775" data-name="image 22">
+            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgImage22} />
+          </div>
+          <div className="[word-break:break-word] content-stretch flex flex-col gap-[8px] items-center not-italic relative shrink-0 text-center w-full" data-node-id="3584:4779">
+            <p className="font-['Wanted_Sans:Bold'] leading-[normal] relative shrink-0 text-[40px] text-black w-full" data-node-id="3584:4777">
+              로그인
+            </p>
+            <div className="font-['Wanted_Sans:Medium'] leading-[0] relative shrink-0 text-[#848491] text-[24px] w-full" data-node-id="3584:4778">
+              <p className="leading-[normal] mb-0">토이빌리지 관리자에 로그인하고</p>
+              <p className="leading-[normal]">토이빌리지의 업무들을 관리하세요</p>
+            </div>
+          </div>
+        </div>
+        <div className="absolute content-stretch flex flex-col gap-[8px] items-start left-[40px] top-[324px] w-[640px]" data-node-id="3584:4794">
+          <p className="[word-break:break-word] font-['Wanted_Sans:SemiBold'] leading-[normal] not-italic relative shrink-0 text-[22px] text-black w-full" data-node-id="3584:4783">
+            아이디
+          </p>
+          <div className="bg-[#f5f5f7] content-stretch flex items-center overflow-clip px-[16px] py-[20px] relative rounded-[8px] shrink-0 w-full" data-node-id="3584:4782">
+            <p className="[word-break:break-word] font-['Wanted_Sans:Medium'] leading-[normal] not-italic relative shrink-0 text-[#848491] text-[20px] text-center whitespace-nowrap" data-node-id="3584:4784">
+              아이디를 입력해주세요
+            </p>
+          </div>
+        </div>
+        <div className="-translate-x-1/2 absolute bg-black border-[#c6c6ce] border-solid border-t content-stretch flex items-center justify-center left-1/2 overflow-clip px-[190px] py-[23px] rounded-[12px] top-[712px] w-[640px]" data-node-id="3584:4792">
+          <p className="[word-break:break-word] font-['Wanted_Sans:Medium'] leading-[normal] not-italic relative shrink-0 text-[28px] text-white whitespace-nowrap" data-node-id="3584:4793">
+            로그인
+          </p>
+        </div>
+        <Component5 className="absolute content-stretch flex flex-col gap-[8px] items-start left-[40px] top-[454px] w-[640px]" />
+      </div>
+    </div>
+  );
+}
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+These styles are contained in the design: gray color/60: #848491, gray color/10: #F5F5F7, gray color/30: #C6C6CE.
+Images and SVGs will be stored as constants, e.g. const image = 'https://www.figma.com/api/mcp/asset/550e8400-e29b-41d4-a716-446655440000.png'. These constants will be used in the code as the source for the image, ex: <img src={image} />. Image assets are stored on a remote server for 7 days and can be fetched using the provided URLs until they expire.
+
+--- normalized-for-map-tokens ---
+# The official MCP emits Tailwind-like reference code. This block restates only
+# values visible in that response using the repository mapper's legacy keys.
+fill: #FFFFFF
+fill: #000000
+fontFamily: "Wanted Sans"
+fontFamily: "Wanted Sans"
+fontFamily: "Wanted Sans"
+fontFamily: "Wanted Sans"
+fontFamily: "Wanted Sans"
+fontFamily: "Wanted Sans"
+fontFamily: "Wanted Sans"
+fontSize: 22
+fontSize: 22
+fontSize: 20
+fontSize: 20
+fontSize: 40
+fontSize: 24
+fontSize: 28
+fontWeight: 600
+fontWeight: 600
+fontWeight: 500
+fontWeight: 500
+fontWeight: 500
+fontWeight: 500
+fontWeight: 700
+padding: "16px 16px",
+padding: "16px 16px",
+padding: "20px 20px",
+padding: "18px 18px",
+padding: "190px 23px",
+gap: "8px"
+gap: "8px"
+gap: "8px"
+gap: "12px"
+borderRadius: "8px"
+borderRadius: "8px"
+borderRadius: "20px"
+borderRadius: "12px"

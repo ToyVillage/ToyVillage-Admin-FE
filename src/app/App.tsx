@@ -5,6 +5,7 @@ import {
   RouterProvider,
 } from 'react-router-dom'
 import { HomePage } from '@/pages/home'
+import { LoginPage } from '@/pages/login'
 import {
   CreateNoticePage,
   NoticeDetailPage,
@@ -38,6 +39,7 @@ function AppLayout() {
 }
 
 const router = createBrowserRouter([
+  { path: '/login', element: <LoginPage /> },
   {
     element: <AppLayout />,
     children: [
