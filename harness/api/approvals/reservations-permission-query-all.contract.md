@@ -3,19 +3,16 @@
 ## Source
 
 - API ID 검색 결과: exact match 1건
-- Notion database/data source: `e33e8d82-...` / `9bbe8d82-...` ("API 명세서 (1)", 최신)
-- Resolved page: https://app.notion.com/p/f1fe8d82a450824287b201c7fa96aa53
-- Requested page: 없음 (제공 URL은 데이터베이스 뷰 인덱스)
-- Checked at: 2026-08-03
+- Notion database/data source: `82ee8d82-...` / `148e8d82-...` ("API 명세서 1", 2026-08-10 개정)
+- Resolved page: https://app.notion.com/p/3f8e8d82a45082c5ab4801b1cc347a95
+- Checked at: 2026-08-10
 - Exact match count: 1
 
 ## Basic Information
 
-| API ID                           | Name             | Method | Full Path                               | Content-Type     |
-| -------------------------------- | ---------------- | ------ | --------------------------------------- | ---------------- |
-| RESERVATION_PERMISSION_QUERY_ALL | 단체예약 권한 조회 기능 | GET    | /reseravtion/permission/{reservationId} | application/json |
-
-※ Full Path의 `reseravtion`은 명세 오타로 추정(백엔드 확인 필요).
+| API ID                           | Name             | Method | Full Path                              | Content-Type     |
+| -------------------------------- | ---------------- | ------ | -------------------------------------- | ---------------- |
+| RESERVATION_PERMISSION_QUERY_ALL | 단체예약 조회 권한 목록 조회 | GET    | /reservation/permission/{reservationId} | application/json |
 
 ## Authentication and Authorization
 
@@ -25,9 +22,9 @@
 
 ## Path Parameters
 
-| Name          | Type    | Required | Description |
-| ------------- | ------- | -------- | ----------- |
-| reservationId | integer | true     | 예약 id     |
+| Name          | Type    | Required | Description                |
+| ------------- | ------- | -------- | -------------------------- |
+| reservationId | integer | true     | 권한 목록을 조회할 단체예약 ID |
 
 ## Query Parameters / Request Body
 
@@ -35,35 +32,33 @@
 
 ## Request Example
 
-`GET /reseravtion/permission/1`
+`GET /reservation/permission/1`
 
 ## Success Responses
 
-### HTTP 200 — 권한 보유 직원명 배열 (빈 배열 가능)
+### HTTP 200 — 직원 계정 배열 (빈 배열 가능)
 
 ```json
-[{ "name": "직원명" }, { "name": "직원명" }]
+[{ "appAdminId": 2, "name": "김직원" }, { "appAdminId": 3, "name": "이직원" }]
 ```
 
-아이템 필드: `name`(string). ※ 직원 `id`/`role`은 응답에 없음.
+아이템 필드: `appAdminId`(integer), `name`(string). → UI Staff `{ id: String(appAdminId), name }`.
 
 ## Error Responses
 
 공통 바디: `{ message, status, timestamp, description }`
 
-| Status | 대표 message                       |
-| ------ | ---------------------------------- |
-| 401    | 만료된 토큰입니다.                 |
-| 403    | 접근할 수 있는 권한이 없습니다.    |
-| 404    | 존재하지 않는 예약입니다           |
-| 500    | 예상하지 못한 에러가 발생했습니다. |
+| Status | 대표 message                     |
+| ------ | -------------------------------- |
+| 401    | 만료된 토큰입니다.               |
+| 403    | 접근할 수 있는 권한이 없습니다.  |
+| 404    | 존재하지 않는 단체예약 목록입니다. |
+| 500    | 내부 서버 오류가 발생했습니다.   |
 
 ## Notes
 
-- 응답에 직원 `id`가 없어 UI 키/제거용 식별자를 합성해야 함(임시 B). 권한 제거(RESERVATION_PERMISSION_DELETE)는 `userId` 필요 → 본 응답으로 불가.
+- 개정 명세에서 엔드포인트 오타(`reseravtion`)가 정정되고 `appAdminId`가 추가됨.
 
 ## Backend Questions
 
-1. 엔드포인트 오타 `reseravtion` → `reservation` 확정.
-2. 응답에 직원 `id`(userId) 포함 여부(권한 제거 연동에 필요).
-3. 접근권한 ADMIN 확정(상세 Header/Response의 User 언급은 복붙 오류로 보임).
+없음.
