@@ -5,35 +5,37 @@ export interface ReservationQueryRequest {
   id: number
 }
 
-// RESERVATION_QUERY (GET /reservation/{id}) 응답 런타임 형태.
-// 명세상 모든 필드가 존재하지만 방어적으로 unknown 으로 받고 매핑 시 검증한다.
-interface ReservationQueryRuntimeItem {
-  id: number | string
+// RESERVATION_ADMIN_QUERY (GET /reservation/{id}) 응답 런타임 형태.
+// 방어적으로 unknown 으로 받고 매핑 시 검증한다. 응답에 id는 없어 요청 id를 사용한다.
+interface ReservationAdminQueryRuntimeItem {
+  counselDate?: unknown
+  visitDate?: unknown
+  visitTime?: unknown
+  exitTime?: unknown
   reservationName?: unknown
-  leaderCount?: unknown
   reservationCount?: unknown
   location?: unknown
-  visitDate?: unknown
-  exitTime?: unknown
-  visitSiteDate?: unknown
-  visitSiteTime?: unknown
-  visitSiteExitTime?: unknown
-  visitSiteCount?: unknown
+  title?: unknown
   money?: unknown
+  status?: unknown
+  leaderCount?: unknown
+  leaderPhoneNumber?: unknown
 }
 
-// RESERVATION_QUERY (GET /reservation/{id}) — id로 단체예약 상세 조회.
-//
-// 임시 매핑(B): 응답에 단체명·상태(사전답사 라벨)·인솔자 연락처 필드가 없어(백엔드 명세 미비)
-// 해당 UI 값은 빈 값으로 둔다. 백엔드가 필드를 추가하면 매핑을 확정한다.
-// - reservationName      → reserverName (예약인)
-// - reservationCount     → headcount (전체 인원)
-// - leaderCount          → guideCount (인솔자 인원)
-// - location             → region / regionDetail (지역)
-// - visitDate            → reserveDate + reserveTime (예약일 / 예약 시작 시간)
-// - exitTime             → reserveTimeEnd (예약 종료 시간)
-// - visitSiteDate        → consultDate (상담일 = 사전답사 방문일)
-// - money                → admissionFee (입장료로 추정)
+// RESERVATION_ADMIN_QUERY (GET /reservation/{id}) — id로 단체예약 상세 조회(관리자).
+// 매핑:
+// - counselDate        → consultDate (상담일)
+// - visitDate          → reserveDate (예약일)
+// - visitTime          → reserveTime (예약 시작 시간)
+// - exitTime           → reserveTimeEnd (예약 종료 시간)
+// - reservationName    → reserverName (예약인)
+// - reservationCount   → headcount (전체 인원)
+// - location           → region / regionDetail (지역)
+// - title              → groupName (단체명)
+// - money              → admissionFee (입장료)
+// - status             → surveyStatus (상태 라벨, 예: 사전답사 완료)
+// - leaderCount        → guideCount (인솔자 인원)
+// - leaderPhoneNumber  → guideContact (인솔자 연락처)
 export async function getReservation({
   id,
 }: ReservationQueryRequest): Promise<ReservationDetail> {
@@ -43,36 +45,36 @@ export async function getReservation({
 
   const { data } = await api.get<unknown>(`/reservation/${id}`)
 
-  if (!isReservationQueryResponse(data)) {
+  if (!isReservationAdminQueryResponse(data)) {
     throw new Error('예약 상세 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  return toReservationDetail(data)
+  return toReservationDetail(id, data)
 }
 
-function toReservationDetail(item: ReservationQueryRuntimeItem): ReservationDetail {
+function toReservationDetail(
+  id: number,
+  item: ReservationAdminQueryRuntimeItem,
+): ReservationDetail {
   const location = toText(item.location)
 
   return {
-    id: String(item.id),
-    // 이 API는 목록 상태(pending/approved/rejected)를 제공하지 않는다(상세 카드 미표시).
+    id: String(id),
+    // 목록 상태(pending/approved/rejected)는 이 응답으로 판별하지 않는다(상세 카드 미표시).
     status: 'pending' as ReservationStatus,
-    consultDate: toDateDots(item.visitSiteDate),
+    consultDate: toDateDots(item.counselDate),
     reserveDate: toDateDots(item.visitDate),
-    reserveTime: toClock(item.visitDate),
+    reserveTime: toClock(item.visitTime),
     reserveTimeEnd: toClock(item.exitTime),
     reserverName: toText(item.reservationName),
-    // 응답에 단체명 없음(임시 매핑 B) → 빈 값.
-    groupName: '',
+    groupName: toText(item.title),
     region: location,
     regionDetail: location,
     headcount: toNumber(item.reservationCount),
     admissionFee: toNumber(item.money),
-    // 응답에 상태 라벨 없음(임시 매핑 B) → 빈 값.
-    surveyStatus: '',
+    surveyStatus: toText(item.status),
     guideCount: toNumber(item.leaderCount),
-    // 응답에 인솔자 연락처 없음(임시 매핑 B) → 빈 값.
-    guideContact: '',
+    guideContact: toText(item.leaderPhoneNumber),
   }
 }
 
@@ -98,16 +100,10 @@ function toNumber(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
-function isReservationQueryResponse(
+function isReservationAdminQueryResponse(
   value: unknown,
-): value is ReservationQueryRuntimeItem {
-  if (typeof value !== 'object' || value === null) return false
-
-  const item = value as Record<string, unknown>
-  return (
-    (typeof item.id === 'number' && Number.isFinite(item.id)) ||
-    (typeof item.id === 'string' && item.id.trim().length > 0)
-  )
+): value is ReservationAdminQueryRuntimeItem {
+  return typeof value === 'object' && value !== null
 }
 
 export function isReservationNotFoundError(error: unknown): boolean {
