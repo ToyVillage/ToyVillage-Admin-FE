@@ -1,13 +1,13 @@
 {
-  "apiId": "RESERVATION_QUERY",
-  "name": "단체예약 단일조회 기능",
-  "description": "id로 단체예약을 상세 조회하는 기능",
+  "apiId": "RESERVATION_ADMIN_QUERY",
+  "name": "관리자 단체예약 상세 조회",
+  "description": "id로 단체예약을 상세 조회하는 기능(관리자)",
   "method": "GET",
   "path": "/reservation/{id}",
   "authentication": {
     "required": true,
     "type": "Bearer",
-    "roles": ["USER", "ADMIN"]
+    "roles": ["ADMIN"]
   },
   "contentType": "application/json",
   "headers": [
@@ -19,7 +19,7 @@
       "nullable": false,
       "default": null,
       "example": "Bearer <access-token>",
-      "description": "액세스 토큰 (Admin 또는 User 토큰 모두 허용)",
+      "description": "관리자(ADMIN) 액세스 토큰",
       "constraints": ["Bearer 스킴"]
     }
   ],
@@ -32,8 +32,8 @@
       "nullable": false,
       "default": null,
       "example": 1,
-      "description": "예약(Reservation)의 id",
-      "constraints": ["양의 정수"]
+      "description": "조회할 단체예약 ID",
+      "constraints": ["양의 정수(LONG)"]
     }
   ],
   "queryParameters": [],
@@ -50,15 +50,48 @@
           "description": "단체예약 상세",
           "fields": [
             {
-              "name": "id",
+              "name": "counselDate",
               "location": "body",
-              "type": "integer",
+              "type": "string",
               "required": true,
               "nullable": false,
               "default": null,
-              "example": 1,
-              "description": "예약 id",
-              "constraints": []
+              "example": "2026-07-02",
+              "description": "상담일",
+              "constraints": ["형식 yyyy-MM-dd"]
+            },
+            {
+              "name": "visitDate",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-07-13",
+              "description": "예약일(방문일)",
+              "constraints": ["형식 yyyy-MM-dd"]
+            },
+            {
+              "name": "visitTime",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "13:01:00",
+              "description": "예약 시작 시간",
+              "constraints": ["형식 HH:mm:ss"]
+            },
+            {
+              "name": "exitTime",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "15:00:00",
+              "description": "예약 종료 시간",
+              "constraints": ["형식 HH:mm:ss"]
             },
             {
               "name": "reservationName",
@@ -67,19 +100,8 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "예약인 성함",
+              "example": "홍길동",
               "description": "예약인 성함",
-              "constraints": []
-            },
-            {
-              "name": "leaderCount",
-              "location": "body",
-              "type": "integer",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": 5,
-              "description": "인솔자 인원",
               "constraints": []
             },
             {
@@ -100,74 +122,19 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "위치",
-              "description": "위치",
+              "example": "대전광역시 유성구 장동",
+              "description": "지역",
               "constraints": []
             },
             {
-              "name": "visitDate",
-              "location": "body",
-              "type": "datetime",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "2026-07-12T09:41:00.123",
-              "description": "방문 일시",
-              "constraints": ["형식 yyyy-MM-dd'T'HH:mm:ss.SSS"]
-            },
-            {
-              "name": "exitTime",
+              "name": "title",
               "location": "body",
               "type": "string",
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "09:14:14",
-              "description": "퇴장 시간",
-              "constraints": ["형식 HH:mm:ss"]
-            },
-            {
-              "name": "visitSiteDate",
-              "location": "body",
-              "type": "datetime",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "2026-07-12T09:41:00.123",
-              "description": "사전답사 방문 일시",
-              "constraints": ["형식 yyyy-MM-dd'T'HH:mm:ss.SSS"]
-            },
-            {
-              "name": "visitSiteTime",
-              "location": "body",
-              "type": "string",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "09:14:14",
-              "description": "사전답사 방문 시간",
-              "constraints": ["형식 HH:mm:ss"]
-            },
-            {
-              "name": "visitSiteExitTime",
-              "location": "body",
-              "type": "string",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": "09:14:14",
-              "description": "사전답사 퇴장 시간",
-              "constraints": ["형식 HH:mm:ss"]
-            },
-            {
-              "name": "visitSiteCount",
-              "location": "body",
-              "type": "integer",
-              "required": true,
-              "nullable": false,
-              "default": null,
-              "example": 3,
-              "description": "사전답사 방문 인원",
+              "example": "대덕소프트웨어마이스터고",
+              "description": "단체명",
               "constraints": []
             },
             {
@@ -177,9 +144,42 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": 1000,
-              "description": "입장료로 추정(명세에 타입·설명 미기재, 예시값 1000). 백엔드 확인 필요",
-              "constraints": ["명세 결함: 타입/설명 없음"]
+              "example": 200000,
+              "description": "입장료",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "사전답사 완료",
+              "description": "상태 라벨",
+              "constraints": []
+            },
+            {
+              "name": "leaderCount",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 3,
+              "description": "인솔자 인원",
+              "constraints": []
+            },
+            {
+              "name": "leaderPhoneNumber",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "010-7753-9698",
+              "description": "인솔자 연락처",
+              "constraints": []
             }
           ]
         }
@@ -224,7 +224,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "2026-02-06T19:56:53.62201",
+              "example": "2026-08-08T12:00:00",
               "description": "에러 발생 시각",
               "constraints": []
             },
@@ -235,7 +235,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "에러 설명",
+              "example": "만료된 토큰입니다.",
               "description": "에러 설명",
               "constraints": []
             }
@@ -280,7 +280,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "2026-02-06T19:56:53.62201",
+              "example": "2026-08-08T12:00:00",
               "description": "에러 발생 시각",
               "constraints": []
             },
@@ -291,7 +291,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "에러 설명",
+              "example": "접근할 수 있는 권한이 없습니다.",
               "description": "에러 설명",
               "constraints": []
             }
@@ -300,7 +300,7 @@
       },
       {
         "status": 404,
-        "description": "존재하지 않는 예약",
+        "description": "존재하지 않는 단체예약",
         "noContent": false,
         "body": {
           "type": "object",
@@ -314,7 +314,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "존재하지 않는 예약입니다",
+              "example": "존재하지 않는 단체예약 목록입니다.",
               "description": "오류 메시지",
               "constraints": []
             },
@@ -336,7 +336,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "2026-02-06T19:56:53.62201",
+              "example": "2026-08-08T12:00:00",
               "description": "에러 발생 시각",
               "constraints": []
             },
@@ -347,7 +347,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "에러 설명",
+              "example": "존재하지 않는 단체예약 목록입니다.",
               "description": "에러 설명",
               "constraints": []
             }
@@ -370,7 +370,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "예상하지 못한 에러가 발생했습니다.",
+              "example": "내부 서버 오류가 발생했습니다.",
               "description": "오류 메시지",
               "constraints": []
             },
@@ -392,7 +392,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "2026-02-06T19:56:53.62201",
+              "example": "2026-08-08T12:00:00",
               "description": "에러 발생 시각",
               "constraints": []
             },
@@ -403,7 +403,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "에러 설명",
+              "example": "내부 서버 오류가 발생했습니다.",
               "description": "에러 설명",
               "constraints": []
             }
@@ -413,30 +413,30 @@
     ]
   },
   "source": {
-    "notionDatabase": "e33e8d82-a450-838c-bdd2-01d2c33c5919",
-    "notionDataSource": "9bbe8d82-a450-824e-b73c-07d7c0e9a8f2",
-    "resolvedNotionPage": "https://app.notion.com/p/ee2e8d82a45082ed9c6e017bdc2060dd",
+    "notionDatabase": "82ee8d82-a450-837b-b910-8120100d422b",
+    "notionDataSource": "148e8d82-a450-8320-ad45-871cd4c73b4d",
+    "resolvedNotionPage": "https://app.notion.com/p/a0fe8d82a4508392af2b811864e8146c",
     "requestedNotionPage": null,
-    "checkedAt": "2026-08-03T00:00:00.000Z",
+    "checkedAt": "2026-08-10T00:00:00.000Z",
     "apiIdMatchCount": 1,
     "databaseValues": {
-      "apiId": "RESERVATION_QUERY",
+      "apiId": "RESERVATION_ADMIN_QUERY",
       "method": "GET",
       "path": "/reservation/{id}",
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": ["USER", "ADMIN"]
+        "roles": ["ADMIN"]
       }
     },
     "detailValues": {
-      "apiId": "RESERVATION_QUERY",
+      "apiId": "RESERVATION_ADMIN_QUERY",
       "method": "GET",
       "path": "/reservation/{id}",
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": ["USER", "ADMIN"]
+        "roles": ["ADMIN"]
       }
     }
   }

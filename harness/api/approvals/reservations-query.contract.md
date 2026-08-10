@@ -1,45 +1,34 @@
-# API Contract — RESERVATION_QUERY
+# API Contract — RESERVATION_ADMIN_QUERY
 
 ## Source
 
 - API ID 검색 결과: exact match 1건
-- Notion database/data source: `e33e8d82-...` / `9bbe8d82-...` ("API 명세서 (1)", 최신)
-- Resolved page: https://app.notion.com/p/ee2e8d82a45082ed9c6e017bdc2060dd
-- Requested page: 없음 (제공 URL은 데이터베이스 뷰 인덱스)
-- Checked at: 2026-08-03
+- Notion database/data source: `82ee8d82-...` / `148e8d82-...` ("API 명세서 1", 2026-08-10 개정)
+- Resolved page: https://app.notion.com/p/a0fe8d82a4508392af2b811864e8146c
+- Checked at: 2026-08-10
 - Exact match count: 1
 
 ## Basic Information
 
-| API ID            | Name              | Method | Full Path         | Content-Type     |
-| ----------------- | ----------------- | ------ | ----------------- | ---------------- |
-| RESERVATION_QUERY | 단체예약 단일조회 기능 | GET    | /reservation/{id} | application/json |
+| API ID                  | Name             | Method | Full Path         | Content-Type     |
+| ----------------------- | ---------------- | ------ | ----------------- | ---------------- |
+| RESERVATION_ADMIN_QUERY | 관리자 단체예약 상세 조회 | GET    | /reservation/{id} | application/json |
 
 ## Authentication and Authorization
 
-| Required | Type   | Roles       |
-| -------- | ------ | ----------- |
-| true     | Bearer | USER, ADMIN |
-
-## Request Headers
-
-| Name          | Type   | Required | Example                 |
-| ------------- | ------ | -------- | ----------------------- |
-| Authorization | string | true     | `Bearer <access-token>` |
+| Required | Type   | Roles |
+| -------- | ------ | ----- |
+| true     | Bearer | ADMIN |
 
 ## Path Parameters
 
 | Name | Type    | Required | Description        |
 | ---- | ------- | -------- | ------------------ |
-| id   | integer | true     | 예약(Reservation)의 id |
+| id   | integer | true     | 조회할 단체예약 ID |
 
-## Query Parameters
+## Query Parameters / Request Body
 
-없음
-
-## Request Body
-
-없음
+없음 / 없음
 
 ## Request Example
 
@@ -51,45 +40,54 @@
 
 ```json
 {
-  "id": 1,
-  "reservationName": "예약인 성함",
-  "leaderCount": 5,
+  "counselDate": "2026-07-02",
+  "visitDate": "2026-07-13",
+  "visitTime": "13:01:00",
+  "exitTime": "15:00:00",
+  "reservationName": "홍길동",
   "reservationCount": 20,
-  "location": "위치",
-  "visitDate": "2026-07-12T09:41:00.123",
-  "exitTime": "09:14:14",
-  "visitSiteDate": "2026-07-12T09:41:00.123",
-  "visitSiteTime": "09:14:14",
-  "visitSiteExitTime": "09:14:14",
-  "visitSiteCount": 3,
-  "money": 1000
+  "location": "대전광역시 유성구 장동",
+  "title": "대덕소프트웨어마이스터고",
+  "money": 200000,
+  "status": "사전답사 완료",
+  "leaderCount": 3,
+  "leaderPhoneNumber": "010-7753-9698"
 }
 ```
 
-필드: `id`(integer), `reservationName`(string), `leaderCount`(integer), `reservationCount`(integer), `location`(string), `visitDate`(datetime), `exitTime`(string HH:mm:ss), `visitSiteDate`(datetime), `visitSiteTime`(string HH:mm:ss), `visitSiteExitTime`(string HH:mm:ss), `visitSiteCount`(integer), `money`(integer, 명세 타입/설명 미기재).
+## UI 매핑 (ReservationInfoCard)
+
+| API 필드            | UI(ReservationDetail) |
+| ------------------- | --------------------- |
+| counselDate         | consultDate (상담일)  |
+| visitDate           | reserveDate (예약일)  |
+| visitTime           | reserveTime (예약 시작) |
+| exitTime            | reserveTimeEnd (예약 종료) |
+| reservationName     | reserverName (예약인) |
+| reservationCount    | headcount (전체 인원) |
+| location            | region / regionDetail (지역) |
+| title               | groupName (단체명)    |
+| money               | admissionFee (입장료) |
+| status              | surveyStatus (상태)   |
+| leaderCount         | guideCount (인솔자 인원) |
+| leaderPhoneNumber   | guideContact (인솔자 연락처) |
 
 ## Error Responses
 
 공통 바디: `{ message, status, timestamp, description }`
 
-| Status | 대표 message                       |
-| ------ | ---------------------------------- |
-| 401    | 만료된 토큰입니다.                 |
-| 403    | 접근할 수 있는 권한이 없습니다.    |
-| 404    | 존재하지 않는 예약입니다           |
-| 500    | 예상하지 못한 에러가 발생했습니다. |
-
-## Validation and Constraints
-
-- `id`는 양의 정수. 응답은 단일 객체(배열 아님).
+| Status | 대표 message                     |
+| ------ | -------------------------------- |
+| 401    | 만료된 토큰입니다.               |
+| 403    | 접근할 수 있는 권한이 없습니다.  |
+| 404    | 존재하지 않는 단체예약 목록입니다. |
+| 500    | 내부 서버 오류가 발생했습니다.   |
 
 ## Notes
 
-- 목록 UI가 쓰는 `단체명`, `상태(사전답사 라벨)`, `인솔자 연락처`는 응답에 없음(임시 매핑 B에서 빈 값).
+- 응답에 `id` 없음 → 요청 path의 `id` 사용.
+- 이전 임시 매핑(B)의 빈 값(단체명·상태·인솔자 연락처)이 실제 필드로 해소됨.
 
 ## Backend Questions
 
-1. `단체명` / `상태(사전답사 라벨)` / `인솔자 연락처` 응답 추가 여부.
-2. `money` 타입·의미(입장료?) 확정.
-3. 200 예시 JSON `visitSiteCount` 뒤 콤마 누락(유효 JSON 아님) 수정.
-4. 명세서 DB 정본 지정(중복 3개).
+없음.

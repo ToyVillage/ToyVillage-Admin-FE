@@ -1,15 +1,15 @@
 {
   "feature": "reservations-query",
-  "apiId": "RESERVATION_QUERY",
-  "approvedAt": "2026-08-03T09:54:47.211Z",
+  "apiId": "RESERVATION_ADMIN_QUERY",
+  "approvedAt": "2026-08-10T11:46:09.319Z",
   "approvedBy": "kimjihwan8",
-  "taskSpecHash": "f3e5711e2a5bd1b66627df75f256c1de8508c402f5b4fda6f4cd6fe8640a074a",
-  "contractHash": "f8623213d37f5aec448c08fdbcf056d24623aa1a6574c413eeab9df89a71624e",
-  "contractMarkdownHash": "6f7302abc916026086175812cd1517e6924c39d544742392c1091194a3f7cbb9",
-  "planHash": "83853a1e5fd653b4abe1d67258f4d76ffc16926d817ad1692b760815d01713c4",
-  "scenarioHash": "b4d5ccf59e6501d07184bf4aba5336071a8bc5ce8312a571f81b3cbb10eac10b",
-  "testHash": "c1a990fa7df05c340463f37a1d75e2ec51062dd48dc8865664bd4dcaa16118cd",
+  "taskSpecHash": "978f49fa9e7ba8e6bbfd978f8e78657e2fff60af07b53cabd20f6b1dbea8bedd",
+  "contractHash": "b8d9ff8d1a72d852ab47c0979cb1dd25cef6b0f6c31d1860ad55f7e3ae5051ee",
+  "contractMarkdownHash": "0c50797307b6d386724b6fb8332b0c9ac347fe3daf941cd3a71800327a417f74",
+  "planHash": "6b2419ed582d36709cd829fabd64603bdef4ef90253ffe994872ed34837c40bf",
+  "scenarioHash": "38b5e9279d1630923c7624070d6b01c13bdc2c8e16508ef8a647f6d4090c6847",
+  "testHash": "d084c2d6ba08ec8fff2b6530201752c065da5faffd86c2384b2b53a8d60957f1",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-08-03T09:57:11.908Z"
+  "testApprovedAt": "2026-08-10T11:46:09.761Z"
 }
