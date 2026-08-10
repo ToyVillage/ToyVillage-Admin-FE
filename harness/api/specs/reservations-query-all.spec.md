@@ -51,4 +51,5 @@ real_server:
 # 비고 및 제약
 
 - 실제 서버 테스트는 비활성화한다(`real_server.enabled: false`). Mock 기반 Playwright만 수행.
-- **미해결(백엔드/디자인 확인 필요):** 현재 목록 UI가 요구하는 `status`(사전답사 전/완료·방문 완료 3개 탭 + 카운트), `region`(지역 검색), `consultDate`(상담일 정렬/표시), `groupName`(단체명)이 `RESERVATION_QUERY_ALL` 응답에 없다. 응답 필드는 `title, reservationName, visitDate, reservationCount, reservationDate`뿐이다. 매핑을 추측하지 않고 백엔드 질문 목록으로 반환한다.
+- **보류(SUPERSEDED):** 2026-08-10 개정 명세("API 명세서 1")에서 `RESERVATION_QUERY_ALL`이 관리자용 `RESERVATION_ADMIN_QUERY_ALL`(`GET /reservation`, ADMIN)과 직원용 `RESERVATION_EMPLOYEE_QUERY_ALL`(`GET /reservation/employee`, USER)로 분리되었다. 이 spec은 어느 변형을 쓸지(로그인/역할 흐름 확정) 결정 전까지 보류하며, 구현하지 않는다.
+- **미해결(백엔드/디자인 확인 필요):** 목록 UI가 요구하는 `status`(3개 탭+카운트), `region`(지역 검색), `consultDate`(상담일 정렬/표시), `groupName`(단체명)의 응답 매핑을 확정해야 한다.
