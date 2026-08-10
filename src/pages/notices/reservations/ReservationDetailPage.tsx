@@ -34,8 +34,8 @@ export function ReservationDetailPage() {
   })
 
   const removeMutation = useMutation({
-    mutationFn: (userId: string) =>
-      deleteReservationPermission({ reservationId: Number(id), userId }),
+    mutationFn: (appAdminId: string) =>
+      deleteReservationPermission({ reservationId: Number(id), appAdminId }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ['reservations', id, 'access'],
