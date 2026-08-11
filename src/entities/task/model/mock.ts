@@ -1,4 +1,12 @@
-import type { CreateTaskInput, Task, TaskAssignee, UpdateTaskInput } from './types'
+import { taskPriorities, taskStatuses } from './types'
+import type {
+  CreateTaskInput,
+  Task,
+  TaskAssignee,
+  TaskPriority,
+  TaskStatus,
+  UpdateTaskInput,
+} from './types'
 
 export const taskStorageKey = 'toyvillage:tasks'
 export const deletedTaskStorageKey = 'toyvillage:tasks:deleted'
@@ -231,12 +239,21 @@ function isTask(value: unknown): value is Task {
     typeof task.assigneeId === 'string' &&
     typeof task.title === 'string' &&
     typeof task.content === 'string' &&
-    typeof task.status === 'string' &&
-    typeof task.priority === 'string' &&
+    isTaskStatus(task.status) &&
+    isTaskPriority(task.priority) &&
     typeof task.dueDate === 'string' &&
     typeof task.visibility === 'string' &&
     (task.attachments === undefined ||
       (Array.isArray(task.attachments) &&
         task.attachments.every((name) => typeof name === 'string')))
   )
+}
+
+// 열거형 밖의 값이 통과하면 taskStatusLabels·taskPriorityLabels 조회가 빈 값이 된다.
+function isTaskStatus(value: unknown): value is TaskStatus {
+  return taskStatuses.some((status) => status === value)
+}
+
+function isTaskPriority(value: unknown): value is TaskPriority {
+  return taskPriorities.some((priority) => priority === value)
 }

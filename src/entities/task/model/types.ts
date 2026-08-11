@@ -1,7 +1,10 @@
 // 상태는 목록 표시 전용 파생값이다(spec: 변경 UI 없음).
-export type TaskStatus = 'IN_PROGRESS' | 'DONE' | 'REJECTED'
+// 저장소 값 검증(mock.ts)과 레이블(labels.ts)이 같은 목록을 쓰도록 값으로 둔다.
+export const taskStatuses = ['IN_PROGRESS', 'DONE', 'REJECTED'] as const
+export type TaskStatus = (typeof taskStatuses)[number]
 
-export type TaskPriority = 'HIGH' | 'MEDIUM' | 'LOW'
+export const taskPriorities = ['HIGH', 'MEDIUM', 'LOW'] as const
+export type TaskPriority = (typeof taskPriorities)[number]
 
 export interface Task {
   id: string
