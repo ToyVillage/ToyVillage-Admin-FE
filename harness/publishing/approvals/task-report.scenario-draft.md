@@ -93,6 +93,11 @@
 - When: `업무 보고 상세조회` 버튼을 클릭한다
 - Then: 그 업무의 업무보고 상세 `/task-reports/:reportId` 로 이동한다
 
+### S17: 사이드바 업무보고 메뉴 이동
+- Given: 다른 화면에서 사이드바를 연 상태
+- When: `업무보고 바로가기` 를 클릭한다
+- Then: `/task-reports` 로 이동하고 사이드바가 닫힌다
+
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
      불필요한 시나리오는 여기서 삭제(가지치기). 승인되지 않은 시나리오는 Playwright로 변환되지 않는다. -->

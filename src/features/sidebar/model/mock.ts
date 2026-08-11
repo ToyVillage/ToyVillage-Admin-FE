@@ -32,6 +32,12 @@ export const mockSidebarItems: SidebarNavItem[] = [
     icon: 'task',
   },
   {
+    id: 'task-reports',
+    label: '업무보고 바로가기',
+    to: '/task-reports',
+    icon: 'task',
+  },
+  {
     id: 'reservations',
     label: '단체예약 바로가기',
     to: '/notices/reservations',
