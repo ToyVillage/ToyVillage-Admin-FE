@@ -26,6 +26,12 @@ export const mockSidebarItems: SidebarNavItem[] = [
     icon: 'storage',
   },
   {
+    id: 'tasks',
+    label: '업무관리 바로가기',
+    to: '/tasks',
+    icon: 'task',
+  },
+  {
     id: 'reservations',
     label: '단체예약 바로가기',
     to: '/notices/reservations',

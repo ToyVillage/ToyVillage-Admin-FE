@@ -9,9 +9,12 @@ import {
   type UpdateNoticeInput,
   updateNotice,
 } from '@/entities/notice'
-import { DeleteConfirmationDialog, ValidationDialog } from '@/shared/ui'
-
-import { AttachmentField, RemoveIconButton } from '@/shared/ui'
+import {
+  AttachmentField,
+  DeleteConfirmationDialog,
+  RemoveIconButton,
+  ValidationDialog,
+} from '@/shared/ui'
 import { TeamAddDialog } from './TeamAddDialog'
 
 type FieldName = 'title' | 'content'

@@ -10,11 +10,18 @@ interface AttachedFile {
   file?: File
 }
 
+export interface AttachmentAddResult {
+  added: number
+  rejected: number
+}
+
 interface AttachmentFieldProps {
   initialFileNames?: string[]
   onFilesChange?: (hasFiles: boolean) => void
   onFileNamesChange?: (fileNames: string[]) => void
   onFileObjectsChange?: (files: File[]) => void
+  /** 첨부 시도 결과. 토스트가 필요한 화면만 사용한다. */
+  onAddResult?: (result: AttachmentAddResult) => void
 }
 
 export function AttachmentField({
@@ -22,6 +29,7 @@ export function AttachmentField({
   onFilesChange,
   onFileNamesChange,
   onFileObjectsChange,
+  onAddResult,
 }: AttachmentFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<AttachedFile[]>(() =>
@@ -74,6 +82,11 @@ export function AttachmentField({
     if (nextFiles.length > 0) {
       setFiles((currentFiles) => [...currentFiles, ...nextFiles])
     }
+
+    onAddResult?.({
+      added: nextFiles.length,
+      rejected: incomingFiles.length - nextFiles.length,
+    })
   }
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
