@@ -196,6 +196,14 @@ interface CreateTaskInput {
 - 이탈 확인은 생성 화면에도 적용한다(기존 `create-notice` 관례).
 - 공용화: `TaskDueDateField` / `TaskAttachmentField` / `LeaveConfirmationDialog` / `Toast` 를 shared 로 올린다.
 
+## 육안 확인 결과 (⑦ 통과, 2026-08-11)
+
+아래 차이는 확인 후 **수용**했다. 명세 불일치가 아니므로 다시 맞추지 않는다.
+
+- 완료기한 표기는 공용 `DateField` 의 기존 포맷 `YYYY. MM. DD`(공백 포함)를 그대로 쓴다.
+  Figma 표기(`YYYY.MM.DD`)로 바꾸면 휴관일 화면에도 영향이 가므로 재사용을 우선했다.
+- 우선순위 pill 은 240px 고정 대신 3등분 폭을 쓴다.
+
 ## 미결 사항 (이번 범위 밖)
 
 - [ ] 실제 업무 API endpoint 와 첨부 업로드 계약 / 백엔드 담당 — `/api` 스킬에서 처리한다.

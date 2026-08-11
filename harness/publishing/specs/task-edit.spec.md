@@ -173,6 +173,13 @@ interface UpdateTaskInput {
 - 공용화: `TaskForm` 을 생성·수정 공용으로 두고, `LeaveConfirmationDialog` 를 shared 로 올리며,
   `Toast` 를 shared 에 신규 추가한다.
 
+## 육안 확인 결과 (⑦ 통과, 2026-08-11)
+
+아래 차이는 확인 후 **수용**했다. 명세 불일치가 아니므로 다시 맞추지 않는다.
+
+- `업무 보고 상세조회` 버튼을 `뒤로가기` 와 같은 줄에 둔다(Figma 는 한 단 아래).
+- 완료기한 표기와 우선순위 pill 폭은 `task-create.spec.md` 의 육안 확인 결과를 따른다.
+
 ## 미결 사항 (이번 범위 밖)
 
 - [ ] 실제 업무 API endpoint 계약 / 백엔드 담당 — `/api` 스킬에서 처리한다.
