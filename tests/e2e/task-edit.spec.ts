@@ -5,6 +5,8 @@ import { expect, test, type Page } from '@playwright/test'
 // 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않고 localStorage mock 만 사용한다.
 
 const deletedTaskStorageKey = 'toyvillage:tasks:deleted'
+const mutationDelayStorageKey = 'toyvillage:tasks:mutation-delay'
+const mutationLogStorageKey = 'toyvillage:tasks:mutation-log'
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -236,17 +238,41 @@ test('S18: 이탈 확인 후 이동', async ({ page }) => {
 
 test('S19: 저장·삭제 중 중복 제출 방지', async ({ page }) => {
   await page.goto('/tasks/1')
+  await delayTaskMutation(page)
   await page.getByLabel(/제목/).fill('한 번만 저장할 업무')
 
-  await page.getByRole('button', { name: '저장하기' }).evaluate((button) => {
-    const form = button.closest('form')
-    form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-    form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-  })
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  // 저장 중에는 버튼이 비활성이라 사용자가 다시 눌러도 제출되지 않는다.
+  const pendingButton = page.getByRole('button', { name: '저장 중' })
+  await expect(pendingButton).toBeDisabled()
+  await pendingButton.click({ force: true })
 
   await expect(page).toHaveURL(/\/tasks$/)
   await expect(page.getByText('한 번만 저장할 업무')).toHaveCount(1)
   await expect(page.getByTestId('task-row')).toHaveCount(4)
+  expect(await mutationCount(page, 'update')).toBe(1)
+
+  // 삭제도 같은 방식으로 확인한다. 재진입 시 mock 상태와 요청 기록은 초기화된다.
+  await page.goto('/tasks/1')
+  await delayTaskMutation(page)
+
+  await page.getByRole('button', { name: '삭제하기' }).click()
+  const dialog = page.getByRole('alertdialog', {
+    name: '정말 삭제하시겠습니까?',
+  })
+  await dialog.getByRole('button', { name: '확인' }).click()
+
+  // 삭제 중에는 확인 버튼이 비활성이라 다시 눌러도 요청이 늘지 않는다.
+  const pendingConfirm = dialog.getByRole('button', { name: '삭제 중' })
+  await expect(pendingConfirm).toBeDisabled()
+  await pendingConfirm.click({ force: true })
+
+  await expect(page).toHaveURL(/\/tasks$/)
+  await expect(page.getByRole('status')).toContainText(
+    '데이터 삭제에 성공했습니다',
+  )
+  expect(await mutationCount(page, 'delete')).toBe(1)
 })
 
 test('S20: 키보드 전용 조작', async ({ page }) => {
@@ -296,6 +322,32 @@ function attachmentGroup(page: Page) {
 
 function uploadInput(page: Page) {
   return page.getByLabel('첨부파일 선택')
+}
+
+// mock mutation 완료를 늦춘다. 진행 중 상태가 유지돼야 재클릭을 시도할 수 있다.
+async function delayTaskMutation(page: Page, ms = 1500) {
+  await page.evaluate(
+    ([key, value]) => {
+      localStorage.setItem(key, value)
+    },
+    [mutationDelayStorageKey, String(ms)],
+  )
+}
+
+// mock 이 기록한 요청 횟수. 저장·삭제는 두 번 실행돼도 결과가 같아 횟수로 확인한다.
+async function mutationCount(page: Page, kind: 'update' | 'delete') {
+  return page.evaluate(
+    ([key, target]) => {
+      const rawLog = localStorage.getItem(key)
+      if (!rawLog) return 0
+
+      const log: unknown = JSON.parse(rawLog)
+      return Array.isArray(log)
+        ? log.filter((entry) => entry === target).length
+        : 0
+    },
+    [mutationLogStorageKey, kind],
+  )
 }
 
 // 저장·삭제 실패를 재현한다. mock 은 대상 업무를 찾지 못하면 실패한다.

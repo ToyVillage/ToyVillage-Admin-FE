@@ -11,6 +11,15 @@ import type {
 export const taskStorageKey = 'toyvillage:tasks'
 export const deletedTaskStorageKey = 'toyvillage:tasks:deleted'
 
+// localStorage mock 은 즉시 끝나므로 진행 중 상태를 관찰할 수 없다.
+// 아래 두 키는 테스트 제어점이다. 실제 API 로 교체할 때 함께 제거한다.
+// - delay: 값(ms)만큼 완료를 늦춰 `저장 중`·`삭제 중` 상태를 유지시킨다.
+// - log: 요청이 실제로 몇 번 전송됐는지 확인한다.
+export const taskMutationDelayStorageKey = 'toyvillage:tasks:mutation-delay'
+export const taskMutationLogStorageKey = 'toyvillage:tasks:mutation-log'
+
+type TaskMutationKind = 'create' | 'update' | 'delete'
+
 // 담당자 드롭다운 옵션. 목록 `담당자` 셀은 name, 드롭다운은 label 을 쓴다.
 export const taskAssignees: TaskAssignee[] = [
   { id: 'emp-1', name: '이승현', label: '이승현 사원' },
@@ -153,6 +162,8 @@ export async function getMockTask(id: string): Promise<Task | null> {
 }
 
 export async function createMockTask(input: CreateTaskInput): Promise<Task> {
+  await startMockMutation('create')
+
   const task: Task = {
     id: `created-${crypto.randomUUID()}`,
     ...input,
@@ -172,6 +183,8 @@ export async function updateMockTask({
   id: string
   input: UpdateTaskInput
 }): Promise<Task> {
+  await startMockMutation('update')
+
   const currentTask = await getMockTask(id)
   if (!currentTask) throw new Error('Task not found')
 
@@ -191,6 +204,8 @@ export async function updateMockTask({
 }
 
 export async function deleteMockTask(id: string): Promise<void> {
+  await startMockMutation('delete')
+
   const currentTask = await getMockTask(id)
   if (!currentTask) throw new Error('Task not found')
 
@@ -200,6 +215,37 @@ export async function deleteMockTask(id: string): Promise<void> {
 
   localStorage.setItem(taskStorageKey, JSON.stringify(nextTasks))
   localStorage.setItem(deletedTaskStorageKey, JSON.stringify([...deletedIds]))
+}
+
+// 요청 시점을 기록한 뒤, 설정된 지연만큼 완료를 늦춘다.
+async function startMockMutation(kind: TaskMutationKind): Promise<void> {
+  recordMockMutation(kind)
+
+  const delay = Number(localStorage.getItem(taskMutationDelayStorageKey))
+  if (!Number.isFinite(delay) || delay <= 0) return
+
+  await new Promise((resolve) => setTimeout(resolve, delay))
+}
+
+function recordMockMutation(kind: TaskMutationKind): void {
+  localStorage.setItem(
+    taskMutationLogStorageKey,
+    JSON.stringify([...readMockMutationLog(), kind]),
+  )
+}
+
+function readMockMutationLog(): string[] {
+  const rawLog = localStorage.getItem(taskMutationLogStorageKey)
+  if (!rawLog) return []
+
+  try {
+    const log: unknown = JSON.parse(rawLog)
+    return Array.isArray(log)
+      ? log.filter((entry): entry is string => typeof entry === 'string')
+      : []
+  } catch {
+    return []
+  }
 }
 
 function readStoredTasks(): Task[] {
