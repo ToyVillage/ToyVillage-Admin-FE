@@ -188,6 +188,12 @@ test('S17: 사이드바 업무관리 메뉴 이동', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/tasks$/)
   await expect(page.getByRole('heading', { name: '업무관리' })).toBeVisible()
+
+  // 메뉴로 이동하면 사이드바도 함께 닫힌다.
+  await expect(page.getByRole('dialog', { name: '사이드바' })).toBeHidden()
+  await expect(
+    page.getByRole('button', { name: '사이드바 열기' }),
+  ).toHaveAttribute('aria-expanded', 'false')
 })
 
 function rows(page: Page) {
