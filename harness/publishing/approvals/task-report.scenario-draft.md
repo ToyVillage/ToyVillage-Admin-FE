@@ -88,10 +88,10 @@
 - When: 화면에 진입한다
 - Then: `업무보고를 찾을 수 없습니다.` 안내와 목록으로 돌아가는 링크가 보인다
 
-### S16: 업무 상세에서 업무보고로 진입
-- Given: 업무 상세 `/tasks/:id`
+### S16: 업무 상세에서 그 업무의 업무보고 상세로 진입
+- Given: 업무보고가 올라온 업무의 상세 `/tasks/:id`
 - When: `업무 보고 상세조회` 버튼을 클릭한다
-- Then: `/task-reports` 로 이동한다
+- Then: 그 업무의 업무보고 상세 `/task-reports/:reportId` 로 이동한다
 
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
