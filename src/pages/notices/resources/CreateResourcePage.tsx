@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { Link, useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom'
-import { LeaveConfirmationDialog } from '@/features/create-notice'
+import { LeaveConfirmationDialog } from '@/shared/ui'
 import { ResourceForm } from '@/features/create-resource'
 
 export function CreateResourcePage() {

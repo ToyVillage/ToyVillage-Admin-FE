@@ -10,8 +10,8 @@ import {
   updateNotice,
 } from '@/entities/notice'
 import { DeleteConfirmationDialog, ValidationDialog } from '@/shared/ui'
-import { NoticeAttachmentField } from './NoticeAttachmentField'
-import { RemoveIconButton } from './RemoveIconButton'
+
+import { AttachmentField, RemoveIconButton } from '@/shared/ui'
 import { TeamAddDialog } from './TeamAddDialog'
 
 type FieldName = 'title' | 'content'
@@ -280,7 +280,7 @@ export function NoticeForm({
         />
       </ContentCard>
 
-      <NoticeAttachmentField
+      <AttachmentField
         initialFileNames={initialAttachmentNames}
         onFilesChange={setHasAttachments}
         onFileNamesChange={setAttachmentNames}

@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { getAllNotices, NoticeTable } from '@/entities/notice'
 import { CreateNoticeButton } from '@/features/create-notice'
-import { CategoryTabs } from './ui/CategoryTabs'
-import type { DataTableSortValue } from '@/shared/ui'
+
+import { CategoryTabs, type DataTableSortValue } from '@/shared/ui'
 
 const API_PAGE_SIZE = 10
 const TABLE_PAGE_SIZE = 4

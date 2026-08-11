@@ -10,19 +10,19 @@ interface AttachedFile {
   file?: File
 }
 
-interface NoticeAttachmentFieldProps {
+interface AttachmentFieldProps {
   initialFileNames?: string[]
   onFilesChange?: (hasFiles: boolean) => void
   onFileNamesChange?: (fileNames: string[]) => void
   onFileObjectsChange?: (files: File[]) => void
 }
 
-export function NoticeAttachmentField({
+export function AttachmentField({
   initialFileNames = [],
   onFilesChange,
   onFileNamesChange,
   onFileObjectsChange,
-}: NoticeAttachmentFieldProps) {
+}: AttachmentFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<AttachedFile[]>(() =>
     initialFileNames.map((name, index) => ({

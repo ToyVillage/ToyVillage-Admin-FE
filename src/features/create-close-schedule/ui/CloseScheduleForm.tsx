@@ -10,7 +10,7 @@ import {
   type CreateCloseScheduleInput,
 } from '@/entities/close-schedule'
 import { DeleteConfirmationDialog, ValidationDialog } from '@/shared/ui'
-import { CloseScheduleDateField } from './CloseScheduleDateField'
+import { DateField } from '@/shared/ui'
 
 type ValidationError = 'date' | 'title' | 'range'
 
@@ -156,7 +156,7 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
   return (
     <Form onSubmit={handleSubmit} noValidate>
       <DateFields>
-        <CloseScheduleDateField
+        <DateField
           ref={startDateRef}
           id="close-schedule-start-date"
           label="시작일"
@@ -164,7 +164,7 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
           onChange={setStartDate}
           onTabForward={() => endDateRef.current?.focus()}
         />
-        <CloseScheduleDateField
+        <DateField
           ref={endDateRef}
           id="close-schedule-end-date"
           label="종료일"

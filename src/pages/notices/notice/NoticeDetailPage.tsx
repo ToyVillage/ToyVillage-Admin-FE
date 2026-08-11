@@ -9,7 +9,8 @@ import {
   useParams,
 } from 'react-router-dom'
 import { getNotice, isNoticeNotFoundError } from '@/entities/notice'
-import { LeaveConfirmationDialog, NoticeForm } from '@/features/create-notice'
+import { NoticeForm } from '@/features/create-notice'
+import { LeaveConfirmationDialog } from '@/shared/ui'
 
 export function NoticeDetailPage() {
   const { id = '' } = useParams()
