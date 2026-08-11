@@ -26,6 +26,11 @@ import {
   NoticeReservationsPage,
   ReservationDetailPage,
 } from '@/pages/notices/reservations'
+import {
+  CreateTaskPage,
+  TaskDetailPage,
+  TaskListPage,
+} from '@/pages/tasks'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 
 function AppLayout() {
@@ -81,6 +86,9 @@ const router = createBrowserRouter([
         path: '/notices/reservations/:id',
         element: <ReservationDetailPage />,
       },
+      { path: '/tasks', element: <TaskListPage /> },
+      { path: '/tasks/create', element: <CreateTaskPage /> },
+      { path: '/tasks/:id', element: <TaskDetailPage /> },
     ],
   },
 ])

@@ -18,6 +18,11 @@ export const tokens = {
     background: '#F5F5F7', // 페이지 배경
     surface: '#FFFFFF', // 카드/테이블 표면
     tableHeader: '#E1E1E1', // 테이블 헤더
+    tableHeaderStrong: '#DDDDE3', // 업무 테이블 헤더 / 진행중 pill / 업로드 드롭존
+    warning: '#FDB542', // 반려 상태 / 우선순위 중
+    warningBg: '#FFE8C3', // 반려 상태 배경 / 우선순위 중 배경
+    dangerBg: '#FFCECE', // 우선순위 하 배경
+    toastIcon: '#1F1F1F', // 토스트 아이콘
     border: '#A1A1A1',
     dialogBorder: '#C6C6CE',
     divider: '#727272',

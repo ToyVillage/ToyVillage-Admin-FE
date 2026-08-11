@@ -6,7 +6,8 @@ import {
   useBlocker,
   useNavigate,
 } from 'react-router-dom'
-import { LeaveConfirmationDialog, NoticeForm } from '@/features/create-notice'
+import { NoticeForm } from '@/features/create-notice'
+import { LeaveConfirmationDialog } from '@/shared/ui'
 
 export function CreateNoticePage() {
   const navigate = useNavigate()

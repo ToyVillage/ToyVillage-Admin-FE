@@ -1,7 +1,7 @@
 import { forwardRef } from 'react'
 import styled from '@emotion/styled'
 
-interface CloseScheduleDateFieldProps {
+interface DateFieldProps {
   id: string
   label: string
   value: string
@@ -10,10 +10,10 @@ interface CloseScheduleDateFieldProps {
   onTabBackward?: () => void
 }
 
-export const CloseScheduleDateField = forwardRef<
+export const DateField = forwardRef<
   HTMLInputElement,
-  CloseScheduleDateFieldProps
->(function CloseScheduleDateField(
+  DateFieldProps
+>(function DateField(
   { id, label, value, onChange, onTabForward, onTabBackward },
   ref,
 ) {

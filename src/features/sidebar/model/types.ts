@@ -1,4 +1,9 @@
-export type SidebarIconName = 'calendar' | 'megaphone' | 'people' | 'storage'
+export type SidebarIconName =
+  | 'calendar'
+  | 'megaphone'
+  | 'people'
+  | 'storage'
+  | 'task'
 
 export interface SidebarUser {
   name: string

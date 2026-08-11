@@ -6,6 +6,7 @@ import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
 import megaphoneIcon from './assets/megaphone.svg'
 import peopleIcon from './assets/people.svg'
 import storageIcon from './assets/storage.svg'
+import taskIcon from './assets/task.svg'
 import { mockSidebarItems, mockSidebarUser } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
 import type { SidebarIconName, SidebarNavItem } from '../model/types'
@@ -15,6 +16,7 @@ const sidebarIcons: Record<SidebarIconName, string> = {
   megaphone: megaphoneIcon,
   people: peopleIcon,
   storage: storageIcon,
+  task: taskIcon,
 }
 
 export function Sidebar() {
