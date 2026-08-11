@@ -123,7 +123,8 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 - `entities/task-report/model/types.ts`
   - `taskReportReviewStatuses = ['PENDING','APPROVED','REJECTED','RESUBMITTED']`, `TaskReportReviewStatus`
-  - `TaskReport { id, assigneeId, title, content, reviewStatus, taskStatus, priority, dueDate, visibility, attachments? }`
+  - `TaskReport { id, taskId?, assigneeId, title, content, reviewStatus, taskStatus, priority, dueDate, visibility, attachments? }`
+    (`taskId` 는 업무 상세의 `업무 보고 상세조회` 진입에 쓴다)
   - `TaskReportListItem` — 표 렌더용 파생 타입
 - `entities/task-report/model/labels.ts` — `심사대기 / 완료 / 반려 / 재제출`
 - `entities/task-report/ui/TaskReportTable.tsx` — 표. 컬럼 구성이 업무관리 목록과 같으므로
@@ -139,6 +140,10 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 `task-report.token-diff.report.md` 기준 신규 색 후보는 `#FF7878`(첨부 pdf 아이콘) 하나뿐이고,
 기존 `color.primary`(#FF8181)가 이미 같은 자리(첨부 chip 의 pdf 배지)에 쓰이고 있다 →
 **신규 토큰을 만들지 않고 기존 `primary` 를 재사용**한다. 그 외 색·폰트는 모두 기존 theme 에 존재한다.
+
+## 육안 확인 결과 (⑦ 통과, 2026-08-11)
+
+개발자가 `yarn dev` 로 Figma 원본(`3118:4294`, `3350:3962`)과 비교해 승인했다. 재작업 항목 없음.
 
 ## 비고 / 제약 (게이트 결정 사항)
 
