@@ -45,7 +45,11 @@ const columns: DataTableColumn[] = [
     header: '완료기한',
     render: (row) => {
       const task = row as TaskTableRow
-      return <DueDate $overdue={task.overdue}>{task.dueDate}</DueDate>
+      return (
+        <DueDate data-overdue={task.overdue} $overdue={task.overdue}>
+          {task.dueDate}
+        </DueDate>
+      )
     },
   },
   { key: 'visibility', header: '공개범위', render: renderPlainCell('visibility') },

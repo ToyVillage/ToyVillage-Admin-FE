@@ -1,4 +1,11 @@
-import { forwardRef, useEffect, useId, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
 import styled from '@emotion/styled'
 
 export interface TaskSelectOption {
@@ -25,8 +32,18 @@ export const TaskSelectField = forwardRef<
 ) {
   const listId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
   const selected = options.find((option) => option.value === value)
+
+  useImperativeHandle(ref, () => triggerRef.current as HTMLButtonElement, [])
+
+  function selectOption(nextValue: string) {
+    onChange(nextValue)
+    setOpen(false)
+    // 선택 후 호출 control 로 포커스를 복귀시켜 키보드 순서를 유지한다.
+    requestAnimationFrame(() => triggerRef.current?.focus())
+  }
 
   useEffect(() => {
     if (!open) return
@@ -39,6 +56,7 @@ export const TaskSelectField = forwardRef<
       if (event.key === 'Escape') {
         event.preventDefault()
         setOpen(false)
+        triggerRef.current?.focus()
       }
     }
 
@@ -55,15 +73,16 @@ export const TaskSelectField = forwardRef<
       <Label id={`${listId}-label`}>{label}</Label>
       <Control>
         <Trigger
-          ref={ref}
+          ref={triggerRef}
           type="button"
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-labelledby={`${listId}-label`}
           onClick={() => setOpen((current) => !current)}
         >
-          <TriggerText $empty={!selected}>
-            {selected?.label ?? placeholder}
+          {/* 저장된 값이 옵션 목록에 없어도(목록 표기와 폼 옵션이 다른 경우) 그대로 보여준다. */}
+          <TriggerText $empty={!value}>
+            {selected?.label ?? value ?? placeholder}
           </TriggerText>
           <Chevron viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 15.4 6.6 10l1.4-1.4 4 4 4-4L17.4 10z" />
@@ -78,10 +97,7 @@ export const TaskSelectField = forwardRef<
                 type="button"
                 role="option"
                 aria-selected={option.value === value}
-                onClick={() => {
-                  onChange(option.value)
-                  setOpen(false)
-                }}
+                onClick={() => selectOption(option.value)}
               >
                 {option.label}
               </OptionItem>

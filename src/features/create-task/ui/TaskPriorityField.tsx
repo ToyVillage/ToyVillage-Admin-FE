@@ -59,6 +59,7 @@ const Options = styled.div`
 `
 
 const Option = styled.label<{ $selected: boolean }>`
+  position: relative;
   display: flex;
   min-width: 0;
   height: 88px;
@@ -80,11 +81,16 @@ const Option = styled.label<{ $selected: boolean }>`
   }
 `
 
+// 시각적으로는 숨기되 pill 전체를 클릭 대상으로 삼아 label 이 클릭을 가로채지 않게 한다.
 const RadioInput = styled.input`
   position: absolute;
-  width: 1px;
-  height: 1px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   margin: 0;
-  opacity: 0;
-  pointer-events: none;
+  appearance: none;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
 `
