@@ -220,6 +220,18 @@ test('S17: 사이드바 업무보고 메뉴 이동', async ({ page }) => {
   await expect(page.getByRole('dialog', { name: '사이드바' })).toBeHidden()
 })
 
+test('S18: 상세에서 뒤로가기', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+  await page.getByRole('link', { name: '뒤로가기' }).click()
+
+  await expect(page).toHaveURL(/\/task-reports$/)
+  // 심사대기 건수가 그대로면 승인·반려 처리가 일어나지 않은 것이다.
+  await expect(
+    page.getByRole('button', { name: '심사대기 7', exact: true }),
+  ).toBeVisible()
+  expect(await mutationCount(page)).toBe(0)
+})
+
 function rows(page: Page) {
   return page.getByTestId('task-report-row')
 }

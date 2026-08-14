@@ -1,6 +1,6 @@
 {
   "feature": "task-report",
-  "approvedAt": "2026-08-11T13:01:45.848Z",
+  "approvedAt": "2026-08-14T14:30:27.532Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -19,8 +19,9 @@
     "S14",
     "S15",
     "S16",
-    "S17"
+    "S17",
+    "S18"
   ],
-  "scenarioHash": "08db112d993befc2c226938902001ef16a549801d8d40800e4a0ab7544fe394a",
-  "e2eHash": "cf8e1fb2dc33cdf2a885dc361cd87a427a4cb29404697da75be0b8337b581482"
+  "scenarioHash": "31bcd805314b6de74f1fb954572122f0bf12ce086f7ba5da1eb948a2a8edfeb6",
+  "e2eHash": "1c91abe9471b5f7ddd58b38d40ab073c7fd7bc599361df5cdada5db08af16bd8"
 }

@@ -98,6 +98,11 @@
 - When: `업무보고 바로가기` 를 클릭한다
 - Then: `/task-reports` 로 이동하고 사이드바가 닫힌다
 
+### S18: 상세에서 뒤로가기
+- Given: 업무보고 상세 `/task-reports/:id`
+- When: 상단 `뒤로가기` 를 클릭한다
+- Then: 승인·반려 처리 없이 `/task-reports` 로 이동한다
+
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
      불필요한 시나리오는 여기서 삭제(가지치기). 승인되지 않은 시나리오는 Playwright로 변환되지 않는다. -->
