@@ -68,9 +68,11 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 ## 화면 구조 — 상세 (Figma 3350:3962)
 
-본문 폭 1320, 좌측 x300, 상단 y164. 페이지 배경 `background`.
+본문 폭 1320, 좌측 x300. 페이지 배경 `background`.
 
-1. 메타 요약행 (h42, gap 20): `우선순위:` + 우선순위 배지(원형/pill, radius80, `accentBg`+`accent` 등 기존 배지 색),
+0. 뒤로가기 링크 @300,75: chevron(24, `textGuide`) + `뒤로가기`(24 SemiBold, `textGuide`).
+   업무 상세(`TaskDetailPage`)·업무 등록 화면의 `TaskBackLink` 와 같은 규격이며, 목록 `/task-reports` 로 이동한다.
+1. 메타 요약행 @300,164 (h42, gap 20): `우선순위:` + 우선순위 배지(원형/pill, radius80, `accentBg`+`accent` 등 기존 배지 색),
    `상태:` + 상태 pill(w80 h40, radius80, `warningBg`+`warning` 등), `담당자: {이름}`, `완료 기한: {YYYY-MM-DD}`,
    `공개 범위: {값}`. 라벨 20 Medium, 값 22 Medium, 모두 `text`.
 2. 제목 카드 (h162, `surface`, radius20, padding40): 라벨 `제목`(22 Medium) + 값(40 Medium).
@@ -81,7 +83,8 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 5. 하단 우측 버튼 2개 (각 123x61, radius8, 24 SemiBold): `반려하기`(투명 배경 + `danger` 2px 테두리·글자),
    `승인하기`(`text` 배경 + `surface` 글자). 기존 `TaskForm` 의 삭제/저장 버튼과 규격이 동일하다.
 
-상세 화면에는 뒤로가기 링크가 없다(Figma 근거 없음). 목록 복귀는 승인·반려 처리 후 이동으로만 일어난다.
+상세 화면 상단에 뒤로가기 링크를 둔다(2026-08-14 개발자 제공 디자인 반영 — 최초 슬라이스에는 없었다).
+목록 복귀는 뒤로가기 또는 승인·반려 처리 후 이동으로 일어난다.
 
 ## 동작 (source of truth)
 
@@ -104,6 +107,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
   목록 링크를 보인다(기존 `TaskDetailPage` 상태 패턴).
 - 조회한 보고의 우선순위·상태·담당자·완료 기한·공개 범위를 메타 요약행에, 제목·상세 내용을 각 카드에 렌더한다.
 - 첨부자료는 파일명과 확장자 배지로 표시하고, 다운로드 아이콘 클릭 시 해당 파일을 내려받는다. 삭제·추가 수단은 없다.
+- `뒤로가기` 클릭 → 아무 것도 처리하지 않고 `/task-reports` 로 이동한다. 상세는 편집 화면이 아니라 이탈 확인 dialog 를 두지 않는다.
 - `승인하기` 클릭 → 보고를 승인 처리한다. 성공하면 `/task-reports` 로 이동한다.
 - `반려하기` 클릭 → 보고를 반려 처리한다. 성공하면 `/task-reports` 로 이동한다.
 - 처리 실패 시 화면에 머무르고 버튼을 다시 누를 수 있게 되돌린다. 실패 안내(토스트·모달)는 이번 범위에서 그리지 않는다.

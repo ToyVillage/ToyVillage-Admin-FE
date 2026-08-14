@@ -42,6 +42,13 @@ export function TaskReportDetailPage() {
   return (
     <Page>
       <Content>
+        <BackLink to="/task-reports">
+          <BackIcon viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m15 4-8 8 8 8" />
+          </BackIcon>
+          뒤로가기
+        </BackLink>
+
         <TaskReportMetaRow
           priority={report.priority}
           taskStatus={report.taskStatus}
@@ -86,7 +93,37 @@ const Content = styled.div`
   flex-direction: column;
   gap: 32px;
   margin: 0 auto;
-  padding-top: 164px;
+  padding-top: 75px;
+`
+
+// 뒤로가기(y75) 아래로 메타 요약행이 Figma 기준 y164 에 오도록 gap(32) 에 28 을 더한다.
+const BackLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-left: 6px;
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.textGuide};
+    outline-offset: 3px;
+  }
+`
+
+const BackIcon = styled.svg`
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
 `
 
 const TitleCard = styled.section`
