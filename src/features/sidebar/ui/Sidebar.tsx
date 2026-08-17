@@ -114,12 +114,9 @@ function SidebarItem({
   )
 }
 
+// 상세/생성 같은 하위 경로도 같은 메뉴의 활성 범위로 본다.
 function isActiveRoute(pathname: string, route: string) {
-  if (route === '/notices/list') {
-    return pathname === route || pathname.startsWith('/notices/list/')
-  }
-
-  return pathname === route
+  return pathname === route || pathname.startsWith(`${route}/`)
 }
 
 const Layer = styled.div`
