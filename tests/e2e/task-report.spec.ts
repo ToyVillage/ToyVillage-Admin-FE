@@ -213,7 +213,7 @@ test('S16: 업무 상세에서 그 업무의 업무보고 상세로 진입', asy
 test('S17: 사이드바 업무보고 메뉴 이동', async ({ page }) => {
   await page.goto('/notices/list')
   await page.getByRole('button', { name: '사이드바 열기' }).click()
-  await page.getByRole('link', { name: '업무보고 바로가기' }).click()
+  await page.getByRole('link', { name: '업무 보고 바로가기' }).click()
 
   await expect(page).toHaveURL(/\/task-reports$/)
   await expect(page.getByRole('heading', { name: '업무보고' })).toBeVisible()
