@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test as base, type Page } from '@playwright/test'
 
 // 승인된 시나리오(task-report.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
@@ -24,10 +24,24 @@ const allMockReportIds = [
   'r14',
 ]
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.clear()
-  })
+type StorageSeed = Record<string, string>
+
+// localStorage 초기화와 시드는 하나의 init script 안에서 순서대로 실행한다.
+// addInitScript 를 두 번 등록하면 실행 순서가 보장되지 않아,
+// clear 가 시드보다 나중에 실행되면 시드가 지워진다.
+const test = base.extend<{ storageSeed: StorageSeed }>({
+  storageSeed: [{}, { option: true }],
+  // 두 번째 인자 이름은 react-hooks 린트 규칙과 겹치지 않도록 runTest 로 둔다.
+  page: async ({ page, storageSeed }, runTest) => {
+    await page.addInitScript((seed: StorageSeed) => {
+      localStorage.clear()
+      for (const [key, value] of Object.entries(seed)) {
+        localStorage.setItem(key, value)
+      }
+    }, storageSeed)
+
+    await runTest(page)
+  },
 })
 
 test('S1: 목록 진입 기본 상태', async ({ page }) => {
@@ -183,13 +197,16 @@ test('S13: 처리 중 중복 제출 차단', async ({ page }) => {
   expect(await mutationCount(page)).toBe(1)
 })
 
-test('S14: 결과 없음 → 빈 상태', async ({ page }) => {
-  await seedReviewedReports(page, allMockReportIds, 'APPROVED')
-  await page.goto('/task-reports')
+test.describe('결과 없음', () => {
+  test.use({ storageSeed: reviewedReportsSeed(allMockReportIds, 'APPROVED') })
 
-  await expect(rows(page)).toHaveCount(0)
-  await expect(page.getByText('등록된 업무보고가 없습니다.')).toBeVisible()
-  await expect(page.getByRole('button', { name: '2 페이지' })).toHaveCount(0)
+  test('S14: 결과 없음 → 빈 상태', async ({ page }) => {
+    await page.goto('/task-reports')
+
+    await expect(rows(page)).toHaveCount(0)
+    await expect(page.getByText('등록된 업무보고가 없습니다.')).toBeVisible()
+    await expect(page.getByRole('button', { name: '2 페이지' })).toHaveCount(0)
+  })
 })
 
 test('S15: 없는 보고 진입', async ({ page }) => {
@@ -236,22 +253,12 @@ function rows(page: Page) {
   return page.getByTestId('task-report-row')
 }
 
-async function seedReviewedReports(
-  page: Page,
-  ids: string[],
-  reviewStatus: string,
-) {
-  await page.addInitScript(
-    ({ key, seededIds, status }) => {
-      localStorage.setItem(
-        key,
-        JSON.stringify(
-          Object.fromEntries(seededIds.map((id: string) => [id, status])),
-        ),
-      )
-    },
-    { key: reviewStorageKey, seededIds: ids, status: reviewStatus },
-  )
+function reviewedReportsSeed(ids: string[], reviewStatus: string): StorageSeed {
+  return {
+    [reviewStorageKey]: JSON.stringify(
+      Object.fromEntries(ids.map((id) => [id, reviewStatus])),
+    ),
+  }
 }
 
 async function delayReportMutation(page: Page, delay = 700) {
