@@ -5,8 +5,8 @@ export const tokens = {
   color: {
     primary: '#FF8181', // 핑크 강조 (활성 탭/포인트)
     primaryBg: '#FFDDDD', // 핑크 배경 (활성 pill)
-    accent: '#4952FF', // blue — 페이지네이션 활성 번호
-    accentBg: '#E8E9FF', // blue-background — 페이지네이션 활성 배경
+    accent: '#4952FF', // blue — 페이지네이션 활성 번호 / 사이드바 활성 메뉴
+    accentBg: '#E8E9FF', // blue-background — 페이지네이션 활성 배경 / 사이드바 활성 밴드
     pageMuted: '#C6C6CE', // gray/30 — 페이지네이션 비활성 번호
     text: '#000000',
     textStrong: '#36363F',

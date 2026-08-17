@@ -97,7 +97,7 @@ function SidebarItem({
 }) {
   const content = (
     <>
-      <ItemIcon src={sidebarIcons[item.icon]} alt="" />
+      <ItemIcon $icon={sidebarIcons[item.icon]} aria-hidden="true" />
       <ItemLabel>{item.label}</ItemLabel>
     </>
   )
@@ -197,44 +197,55 @@ const UserName = styled.span`
   line-height: 1.2;
 `
 
+// 활성 항목은 48px 배경 밴드로 표시한다. 항목 높이 48px + gap 8px 로
+// 아이콘/라벨의 세로 위치는 밴드 없이 32px 항목이던 때와 동일하게 유지된다.
 const Nav = styled.nav`
   position: absolute;
-  top: 222px;
+  top: calc(222px - 8px);
   left: 0;
   display: flex;
   width: 100%;
   flex-direction: column;
-  gap: calc(56px - 32px);
+  gap: 8px;
 `
 
 const NavItem = styled(Link, {
   shouldForwardProp: (prop) => prop !== '$active',
 })<{ $active: boolean }>`
   display: flex;
-  min-height: 32px;
+  min-height: 48px;
   align-items: center;
   gap: 12px;
-  padding: 0 44px;
+  padding: 8px 44px;
+  background: ${({ theme, $active }) =>
+    $active ? theme.colors.accentBg : 'transparent'};
   color: ${({ theme, $active }) =>
-    $active ? theme.colors.primary : theme.colors.text};
+    $active ? theme.colors.accent : theme.colors.text};
   text-decoration: none;
 `
 
 const DisabledItem = styled.div`
   display: flex;
-  min-height: 32px;
+  min-height: 48px;
   align-items: center;
   gap: 12px;
-  padding: 0 44px;
+  padding: 8px 44px;
   color: ${({ theme }) => theme.colors.text};
   opacity: 0.4;
   cursor: default;
 `
 
-const ItemIcon = styled.img`
+// 단색 아이콘이라 mask 로 깔아 활성 색상을 텍스트와 함께 따라가게 한다.
+const ItemIcon = styled.span<{ $icon: string }>`
   width: 32px;
   height: 32px;
   flex: 0 0 32px;
+  background: currentColor;
+  /* Vite 가 인라인한 svg data URI 는 안에 작은따옴표를 쓰므로 큰따옴표로 감싼다. */
+  mask-image: url("${({ $icon }) => $icon}");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 32px 32px;
 `
 
 const ItemLabel = styled.span`
