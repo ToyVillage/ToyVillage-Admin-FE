@@ -46,10 +46,11 @@ Figma 사이드바(`1541:1412`) 순서를 그대로 따른다.
 
 ## 컴포넌트 구조/props (Figma flat → 여기서 명세)
 
+- `SidebarNavItem` — 컴포넌트가 아니라 메뉴 데이터 타입이다. `id`, `label`, `icon`과 **선택적** `to`를 가지며, `to`가 없으면 화면 미구현 항목이다.
 - `SidebarToggleButton` — 메뉴 아이콘 버튼. 클릭 시 사이드바를 연다.
-- `Sidebar` — 열린 상태의 내비게이션 패널. 메뉴 목록, 닫기 버튼, 활성 메뉴 표시를 담당한다.
-- `SidebarNavItem` — `label`, `to`, `active`, `onClick`을 받아 메뉴 항목을 렌더링한다.
-- `SidebarOverlay` — dim 영역. 클릭 시 사이드바를 닫는다.
+- `Sidebar` — 열린 상태의 내비게이션 패널. 메뉴 목록, 닫기 버튼, dim 영역, 활성 메뉴 표시를 담당한다.
+- `SidebarItem` — `item: SidebarNavItem`, `active: boolean`, `onClick: () => void`을 받아 항목 하나를 렌더링한다. `item.to`가 있으면 링크로, 없으면 `aria-disabled` 항목으로 그린다. 즉 `active`와 `onClick`은 데이터가 아니라 렌더링 인자다.
+- dim 영역은 별도 공개 컴포넌트가 아니라 `Sidebar` 내부 요소로 두고, 클릭 시 사이드바를 닫는다.
 
 ## 접근성
 
