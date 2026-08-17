@@ -25,10 +25,18 @@ paths: src/app, src/features/sidebar, src/shared/ui
 
 ## 메뉴
 
-- 공지사항 → `/notices/list`
-- 운영안내 → `/notices/guide`
-- 자료실 → `/notices/resources`
-- 단체예약현황 → `/notices/reservations`
+Figma 사이드바(`1541:1412`) 순서를 그대로 따른다.
+
+- 공지사항 바로가기 → `/notices/list`
+- 휴관일 관리 바로가기 → `/notices/guide`
+- 자료실 바로가기 → `/notices/resources`
+- 단체예약 바로가기 → `/notices/reservations`
+- 팀 설정 바로가기 → 화면 미구현. 비활성 항목으로 표시한다.
+- 업무 관리 바로가기 → `/tasks`
+- 업무 보고 바로가기 → `/task-reports`
+- 업무일지관리 바로가기 → 화면 미구현. 비활성 항목으로 표시한다.
+
+화면이 없는 항목은 링크가 아닌 `aria-disabled` 항목으로 렌더링하고, 화면이 생기면 `to`만 채운다.
 
 ## 데이터
 
