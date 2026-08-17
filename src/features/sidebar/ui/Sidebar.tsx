@@ -7,6 +7,9 @@ import megaphoneIcon from './assets/megaphone.svg'
 import peopleIcon from './assets/people.svg'
 import storageIcon from './assets/storage.svg'
 import taskIcon from './assets/task.svg'
+import taskReportIcon from './assets/task-report.svg'
+import teamIcon from './assets/team.svg'
+import workLogIcon from './assets/work-log.svg'
 import { mockSidebarItems, mockSidebarUser } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
 import type { SidebarIconName, SidebarNavItem } from '../model/types'
@@ -17,6 +20,9 @@ const sidebarIcons: Record<SidebarIconName, string> = {
   people: peopleIcon,
   storage: storageIcon,
   task: taskIcon,
+  taskReport: taskReportIcon,
+  team: teamIcon,
+  workLog: workLogIcon,
 }
 
 export function Sidebar() {
@@ -70,7 +76,7 @@ export function Sidebar() {
             <SidebarItem
               key={item.id}
               item={item}
-              active={isActiveRoute(pathname, item.to)}
+              active={item.to ? isActiveRoute(pathname, item.to) : false}
               onClick={close}
             />
           ))}
@@ -89,10 +95,21 @@ function SidebarItem({
   active: boolean
   onClick: () => void
 }) {
-  return (
-    <NavItem to={item.to} onClick={onClick} $active={active}>
+  const content = (
+    <>
       <ItemIcon src={sidebarIcons[item.icon]} alt="" />
       <ItemLabel>{item.label}</ItemLabel>
+    </>
+  )
+
+  // 화면이 없는 메뉴는 링크 대신 비활성 항목으로 노출한다.
+  if (!item.to) {
+    return <DisabledItem aria-disabled="true">{content}</DisabledItem>
+  }
+
+  return (
+    <NavItem to={item.to} onClick={onClick} $active={active}>
+      {content}
     </NavItem>
   )
 }
@@ -204,6 +221,17 @@ const NavItem = styled(Link, {
   color: ${({ theme, $active }) =>
     $active ? theme.colors.primary : theme.colors.text};
   text-decoration: none;
+`
+
+const DisabledItem = styled.div`
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 44px;
+  color: ${({ theme }) => theme.colors.text};
+  opacity: 0.4;
+  cursor: default;
 `
 
 const ItemIcon = styled.img`
