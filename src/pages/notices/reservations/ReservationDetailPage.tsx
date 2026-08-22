@@ -9,9 +9,29 @@ import {
   getReservationPermissions,
   type Staff,
 } from '@/entities/reservation'
+import type { ReservationDetail } from '@/entities/reservation'
 import { ReservationAccessCard } from './ui/ReservationAccessCard'
 import { ReservationBackLink } from './ui/ReservationBackLink'
 import { RemoveAccessConfirmDialog } from './ui/RemoveAccessConfirmDialog'
+
+// 로딩 중에도 디자인에 없는 별도 로딩 화면을 두지 않고, 동일 레이아웃의 빈 카드를 렌더한다.
+const EMPTY_RESERVATION: ReservationDetail = {
+  id: '',
+  status: 'pending',
+  consultDate: '',
+  reserveDate: '',
+  reserveTime: '',
+  reserveTimeEnd: '',
+  reserverName: '',
+  groupName: '',
+  region: '',
+  regionDetail: '',
+  headcount: 0,
+  admissionFee: 0,
+  surveyStatus: '',
+  guideCount: 0,
+  guideContact: '',
+}
 
 export function ReservationDetailPage() {
   const { id = '' } = useParams()
@@ -63,15 +83,8 @@ export function ReservationDetailPage() {
     }
   }
 
-  if (reservationPending) {
-    return (
-      <StatePage>
-        <StateCard role="status">예약 정보를 불러오는 중입니다.</StateCard>
-      </StatePage>
-    )
-  }
-
-  if (!reservation) {
+  // 조회가 끝났는데 데이터가 없을 때만 미조회 상태를 표시한다(로딩 중에는 빈 폼 유지).
+  if (!reservationPending && !reservation) {
     return (
       <StatePage>
         <StateCard>
@@ -87,7 +100,7 @@ export function ReservationDetailPage() {
       <Content>
         <ReservationBackLink />
         <Cards>
-          <ReservationInfoCard reservation={reservation} />
+          <ReservationInfoCard reservation={reservation ?? EMPTY_RESERVATION} />
           <ReservationAccessCard
             staff={filteredStaff}
             query={staffQuery}
@@ -131,7 +144,7 @@ const Content = styled.div`
 
 const Cards = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 20px;
 
   @media (max-width: 980px) {

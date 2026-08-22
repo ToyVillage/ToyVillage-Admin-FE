@@ -75,7 +75,6 @@ export function ReservationAccessCard({
 
 const Card = styled.section`
   display: flex;
-  height: 530px;
   flex: 0 1 427px;
   flex-direction: column;
   overflow: hidden;
