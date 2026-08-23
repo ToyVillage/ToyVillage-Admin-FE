@@ -3,6 +3,11 @@ import type { TaskReport, TaskReportReviewStatus } from './types'
 
 export const taskReportReviewStorageKey = 'toyvillage:task-reports:reviews'
 
+// 반려 사유는 심사 상태와 같은 mock 경계에 둔다(id → 사유).
+// 실제 API 로 교체할 때 반려 요청 body 로 옮긴다.
+export const taskReportRejectReasonStorageKey =
+  'toyvillage:task-reports:reject-reasons'
+
 // localStorage mock 은 즉시 끝나므로 진행 중 상태를 관찰할 수 없다.
 // 아래 두 키는 테스트 제어점이다. 실제 API 로 교체할 때 함께 제거한다.
 // - delay: 값(ms)만큼 완료를 늦춰 `처리 중` 상태를 유지시킨다.
@@ -213,9 +218,11 @@ export async function getMockTaskReportByTaskId(
 export async function reviewMockTaskReport({
   id,
   reviewStatus,
+  rejectReason,
 }: {
   id: string
   reviewStatus: TaskReportReviewStatus
+  rejectReason?: string
 }): Promise<TaskReport> {
   await startMockMutation(reviewStatus)
 
@@ -229,7 +236,36 @@ export async function reviewMockTaskReport({
     JSON.stringify(Object.fromEntries(reviews)),
   )
 
+  if (rejectReason !== undefined) storeRejectReason(id, rejectReason)
+
   return { ...currentReport, reviewStatus }
+}
+
+function storeRejectReason(id: string, rejectReason: string): void {
+  const reasons = readStoredRejectReasons()
+  reasons.set(id, rejectReason)
+  localStorage.setItem(
+    taskReportRejectReasonStorageKey,
+    JSON.stringify(Object.fromEntries(reasons)),
+  )
+}
+
+function readStoredRejectReasons(): Map<string, string> {
+  const rawReasons = localStorage.getItem(taskReportRejectReasonStorageKey)
+  if (!rawReasons) return new Map()
+
+  try {
+    const reasons: unknown = JSON.parse(rawReasons)
+    if (!reasons || typeof reasons !== 'object') return new Map()
+
+    return new Map(
+      Object.entries(reasons as Record<string, unknown>).filter(
+        (entry): entry is [string, string] => typeof entry[1] === 'string',
+      ),
+    )
+  } catch {
+    return new Map()
+  }
 }
 
 // 요청 시점을 기록한 뒤, 설정된 지연만큼 완료를 늦춘다.
