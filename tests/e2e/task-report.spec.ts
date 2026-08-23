@@ -328,6 +328,26 @@ test('S23: 모달 처리 중 중복 확인 차단', async ({ page }) => {
   expect(await mutationCount(page)).toBe(1)
 })
 
+test('S24: 모달 처리 중 초점 유지', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+  await delayReportMutation(page)
+
+  await page.getByRole('button', { name: '반려하기' }).click()
+  const reasonField = page.getByRole('textbox', { name: '반려 사유' })
+  await reasonField.fill('사유 입력')
+  await rejectDialog(page).getByRole('button', { name: '확인' }).click()
+
+  // 처리 중 `확인` 이 비활성이 되어도 초점은 모달 안에 남아야 한다.
+  await expect(rejectDialog(page)).toHaveAttribute('aria-busy', 'true')
+  await expect(reasonField).toBeFocused()
+
+  // 초점 트랩이 유지되므로 Tab 을 눌러도 모달 밖으로 나가지 않는다.
+  await page.keyboard.press('Tab')
+  await expect(reasonField).toBeFocused()
+
+  await expect(page).toHaveURL(/\/task-reports$/)
+})
+
 function rejectDialog(page: Page) {
   return page.getByRole('dialog', { name: '반려 사유를 작성해주세요' })
 }
