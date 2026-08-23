@@ -20,12 +20,19 @@ export function RejectReasonDialog({
   const reasonRef = useRef<HTMLTextAreaElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const pendingRef = useRef(pending)
+  const onCancelRef = useRef(onCancel)
   const [reason, setReason] = useState('')
 
   useEffect(() => {
     pendingRef.current = pending
   }, [pending])
 
+  // 부모가 `onCancel` 을 인라인으로 넘겨도 아래 마운트 effect 가 다시 돌지 않도록 최신 값만 담아 둔다.
+  useEffect(() => {
+    onCancelRef.current = onCancel
+  }, [onCancel])
+
+  // 초점 스냅샷·배경 inert·초기 초점은 열고 닫을 때 한 번씩만 일어나야 해서 의존성을 비운다.
   useEffect(() => {
     const appRoot = document.getElementById('root')
     previousFocusRef.current = document.activeElement as HTMLElement | null
@@ -36,7 +43,7 @@ export function RejectReasonDialog({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape' && !pendingRef.current) {
         event.preventDefault()
-        onCancel()
+        onCancelRef.current()
         return
       }
 
@@ -67,7 +74,14 @@ export function RejectReasonDialog({
         previousFocusRef.current.focus()
       }
     }
-  }, [onCancel])
+  }, [])
+
+  // 처리 중에는 `확인` 이 비활성이 되면서 브라우저가 초점을 body 로 흘려보낸다. 모달 안으로 되돌린다.
+  useEffect(() => {
+    if (!pending) return
+    if (dialogRef.current?.contains(document.activeElement)) return
+    reasonRef.current?.focus()
+  }, [pending])
 
   const trimmedReason = reason.trim()
   const canConfirm = trimmedReason.length > 0 && !pending
@@ -97,7 +111,7 @@ export function RejectReasonDialog({
           value={reason}
           placeholder="반려 사유 작성"
           aria-label="반려 사유"
-          disabled={pending}
+          readOnly={pending}
           onChange={(event) => setReason(event.target.value)}
         />
         <ConfirmButton
@@ -160,7 +174,7 @@ const ReasonField = styled.textarea`
     color: ${({ theme }) => theme.colors.textFaint};
   }
 
-  &:disabled {
+  &:read-only {
     cursor: wait;
   }
 
