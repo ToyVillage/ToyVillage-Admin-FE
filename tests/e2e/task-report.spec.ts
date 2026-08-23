@@ -7,6 +7,7 @@ import { expect, test as base, type Page } from '@playwright/test'
 const reviewStorageKey = 'toyvillage:task-reports:reviews'
 const mutationDelayStorageKey = 'toyvillage:task-reports:mutation-delay'
 const mutationLogStorageKey = 'toyvillage:task-reports:mutation-log'
+const rejectReasonStorageKey = 'toyvillage:task-reports:reject-reasons'
 const allMockReportIds = [
   'r1',
   'r2',
@@ -168,9 +169,11 @@ test('S11: 승인 처리', async ({ page }) => {
   await expect(rows(page).filter({ hasText: '2026-07-03' })).toHaveCount(1)
 })
 
-test('S12: 반려 처리', async ({ page }) => {
+test('S12: 반려 처리 (반려 사유 모달 경유)', async ({ page }) => {
   await page.goto('/task-reports/r1')
   await page.getByRole('button', { name: '반려하기' }).click()
+  await page.getByRole('textbox', { name: '반려 사유' }).fill('점검 항목 누락')
+  await rejectDialog(page).getByRole('button', { name: '확인' }).click()
 
   await expect(page).toHaveURL(/\/task-reports$/)
   await expect(
@@ -248,6 +251,93 @@ test('S18: 상세에서 뒤로가기', async ({ page }) => {
   ).toBeVisible()
   expect(await mutationCount(page)).toBe(0)
 })
+
+test('S19: 반려하기 → 반려 사유 모달 표시', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+  await page.getByRole('button', { name: '반려하기' }).click()
+
+  const dialog = rejectDialog(page)
+  await expect(
+    dialog.getByRole('heading', { name: '반려 사유를 작성해주세요' }),
+  ).toBeVisible()
+  await expect(
+    dialog.getByPlaceholder('반려 사유 작성'),
+  ).toBeVisible()
+  await expect(dialog.getByRole('button', { name: '확인' })).toBeVisible()
+
+  // 모달만 열릴 뿐 화면은 상세에 머무르고 반려 요청은 아직 없다.
+  await expect(page).toHaveURL(/\/task-reports\/r1$/)
+  expect(await mutationCount(page)).toBe(0)
+})
+
+test('S20: 사유 미입력 시 확인 불가', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+  await page.getByRole('button', { name: '반려하기' }).click()
+
+  const confirmButton = rejectDialog(page).getByRole('button', { name: '확인' })
+  await expect(confirmButton).toBeDisabled()
+
+  await page.getByRole('textbox', { name: '반려 사유' }).fill('   ')
+  await expect(confirmButton).toBeDisabled()
+})
+
+test('S21: 모달 이탈 시 반려되지 않음', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+
+  await page.getByRole('button', { name: '반려하기' }).click()
+  await page.keyboard.press('Escape')
+  await expect(rejectDialog(page)).toBeHidden()
+
+  // Figma 에 취소 버튼이 없어 오버레이 클릭도 같은 이탈 수단이다.
+  await page.getByRole('button', { name: '반려하기' }).click()
+  await page.mouse.click(10, 10)
+  await expect(rejectDialog(page)).toBeHidden()
+
+  await expect(page).toHaveURL(/\/task-reports\/r1$/)
+  expect(await mutationCount(page)).toBe(0)
+})
+
+test('S22: 입력한 반려 사유 저장', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+  await page.getByRole('button', { name: '반려하기' }).click()
+  await page
+    .getByRole('textbox', { name: '반려 사유' })
+    .fill('첨부 자료가 누락되었습니다')
+  await rejectDialog(page).getByRole('button', { name: '확인' }).click()
+
+  await expect(page).toHaveURL(/\/task-reports$/)
+  expect(await storedRejectReasons(page)).toEqual({
+    r1: '첨부 자료가 누락되었습니다',
+  })
+})
+
+test('S23: 모달 처리 중 중복 확인 차단', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+  await delayReportMutation(page)
+
+  await page.getByRole('button', { name: '반려하기' }).click()
+  await page.getByRole('textbox', { name: '반려 사유' }).fill('사유 입력')
+
+  const confirmButton = rejectDialog(page).getByRole('button', { name: '확인' })
+  await confirmButton.click()
+
+  await expect(confirmButton).toBeDisabled()
+  await confirmButton.click({ force: true })
+
+  await expect(page).toHaveURL(/\/task-reports$/)
+  expect(await mutationCount(page)).toBe(1)
+})
+
+function rejectDialog(page: Page) {
+  return page.getByRole('dialog', { name: '반려 사유를 작성해주세요' })
+}
+
+async function storedRejectReasons(page: Page) {
+  return page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? '{}') as unknown,
+    rejectReasonStorageKey,
+  )
+}
 
 function rows(page: Page) {
   return page.getByTestId('task-report-row')
