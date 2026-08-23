@@ -134,7 +134,11 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 - 모달은 Esc 또는 오버레이 클릭으로 닫는다(Figma 에 취소 버튼이 없어 저장소의 기존 dialog 패턴을 따른다).
   닫으면 반려 처리는 일어나지 않고 상세에 머무른다.
 - 모달이 열려 있는 동안 초점은 모달 안에 가둔다(기존 `DeleteConfirmationDialog` 와 같은 규칙).
+  모달을 닫으면 초점은 모달을 연 `반려하기` 버튼으로 돌아간다.
 - 반려 처리 중에는 `확인` 을 비활성화해 중복 제출을 막는다.
+- 반려 처리 중에도 초점은 모달 안에 남는다(개발자 결정 2026-08-23). `확인` 이 비활성이 되면 브라우저가
+  초점을 놓아 버리므로 사유 입력란으로 되돌리고, 사유 입력란은 `disabled` 대신 `readonly` 로 두어
+  초점 트랩 안에 남긴다.
 - 처리 실패 시 화면에 머무르고 버튼을 다시 누를 수 있게 되돌린다. 실패 안내(토스트·모달)는 이번 범위에서 그리지 않는다.
 - 처리 중에는 두 버튼을 비활성화해 중복 제출을 막는다.
 - 이미 완료·반려된 보고에서도 두 버튼은 그대로 보인다(Figma 상세는 상태 `반려` 인 상태로 두 버튼을 함께 보여준다).
@@ -167,6 +171,8 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 - `features/review-task-report/ui/TaskReportReviewActions.tsx` — `반려하기`/`승인하기` 버튼 + 처리 mutation.
   반려는 모달 확인 후에 mutation 을 보낸다.
 - `features/review-task-report/ui/RejectReasonDialog.tsx` — 반려 사유 모달(제목·사유 입력·`확인`).
+  초점 스냅샷·배경 `inert`·초기 초점을 다루는 effect 는 열고 닫을 때 한 번씩만 돌아야 하므로
+  `onCancel` 을 의존성으로 두지 않고 ref 로 받는다(부모가 인라인 콜백을 넘겨도 안전하게).
   `shared/ui` 의 확인 dialog 들은 문구가 고정된 alertdialog 라 입력이 있는 이 모달과 책임이 달라
   feature 안에 둔다. props: `pending`, `onCancel`, `onConfirm(reason)`.
 - `pages/task-reports/TaskReportListPage.tsx`, `pages/task-reports/TaskReportDetailPage.tsx`
