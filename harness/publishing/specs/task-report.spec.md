@@ -3,6 +3,10 @@ feature: task-report
 figma:
   fileKey: fkbMQaiPeIufKzjXXoWAPS
   nodeId: 3118:4294
+  nodes:
+    - 3118:4294 # 목록
+    - 3350:3962 # 상세(심사)
+    - 3350:4018 # 상세 + 반려 사유 모달
 requires_functional_test: true
 paths: src/pages/task-reports, src/entities/task-report, src/features/review-task-report
 ---
@@ -11,10 +15,11 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 ## 상태와 근거
 
-- Status: Approved (yunho09 승인, 시나리오 S1–S16)
-- Last refreshed: 2026-08-11
+- Status: Approved (yunho09 승인, 시나리오 S1–S23 — 반려 사유 모달 슬라이스 포함 2026-08-22 재승인)
+- Last refreshed: 2026-08-21
 - 목록 화면 기준: Figma `3118:4294` ("task report" / 업무보고)
 - 상세(심사) 화면 기준: Figma `3350:3962` ("report management")
+- 반려 사유 모달 기준: Figma `3350:4018` ("Reason for Rejection") — 상세 화면 위 오버레이 `3125:4869`
 - 결과 표시(이번 범위 제외, 다음 슬라이스): `4310:7791`(반려 성공 토스트), `4515:8096`(승인 성공 토스트),
   `4310:7729`(반려 실패 토스트), `4515:8115`(승인 실패 토스트),
   `3803:4932`/`3803:4994`(같은 실패를 모달로 표현한 중복본)
@@ -33,7 +38,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 ## 범위
 
 - 포함: 업무보고 목록(탭 필터·표·페이지네이션·빈 상태), 업무보고 상세 조회(메타 요약·제목·상세 내용·첨부자료 다운로드),
-  승인/반려 처리와 처리 후 목록 이동, 업무 상세에서 업무보고로의 진입,
+  승인/반려 처리와 처리 후 목록 이동, **반려 시 반려 사유 모달(2026-08-21 추가)**, 업무 상세에서 업무보고로의 진입,
   사이드바에 `업무 보고 바로가기` 항목 추가(개발자 승인 — TODO-2 해결. 이후 Figma 사이드바 `1541:1412`에도 반영됨)
 - 제외: **승인·반려 결과 표시(성공 토스트·실패 토스트·실패 모달) — 개발자 결정으로 다음 슬라이스**,
   실제 API 연동(`/api` 스킬 담당 — 이번 슬라이스는 mock 경계), 보고 작성·수정·삭제(직원 화면),
@@ -87,6 +92,17 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 상세 화면 상단에 뒤로가기 링크를 둔다(2026-08-14 개발자 제공 디자인 반영 — 최초 슬라이스에는 없었다).
 목록 복귀는 뒤로가기 또는 승인·반려 처리 후 이동으로 일어난다.
 
+## 화면 구조 — 반려 사유 모달 (Figma 3350:4018)
+
+상세 화면 위에 오버레이(`#000000` 50%)를 덮고 가운데에 모달을 띄운다.
+
+1. 모달: w560, radius20, `surface`, padding40, 세로 배치 gap20 (높이는 내용에 맞춘다 — Figma 432).
+2. 제목: `반려 사유를 작성해주세요` (28 SemiBold, `text`, 가운데 정렬).
+3. 사유 입력: w480 h206, radius12, 배경 `background`, padding20, 여러 줄 입력.
+   placeholder `반려 사유 작성` (22 Medium, `textFaint`).
+4. `확인` 버튼: 가로 채움(480) h73, radius12, 배경 `text` + 글자 `surface`(28 Medium), 테두리 `dialogBorder`.
+   Figma 에는 취소 버튼도 닫기(X) 아이콘도 없다.
+
 ## 동작 (source of truth)
 
 ### 목록
@@ -110,7 +126,15 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 - 첨부자료는 파일명과 확장자 배지로 표시하고, 다운로드 아이콘 클릭 시 해당 파일을 내려받는다. 삭제·추가 수단은 없다.
 - `뒤로가기` 클릭 → 아무 것도 처리하지 않고 `/task-reports` 로 이동한다. 상세는 편집 화면이 아니라 이탈 확인 dialog 를 두지 않는다.
 - `승인하기` 클릭 → 보고를 승인 처리한다. 성공하면 `/task-reports` 로 이동한다.
-- `반려하기` 클릭 → 보고를 반려 처리한다. 성공하면 `/task-reports` 로 이동한다.
+- `반려하기` 클릭 → 이 시점에는 반려 처리를 보내지 않고 **반려 사유 모달**을 연다.
+- 모달의 `확인` 클릭 → 입력한 사유와 함께 보고를 반려 처리한다. 성공하면 `/task-reports` 로 이동한다
+  (모달 도입 전의 반려 동작과 결과는 같다).
+- 반려 사유는 필수다. 입력이 비어 있거나 공백뿐이면 `확인` 을 비활성으로 둔다(개발자 결정 2026-08-21 —
+  Figma 에 유효성 안내가 없어 별도 오류 문구는 그리지 않는다).
+- 모달은 Esc 또는 오버레이 클릭으로 닫는다(Figma 에 취소 버튼이 없어 저장소의 기존 dialog 패턴을 따른다).
+  닫으면 반려 처리는 일어나지 않고 상세에 머무른다.
+- 모달이 열려 있는 동안 초점은 모달 안에 가둔다(기존 `DeleteConfirmationDialog` 와 같은 규칙).
+- 반려 처리 중에는 `확인` 을 비활성화해 중복 제출을 막는다.
 - 처리 실패 시 화면에 머무르고 버튼을 다시 누를 수 있게 되돌린다. 실패 안내(토스트·모달)는 이번 범위에서 그리지 않는다.
 - 처리 중에는 두 버튼을 비활성화해 중복 제출을 막는다.
 - 이미 완료·반려된 보고에서도 두 버튼은 그대로 보인다(Figma 상세는 상태 `반려` 인 상태로 두 버튼을 함께 보여준다).
@@ -123,6 +147,8 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 - mock 데이터는 Figma 행(이승현/김수인/이지아 · `업무 제목` · 완료 · 상/하/중 · 2026-07-03/07-01/07-28 · 전체 공개/특정 파트)을
   1페이지로 재현하고, 페이지네이션(1·2·3)을 재현하도록 `심사대기` 를 7건 두어 3페이지가 되게 한다.
   나머지는 `완료` 3건, `반려` 2건, `재제출` 2건.
+- 반려 사유는 심사 상태와 같은 localStorage mock 경계에 보관한다
+  (`toyvillage:task-reports:reject-reasons`, id → 사유). 실제 API 로 교체할 때 요청 body 로 옮긴다.
 - 테스트 제어점은 기존 업무 mock 규약을 따른다: 처리 지연(`toyvillage:task-reports:mutation-delay`),
   요청 로그(`toyvillage:task-reports:mutation-log`). 실패 주입 키는 결과 표시 슬라이스에서 함께 추가한다.
   실제 API 로 교체할 때 함께 제거한다.
@@ -138,7 +164,11 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 - `entities/task-report/ui/TaskReportTable.tsx` — 표. 컬럼 구성이 업무관리 목록과 같으므로
   `shared/ui/DataTable` 을 쓰고 상태/우선순위 셀은 기존 `entities/task` 의 `TaskStatusBadge`·`TaskPriorityBadge` 를
   재사용한다(entities → entities 는 ESLint 상 허용).
-- `features/review-task-report/ui/TaskReportReviewActions.tsx` — `반려하기`/`승인하기` 버튼 + 처리 mutation
+- `features/review-task-report/ui/TaskReportReviewActions.tsx` — `반려하기`/`승인하기` 버튼 + 처리 mutation.
+  반려는 모달 확인 후에 mutation 을 보낸다.
+- `features/review-task-report/ui/RejectReasonDialog.tsx` — 반려 사유 모달(제목·사유 입력·`확인`).
+  `shared/ui` 의 확인 dialog 들은 문구가 고정된 alertdialog 라 입력이 있는 이 모달과 책임이 달라
+  feature 안에 둔다. props: `pending`, `onCancel`, `onConfirm(reason)`.
 - `pages/task-reports/TaskReportListPage.tsx`, `pages/task-reports/TaskReportDetailPage.tsx`
 - `shared/ui/AttachmentList.tsx` (신규 후보) — 읽기 전용 첨부 목록(파일명 + 확장자 배지 + 다운로드).
   기존 `AttachmentField` 는 편집 전용(드롭존·삭제)이라 그대로 두고 건드리지 않는다. 게이트 승인 대상(TODO-2).
