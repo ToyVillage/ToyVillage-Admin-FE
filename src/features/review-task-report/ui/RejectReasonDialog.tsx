@@ -77,9 +77,11 @@ export function RejectReasonDialog({
   }, [])
 
   // 처리 중에는 `확인` 이 비활성이 되면서 브라우저가 초점을 body 로 흘려보낸다. 모달 안으로 되돌린다.
+  // 초점이 비활성 `확인` 에 남는 브라우저도 있어 `contains` 대신 실제 초점 대상 목록으로 확인한다.
   useEffect(() => {
     if (!pending) return
-    if (dialogRef.current?.contains(document.activeElement)) return
+    const active = document.activeElement as HTMLElement | null
+    if (active && focusableElements(dialogRef.current).includes(active)) return
     reasonRef.current?.focus()
   }, [pending])
 
