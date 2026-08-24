@@ -1,0 +1,33 @@
+{
+  "feature": "task-report",
+  "approvedAt": "2026-08-23T08:45:06.539Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S17",
+    "S18",
+    "S19",
+    "S20",
+    "S21",
+    "S22",
+    "S23",
+    "S24"
+  ],
+  "scenarioHash": "77b7b13aadfca81dda8bff567bee8a1abb157e591ebbf12f254586ddae9a31ed",
+  "e2eHash": "64802bab37d6ba9c94a483c3ed14a079c9f12d6dd1665333ab3377a4c79b7f52"
+}

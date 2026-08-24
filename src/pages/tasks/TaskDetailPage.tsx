@@ -9,6 +9,7 @@ import {
   useParams,
 } from 'react-router-dom'
 import { getMockTask } from '@/entities/task'
+import { getMockTaskReportByTaskId } from '@/entities/task-report'
 import { TaskForm } from '@/features/create-task'
 import { LeaveConfirmationDialog } from '@/shared/ui'
 import { TaskBackLink } from './ui/TaskBackLink'
@@ -49,6 +50,13 @@ export function TaskDetailPage() {
     enabled: Boolean(id),
   })
 
+  // 이 업무에 올라온 업무보고. 없으면 이동할 상세가 없어 버튼을 비활성으로 둔다.
+  const { data: report } = useQuery({
+    queryKey: ['task-reports', 'by-task', id],
+    queryFn: () => getMockTaskReportByTaskId(id),
+    enabled: Boolean(id),
+  })
+
   const handleCompleted = useCallback(
     (result: 'saved' | 'deleted') => {
       allowNavigationRef.current = true
@@ -83,8 +91,12 @@ export function TaskDetailPage() {
       <Content>
         <TopRow>
           <TaskBackLink />
-          {/* 업무 보고 상세조회는 이동 대상 화면이 이번 범위에 없어 표시만 한다(spec 결정 사항). */}
-          <ReportButton type="button" disabled>
+          {/* 이 업무의 업무보고 상세(spec: task-report)로 진입한다. */}
+          <ReportButton
+            type="button"
+            disabled={!report}
+            onClick={() => report && navigate(`/task-reports/${report.id}`)}
+          >
             업무 보고 상세조회
             <ReportIcon viewBox="0 0 24 24" aria-hidden="true">
               <path d="m9 4 8 8-8 8" />
@@ -144,6 +156,7 @@ const ReportButton = styled.button`
   font-family: inherit;
   font-size: 24px;
   font-weight: 600;
+  cursor: pointer;
 
   &:disabled {
     cursor: not-allowed;

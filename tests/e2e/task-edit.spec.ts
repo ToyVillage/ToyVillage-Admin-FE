@@ -299,13 +299,16 @@ test('S20: 키보드 전용 조작', async ({ page }) => {
   await expect(page.getByText('키보드로 수정한 제목')).toHaveCount(1)
 })
 
-test('S21: 업무 보고 상세조회 버튼 비활성', async ({ page }) => {
+test('S21: 업무 보고 상세조회 버튼으로 업무보고 상세 이동', async ({ page }) => {
   await page.goto('/tasks/1')
 
   const reportButton = page.getByRole('button', { name: '업무 보고 상세조회' })
   await expect(reportButton).toBeVisible()
-  await expect(reportButton).toBeDisabled()
-  await expect(page).toHaveURL(/\/tasks\/1$/)
+  await expect(reportButton).toBeEnabled()
+  await reportButton.click()
+
+  // 1번 업무의 보고는 r1 이다.
+  await expect(page).toHaveURL(/\/task-reports\/r1$/)
 })
 
 function visibilityTrigger(page: Page) {

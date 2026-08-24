@@ -7,6 +7,9 @@ import megaphoneIcon from './assets/megaphone.svg'
 import peopleIcon from './assets/people.svg'
 import storageIcon from './assets/storage.svg'
 import taskIcon from './assets/task.svg'
+import taskReportIcon from './assets/task-report.svg'
+import teamIcon from './assets/team.svg'
+import workLogIcon from './assets/work-log.svg'
 import { mockSidebarItems, mockSidebarUser } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
 import type { SidebarIconName, SidebarNavItem } from '../model/types'
@@ -17,6 +20,9 @@ const sidebarIcons: Record<SidebarIconName, string> = {
   people: peopleIcon,
   storage: storageIcon,
   task: taskIcon,
+  taskReport: taskReportIcon,
+  team: teamIcon,
+  workLog: workLogIcon,
 }
 
 export function Sidebar() {
@@ -70,7 +76,7 @@ export function Sidebar() {
             <SidebarItem
               key={item.id}
               item={item}
-              active={isActiveRoute(pathname, item.to)}
+              active={item.to ? isActiveRoute(pathname, item.to) : false}
               onClick={close}
             />
           ))}
@@ -89,20 +95,28 @@ function SidebarItem({
   active: boolean
   onClick: () => void
 }) {
+  const content = (
+    <>
+      <ItemIcon $icon={sidebarIcons[item.icon]} aria-hidden="true" />
+      <ItemLabel>{item.label}</ItemLabel>
+    </>
+  )
+
+  // 화면이 없는 메뉴는 링크 대신 비활성 항목으로 노출한다.
+  if (!item.to) {
+    return <DisabledItem aria-disabled="true">{content}</DisabledItem>
+  }
+
   return (
     <NavItem to={item.to} onClick={onClick} $active={active}>
-      <ItemIcon src={sidebarIcons[item.icon]} alt="" />
-      <ItemLabel>{item.label}</ItemLabel>
+      {content}
     </NavItem>
   )
 }
 
+// 상세/생성 같은 하위 경로도 같은 메뉴의 활성 범위로 본다.
 function isActiveRoute(pathname: string, route: string) {
-  if (route === '/notices/list') {
-    return pathname === route || pathname.startsWith('/notices/list/')
-  }
-
-  return pathname === route
+  return pathname === route || pathname.startsWith(`${route}/`)
 }
 
 const Layer = styled.div`
@@ -183,33 +197,55 @@ const UserName = styled.span`
   line-height: 1.2;
 `
 
+// 활성 항목은 48px 배경 밴드로 표시한다. 항목 높이 48px + gap 8px 로
+// 아이콘/라벨의 세로 위치는 밴드 없이 32px 항목이던 때와 동일하게 유지된다.
 const Nav = styled.nav`
   position: absolute;
-  top: 222px;
+  top: calc(222px - 8px);
   left: 0;
   display: flex;
   width: 100%;
   flex-direction: column;
-  gap: calc(56px - 32px);
+  gap: 8px;
 `
 
 const NavItem = styled(Link, {
   shouldForwardProp: (prop) => prop !== '$active',
 })<{ $active: boolean }>`
   display: flex;
-  min-height: 32px;
+  min-height: 48px;
   align-items: center;
   gap: 12px;
-  padding: 0 44px;
+  padding: 8px 44px;
+  background: ${({ theme, $active }) =>
+    $active ? theme.colors.accentBg : 'transparent'};
   color: ${({ theme, $active }) =>
-    $active ? theme.colors.primary : theme.colors.text};
+    $active ? theme.colors.accent : theme.colors.text};
   text-decoration: none;
 `
 
-const ItemIcon = styled.img`
+const DisabledItem = styled.div`
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 44px;
+  color: ${({ theme }) => theme.colors.text};
+  opacity: 0.4;
+  cursor: default;
+`
+
+// 단색 아이콘이라 mask 로 깔아 활성 색상을 텍스트와 함께 따라가게 한다.
+const ItemIcon = styled.span<{ $icon: string }>`
   width: 32px;
   height: 32px;
   flex: 0 0 32px;
+  background: currentColor;
+  /* Vite 가 인라인한 svg data URI 는 안에 작은따옴표를 쓰므로 큰따옴표로 감싼다. */
+  mask-image: url("${({ $icon }) => $icon}");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 32px 32px;
 `
 
 const ItemLabel = styled.span`

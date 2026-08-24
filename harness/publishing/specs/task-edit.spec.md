@@ -30,7 +30,8 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
 
 - 포함: 기존 업무 조회, 필드 편집, 첨부 확인·다운로드·추가·제거, 저장, 삭제(확인 모달 포함), 이탈 보호,
   삭제 실패 토스트
-- 제외: 실제 API 연동(`/api` 스킬 담당), 업무 보고 상세 화면, 상태(`진행중/완료/반려`) 변경, 수정 이력
+- 제외: 실제 API 연동(`/api` 스킬 담당), 업무 보고 상세 화면 자체의 퍼블리싱(`task-report.spec.md` 담당 — 이 화면은
+  그 화면으로 진입만 한다), 상태(`진행중/완료/반려`) 변경, 수정 이력
 
 ## 라우트와 진입
 
@@ -79,8 +80,8 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
   `취소` 또는 `Esc` 는 현재 URL 과 입력을 유지하고, `확인` 은 시도한 경로로 이동한다.
 - 저장·삭제 성공에 의한 이동은 이탈 확인 대상에서 제외한다.
 - 새로고침과 탭 닫기는 브라우저 기본 이탈 경고로 보호한다.
-- `업무 보고 상세조회` 버튼은 Figma 대로 **표시만 하고 동작하지 않는다**. 이동 대상 화면이 이번 범위에 없어
-  `disabled` 로 두고 클릭해도 아무 일도 일어나지 않는다.
+- `업무 보고 상세조회` 버튼은 이 업무에 올라온 업무보고 상세(`/task-reports/:reportId`)로 이동한다
+  (`task-report` 슬라이스에서 이동 대상 화면이 생겼다). 해당 업무의 보고가 없으면 `disabled` 로 둔다.
 - 저장 성공·실패에 대한 토스트는 만들지 않는다(Figma 에 삭제 실패 토스트만 있다).
   저장 실패는 화면과 입력을 유지한 채 실패를 알리는 것으로 충분하다.
 
@@ -89,7 +90,9 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
 생성 화면(`task-create.spec.md` §화면 구조)과 동일한 카드 구성·치수를 사용한다. 차이는 다음과 같다.
 
 1. 우측 상단(`y=131`)에 `업무 보고 상세조회` 버튼: 264×68, radius 12px, 배경 `colors.accentBg`,
-   padding 16/20px, 라벨 24px SemiBold `colors.accent` + chevron 36px. 표시만 하고 동작하지 않는다(`disabled`).
+   padding 16/20px, 라벨 24px SemiBold `colors.accent` + chevron 36px.
+   이 업무에 올라온 업무보고가 있으면 활성 상태로 `/task-reports/:reportId` 로 이동하고, 보고가 없을 때만 `disabled` 다
+   (§동작 참조).
 2. 우선순위는 진입 시 저장된 값이 선택 상태다(선택 배경 `colors.accentBg`, 글자 `colors.accent`).
 3. 완료기한·공개범위·담당자·제목·상세 내용은 placeholder 대신 저장된 값을 표시한다
    (제목 40px Medium `colors.text`).
@@ -131,7 +134,8 @@ interface UpdateTaskInput {
 - `LeaveConfirmationDialog` — 이탈 확인 모달 재사용(공용화 후보).
 - `ValidationDialog`(기존 `src/shared/ui`) — 검증 모달 재사용.
 - `Toast` — 삭제 실패 토스트. 신규 공용 컴포넌트 후보.
-- `TaskReportLinkButton` — `업무 보고 상세조회` 버튼. 이번 범위에서는 이동 대상이 없다.
+- `TaskReportLinkButton` — `업무 보고 상세조회` 버튼. 이 업무의 업무보고 상세(`/task-reports/:reportId`)로 이동한다.
+  보고가 없을 때만 `disabled` 다.
 
 ## 접근성
 
@@ -160,13 +164,15 @@ interface UpdateTaskInput {
 - S12: 값을 고친 뒤 `뒤로가기` → 이탈 확인 모달이 입력 손실을 막는다.
 - S13: 저장·삭제 요청 중 재클릭 → 중복 요청을 보내지 않는다.
 - S14: 키보드만으로 편집·첨부·검증·저장·삭제 취소를 수행할 수 있다.
+- 업무보고 진입(scenario-draft·e2e 의 `S21`): 보고가 올라온 업무의 `/tasks/:id` 에서 `업무 보고 상세조회` 버튼은
+  활성 상태이고, 클릭하면 `/task-reports/:reportId` 로 이동한다. 보고가 없는 업무에서는 `disabled` 다.
 
 ## 결정 사항 (게이트 ② 승인)
 
 - 라우트는 `/tasks/:id` 로 확정한다.
 - 담당자 초기값은 mock 에 저장값을 채운다(Figma placeholder 잔재 미채택).
 - 기존 첨부에도 제거 컨트롤을 노출한다(Figma `visible: false` 는 디자인 누락으로 판단).
-- `업무 보고 상세조회` 는 버튼만 만들고 동작시키지 않는다(`disabled`).
+- `업무 보고 상세조회` 는 이 업무의 업무보고 상세로 이동한다(보고가 없으면 `disabled`). — `task-report` 슬라이스에서 갱신
 - 상태(`진행중/완료/반려`)는 표시 전용 파생값이며 수정 화면에서 바꿀 수 없다.
 - 저장 성공·실패 토스트는 만들지 않는다. 삭제 실패 토스트만 사용한다.
 - not-found 문구는 `업무를 찾을 수 없습니다.` 로 한다.
@@ -183,4 +189,4 @@ interface UpdateTaskInput {
 ## 미결 사항 (이번 범위 밖)
 
 - [ ] 실제 업무 API endpoint 계약 / 백엔드 담당 — `/api` 스킬에서 처리한다.
-- [ ] `업무 보고 상세조회` 의 이동 대상 화면(task report) 퍼블리싱 — 별도 슬라이스.
+- [x] `업무 보고 상세조회` 의 이동 대상 화면(task report) 퍼블리싱 — `task-report` 슬라이스에서 완료.

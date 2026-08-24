@@ -15,7 +15,7 @@ export const mockSidebarItems: SidebarNavItem[] = [
   },
   {
     id: 'holidays',
-    label: '공휴일 확인 바로가기',
+    label: '휴관일 관리 바로가기',
     to: '/notices/guide',
     icon: 'calendar',
   },
@@ -26,15 +26,31 @@ export const mockSidebarItems: SidebarNavItem[] = [
     icon: 'storage',
   },
   {
-    id: 'tasks',
-    label: '업무관리 바로가기',
-    to: '/tasks',
-    icon: 'task',
-  },
-  {
     id: 'reservations',
     label: '단체예약 바로가기',
     to: '/notices/reservations',
     icon: 'people',
+  },
+  {
+    id: 'team-settings',
+    label: '팀 설정 바로가기',
+    icon: 'team',
+  },
+  {
+    id: 'tasks',
+    label: '업무 관리 바로가기',
+    to: '/tasks',
+    icon: 'task',
+  },
+  {
+    id: 'task-reports',
+    label: '업무 보고 바로가기',
+    to: '/task-reports',
+    icon: 'taskReport',
+  },
+  {
+    id: 'work-logs',
+    label: '업무일지관리 바로가기',
+    icon: 'workLog',
   },
 ]
