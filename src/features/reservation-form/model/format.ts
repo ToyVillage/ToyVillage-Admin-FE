@@ -1,3 +1,16 @@
+import type { AmPm } from './types'
+
+// 24시간 "HH : MM" 표시 문자열 → 12시간 폼 값(raw 자릿수 "HHMM" + am/pm). 수정 초기값 변환용.
+export function clock24ToParts(value: string): { time: string; ampm: AmPm } {
+  const digits = value.replace(/\D/g, '').slice(0, 4)
+  if (digits.length < 4) return { time: digits, ampm: 'am' }
+  const h24 = Number(digits.slice(0, 2))
+  const minute = digits.slice(2, 4)
+  const ampm: AmPm = h24 >= 12 ? 'pm' : 'am'
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12
+  return { time: String(h12).padStart(2, '0') + minute, ampm }
+}
+
 // 숫자 입력을 yyyy.mm.dd 형식으로 자동 서식(최대 8자리).
 export function formatDateInput(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 8)
