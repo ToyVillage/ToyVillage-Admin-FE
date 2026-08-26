@@ -8,8 +8,10 @@ import {
 } from '@/entities/reservation'
 import {
   ReservationForm,
+  clock24ToParts,
   deleteReservationMock,
   emptyReservationFormValue,
+  formatMoney,
   mockAssignableStaff,
   scrollToFirstError,
   updateReservationMock,
@@ -22,7 +24,10 @@ import { DeleteConfirmationDialog } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
 
 // 조회한 상세 → 폼 값(mock 경계 매핑). 폼에만 있는 필드(사전답사 등)는 빈 값으로 둔다.
+// 초기값도 폼 입력 계약에 맞춰 서식한다: 금액 콤마, 시간은 24h→12h(raw 자릿수)+am/pm.
 function toFormValue(detail: ReservationDetail): ReservationFormValue {
+  const visit = clock24ToParts(detail.reserveTime)
+  const exit = clock24ToParts(detail.reserveTimeEnd)
   return {
     ...emptyReservationFormValue,
     groupName: detail.groupName,
@@ -32,10 +37,12 @@ function toFormValue(detail: ReservationDetail): ReservationFormValue {
     representativeContact: detail.guideContact,
     headcount: detail.headcount ? String(detail.headcount) : '',
     guideCount: detail.guideCount ? String(detail.guideCount) : '',
-    admissionFee: detail.admissionFee ? String(detail.admissionFee) : '',
+    admissionFee: detail.admissionFee ? formatMoney(String(detail.admissionFee)) : '',
     visitDate: detail.reserveDate,
-    visitTime: detail.reserveTime,
-    exitTime: detail.reserveTimeEnd,
+    visitTime: visit.time,
+    visitTimeAmPm: visit.ampm,
+    exitTime: exit.time,
+    exitTimeAmPm: exit.ampm,
   }
 }
 
