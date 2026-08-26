@@ -23,6 +23,7 @@ import {
   OperatingHoursPage,
 } from '@/pages/notices/guide'
 import {
+  CreateReservationPage,
   NoticeReservationsPage,
   ReservationDetailPage,
 } from '@/pages/notices/reservations'
@@ -85,6 +86,10 @@ const router = createBrowserRouter([
       {
         path: '/notices/reservations',
         element: <NoticeReservationsPage />,
+      },
+      {
+        path: '/notices/reservations/create',
+        element: <CreateReservationPage />,
       },
       {
         path: '/notices/reservations/:id',
