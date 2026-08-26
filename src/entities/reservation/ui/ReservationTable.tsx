@@ -13,9 +13,10 @@ import type { Reservation } from '../model/types'
 interface ReservationTableProps {
   reservations: Reservation[]
   onRowClick?: (id: string) => void
-  selectedIds: string[]
-  onToggle: (id: string) => void
-  onToggleAll: () => void
+  // 선택(체크박스)은 선택적. 세 값이 모두 있을 때만 노출한다.
+  selectedIds?: string[]
+  onToggle?: (id: string) => void
+  onToggleAll?: () => void
   search?: DataTableSearch
   sort?: DataTableSort
   pagination?: DataTablePagination
@@ -61,13 +62,16 @@ export function ReservationTable({
     headcount: `${reservation.headcount}명`,
   }))
 
-  const selection: DataTableSelection = {
-    selectedIds,
-    onToggle,
-    onToggleAll,
-    allLabel: '전체 예약 선택',
-    rowLabel: (row) => `${String(row.groupName)} 선택`,
-  }
+  const selection: DataTableSelection | undefined =
+    selectedIds && onToggle && onToggleAll
+      ? {
+          selectedIds,
+          onToggle,
+          onToggleAll,
+          allLabel: '전체 예약 선택',
+          rowLabel: (row) => `${String(row.groupName)} 선택`,
+        }
+      : undefined
 
   return (
     <DataTable

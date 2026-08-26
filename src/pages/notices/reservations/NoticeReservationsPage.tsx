@@ -1,21 +1,13 @@
 import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   ReservationTable,
   getMockReservations,
-  getMockStaff,
-  grantMockReservationAccess,
-  mockReservations,
-  mockStaff,
-  reservationStatuses,
-  type GrantAccessInput,
   type Reservation,
   type ReservationStatus,
 } from '@/entities/reservation'
-import { GrantReservationAccessDialog } from '@/features/grant-reservation-access'
-import { ErrorDialog } from '@/shared/ui'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 
 // 한 페이지에 노출할 예약 수(Figma list 기준). 공지/자료와 동일.
@@ -28,43 +20,31 @@ const sortOptions = [
   { value: 'reserve', label: '예약일순' },
 ]
 
+// 안정적인 참조(빈 결과)로 useMemo 의존성이 매 렌더 바뀌지 않게 한다.
+const emptyReservations: Reservation[] = []
+
 export function NoticeReservationsPage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [active, setActive] = useState<ReservationStatus>('pending')
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<ReservationSort>('consult')
   const [page, setPage] = useState(1)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [accessDialogOpen, setAccessDialogOpen] = useState(false)
 
-  const { data: allReservations = mockReservations } = useQuery({
+  const { data } = useQuery({
     queryKey: ['reservations'],
     queryFn: getMockReservations,
-    placeholderData: mockReservations,
-  })
-  const { data: staff = mockStaff } = useQuery({
-    queryKey: ['staff'],
-    queryFn: getMockStaff,
-    placeholderData: mockStaff,
-  })
-  const grantMutation = useMutation({
-    mutationFn: (input: GrantAccessInput) => grantMockReservationAccess(input),
   })
 
+  const allReservations = data ?? emptyReservations
+  // 상태별 카운트는 목록에서 계산한다(mock 경계).
   const counts = useMemo(
     () =>
-      reservationStatuses.reduce(
-        (acc, status) => {
-          acc[status] = allReservations.filter(
-            (reservation) => reservation.status === status,
-          ).length
+      allReservations.reduce(
+        (acc, reservation) => {
+          acc[reservation.status] += 1
           return acc
         },
-        { pending: 0, approved: 0, rejected: 0 } as Record<
-          ReservationStatus,
-          number
-        >,
+        { pending: 0, approved: 0, rejected: 0 },
       ),
     [allReservations],
   )
@@ -96,12 +76,6 @@ export function NoticeReservationsPage() {
     setPrevFilterKey(filterKey)
     setPage(1)
   }
-  // 상태 탭이 바뀌면 이전 상태의 선택이 남지 않도록 선택을 초기화한다.
-  const [prevActive, setPrevActive] = useState(active)
-  if (prevActive !== active) {
-    setPrevActive(active)
-    setSelectedIds([])
-  }
   const currentPage = Math.min(page, pageCount)
 
   const pageReservations = useMemo(
@@ -109,46 +83,6 @@ export function NoticeReservationsPage() {
       filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
     [filtered, currentPage],
   )
-
-  const displayedIds = pageReservations.map((reservation) => reservation.id)
-  const allDisplayedSelected =
-    displayedIds.length > 0 &&
-    displayedIds.every((id) => selectedIds.includes(id))
-
-  function toggle(id: string) {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((selectedId) => selectedId !== id)
-        : [...current, id],
-    )
-  }
-
-  function toggleAll() {
-    setSelectedIds((current) =>
-      allDisplayedSelected
-        ? current.filter((id) => !displayedIds.includes(id))
-        : [...new Set([...current, ...displayedIds])],
-    )
-  }
-
-  function handleGrantConfirm(staffIds: string[]) {
-    grantMutation.mutate(
-      { reservationIds: selectedIds, staffIds },
-      {
-        onSuccess: async () => {
-          await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-          setAccessDialogOpen(false)
-          setSelectedIds([])
-        },
-        // 실패 시 모달을 열어둔 채(재시도) 예외 모달로 알린다. onSuccess 정리 로직은 유지.
-        onError: () => {
-          setAccessDialogOpen(true)
-        },
-      },
-    )
-  }
-
-  const hasData = allReservations.length > 0
 
   return (
     <Page>
@@ -164,23 +98,17 @@ export function NoticeReservationsPage() {
             active={active}
             onSelect={setActive}
           />
-          {hasData && (
-            <GrantButton
-              type="button"
-              disabled={selectedIds.length === 0}
-              onClick={() => setAccessDialogOpen(true)}
-            >
-              페이지 권한주기
-            </GrantButton>
-          )}
+          <CreateButton
+            type="button"
+            onClick={() => navigate('/notices/reservations/create')}
+          >
+            단체예약 생성하기
+          </CreateButton>
         </StatusRow>
 
         <ReservationTable
           reservations={pageReservations}
           onRowClick={(id) => navigate(`/notices/reservations/${id}`)}
-          selectedIds={selectedIds}
-          onToggle={toggle}
-          onToggleAll={toggleAll}
           search={{
             value: query,
             onChange: setQuery,
@@ -199,23 +127,6 @@ export function NoticeReservationsPage() {
           }
         />
       </Content>
-
-      {accessDialogOpen && (
-        <GrantReservationAccessDialog
-          reservationCount={selectedIds.length}
-          staff={staff}
-          pending={grantMutation.isPending}
-          onCancel={() => setAccessDialogOpen(false)}
-          onConfirm={handleGrantConfirm}
-        />
-      )}
-
-      {grantMutation.isError && (
-        <ErrorDialog
-          title="권한 부여에 실패했습니다"
-          onConfirm={() => grantMutation.reset()}
-        />
-      )}
     </Page>
   )
 }
@@ -262,7 +173,7 @@ const StatusRow = styled.div`
   margin-top: 24px;
 `
 
-const GrantButton = styled.button`
+const CreateButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -277,11 +188,6 @@ const GrantButton = styled.button`
   font-size: 24px;
   font-weight: 600;
   line-height: 1.2;
-
-  &:disabled {
-    background: ${({ theme }) => theme.colors.textFaint};
-    cursor: default;
-  }
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.accent};
