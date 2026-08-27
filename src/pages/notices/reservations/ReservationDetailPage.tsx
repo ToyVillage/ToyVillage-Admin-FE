@@ -159,7 +159,7 @@ export function ReservationDetailPage() {
 
 const Page = styled.main`
   min-height: 100vh;
-  padding: 0 32px 66px;
+  padding: 0 32px 480px;
   background: ${({ theme }) => theme.colors.background};
   font-family: ${({ theme }) => theme.font.body};
 `
