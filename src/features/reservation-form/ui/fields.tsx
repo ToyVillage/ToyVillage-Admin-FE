@@ -10,6 +10,7 @@ import {
 import styled from '@emotion/styled'
 import calendarIcon from '@/shared/ui/assets/calendar.svg'
 import chevronDown from '@/shared/ui/assets/chevron-down.svg'
+import { DateCalendar } from './DateCalendar'
 import {
   formatDateInput,
   formatDigits,
@@ -122,19 +123,38 @@ export function DateField({
   placeholder?: string
 }) {
   const id = useId()
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  // 바깥 클릭 시 달력을 닫는다.
+  useEffect(() => {
+    if (!open) return
+    function onDocClick(event: MouseEvent) {
+      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
+
   return (
     <LabeledField label={label} required={required} error={error} htmlFor={id}>
-      <ControlBox $error={Boolean(error)}>
-        <Input
-          id={id}
-          value={value}
-          placeholder={placeholder}
-          inputMode="numeric"
-          aria-label={label}
-          onChange={(event) => onChange(formatDateInput(event.target.value))}
-        />
-        <IconImg src={calendarIcon} alt="" aria-hidden="true" />
-      </ControlBox>
+      <DateWrap ref={wrapRef}>
+        <ControlBox $error={Boolean(error)} $open={open}>
+          {/* 포커스하면 달력 팝업. 직접 입력도 가능(yyyy.mm.dd 자동 서식). */}
+          <Input
+            id={id}
+            value={value}
+            placeholder={placeholder}
+            inputMode="numeric"
+            aria-label={label}
+            onFocus={() => setOpen(true)}
+            onChange={(event) => onChange(formatDateInput(event.target.value))}
+          />
+          <IconImg src={calendarIcon} alt="" aria-hidden="true" />
+        </ControlBox>
+        {/* 날짜를 골라도 닫지 않는다 — 바깥 여백 클릭 시에만 닫힘. */}
+        {open && <DateCalendar value={value} onSelect={onChange} />}
+      </DateWrap>
     </LabeledField>
   )
 }
@@ -303,7 +323,7 @@ const Req = styled.span`
   color: ${({ theme }) => theme.colors.danger};
 `
 
-const ControlBox = styled.div<{ $error?: boolean }>`
+const ControlBox = styled.div<{ $error?: boolean; $open?: boolean }>`
   display: flex;
   height: 66px;
   align-items: center;
@@ -311,8 +331,13 @@ const ControlBox = styled.div<{ $error?: boolean }>`
   padding: 20px 24px;
   border: 1px solid
     ${({ theme, $error }) => ($error ? theme.colors.danger : 'transparent')};
-  border-radius: 8px;
+  border-radius: ${({ $open }) => ($open ? '8px 8px 0 0' : '8px')};
   background: ${({ theme }) => theme.colors.background};
+`
+
+// 날짜 필드: 달력 팝업을 컨트롤 기준 absolute로 띄우기 위한 relative 래퍼.
+const DateWrap = styled.div`
+  position: relative;
 `
 
 const Input = styled.input`
