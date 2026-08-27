@@ -314,9 +314,8 @@ export function TimeAmPmField({
                     role="option"
                     aria-selected={ampm === option}
                     $selected={ampm === option}
-                    onMouseDown={(event) => {
-                      // mousedown 로 처리해 바깥 클릭 닫힘보다 먼저 선택되게 한다.
-                      event.preventDefault()
+                    onClick={() => {
+                      // click 로 처리해 마우스와 키보드(Enter/Space) 모두 선택되게 한다.
                       onAmPmChange(option)
                       setOpen(false)
                     }}
