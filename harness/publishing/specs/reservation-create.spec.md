@@ -80,7 +80,7 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 - 제출 입력 계약(초안): `CreateReservationInput { groupName, region, counselDate, reserverName, representativeContact, headcount, guideCount, admissionFee, visitDate, visitTime{h,m,ampm}, exitTime{...}, surveyCount, surveyDate, surveyEnterTime, surveyExitTime, assignedStaffIds[] }`
 - mock 생성 → `['reservations']` 무효화 → 목록 복귀. 실제 필드/엔드포인트는 `/api` 슬라이스에서 확정(현재 백엔드 생성 명세 미확인).
 
-## 컴포넌트 경계 (design-rules §7)
+## 컴포넌트 경계 (design-rules §1)
 
 - `CreateReservationPage`(pages): 라우팅·제출·검증 상태 조립.
 - `ReservationFormSection`(features/reservation-form): 접이식 섹션 카드(헤더+배지+chevron+children).
