@@ -35,9 +35,13 @@ function toFormValue(detail: ReservationDetail): ReservationFormValue {
     counselDate: detail.consultDate,
     reserverName: detail.reserverName,
     representativeContact: detail.guideContact,
-    headcount: detail.headcount ? String(detail.headcount) : '',
-    guideCount: detail.guideCount ? String(detail.guideCount) : '',
-    admissionFee: detail.admissionFee ? formatMoney(String(detail.admissionFee)) : '',
+    // 숫자 0(무료 입장료·0명 등)도 유효값이므로 truthy가 아닌 존재 여부로 판단한다.
+    headcount: detail.headcount != null ? String(detail.headcount) : '',
+    guideCount: detail.guideCount != null ? String(detail.guideCount) : '',
+    admissionFee:
+      detail.admissionFee != null
+        ? formatMoney(String(detail.admissionFee))
+        : '',
     visitDate: detail.reserveDate,
     visitTime: visit.time,
     visitTimeAmPm: visit.ampm,
