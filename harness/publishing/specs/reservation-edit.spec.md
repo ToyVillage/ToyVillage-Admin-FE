@@ -38,7 +38,7 @@ paths: src/pages/notices/reservations/ReservationDetailPage.tsx, src/features/re
 
 - 진입 시 `:id`로 예약을 조회해 폼 초기값을 채운다(mock 경계, 기존 `getReservation` 재사용 후보). 로딩 중에는 디자인에 없는 별도 화면 없이 동일 레이아웃의 빈 폼을 유지한다(no-invented-ui).
 - 섹션 접기/펼치기·상태 배지·am/pm·배정 추가/취소는 `reservation-create`와 동일.
-- `저장하기` 클릭 → 필수값 검증(생성과 동일 인라인 규칙) → 통과 시 mock 저장 → 상세 유지 또는 목록 복귀(미결).
+- `저장하기` 클릭 → 필수값 검증(생성과 동일 인라인 규칙) → 통과 시 mock 저장 → 목록 복귀(`/notices/reservations`).
 - `삭제하기` 클릭 → 삭제 확인 모달(공용 삭제 확인 패턴) → 확인 시 mock 삭제 후 `/notices/reservations`.
 - 페이지 권한 섹션 `취소`/`완료`의 역할은 미결(배정 하위 편집 확정 vs 전체 저장과 중복) — 게이트 확정.
 
