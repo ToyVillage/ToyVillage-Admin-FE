@@ -33,12 +33,15 @@ export function LabeledField({
   required,
   error,
   htmlFor,
+  errorId,
   children,
 }: {
   label: string
   required?: boolean
   error?: string
   htmlFor?: string
+  // 인라인 에러 텍스트의 id. 입력의 aria-describedby와 연결한다(스크린리더 연관).
+  errorId?: string
   children: ReactNode
 }) {
   return (
@@ -49,7 +52,7 @@ export function LabeledField({
       </Label>
       {children}
       {error && (
-        <ErrorRow role="alert">
+        <ErrorRow role="alert" id={errorId}>
           <ErrorDot aria-hidden="true">!</ErrorDot>
           {error}
         </ErrorRow>
@@ -81,10 +84,17 @@ export function TextInputField({
   ariaLabel?: string
 }) {
   const id = useId()
+  const errorId = `${id}-error`
   const inputMode =
     format === 'phone' ? 'tel' : format ? 'numeric' : undefined
   return (
-    <LabeledField label={label} required={required} error={error} htmlFor={id}>
+    <LabeledField
+      label={label}
+      required={required}
+      error={error}
+      htmlFor={id}
+      errorId={error ? errorId : undefined}
+    >
       <ControlBox $error={Boolean(error)}>
         <Input
           id={id}
@@ -92,6 +102,7 @@ export function TextInputField({
           placeholder={placeholder}
           inputMode={inputMode}
           aria-label={ariaLabel ?? label}
+          aria-describedby={error ? errorId : undefined}
           onChange={(event) =>
             onChange(
               format
@@ -123,6 +134,7 @@ export function DateField({
   placeholder?: string
 }) {
   const id = useId()
+  const errorId = `${id}-error`
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
 
@@ -137,7 +149,13 @@ export function DateField({
   }, [open])
 
   return (
-    <LabeledField label={label} required={required} error={error} htmlFor={id}>
+    <LabeledField
+      label={label}
+      required={required}
+      error={error}
+      htmlFor={id}
+      errorId={error ? errorId : undefined}
+    >
       <DateWrap ref={wrapRef}>
         <ControlBox $error={Boolean(error)} $open={open}>
           {/* 포커스하면 달력 팝업. 직접 입력도 가능(yyyy.mm.dd 자동 서식). */}
@@ -147,6 +165,7 @@ export function DateField({
             placeholder={placeholder}
             inputMode="numeric"
             aria-label={label}
+            aria-describedby={error ? errorId : undefined}
             onFocus={() => setOpen(true)}
             onChange={(event) => onChange(formatDateInput(event.target.value))}
           />
@@ -178,6 +197,7 @@ export function TimeAmPmField({
   onAmPmChange: (value: AmPm) => void
 }) {
   const id = useId()
+  const errorId = `${id}-error`
   const [open, setOpen] = useState(false)
   const ampmRef = useRef<HTMLDivElement>(null)
   const hhRef = useRef<HTMLInputElement>(null)
@@ -227,7 +247,13 @@ export function TimeAmPmField({
   }, [open])
 
   return (
-    <LabeledField label={label} required={required} error={error} htmlFor={id}>
+    <LabeledField
+      label={label}
+      required={required}
+      error={error}
+      htmlFor={id}
+      errorId={error ? errorId : undefined}
+    >
       <TimeRow>
         {/* 박스 어디를 클릭해도(여백·콜론 포함) 활성 칸으로 포커스된다. */}
         <TimeBox
@@ -245,6 +271,7 @@ export function TimeAmPmField({
             inputMode="numeric"
             maxLength={2}
             aria-label={`${label} 시`}
+            aria-describedby={error ? errorId : undefined}
             onKeyDown={handleTimeKey}
             onChange={() => {}}
             onFocus={focusActiveSlot}
@@ -259,6 +286,7 @@ export function TimeAmPmField({
             inputMode="numeric"
             maxLength={2}
             aria-label={`${label} 분`}
+            aria-describedby={error ? errorId : undefined}
             onKeyDown={handleTimeKey}
             onChange={() => {}}
             onFocus={focusActiveSlot}
