@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  getMockReservationDetail,
+  getReservation,
   type ReservationDetail,
 } from '@/entities/reservation'
 import {
@@ -63,7 +63,7 @@ export function ReservationDetailPage() {
 
   const { data: reservation, isPending } = useQuery({
     queryKey: ['reservations', id],
-    queryFn: () => getMockReservationDetail(id),
+    queryFn: () => getReservation({ id: Number(id) }),
     enabled: Boolean(id),
     retry: false,
   })
