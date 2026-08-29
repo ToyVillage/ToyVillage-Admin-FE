@@ -1,25 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   ReservationTable,
-  getMockReservations,
-  getMockStaff,
-  grantMockReservationAccess,
-  mockReservations,
-  mockStaff,
-  reservationStatuses,
-  type GrantAccessInput,
-  type Reservation,
+  getAdminReservations,
+  reservationStatusToCode,
+  type ReservationSortCode,
   type ReservationStatus,
 } from '@/entities/reservation'
-import { GrantReservationAccessDialog } from '@/features/grant-reservation-access'
-import { ErrorDialog } from '@/shared/ui'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 
-// 한 페이지에 노출할 예약 수(Figma list 기준). 공지/자료와 동일.
-const PAGE_SIZE = 4
+// 한 페이지에 노출할 예약 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
+const PAGE_SIZE = 10
+// 검색 입력 디바운스(ms). 입력이 멈춘 뒤에만 조회 요청을 보낸다.
+const SEARCH_DEBOUNCE_MS = 200
 
 type ReservationSort = 'consult' | 'reserve'
 
@@ -28,127 +23,62 @@ const sortOptions = [
   { value: 'reserve', label: '예약일순' },
 ]
 
+// UI 정렬 값 → 서버 정렬 코드.
+const sortToCode: Record<ReservationSort, ReservationSortCode> = {
+  consult: 'COUNSEL_DATE',
+  reserve: 'RESERVATION_DATE',
+}
+
+const emptyCounts: Record<ReservationStatus, number> = {
+  pending: 0,
+  approved: 0,
+  rejected: 0,
+}
+
 export function NoticeReservationsPage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [active, setActive] = useState<ReservationStatus>('pending')
   const [query, setQuery] = useState('')
+  const [debouncedKeyword, setDebouncedKeyword] = useState('')
   const [sort, setSort] = useState<ReservationSort>('consult')
   const [page, setPage] = useState(1)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [accessDialogOpen, setAccessDialogOpen] = useState(false)
 
-  const { data: allReservations = mockReservations } = useQuery({
-    queryKey: ['reservations'],
-    queryFn: getMockReservations,
-    placeholderData: mockReservations,
-  })
-  const { data: staff = mockStaff } = useQuery({
-    queryKey: ['staff'],
-    queryFn: getMockStaff,
-    placeholderData: mockStaff,
-  })
-  const grantMutation = useMutation({
-    mutationFn: (input: GrantAccessInput) => grantMockReservationAccess(input),
-  })
-
-  const counts = useMemo(
-    () =>
-      reservationStatuses.reduce(
-        (acc, status) => {
-          acc[status] = allReservations.filter(
-            (reservation) => reservation.status === status,
-          ).length
-          return acc
-        },
-        { pending: 0, approved: 0, rejected: 0 } as Record<
-          ReservationStatus,
-          number
-        >,
-      ),
-    [allReservations],
-  )
-
-  const filtered = useMemo(() => {
-    const byStatus = allReservations.filter(
-      (reservation) => reservation.status === active,
+  // 입력값(query)은 즉시 반영하되, 실제 조회 키워드는 디바운스해 타이핑 중 요청을 막는다.
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setDebouncedKeyword(query.trim()),
+      SEARCH_DEBOUNCE_MS,
     )
-    const keyword = query.trim().toLowerCase()
-    const matched = keyword
-      ? byStatus.filter((reservation) =>
-          `${reservation.groupName} ${reservation.region}`
-            .toLowerCase()
-            .includes(keyword),
-        )
-      : byStatus
+    return () => clearTimeout(timer)
+  }, [query])
 
-    const dateOf = (reservation: Reservation) =>
-      sort === 'consult' ? reservation.consultDate : reservation.reserveDate
-    return [...matched].sort((a, b) => dateOf(b).localeCompare(dateOf(a)))
-  }, [active, allReservations, query, sort])
+  // 서버 사이드 조회: 상태 필터·검색·정렬·페이지를 파라미터로 전달한다.
+  const { data, isError } = useQuery({
+    queryKey: ['reservations', 'list', { status: active, title: debouncedKeyword, sort, page }],
+    queryFn: () =>
+      getAdminReservations({
+        status: reservationStatusToCode[active],
+        title: debouncedKeyword || undefined,
+        sort: sortToCode[sort],
+        page: page - 1,
+        size: PAGE_SIZE,
+      }),
+    placeholderData: (previousData) => previousData,
+  })
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  // 상태 카운트는 필터와 무관하게 항상 전체 기준(서버 응답값).
+  const counts = data?.counts ?? emptyCounts
+  const pageReservations = data?.reservations ?? []
+  const pageCount = Math.max(1, data?.totalPages ?? 1)
 
-  // 상태·검색·정렬이 바뀌면 첫 페이지로 되돌린다(렌더 중 상태 보정).
-  const filterKey = `${active} ${query} ${sort}`
+  // 상태·검색·정렬이 바뀌면 첫 페이지로 되돌린다.
+  const filterKey = `${active} ${debouncedKeyword} ${sort}`
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
   if (prevFilterKey !== filterKey) {
     setPrevFilterKey(filterKey)
     setPage(1)
   }
-  // 상태 탭이 바뀌면 이전 상태의 선택이 남지 않도록 선택을 초기화한다.
-  const [prevActive, setPrevActive] = useState(active)
-  if (prevActive !== active) {
-    setPrevActive(active)
-    setSelectedIds([])
-  }
   const currentPage = Math.min(page, pageCount)
-
-  const pageReservations = useMemo(
-    () =>
-      filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [filtered, currentPage],
-  )
-
-  const displayedIds = pageReservations.map((reservation) => reservation.id)
-  const allDisplayedSelected =
-    displayedIds.length > 0 &&
-    displayedIds.every((id) => selectedIds.includes(id))
-
-  function toggle(id: string) {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((selectedId) => selectedId !== id)
-        : [...current, id],
-    )
-  }
-
-  function toggleAll() {
-    setSelectedIds((current) =>
-      allDisplayedSelected
-        ? current.filter((id) => !displayedIds.includes(id))
-        : [...new Set([...current, ...displayedIds])],
-    )
-  }
-
-  function handleGrantConfirm(staffIds: string[]) {
-    grantMutation.mutate(
-      { reservationIds: selectedIds, staffIds },
-      {
-        onSuccess: async () => {
-          await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-          setAccessDialogOpen(false)
-          setSelectedIds([])
-        },
-        // 실패 시 모달을 열어둔 채(재시도) 예외 모달로 알린다. onSuccess 정리 로직은 유지.
-        onError: () => {
-          setAccessDialogOpen(true)
-        },
-      },
-    )
-  }
-
-  const hasData = allReservations.length > 0
 
   return (
     <Page>
@@ -158,29 +88,29 @@ export function NoticeReservationsPage() {
           <Subtitle>토이빌리지의 단체 방문 일정을 모니터링</Subtitle>
         </Header>
 
+        {isError && (
+          <ErrorAlert role="alert">
+            단체예약을 불러오지 못했습니다. 다시 시도해 주세요.
+          </ErrorAlert>
+        )}
+
         <StatusRow>
           <ReservationStatusCards
             counts={counts}
             active={active}
             onSelect={setActive}
           />
-          {hasData && (
-            <GrantButton
-              type="button"
-              disabled={selectedIds.length === 0}
-              onClick={() => setAccessDialogOpen(true)}
-            >
-              페이지 권한주기
-            </GrantButton>
-          )}
+          <CreateButton
+            type="button"
+            onClick={() => navigate('/notices/reservations/create')}
+          >
+            단체예약 생성하기
+          </CreateButton>
         </StatusRow>
 
         <ReservationTable
           reservations={pageReservations}
           onRowClick={(id) => navigate(`/notices/reservations/${id}`)}
-          selectedIds={selectedIds}
-          onToggle={toggle}
-          onToggleAll={toggleAll}
           search={{
             value: query,
             onChange: setQuery,
@@ -195,27 +125,10 @@ export function NoticeReservationsPage() {
           }}
           pagination={{ page: currentPage, pageCount, onChange: setPage }}
           emptyLabel={
-            query.trim() ? '검색결과가 없습니다' : '아직 단체예약이 없습니다'
+            debouncedKeyword ? '검색결과가 없습니다' : '아직 단체예약이 없습니다'
           }
         />
       </Content>
-
-      {accessDialogOpen && (
-        <GrantReservationAccessDialog
-          reservationCount={selectedIds.length}
-          staff={staff}
-          pending={grantMutation.isPending}
-          onCancel={() => setAccessDialogOpen(false)}
-          onConfirm={handleGrantConfirm}
-        />
-      )}
-
-      {grantMutation.isError && (
-        <ErrorDialog
-          title="권한 부여에 실패했습니다"
-          onConfirm={() => grantMutation.reset()}
-        />
-      )}
     </Page>
   )
 }
@@ -254,6 +167,17 @@ const Subtitle = styled.p`
   line-height: 1.2;
 `
 
+const ErrorAlert = styled.div`
+  margin-top: 24px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+`
+
 const StatusRow = styled.div`
   display: flex;
   align-items: flex-end;
@@ -262,7 +186,7 @@ const StatusRow = styled.div`
   margin-top: 24px;
 `
 
-const GrantButton = styled.button`
+const CreateButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -277,11 +201,6 @@ const GrantButton = styled.button`
   font-size: 24px;
   font-weight: 600;
   line-height: 1.2;
-
-  &:disabled {
-    background: ${({ theme }) => theme.colors.textFaint};
-    cursor: default;
-  }
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.accent};

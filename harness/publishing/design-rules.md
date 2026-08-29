@@ -5,10 +5,11 @@ Figma 퍼블리싱 작업은 먼저 [`../shared/code-rules.md`](../shared/code-r
 ## 1. Figma 노드와 컴포넌트 경계
 
 - Figma `COMPONENT`는 코드 컴포넌트 경계 후보이다.
-- Figma `INSTANCE`는 기존 컴포넌트 재사용 위치이다.
+- Figma `INSTANCE`는 기존 컴포넌트 재사용 위치이다. **`INSTANCE`를 화면 파일 안에 인라인 styled로 다시 그리는 것은 금지**한다.
 - variant는 props 또는 상태 후보이다.
 - 일반 `FRAME`, `GROUP`, `TEXT`, `LINE`, `IMAGE-SVG`는 그 자체만으로 컴포넌트 경계가 아니다.
-- 대응되는 기존 저장소 컴포넌트가 있으면 재사용한다.
+- 대응되는 기존 저장소 컴포넌트가 있으면 재사용한다. 없으면 `shared/ui`(또는 적절한 계층)에 **공용 컴포넌트를 먼저 만들고** 재사용한다. 특히 같은 `INSTANCE`(예: 검색바)가 2곳 이상에 나오면 인라인 복제 대신 단일 공용 컴포넌트로 만든다.
+- 구현 전 `harness/artifacts/publishing/<feature>.component-map.md`의 `INSTANCE=재사용` 항목을 대조하는 것은 RUNBOOK ③의 blocking 게이트다.
 - Figma가 flat 구조라면 `specs/<feature>.spec.md`의 구조와 props 명세를 따른다.
 
 ## 2. 라이브 Figma가 시각 정보의 기준

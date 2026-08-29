@@ -22,3 +22,13 @@ export {
 } from './model/mock'
 export { ReservationTable } from './ui/ReservationTable'
 export { ReservationInfoCard } from './ui/ReservationInfoCard'
+export {
+  getAdminReservations,
+  reservationStatusToCode,
+} from './api/reservationApi'
+export type {
+  ReservationAdminListResult,
+  ReservationAdminQueryAllRequest,
+  ReservationSortCode,
+  ReservationStatusCode,
+} from './api/types'

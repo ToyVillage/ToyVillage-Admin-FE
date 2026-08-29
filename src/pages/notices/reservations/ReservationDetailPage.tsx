@@ -1,82 +1,117 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ReservationInfoCard,
-  getMockReservationAccess,
   getMockReservationDetail,
-  removeMockReservationAccess,
-  type RemoveAccessInput,
-  type Staff,
+  type ReservationDetail,
 } from '@/entities/reservation'
-import { ReservationAccessCard } from './ui/ReservationAccessCard'
+import {
+  ReservationForm,
+  clock24ToParts,
+  deleteReservationMock,
+  emptyReservationFormValue,
+  formatMoney,
+  mockAssignableStaff,
+  scrollToFirstError,
+  updateReservationMock,
+  usePermissionAssignment,
+  validateReservationForm,
+  type ReservationFormErrors,
+  type ReservationFormValue,
+} from '@/features/reservation-form'
+import { DeleteConfirmationDialog } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
-import { RemoveAccessConfirmDialog } from './ui/RemoveAccessConfirmDialog'
+
+// 조회한 상세 → 폼 값(mock 경계 매핑). 폼에만 있는 필드(사전답사 등)는 빈 값으로 둔다.
+// 초기값도 폼 입력 계약에 맞춰 서식한다: 금액 콤마, 시간은 24h→12h(raw 자릿수)+am/pm.
+function toFormValue(detail: ReservationDetail): ReservationFormValue {
+  const visit = clock24ToParts(detail.reserveTime)
+  const exit = clock24ToParts(detail.reserveTimeEnd)
+  return {
+    ...emptyReservationFormValue,
+    groupName: detail.groupName,
+    region: detail.regionDetail || detail.region,
+    counselDate: detail.consultDate,
+    reserverName: detail.reserverName,
+    representativeContact: detail.guideContact,
+    // 숫자 0(무료 입장료·0명 등)도 유효값이므로 truthy가 아닌 존재 여부로 판단한다.
+    headcount: detail.headcount != null ? String(detail.headcount) : '',
+    guideCount: detail.guideCount != null ? String(detail.guideCount) : '',
+    admissionFee:
+      detail.admissionFee != null
+        ? formatMoney(String(detail.admissionFee))
+        : '',
+    visitDate: detail.reserveDate,
+    visitTime: visit.time,
+    visitTimeAmPm: visit.ampm,
+    exitTime: exit.time,
+    exitTimeAmPm: exit.ampm,
+  }
+}
 
 export function ReservationDetailPage() {
   const { id = '' } = useParams()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [staffQuery, setStaffQuery] = useState('')
-  const [removalTarget, setRemovalTarget] = useState<Staff | null>(null)
 
-  const { data: reservation, isPending: reservationPending } = useQuery({
+  const [value, setValue] = useState<ReservationFormValue | null>(null)
+  const [errors, setErrors] = useState<ReservationFormErrors>({})
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  // 수정 페이지는 배정팀이 채워진 상태로 보이도록 mock 시드(백엔드 배정 후보 명세 전까지).
+  const permission = usePermissionAssignment(mockAssignableStaff, ['a1', 'a2'])
+
+  const { data: reservation, isPending } = useQuery({
     queryKey: ['reservations', id],
     queryFn: () => getMockReservationDetail(id),
     enabled: Boolean(id),
+    retry: false,
   })
 
-  const { data: accessStaff = [] } = useQuery({
-    queryKey: ['reservations', id, 'access'],
-    queryFn: () => getMockReservationAccess(id),
-    enabled: Boolean(id),
-  })
+  // 조회 결과가 처음 도착하면 폼을 1회 초기화한다(이후 사용자 편집 유지).
+  const [hydratedId, setHydratedId] = useState<string | null>(null)
+  if (reservation && hydratedId !== id) {
+    setHydratedId(id)
+    setValue(toFormValue(reservation))
+  }
 
-  const removeMutation = useMutation({
-    mutationFn: (input: RemoveAccessInput) => removeMockReservationAccess(input),
+  const saveMutation = useMutation({
+    mutationFn: (next: ReservationFormValue) =>
+      updateReservationMock(id, next, permission.assignedIds),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['reservations', id, 'access'],
-      })
-      setRemovalTarget(null)
+      await queryClient.invalidateQueries({ queryKey: ['reservations'] })
+      navigate('/notices/reservations')
+    },
+  })
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteReservationMock(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['reservations'] })
+      navigate('/notices/reservations')
     },
   })
 
-  const filteredStaff = useMemo(() => {
-    const keyword = staffQuery.trim().toLowerCase()
-    if (!keyword) return accessStaff
-    return accessStaff.filter((member) =>
-      member.name.toLowerCase().includes(keyword),
-    )
-  }, [accessStaff, staffQuery])
+  const formValue = value ?? emptyReservationFormValue
 
-  function requestRemove(staffId: string) {
-    const target = accessStaff.find((member) => member.id === staffId)
-    if (target) setRemovalTarget(target)
-  }
-
-  function confirmRemove() {
-    if (removalTarget) {
-      removeMutation.mutate({ reservationId: id, staffId: removalTarget.id })
+  function handleSave() {
+    const nextErrors = validateReservationForm(formValue)
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length === 0) {
+      saveMutation.mutate(formValue)
+    } else {
+      scrollToFirstError()
     }
   }
 
-  if (reservationPending) {
+  // 조회가 끝났는데 데이터가 없을 때만 미조회 상태(로딩 중에는 빈 폼 유지).
+  if (!isPending && !reservation) {
     return (
-      <StatePage>
-        <StateCard role="status">예약 정보를 불러오는 중입니다.</StateCard>
-      </StatePage>
-    )
-  }
-
-  if (!reservation) {
-    return (
-      <StatePage>
-        <StateCard>
-          <StateTitle>예약을 찾을 수 없습니다.</StateTitle>
+      <Page>
+        <Content>
           <ReservationBackLink />
-        </StateCard>
-      </StatePage>
+          <NotFound>예약을 찾을 수 없습니다.</NotFound>
+        </Content>
+      </Page>
     )
   }
 
@@ -84,23 +119,42 @@ export function ReservationDetailPage() {
     <Page>
       <Content>
         <ReservationBackLink />
-        <Cards>
-          <ReservationInfoCard reservation={reservation} />
-          <ReservationAccessCard
-            staff={filteredStaff}
-            query={staffQuery}
-            onQueryChange={setStaffQuery}
-            removing={removeMutation.isPending}
-            onRemove={requestRemove}
-          />
-        </Cards>
+        <ReservationForm
+          value={formValue}
+          onChange={setValue}
+          errors={errors}
+          permission={{
+            query: permission.query,
+            onQueryChange: permission.setQuery,
+            assigned: permission.assigned,
+            available: permission.available,
+            onAdd: permission.add,
+            onCancel: permission.cancel,
+          }}
+        />
+        <Actions>
+          <DeleteButton
+            type="button"
+            disabled={deleteMutation.isPending}
+            onClick={() => setDeleteOpen(true)}
+          >
+            삭제하기
+          </DeleteButton>
+          <SaveButton
+            type="button"
+            disabled={saveMutation.isPending}
+            onClick={handleSave}
+          >
+            저장하기
+          </SaveButton>
+        </Actions>
       </Content>
 
-      {removalTarget && (
-        <RemoveAccessConfirmDialog
-          pending={removeMutation.isPending}
-          onCancel={() => setRemovalTarget(null)}
-          onConfirm={confirmRemove}
+      {deleteOpen && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={() => setDeleteOpen(false)}
+          onConfirm={() => deleteMutation.mutate()}
         />
       )}
     </Page>
@@ -109,7 +163,7 @@ export function ReservationDetailPage() {
 
 const Page = styled.main`
   min-height: 100vh;
-  padding: 0 32px 66px;
+  padding: 0 32px 480px;
   background: ${({ theme }) => theme.colors.background};
   font-family: ${({ theme }) => theme.font.body};
 `
@@ -121,50 +175,64 @@ const Content = styled.div`
   gap: 32px;
   margin: 0 auto;
   padding-top: 76px;
-
-  @media (max-width: 980px) {
-    padding-top: 88px;
-  }
 `
 
-const Cards = styled.div`
+const Actions = styled.div`
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
-
-  @media (max-width: 980px) {
-    flex-direction: column;
-
-    & > * {
-      width: 100%;
-    }
-  }
+  justify-content: flex-end;
+  gap: 16px;
 `
 
-const StatePage = styled.main`
-  display: grid;
-  min-height: 100vh;
-  padding: 32px;
-  place-items: center;
-  background: ${({ theme }) => theme.colors.background};
-  font-family: ${({ theme }) => theme.font.body};
-`
-
-const StateCard = styled.section`
-  display: flex;
-  width: min(100%, 560px);
-  flex-direction: column;
-  gap: 24px;
-  padding: 48px;
-  border-radius: 20px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textStrong};
-  text-align: center;
-`
-
-const StateTitle = styled.h1`
-  margin: 0;
-  font-size: 28px;
+const baseAction = `
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 24px;
   font-weight: 600;
   line-height: 1.2;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  }
+
+  &:disabled {
+    cursor: wait;
+  }
+`
+
+// 삭제하기: 빨강 아웃라인(bg gray/10) — hover 그림자, disabled 회색.
+const DeleteButton = styled.button`
+  ${baseAction}
+  border: 2px solid ${({ theme }) => theme.colors.danger};
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.danger};
+
+  &:disabled {
+    border-color: ${({ theme }) => theme.colors.textGuide};
+    color: ${({ theme }) => theme.colors.textGuide};
+  }
+`
+
+const SaveButton = styled.button`
+  ${baseAction}
+  border: 0;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
+
+  &:disabled {
+    background: ${({ theme }) => theme.colors.textGuide};
+  }
+`
+
+const NotFound = styled.p`
+  margin: 48px 0 0;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 28px;
+  font-weight: 600;
+  text-align: center;
 `
