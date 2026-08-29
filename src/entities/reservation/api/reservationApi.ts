@@ -6,6 +6,7 @@ import type {
   ReservationAdminQueryAllRequest,
   ReservationAdminQueryAllResponse,
   ReservationStatusCode,
+  ReservationStatusLabel,
 } from './types'
 
 // UI 상태 ↔ 서버 상태 코드 매핑(요청 status 파라미터).
@@ -18,11 +19,21 @@ export const reservationStatusToCode: Record<
   rejected: 'VISIT_COMPLETED',
 }
 
-// 응답 status 라벨 → UI 상태(카드/필터).
-const labelToStatus: Record<string, ReservationStatus> = {
+// 응답 status 라벨 → UI 상태(카드/필터). 키는 Contract enum allowedValues와 정확히 일치.
+const labelToStatus: Record<ReservationStatusLabel, ReservationStatus> = {
   '사전답사 전': 'pending',
   '사전답사 완료': 'approved',
   '방문 완료': 'rejected',
+}
+
+function isReservationStatusLabel(
+  value: unknown,
+): value is ReservationStatusLabel {
+  return (
+    value === '사전답사 전' ||
+    value === '사전답사 완료' ||
+    value === '방문 완료'
+  )
 }
 
 export async function getAdminReservations(
@@ -50,7 +61,7 @@ export async function getAdminReservations(
 function toReservation(item: ReservationAdminQueryAllItem): Reservation {
   return {
     id: String(item.id),
-    status: labelToStatus[item.status] ?? 'pending',
+    status: labelToStatus[item.status],
     consultDate: formatDate(item.counselDate),
     reserveDate: formatDate(item.reservationDate),
     reserveTime: formatTime(item.reservationTime),
@@ -113,6 +124,6 @@ function isReservationAdminQueryAllItem(
     typeof item.reservationTime === 'string' &&
     typeof item.location === 'string' &&
     typeof item.count === 'number' &&
-    typeof item.status === 'string'
+    isReservationStatusLabel(item.status)
   )
 }

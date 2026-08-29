@@ -9,6 +9,12 @@ export type ReservationStatusCode =
 // 서버 정렬 코드. 두 기준 모두 내림차순.
 export type ReservationSortCode = 'COUNSEL_DATE' | 'RESERVATION_DATE'
 
+// 응답 status 라벨(Contract enum allowedValues). 이외 값은 계약 위반이다.
+export type ReservationStatusLabel =
+  | '사전답사 전'
+  | '사전답사 완료'
+  | '방문 완료'
+
 // GET /reservation (관리자 전체 조회) 요청 파라미터.
 export interface ReservationAdminQueryAllRequest {
   status?: ReservationStatusCode
@@ -27,7 +33,7 @@ export interface ReservationAdminQueryAllItem {
   reservationTime: string
   location: string
   count: number
-  status: string
+  status: ReservationStatusLabel
 }
 
 export interface ReservationAdminQueryAllPage {
