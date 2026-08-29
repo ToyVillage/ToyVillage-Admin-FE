@@ -1,15 +1,15 @@
 {
   "feature": "reservations-query",
   "apiId": "RESERVATION_ADMIN_QUERY",
-  "approvedAt": "2026-08-10T11:46:09.319Z",
+  "approvedAt": "2026-08-29T06:32:12.456Z",
   "approvedBy": "kimjihwan8",
   "taskSpecHash": "978f49fa9e7ba8e6bbfd978f8e78657e2fff60af07b53cabd20f6b1dbea8bedd",
   "contractHash": "b8d9ff8d1a72d852ab47c0979cb1dd25cef6b0f6c31d1860ad55f7e3ae5051ee",
   "contractMarkdownHash": "0c50797307b6d386724b6fb8332b0c9ac347fe3daf941cd3a71800327a417f74",
   "planHash": "6b2419ed582d36709cd829fabd64603bdef4ef90253ffe994872ed34837c40bf",
-  "scenarioHash": "38b5e9279d1630923c7624070d6b01c13bdc2c8e16508ef8a647f6d4090c6847",
-  "testHash": "d084c2d6ba08ec8fff2b6530201752c065da5faffd86c2384b2b53a8d60957f1",
+  "scenarioHash": "558961a18b1344ca430aac6d1e90f4db0401e4ce3eb802d42f2d1d4fc50b051e",
+  "testHash": "64efe6af6f59d0fce03466a930015fb74d7ccad0d5312c48c3ffccdd6ab45477",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-08-10T11:46:09.761Z"
+  "testApprovedAt": "2026-08-29T06:32:12.657Z"
 }
