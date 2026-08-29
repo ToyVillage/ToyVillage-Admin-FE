@@ -1,0 +1,15 @@
+{
+  "feature": "close-dat-update",
+  "apiId": "CLOSE_DAT_UPDATE",
+  "approvedAt": "2026-07-31T08:12:44.304Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "ae3305b9a19f29cc5df1872b16878c40d7831340d20362a06b381c0e0db3a7be",
+  "contractHash": "2db6a6a3ac9772ac3b3d80bc7c63a82e5f4cc59783e9d10282d755b1f62ed9f7",
+  "contractMarkdownHash": "5ed096ad0d6707e8671102d081d64eea01ac055e85eccbb8563b062bd53f970d",
+  "planHash": "e03b4282073500d20a7c015c9627808168680427e8025ad9bb222d3d28366004",
+  "scenarioHash": "1623dbe130e64e037321d73cc1ba946e475e2cf7ef073631f1e7e255782b188f",
+  "testHash": "af9b559a2c2d395895ffa10e89150ef24a79f52e9642885c3d3e5b1c03f6b439",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-07-31T08:12:44.885Z"
+}

@@ -3,14 +3,14 @@ import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
-  createMockCloseSchedule,
-  deleteMockCloseSchedule,
-  updateMockCloseSchedule,
+  createCloseSchedule,
+  deleteCloseSchedule,
+  updateCloseSchedule,
   type CloseSchedule,
   type CreateCloseScheduleInput,
 } from '@/entities/close-schedule'
 import { DeleteConfirmationDialog, ValidationDialog } from '@/shared/ui'
-import { CloseScheduleDateField } from './CloseScheduleDateField'
+import { DateField } from '@/shared/ui'
 
 type ValidationError = 'date' | 'title' | 'range'
 
@@ -43,13 +43,20 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteError, setDeleteError] = useState(false)
   const mutation = useMutation({
-    mutationFn: (input: CreateCloseScheduleInput) =>
-      initialSchedule
-        ? updateMockCloseSchedule({ id: initialSchedule.id, ...input })
-        : createMockCloseSchedule(input),
+    mutationFn: async (input: CreateCloseScheduleInput) => {
+      if (initialSchedule) {
+        await updateCloseSchedule({
+          id: Number(initialSchedule.id),
+          input,
+        })
+        return
+      }
+
+      await createCloseSchedule(input)
+    },
   })
   const isEditing = Boolean(initialSchedule)
-  const deleteMutation = useMutation({ mutationFn: deleteMockCloseSchedule })
+  const deleteMutation = useMutation({ mutationFn: deleteCloseSchedule })
   const isPending = mutation.isPending || deleteMutation.isPending
 
   const handleConfirm = useCallback(() => {
@@ -80,18 +87,32 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
     if (!initialSchedule || deletingRef.current) return
 
     deletingRef.current = true
-    deleteMutation.mutate(initialSchedule.id, {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['close-schedules'] })
-        navigate('/notices/guide')
+    deleteMutation.mutate(
+      { id: Number(initialSchedule.id) },
+      {
+        onSuccess: async () => {
+          queryClient.setQueryData<CloseSchedule[]>(
+            ['close-schedules'],
+            (schedules) =>
+              schedules?.filter(
+                (schedule) => schedule.id !== initialSchedule.id,
+              ),
+          )
+          queryClient.removeQueries({
+            queryKey: ['close-schedules', initialSchedule.id],
+            exact: true,
+          })
+          await queryClient.invalidateQueries({ queryKey: ['close-schedules'] })
+          navigate('/notices/guide')
+        },
+        onError: () => {
+          deletingRef.current = false
+          setDeleteError(true)
+          setDeleteDialogOpen(false)
+          requestAnimationFrame(() => deleteButtonRef.current?.focus())
+        },
       },
-      onError: () => {
-        deletingRef.current = false
-        setDeleteError(true)
-        setDeleteDialogOpen(false)
-        requestAnimationFrame(() => deleteButtonRef.current?.focus())
-      },
-    })
+    )
   }, [deleteMutation, initialSchedule, navigate, queryClient])
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -135,7 +156,7 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
   return (
     <Form onSubmit={handleSubmit} noValidate>
       <DateFields>
-        <CloseScheduleDateField
+        <DateField
           ref={startDateRef}
           id="close-schedule-start-date"
           label="시작일"
@@ -143,7 +164,7 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
           onChange={setStartDate}
           onTabForward={() => endDateRef.current?.focus()}
         />
-        <CloseScheduleDateField
+        <DateField
           ref={endDateRef}
           id="close-schedule-end-date"
           label="종료일"

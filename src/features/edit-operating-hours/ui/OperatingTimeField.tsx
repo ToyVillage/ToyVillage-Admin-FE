@@ -11,16 +11,18 @@ export interface TimeParts {
 interface OperatingTimeFieldProps {
   label: string
   value: TimeParts
-  onChange: (value: TimeParts) => void
+  onChange?: (value: TimeParts) => void
+  readOnly?: boolean
 }
 
 export function OperatingTimeField({
   label,
   value,
   onChange,
+  readOnly = false,
 }: OperatingTimeFieldProps) {
   function updateNumber(part: 'hour' | 'minute', nextValue: string) {
-    onChange({
+    onChange?.({
       ...value,
       [part]: nextValue.replace(/\D/g, '').slice(0, 2),
     })
@@ -29,17 +31,18 @@ export function OperatingTimeField({
   function normalizeNumber(part: 'hour' | 'minute') {
     const nextValue = value[part]
     if (!nextValue) return
-    onChange({ ...value, [part]: nextValue.padStart(2, '0') })
+    onChange?.({ ...value, [part]: nextValue.padStart(2, '0') })
   }
 
   return (
-    <Card role="group" aria-label={label}>
+    <Card role="group" aria-label={label} aria-readonly={readOnly}>
       <Label>{label}</Label>
       <TimeRow>
         <TimeInput
           aria-label={`${label} 시`}
           inputMode="numeric"
           maxLength={2}
+          readOnly={readOnly}
           value={value.hour}
           onBlur={() => normalizeNumber('hour')}
           onChange={(event) => updateNumber('hour', event.target.value)}
@@ -48,6 +51,7 @@ export function OperatingTimeField({
           aria-label={`${label} 분`}
           inputMode="numeric"
           maxLength={2}
+          readOnly={readOnly}
           value={value.minute}
           onBlur={() => normalizeNumber('minute')}
           onChange={(event) => updateNumber('minute', event.target.value)}
@@ -57,7 +61,8 @@ export function OperatingTimeField({
             type="button"
             aria-pressed={value.meridiem === 'AM'}
             $selected={value.meridiem === 'AM'}
-            onClick={() => onChange({ ...value, meridiem: 'AM' })}
+            disabled={readOnly}
+            onClick={() => onChange?.({ ...value, meridiem: 'AM' })}
           >
             오전
           </PeriodButton>
@@ -65,7 +70,8 @@ export function OperatingTimeField({
             type="button"
             aria-pressed={value.meridiem === 'PM'}
             $selected={value.meridiem === 'PM'}
-            onClick={() => onChange({ ...value, meridiem: 'PM' })}
+            disabled={readOnly}
+            onClick={() => onChange?.({ ...value, meridiem: 'PM' })}
           >
             오후
           </PeriodButton>
@@ -160,5 +166,9 @@ const PeriodButton = styled.button<{ $selected: boolean }>`
   &:focus-visible {
     outline: 4px solid ${({ theme }) => theme.colors.primary};
     outline-offset: calc(-1 * 4px);
+  }
+
+  &:disabled {
+    cursor: default;
   }
 `

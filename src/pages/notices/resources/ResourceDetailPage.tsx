@@ -8,7 +8,7 @@ import {
   useParams,
 } from 'react-router-dom'
 import { getDocument } from '@/entities/resource'
-import { LeaveConfirmationDialog } from '@/features/create-notice'
+import { LeaveConfirmationDialog } from '@/shared/ui'
 import { ResourceForm } from '@/features/create-resource'
 
 export function ResourceDetailPage() {

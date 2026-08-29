@@ -47,8 +47,9 @@
 ### ③ 퍼블리싱 (AI)
 
 - `gate-check.mjs <feature>` **먼저** 통과(sentinel 존재) → 실패면 하드 STOP.
+- **컴포넌트맵 대조 게이트 (코드 작성 전, blocking):** 구현을 시작하기 전에 반드시 해당 feature의 `harness/artifacts/publishing/<feature>.component-map.md`를 **열어서** 읽는다. `INSTANCE`로 매핑된 항목(재사용/재사용 검토)은 **인라인으로 다시 그리지 말고** 대응하는 저장소 컴포넌트를 재사용한다. 대응 컴포넌트가 없으면 `shared/ui`(또는 적절한 계층)에 **먼저 공용 컴포넌트를 만들고** 그것을 사용한다. 계획 단계(①)가 적어둔 맵을 구현 단계에서 확인 없이 무시하는 것이 과거 실패 원인이므로, 이 대조를 건너뛰지 않는다.
 - `prompts/publish.md` + `design-rules.md` + `../shared/code-rules.md` + 확정 의미 토큰 + 행동명세 기준으로 FSD-lite 컴포넌트 생성. px·rgba 등 구현값은 Emotion에 직접 작성한다.
-- 기준은 **행동명세 프롬프트**(Figma만으로 판단 금지). 컴포넌트 경계는 design-rules §7.
+- 기준은 **행동명세 프롬프트**(Figma만으로 판단 금지). 컴포넌트 경계는 design-rules §1.
 
 ### ④ 자동검증 (인너 루프)
 

@@ -5,6 +5,7 @@ import {
   RouterProvider,
 } from 'react-router-dom'
 import { HomePage } from '@/pages/home'
+import { LoginPage } from '@/pages/login'
 import {
   CreateNoticePage,
   NoticeDetailPage,
@@ -22,9 +23,19 @@ import {
   OperatingHoursPage,
 } from '@/pages/notices/guide'
 import {
+  CreateReservationPage,
   NoticeReservationsPage,
   ReservationDetailPage,
 } from '@/pages/notices/reservations'
+import {
+  CreateTaskPage,
+  TaskDetailPage,
+  TaskListPage,
+} from '@/pages/tasks'
+import {
+  TaskReportDetailPage,
+  TaskReportListPage,
+} from '@/pages/task-reports'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 
 function AppLayout() {
@@ -38,6 +49,7 @@ function AppLayout() {
 }
 
 const router = createBrowserRouter([
+  { path: '/login', element: <LoginPage /> },
   {
     element: <AppLayout />,
     children: [
@@ -76,9 +88,18 @@ const router = createBrowserRouter([
         element: <NoticeReservationsPage />,
       },
       {
+        path: '/notices/reservations/create',
+        element: <CreateReservationPage />,
+      },
+      {
         path: '/notices/reservations/:id',
         element: <ReservationDetailPage />,
       },
+      { path: '/tasks', element: <TaskListPage /> },
+      { path: '/tasks/create', element: <CreateTaskPage /> },
+      { path: '/tasks/:id', element: <TaskDetailPage /> },
+      { path: '/task-reports', element: <TaskReportListPage /> },
+      { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
     ],
   },
 ])

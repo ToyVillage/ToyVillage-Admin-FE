@@ -25,10 +25,6 @@ export {
   isReservationNotFoundError,
   type ReservationQueryRequest,
 } from './api/getReservation'
-export {
-  getReservationsAdmin,
-  type ReservationAdminListResult,
-} from './api/getReservationsAdmin'
 export { getReservationPermissions } from './api/getReservationPermissions'
 export {
   deleteReservationPermission,
@@ -36,3 +32,13 @@ export {
 } from './api/deleteReservationPermission'
 export { ReservationTable } from './ui/ReservationTable'
 export { ReservationInfoCard } from './ui/ReservationInfoCard'
+export {
+  getAdminReservations,
+  reservationStatusToCode,
+} from './api/reservationApi'
+export type {
+  ReservationAdminListResult,
+  ReservationAdminQueryAllRequest,
+  ReservationSortCode,
+  ReservationStatusCode,
+} from './api/types'

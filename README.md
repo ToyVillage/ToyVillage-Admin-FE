@@ -1,4 +1,4 @@
-# ToyVillage App FE
+# ToyVillage Admin FE
 
 React + TypeScript + Vite + Emotion + TanStack Query + Zustand + React Router, FSD-lite 구조.
 

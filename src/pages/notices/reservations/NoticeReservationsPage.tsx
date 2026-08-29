@@ -1,17 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   ReservationTable,
-  getReservationsAdmin,
-  type Reservation,
+  getAdminReservations,
+  reservationStatusToCode,
+  type ReservationSortCode,
   type ReservationStatus,
 } from '@/entities/reservation'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 
-// 한 페이지에 노출할 예약 수(Figma list 기준). 공지/자료와 동일.
-const PAGE_SIZE = 4
+// 한 페이지에 노출할 예약 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
+const PAGE_SIZE = 10
+// 검색 입력 디바운스(ms). 입력이 멈춘 뒤에만 조회 요청을 보낸다.
+const SEARCH_DEBOUNCE_MS = 200
 
 type ReservationSort = 'consult' | 'reserve'
 
@@ -20,59 +23,62 @@ const sortOptions = [
   { value: 'reserve', label: '예약일순' },
 ]
 
-const emptyCounts = { pending: 0, approved: 0, rejected: 0 }
-// 안정적인 참조(빈 결과)로 useMemo 의존성이 매 렌더 바뀌지 않게 한다.
-const emptyReservations: Reservation[] = []
+// UI 정렬 값 → 서버 정렬 코드.
+const sortToCode: Record<ReservationSort, ReservationSortCode> = {
+  consult: 'COUNSEL_DATE',
+  reserve: 'RESERVATION_DATE',
+}
+
+const emptyCounts: Record<ReservationStatus, number> = {
+  pending: 0,
+  approved: 0,
+  rejected: 0,
+}
 
 export function NoticeReservationsPage() {
   const navigate = useNavigate()
   const [active, setActive] = useState<ReservationStatus>('pending')
   const [query, setQuery] = useState('')
+  const [debouncedKeyword, setDebouncedKeyword] = useState('')
   const [sort, setSort] = useState<ReservationSort>('consult')
   const [page, setPage] = useState(1)
 
-  const { data } = useQuery({
-    queryKey: ['reservations'],
-    queryFn: getReservationsAdmin,
+  // 입력값(query)은 즉시 반영하되, 실제 조회 키워드는 디바운스해 타이핑 중 요청을 막는다.
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setDebouncedKeyword(query.trim()),
+      SEARCH_DEBOUNCE_MS,
+    )
+    return () => clearTimeout(timer)
+  }, [query])
+
+  // 서버 사이드 조회: 상태 필터·검색·정렬·페이지를 파라미터로 전달한다.
+  const { data, isError } = useQuery({
+    queryKey: ['reservations', 'list', { status: active, title: debouncedKeyword, sort, page }],
+    queryFn: () =>
+      getAdminReservations({
+        status: reservationStatusToCode[active],
+        title: debouncedKeyword || undefined,
+        sort: sortToCode[sort],
+        page: page - 1,
+        size: PAGE_SIZE,
+      }),
+    placeholderData: (previousData) => previousData,
   })
 
-  const allReservations = data?.reservations ?? emptyReservations
+  // 상태 카운트는 필터와 무관하게 항상 전체 기준(서버 응답값).
   const counts = data?.counts ?? emptyCounts
+  const pageReservations = data?.reservations ?? []
+  const pageCount = Math.max(1, data?.totalPages ?? 1)
 
-  const filtered = useMemo(() => {
-    const byStatus = allReservations.filter(
-      (reservation) => reservation.status === active,
-    )
-    const keyword = query.trim().toLowerCase()
-    const matched = keyword
-      ? byStatus.filter((reservation) =>
-          `${reservation.groupName} ${reservation.region}`
-            .toLowerCase()
-            .includes(keyword),
-        )
-      : byStatus
-
-    const dateOf = (reservation: Reservation) =>
-      sort === 'consult' ? reservation.consultDate : reservation.reserveDate
-    return [...matched].sort((a, b) => dateOf(b).localeCompare(dateOf(a)))
-  }, [active, allReservations, query, sort])
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-
-  // 상태·검색·정렬이 바뀌면 첫 페이지로 되돌린다(렌더 중 상태 보정).
-  const filterKey = `${active} ${query} ${sort}`
+  // 상태·검색·정렬이 바뀌면 첫 페이지로 되돌린다.
+  const filterKey = `${active} ${debouncedKeyword} ${sort}`
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
   if (prevFilterKey !== filterKey) {
     setPrevFilterKey(filterKey)
     setPage(1)
   }
   const currentPage = Math.min(page, pageCount)
-
-  const pageReservations = useMemo(
-    () =>
-      filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [filtered, currentPage],
-  )
 
   return (
     <Page>
@@ -81,6 +87,12 @@ export function NoticeReservationsPage() {
           <Title>단체예약 현황</Title>
           <Subtitle>토이빌리지의 단체 방문 일정을 모니터링</Subtitle>
         </Header>
+
+        {isError && (
+          <ErrorAlert role="alert">
+            단체예약을 불러오지 못했습니다. 다시 시도해 주세요.
+          </ErrorAlert>
+        )}
 
         <StatusRow>
           <ReservationStatusCards
@@ -113,7 +125,7 @@ export function NoticeReservationsPage() {
           }}
           pagination={{ page: currentPage, pageCount, onChange: setPage }}
           emptyLabel={
-            query.trim() ? '검색결과가 없습니다' : '아직 단체예약이 없습니다'
+            debouncedKeyword ? '검색결과가 없습니다' : '아직 단체예약이 없습니다'
           }
         />
       </Content>
@@ -151,6 +163,17 @@ const Subtitle = styled.p`
   margin: 12px 0 0;
   color: ${({ theme }) => theme.colors.textGuide};
   font-size: 32px;
+  font-weight: 500;
+  line-height: 1.2;
+`
+
+const ErrorAlert = styled.div`
+  margin-top: 24px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
   font-weight: 500;
   line-height: 1.2;
 `
