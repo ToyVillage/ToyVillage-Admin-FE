@@ -30,6 +30,11 @@ export {
   type ReservationEmployeeQueryRequest,
   type ReservationEmployeeGroups,
 } from './api/getReservationEmployees'
+export {
+  createReservation,
+  type ReservationCreateRequest,
+  type ReservationCreateResponse,
+} from './api/createReservation'
 export { ReservationTable } from './ui/ReservationTable'
 export { ReservationInfoCard } from './ui/ReservationInfoCard'
 export {
