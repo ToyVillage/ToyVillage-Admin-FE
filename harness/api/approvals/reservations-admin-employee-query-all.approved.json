@@ -1,0 +1,15 @@
+{
+  "feature": "reservations-admin-employee-query-all",
+  "apiId": "RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL",
+  "approvedAt": "2026-08-29T08:02:18.034Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "030e22871d787dcfebe322b839e5ac7323accb06922e8273da10c64ff5d9b46a",
+  "contractHash": "268484c7b3325e12f3b1da19cf0cda0499eba8d861197135bd554884d23d8436",
+  "contractMarkdownHash": "2db168861e8d5b0326f5564b19fd14b9bbfc34c45ebf8d88fe6352bcdd46ca2e",
+  "planHash": "9f330663af8893dd72ee7c4a7970531e67a151b5d46ee5fdb79e278353a5f3dc",
+  "scenarioHash": "a62d27019edd4728b20c107c9aa8d12a2021723eb71f765de624f6d12c14a407",
+  "testHash": "575eb684d93b3fb00d48c4402310c6b3118847ade723e16c253baa760f1a1436",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-08-29T08:06:00.702Z"
+}
