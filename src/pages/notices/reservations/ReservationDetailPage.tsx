@@ -6,6 +6,7 @@ import {
   deleteReservation,
   getReservation,
   getReservationEmployees,
+  updateReservation,
   type ReservationDetail,
   type Staff,
 } from '@/entities/reservation'
@@ -15,7 +16,7 @@ import {
   emptyReservationFormValue,
   formatMoney,
   scrollToFirstError,
-  updateReservationMock,
+  toCreateReservationRequest,
   validateReservationForm,
   type ReservationFormErrors,
   type ReservationFormValue,
@@ -36,7 +37,7 @@ function serverMessage(error: unknown): string {
   ) {
     return (data as { message: string }).message
   }
-  return '단체예약 삭제에 실패했습니다. 다시 시도해 주세요.'
+  return '요청 처리에 실패했습니다. 다시 시도해 주세요.'
 }
 
 // 조회한 상세 → 폼 값(mock 경계 매핑). 폼에만 있는 필드(사전답사 등)는 빈 값으로 둔다.
@@ -74,7 +75,7 @@ export function ReservationDetailPage() {
   const [value, setValue] = useState<ReservationFormValue | null>(null)
   const [errors, setErrors] = useState<ReservationFormErrors>({})
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [deleteError, setDeleteError] = useState('')
+  const [actionError, setActionError] = useState('')
 
   // 권한 섹션 검색(디바운스 → 서버 name 파라미터).
   const [permissionQuery, setPermissionQuery] = useState('')
@@ -149,12 +150,21 @@ export function ReservationDetailPage() {
     setAssignedIds((prev) => (prev ?? []).filter((sid) => sid !== staffId))
 
   const saveMutation = useMutation({
-    mutationFn: (next: ReservationFormValue) =>
-      updateReservationMock(id, next, currentAssignedIds),
+    mutationFn: (next: ReservationFormValue) => {
+      // 배정 id는 직원 조회 API에서 온 실제 숫자 id → 그대로 전송(배정 통째 교체).
+      const appAdminIds = currentAssignedIds
+        .map((staffId) => Number(staffId))
+        .filter((n) => Number.isSafeInteger(n) && n > 0)
+      return updateReservation({
+        id: Number(id),
+        body: toCreateReservationRequest(next, appAdminIds),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reservations'] })
       navigate('/notices/reservations')
     },
+    onError: (error) => setActionError(serverMessage(error)),
   })
   const deleteMutation = useMutation({
     mutationFn: () => deleteReservation(Number(id)),
@@ -164,13 +174,14 @@ export function ReservationDetailPage() {
     },
     onError: (error) => {
       setDeleteOpen(false)
-      setDeleteError(serverMessage(error))
+      setActionError(serverMessage(error))
     },
   })
 
   const formValue = value ?? emptyReservationFormValue
 
   function handleSave() {
+    setActionError('')
     const nextErrors = validateReservationForm(formValue)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length === 0) {
@@ -196,7 +207,7 @@ export function ReservationDetailPage() {
     <Page>
       <Content>
         <ReservationBackLink />
-        {deleteError && <ErrorAlert role="alert">{deleteError}</ErrorAlert>}
+        {actionError && <ErrorAlert role="alert">{actionError}</ErrorAlert>}
         <ReservationForm
           value={formValue}
           onChange={setValue}
