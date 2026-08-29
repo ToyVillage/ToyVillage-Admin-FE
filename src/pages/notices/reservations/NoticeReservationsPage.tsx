@@ -14,7 +14,7 @@ import { ReservationStatusCards } from './ui/ReservationStatusCards'
 // 한 페이지에 노출할 예약 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
 const PAGE_SIZE = 10
 // 검색 입력 디바운스(ms). 입력이 멈춘 뒤에만 조회 요청을 보낸다.
-const SEARCH_DEBOUNCE_MS = 200
+const SEARCH_DEBOUNCE_MS = 120
 
 type ReservationSort = 'consult' | 'reserve'
 
@@ -80,6 +80,15 @@ export function NoticeReservationsPage() {
   }
   const currentPage = Math.min(page, pageCount)
 
+  // 상태 필터를 바꾸면 검색어를 초기화한다(다른 상태에서 이전 검색어로 빈 결과가 뜨는 혼란 방지).
+  function handleStatusSelect(next: ReservationStatus) {
+    if (next !== active) {
+      setQuery('')
+      setDebouncedKeyword('')
+    }
+    setActive(next)
+  }
+
   return (
     <Page>
       <Content>
@@ -98,7 +107,7 @@ export function NoticeReservationsPage() {
           <ReservationStatusCards
             counts={counts}
             active={active}
-            onSelect={setActive}
+            onSelect={handleStatusSelect}
           />
           <CreateButton
             type="button"
