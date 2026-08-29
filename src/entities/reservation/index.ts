@@ -25,6 +25,11 @@ export {
   isReservationNotFoundError,
   type ReservationQueryRequest,
 } from './api/getReservation'
+export {
+  getReservationEmployees,
+  type ReservationEmployeeQueryRequest,
+  type ReservationEmployeeGroups,
+} from './api/getReservationEmployees'
 export { ReservationTable } from './ui/ReservationTable'
 export { ReservationInfoCard } from './ui/ReservationInfoCard'
 export {
