@@ -2977,9 +2977,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"toyvillage-app-fe@workspace:.":
+"toyvillage-admin-fe@workspace:.":
   version: 0.0.0-use.local
-  resolution: "toyvillage-app-fe@workspace:."
+  resolution: "toyvillage-admin-fe@workspace:."
   dependencies:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.1"
