@@ -3,6 +3,7 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
+  deleteReservation,
   getReservation,
   getReservationEmployees,
   type ReservationDetail,
@@ -11,7 +12,6 @@ import {
 import {
   ReservationForm,
   clock24ToParts,
-  deleteReservationMock,
   emptyReservationFormValue,
   formatMoney,
   scrollToFirstError,
@@ -25,6 +25,19 @@ import { ReservationBackLink } from './ui/ReservationBackLink'
 
 // 권한 검색 입력 디바운스(ms). 입력이 멈춘 뒤에만 서버 name 검색.
 const PERMISSION_SEARCH_DEBOUNCE_MS = 200
+
+// 서버 오류 응답에서 사용자용 message 를 뽑는다(없으면 기본 문구).
+function serverMessage(error: unknown): string {
+  const data = (error as { response?: { data?: unknown } })?.response?.data
+  if (
+    data &&
+    typeof data === 'object' &&
+    typeof (data as Record<string, unknown>).message === 'string'
+  ) {
+    return (data as { message: string }).message
+  }
+  return '단체예약 삭제에 실패했습니다. 다시 시도해 주세요.'
+}
 
 // 조회한 상세 → 폼 값(mock 경계 매핑). 폼에만 있는 필드(사전답사 등)는 빈 값으로 둔다.
 // 초기값도 폼 입력 계약에 맞춰 서식한다: 금액 콤마, 시간은 24h→12h(raw 자릿수)+am/pm.
@@ -61,6 +74,7 @@ export function ReservationDetailPage() {
   const [value, setValue] = useState<ReservationFormValue | null>(null)
   const [errors, setErrors] = useState<ReservationFormErrors>({})
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   // 권한 섹션 검색(디바운스 → 서버 name 파라미터).
   const [permissionQuery, setPermissionQuery] = useState('')
@@ -143,10 +157,14 @@ export function ReservationDetailPage() {
     },
   })
   const deleteMutation = useMutation({
-    mutationFn: () => deleteReservationMock(id),
+    mutationFn: () => deleteReservation(Number(id)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reservations'] })
       navigate('/notices/reservations')
+    },
+    onError: (error) => {
+      setDeleteOpen(false)
+      setDeleteError(serverMessage(error))
     },
   })
 
@@ -178,6 +196,7 @@ export function ReservationDetailPage() {
     <Page>
       <Content>
         <ReservationBackLink />
+        {deleteError && <ErrorAlert role="alert">{deleteError}</ErrorAlert>}
         <ReservationForm
           value={formValue}
           onChange={setValue}
@@ -234,6 +253,16 @@ const Content = styled.div`
   gap: 32px;
   margin: 0 auto;
   padding-top: 76px;
+`
+
+const ErrorAlert = styled.div`
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
 `
 
 const Actions = styled.div`
