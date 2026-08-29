@@ -7,9 +7,14 @@ export type {
   TaskStatus,
   UpdateTaskInput,
 } from './model/types'
+export { deleteTask } from './api/taskApi'
+export type {
+  TaskDeleteErrorResponse,
+  TaskDeleteRequest,
+  TaskDeleteResponse,
+} from './api/types'
 export {
   createMockTask,
-  deleteMockTask,
   deletedTaskStorageKey,
   findTaskAssignee,
   getMockTask,

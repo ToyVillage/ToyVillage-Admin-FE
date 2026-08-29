@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createMockTask,
-  deleteMockTask,
+  deleteTask,
   taskAssignees,
   taskVisibilityOptions,
   updateMockTask,
@@ -123,7 +123,7 @@ export function TaskForm({
   const deleteMutation = useMutation({
     mutationFn: () => {
       if (!initialTask) throw new Error('Task not found')
-      return deleteMockTask(initialTask.id)
+      return deleteTask({ id: Number(initialTask.id) })
     },
   })
 

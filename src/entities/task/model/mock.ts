@@ -13,12 +13,12 @@ export const deletedTaskStorageKey = 'toyvillage:tasks:deleted'
 
 // localStorage mock 은 즉시 끝나므로 진행 중 상태를 관찰할 수 없다.
 // 아래 두 키는 테스트 제어점이다. 실제 API 로 교체할 때 함께 제거한다.
-// - delay: 값(ms)만큼 완료를 늦춰 `저장 중`·`삭제 중` 상태를 유지시킨다.
+// - delay: 값(ms)만큼 완료를 늦춰 `저장 중` 상태를 유지시킨다.
 // - log: 요청이 실제로 몇 번 전송됐는지 확인한다.
 export const taskMutationDelayStorageKey = 'toyvillage:tasks:mutation-delay'
 export const taskMutationLogStorageKey = 'toyvillage:tasks:mutation-log'
 
-type TaskMutationKind = 'create' | 'update' | 'delete'
+type TaskMutationKind = 'create' | 'update'
 
 // 담당자 드롭다운 옵션. 목록 `담당자` 셀은 name, 드롭다운은 label 을 쓴다.
 export const taskAssignees: TaskAssignee[] = [
@@ -201,20 +201,6 @@ export async function updateMockTask({
 
   localStorage.setItem(taskStorageKey, JSON.stringify(nextTasks))
   return updatedTask
-}
-
-export async function deleteMockTask(id: string): Promise<void> {
-  await startMockMutation('delete')
-
-  const currentTask = await getMockTask(id)
-  if (!currentTask) throw new Error('Task not found')
-
-  const nextTasks = readStoredTasks().filter((task) => task.id !== id)
-  const deletedIds = readDeletedTaskIds()
-  deletedIds.add(id)
-
-  localStorage.setItem(taskStorageKey, JSON.stringify(nextTasks))
-  localStorage.setItem(deletedTaskStorageKey, JSON.stringify([...deletedIds]))
 }
 
 // 요청 시점을 기록한 뒤, 설정된 지연만큼 완료를 늦춘다.
