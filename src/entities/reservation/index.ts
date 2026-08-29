@@ -35,6 +35,10 @@ export {
   type ReservationCreateRequest,
   type ReservationCreateResponse,
 } from './api/createReservation'
+export {
+  deleteReservation,
+  type ReservationDeleteResponse,
+} from './api/deleteReservation'
 export { ReservationTable } from './ui/ReservationTable'
 export { ReservationInfoCard } from './ui/ReservationInfoCard'
 export {
