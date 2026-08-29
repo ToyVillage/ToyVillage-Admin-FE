@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test'
 
 // 승인된 시나리오(task-list.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않고 localStorage mock 만 사용한다.
+// 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않는다. 목록은 localStorage mock,
+// 삭제(S14)는 TASK_DELETE 연동 후 page.route() mock 을 사용한다.
 
 const deletedTaskStorageKey = 'toyvillage:tasks:deleted'
 const allMockTaskIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
@@ -146,6 +147,13 @@ test('S13: 완료기한 초과 표시', async ({ page }) => {
 })
 
 test('S14: 삭제 성공 토스트 표시', async ({ page }) => {
+  await page.route(/\/api\/tasks\/[^/?]+(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: '업무지시가 삭제되었습니다.' }),
+    })
+  })
   await page.goto('/tasks/1')
   await page.getByRole('button', { name: '삭제하기' }).click()
   await page

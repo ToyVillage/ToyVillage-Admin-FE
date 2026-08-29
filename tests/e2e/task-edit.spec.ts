@@ -2,11 +2,13 @@ import { expect, test, type Page } from '@playwright/test'
 
 // 승인된 시나리오(task-edit.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않고 localStorage mock 만 사용한다.
+// 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않는다. 저장은 localStorage mock,
+// 삭제는 TASK_DELETE 연동 후 page.route() mock 을 사용한다.
 
 const deletedTaskStorageKey = 'toyvillage:tasks:deleted'
 const mutationDelayStorageKey = 'toyvillage:tasks:mutation-delay'
 const mutationLogStorageKey = 'toyvillage:tasks:mutation-log'
+const taskDeleteApiPath = /\/api\/tasks\/[^/?]+(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -95,6 +97,7 @@ test('S7: 삭제 취소', async ({ page }) => {
 })
 
 test('S8: 삭제 확인', async ({ page }) => {
+  await mockTaskDelete(page, 200, { message: '업무지시가 삭제되었습니다.' })
   await page.goto('/tasks/1')
   await page.getByRole('button', { name: '삭제하기' }).click()
   await page
@@ -103,8 +106,8 @@ test('S8: 삭제 확인', async ({ page }) => {
     .click()
 
   await expect(page).toHaveURL(/\/tasks$/)
-  await expect(page.getByTestId('task-row').first()).not.toContainText(
-    '2026-07-03',
+  await expect(page.getByRole('status')).toContainText(
+    '데이터 삭제에 성공했습니다',
   )
 })
 
@@ -171,7 +174,12 @@ test('S14: 삭제 실패 토스트', async ({ page }) => {
   await page.goto('/tasks/1')
   await expect(page.getByLabel(/제목/)).toHaveValue('업무 제목')
 
-  await breakTask(page, '1')
+  await mockTaskDelete(page, 500, {
+    message: '예상하지 못한 에러가 발생했습니다.',
+    status: 500,
+    timestamp: '2026-08-29T12:00:00',
+    description: '에러 설명',
+  })
   await page.getByRole('button', { name: '삭제하기' }).click()
   await page
     .getByRole('alertdialog', { name: '정말 삭제하시겠습니까?' })
@@ -253,9 +261,22 @@ test('S19: 저장·삭제 중 중복 제출 방지', async ({ page }) => {
   await expect(page.getByTestId('task-row')).toHaveCount(4)
   expect(await mutationCount(page, 'update')).toBe(1)
 
-  // 삭제도 같은 방식으로 확인한다. 재진입 시 mock 상태와 요청 기록은 초기화된다.
+  // 삭제도 같은 방식으로 확인한다. 응답을 붙잡아 두는 동안 확인 버튼이 비활성이어야 한다.
+  let deleteRequestCount = 0
+  let releaseDelete: (() => void) | undefined
+  const deleteGate = new Promise<void>((resolve) => {
+    releaseDelete = resolve
+  })
+  await page.route(taskDeleteApiPath, async (route) => {
+    deleteRequestCount += 1
+    await deleteGate
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: '업무지시가 삭제되었습니다.' }),
+    })
+  })
   await page.goto('/tasks/1')
-  await delayTaskMutation(page)
 
   await page.getByRole('button', { name: '삭제하기' }).click()
   const dialog = page.getByRole('alertdialog', {
@@ -267,12 +288,13 @@ test('S19: 저장·삭제 중 중복 제출 방지', async ({ page }) => {
   const pendingConfirm = dialog.getByRole('button', { name: '삭제 중' })
   await expect(pendingConfirm).toBeDisabled()
   await pendingConfirm.click({ force: true })
+  releaseDelete?.()
 
   await expect(page).toHaveURL(/\/tasks$/)
   await expect(page.getByRole('status')).toContainText(
     '데이터 삭제에 성공했습니다',
   )
-  expect(await mutationCount(page, 'delete')).toBe(1)
+  expect(deleteRequestCount).toBe(1)
 })
 
 test('S20: 키보드 전용 조작', async ({ page }) => {
@@ -338,7 +360,7 @@ async function delayTaskMutation(page: Page, ms = 1500) {
 }
 
 // mock 이 기록한 요청 횟수. 저장·삭제는 두 번 실행돼도 결과가 같아 횟수로 확인한다.
-async function mutationCount(page: Page, kind: 'update' | 'delete') {
+async function mutationCount(page: Page, kind: 'update') {
   return page.evaluate(
     ([key, target]) => {
       const rawLog = localStorage.getItem(key)
@@ -361,4 +383,19 @@ async function breakTask(page: Page, id: string) {
     },
     [deletedTaskStorageKey, JSON.stringify([id])],
   )
+}
+
+// TASK_DELETE 응답을 mock 한다. 삭제 실패는 오류 status 로 재현한다.
+async function mockTaskDelete(
+  page: Page,
+  status: number,
+  body: Record<string, unknown>,
+) {
+  await page.route(taskDeleteApiPath, async (route) => {
+    await route.fulfill({
+      status,
+      contentType: 'application/json',
+      body: JSON.stringify(body),
+    })
+  })
 }
