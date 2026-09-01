@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -24,9 +24,6 @@ import {
 import { DeleteConfirmationDialog } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
 
-// 권한 검색 입력 디바운스(ms). 입력이 멈춘 뒤에만 서버 name 검색.
-const PERMISSION_SEARCH_DEBOUNCE_MS = 200
-
 // 서버 오류 응답에서 사용자용 message 를 뽑는다(없으면 기본 문구).
 function serverMessage(error: unknown): string {
   const data = (error as { response?: { data?: unknown } })?.response?.data
@@ -40,11 +37,13 @@ function serverMessage(error: unknown): string {
   return '요청 처리에 실패했습니다. 다시 시도해 주세요.'
 }
 
-// 조회한 상세 → 폼 값(mock 경계 매핑). 폼에만 있는 필드(사전답사 등)는 빈 값으로 둔다.
-// 초기값도 폼 입력 계약에 맞춰 서식한다: 금액 콤마, 시간은 24h→12h(raw 자릿수)+am/pm.
+// 조회한 상세 → 폼 값. 초기값을 폼 입력 계약에 맞춰 서식한다:
+// 금액 콤마, 시간은 24h→12h(raw 자릿수)+am/pm, 사전답사 섹션 포함.
 function toFormValue(detail: ReservationDetail): ReservationFormValue {
   const visit = clock24ToParts(detail.reserveTime)
   const exit = clock24ToParts(detail.reserveTimeEnd)
+  const surveyEnter = clock24ToParts(detail.surveyEnterTime ?? '')
+  const surveyExit = clock24ToParts(detail.surveyExitTime ?? '')
   return {
     ...emptyReservationFormValue,
     groupName: detail.groupName,
@@ -64,6 +63,13 @@ function toFormValue(detail: ReservationDetail): ReservationFormValue {
     visitTimeAmPm: visit.ampm,
     exitTime: exit.time,
     exitTimeAmPm: exit.ampm,
+    // 사전답사 섹션 초기값(visitSite*).
+    surveyCount: detail.surveyCount != null ? String(detail.surveyCount) : '',
+    surveyDate: detail.surveyDate ?? '',
+    surveyEnterTime: surveyEnter.time,
+    surveyEnterAmPm: surveyEnter.ampm,
+    surveyExitTime: surveyExit.time,
+    surveyExitAmPm: surveyExit.ampm,
   }
 }
 
@@ -77,16 +83,8 @@ export function ReservationDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [actionError, setActionError] = useState('')
 
-  // 권한 섹션 검색(디바운스 → 서버 name 파라미터).
+  // 권한 섹션 검색어(서버 검색 없음 → 프론트에서 필터).
   const [permissionQuery, setPermissionQuery] = useState('')
-  const [debouncedName, setDebouncedName] = useState('')
-  useEffect(() => {
-    const timer = setTimeout(
-      () => setDebouncedName(permissionQuery.trim()),
-      PERMISSION_SEARCH_DEBOUNCE_MS,
-    )
-    return () => clearTimeout(timer)
-  }, [permissionQuery])
 
   const { data: reservation, isPending } = useQuery({
     queryKey: ['reservations', id],
@@ -102,14 +100,10 @@ export function ReservationDetailPage() {
     setValue(toFormValue(reservation))
   }
 
-  // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. name 은 서버 검색.
+  // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. 전원 반환(서버 검색 없음).
   const { data: employees } = useQuery({
-    queryKey: ['reservations', id, 'employees', debouncedName],
-    queryFn: () =>
-      getReservationEmployees({
-        reservationId: Number(id),
-        name: debouncedName || undefined,
-      }),
+    queryKey: ['reservations', id, 'employees'],
+    queryFn: () => getReservationEmployees({ reservationId: Number(id) }),
     enabled: Boolean(id),
     retry: false,
   })
@@ -122,7 +116,7 @@ export function ReservationDetailPage() {
   }
   const currentAssignedIds = useMemo(() => assignedIds ?? [], [assignedIds])
 
-  // 배정됨 + 배정가능 합집합(중복 제거). 서버가 name 으로 이미 필터한 풀.
+  // 배정됨 + 배정가능 합집합(중복 제거). 전원 반환된 풀(서버 검색 없음).
   const staffPool = useMemo<Staff[]>(() => {
     if (!employees) return []
     const byId = new Map<string, Staff>()
@@ -132,13 +126,28 @@ export function ReservationDetailPage() {
     return [...byId.values()]
   }, [employees])
 
+  // 이름 검색은 프론트에서 처리(부분 일치, 대소문자 무시).
+  const keyword = permissionQuery.trim().toLowerCase()
+  const matchesKeyword = (staff: Staff) =>
+    !keyword || staff.name.toLowerCase().includes(keyword)
+
   const assignedStaff = useMemo(
-    () => staffPool.filter((staff) => currentAssignedIds.includes(staff.id)),
-    [staffPool, currentAssignedIds],
+    () =>
+      staffPool.filter(
+        (staff) =>
+          currentAssignedIds.includes(staff.id) && matchesKeyword(staff),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [staffPool, currentAssignedIds, keyword],
   )
   const availableStaff = useMemo(
-    () => staffPool.filter((staff) => !currentAssignedIds.includes(staff.id)),
-    [staffPool, currentAssignedIds],
+    () =>
+      staffPool.filter(
+        (staff) =>
+          !currentAssignedIds.includes(staff.id) && matchesKeyword(staff),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [staffPool, currentAssignedIds, keyword],
   )
 
   const addStaff = (staffId: string) =>
