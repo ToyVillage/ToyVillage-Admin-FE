@@ -83,7 +83,10 @@ function toReservationDetail(
     surveyStatus: toText(item.status),
     guideCount: toNumber(item.leaderCount),
     guideContact: toText(item.leaderPhoneNumber),
-    surveyCount: toNumber(item.visitSiteCount),
+    // 상세 응답에 visitSiteCount 가 없으면 0 이 아니라 undefined 로 둔다. 0 으로
+    // 채우면 수정 저장 시 visitSiteCount:0 이 나가 기존 사전답사 인원을 덮어쓴다.
+    // undefined → 폼 빈 값 → 필수 검증이 재입력을 강제한다.
+    surveyCount: toOptionalNumber(item.visitSiteCount),
     surveyDate: toDateDots(item.visitSiteDate),
     surveyEnterTime: toClock(item.visitSiteTime),
     surveyExitTime: toClock(item.visitSiteExitTime),
@@ -110,6 +113,12 @@ function toText(value: unknown): string {
 
 function toNumber(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+// 값이 유한한 숫자가 아니면 undefined(누락)로 둔다. visitSite* 처럼 상세 응답에
+// 없을 수 있는 필드를 0 으로 조용히 대체해 파괴적 저장을 만들지 않게 한다.
+function toOptionalNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined
 }
 
 function isReservationAdminQueryResponse(
