@@ -2,9 +2,8 @@ import { api } from '@/shared/api/axios'
 import type { Staff } from '../model/types'
 
 export interface ReservationEmployeeQueryRequest {
+  // 단체예약 id. 아직 저장 전(생성 화면)이면 -1 → 전원 assignable, assigned 빈 배열.
   reservationId: number
-  // 직원 이름 부분 일치 검색어. 생략 시 전체.
-  name?: string
 }
 
 // 배정됨/배정가능 두 그룹(EMPLOYEE 권한 계정, 이름 오름차순).
@@ -19,20 +18,21 @@ interface EmployeeItemRuntime {
   name?: unknown
 }
 
-// RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL (GET /reservation/{reservationId}/employee)
-// — 단체예약별 배정됨·배정가능 직원 목록 조회(관리자). name 으로 서버 검색.
+// RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL (GET /reservation/assigned-employee/{reservationId})
+// — 단체예약별 배정됨·배정가능 직원 목록 조회(관리자). 서버 검색 없음(전원 반환, 이름 검색은 프론트).
 export async function getReservationEmployees({
   reservationId,
-  name,
 }: ReservationEmployeeQueryRequest): Promise<ReservationEmployeeGroups> {
-  if (!Number.isSafeInteger(reservationId) || reservationId <= 0) {
+  // 저장 전(생성 화면)은 -1, 그 외는 양의 정수. 0/비정수는 거부.
+  if (
+    !Number.isSafeInteger(reservationId) ||
+    (reservationId <= 0 && reservationId !== -1)
+  ) {
     throw new Error('예약 ID가 올바르지 않습니다.')
   }
 
-  const trimmed = name?.trim()
   const { data } = await api.get<unknown>(
-    `/reservation/${reservationId}/employee`,
-    { params: trimmed ? { name: trimmed } : undefined },
+    `/reservation/assigned-employee/${reservationId}`,
   )
 
   if (!isEmployeeGroupsResponse(data)) {
