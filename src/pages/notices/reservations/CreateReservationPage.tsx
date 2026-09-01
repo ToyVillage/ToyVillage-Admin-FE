@@ -1,20 +1,25 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   ReservationForm,
   emptyReservationFormValue,
-  mockAssignableStaff,
   scrollToFirstError,
   toCreateReservationRequest,
-  usePermissionAssignment,
   validateReservationForm,
   type ReservationFormErrors,
   type ReservationFormValue,
 } from '@/features/reservation-form'
-import { createReservation } from '@/entities/reservation'
+import {
+  createReservation,
+  getReservationEmployees,
+  type Staff,
+} from '@/entities/reservation'
 import { ReservationBackLink } from './ui/ReservationBackLink'
+
+// 저장 전 단체예약의 직원 목록은 reservationId=-1 로 조회한다(전원 assignable).
+const NEW_RESERVATION_ID = -1
 
 // 서버 오류 응답에서 사용자용 message 를 뽑는다(없으면 기본 문구).
 function serverMessage(error: unknown): string {
@@ -37,12 +42,55 @@ export function CreateReservationPage() {
   )
   const [errors, setErrors] = useState<ReservationFormErrors>({})
   const [submitError, setSubmitError] = useState('')
-  const permission = usePermissionAssignment(mockAssignableStaff)
+
+  // 페이지 권한 섹션: 저장 전이므로 -1 로 전원 조회. 이름 검색은 프론트 필터.
+  const [permissionQuery, setPermissionQuery] = useState('')
+  const { data: employees } = useQuery({
+    queryKey: ['reservations', 'employees', 'new'],
+    queryFn: () => getReservationEmployees({ reservationId: NEW_RESERVATION_ID }),
+    retry: false,
+  })
+
+  // 로컬 배정 상태(생성 화면은 처음엔 배정 없음).
+  const [assignedIds, setAssignedIds] = useState<string[]>([])
+  const staffPool = useMemo<Staff[]>(() => {
+    if (!employees) return []
+    const byId = new Map<string, Staff>()
+    for (const staff of [...employees.assigned, ...employees.assignable]) {
+      byId.set(staff.id, staff)
+    }
+    return [...byId.values()]
+  }, [employees])
+
+  const keyword = permissionQuery.trim().toLowerCase()
+  const matchesKeyword = (staff: Staff) =>
+    !keyword || staff.name.toLowerCase().includes(keyword)
+  const assignedStaff = useMemo(
+    () =>
+      staffPool.filter(
+        (staff) => assignedIds.includes(staff.id) && matchesKeyword(staff),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [staffPool, assignedIds, keyword],
+  )
+  const availableStaff = useMemo(
+    () =>
+      staffPool.filter(
+        (staff) => !assignedIds.includes(staff.id) && matchesKeyword(staff),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [staffPool, assignedIds, keyword],
+  )
+  const addStaff = (staffId: string) =>
+    setAssignedIds((prev) =>
+      prev.includes(staffId) ? prev : [...prev, staffId],
+    )
+  const cancelStaff = (staffId: string) =>
+    setAssignedIds((prev) => prev.filter((sid) => sid !== staffId))
 
   const createMutation = useMutation({
     mutationFn: () => {
-      // 배정 후보가 아직 mock(비숫자 id)이라 숫자로 변환 가능한 id만 전송한다.
-      const appAdminIds = permission.assignedIds
+      const appAdminIds = assignedIds
         .map((staffId) => Number(staffId))
         .filter((n) => Number.isSafeInteger(n) && n > 0)
       return createReservation(toCreateReservationRequest(value, appAdminIds))
@@ -75,12 +123,12 @@ export function CreateReservationPage() {
           onChange={setValue}
           errors={errors}
           permission={{
-            query: permission.query,
-            onQueryChange: permission.setQuery,
-            assigned: permission.assigned,
-            available: permission.available,
-            onAdd: permission.add,
-            onCancel: permission.cancel,
+            query: permissionQuery,
+            onQueryChange: setPermissionQuery,
+            assigned: assignedStaff,
+            available: availableStaff,
+            onAdd: addStaff,
+            onCancel: cancelStaff,
           }}
         />
         <Actions>
