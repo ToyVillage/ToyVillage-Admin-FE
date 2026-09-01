@@ -6,6 +6,7 @@ import {
   deleteReservation,
   getReservation,
   getReservationEmployees,
+  isReservationNotFoundError,
   updateReservation,
   type ReservationDetail,
   type Staff,
@@ -86,7 +87,12 @@ export function ReservationDetailPage() {
   // 권한 섹션 검색어(서버 검색 없음 → 프론트에서 필터).
   const [permissionQuery, setPermissionQuery] = useState('')
 
-  const { data: reservation, isPending } = useQuery({
+  const {
+    data: reservation,
+    isPending,
+    isError: isReservationError,
+    error: reservationError,
+  } = useQuery({
     queryKey: ['reservations', id],
     queryFn: () => getReservation({ id: Number(id) }),
     enabled: Boolean(id),
@@ -101,7 +107,7 @@ export function ReservationDetailPage() {
   }
 
   // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. 전원 반환(서버 검색 없음).
-  const { data: employees } = useQuery({
+  const { data: employees, isError: isEmployeesError } = useQuery({
     queryKey: ['reservations', id, 'employees'],
     queryFn: () => getReservationEmployees({ reservationId: Number(id) }),
     enabled: Boolean(id),
@@ -191,6 +197,16 @@ export function ReservationDetailPage() {
 
   function handleSave() {
     setActionError('')
+    // 배정 직원 조회가 끝나기 전(또는 실패)에는 현재 배정을 알 수 없다. 이때 저장하면
+    // appAdminIds 가 빈 목록으로 나가 기존 배정을 전부 지운다 → 조회 성공 전까지 저장을 막는다.
+    if (assignedIds === null) {
+      setActionError(
+        isEmployeesError
+          ? '담당자 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'
+          : '담당자 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.',
+      )
+      return
+    }
     const nextErrors = validateReservationForm(formValue)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length === 0) {
@@ -200,13 +216,23 @@ export function ReservationDetailPage() {
     }
   }
 
-  // 조회가 끝났는데 데이터가 없을 때만 미조회 상태(로딩 중에는 빈 폼 유지).
+  // 조회가 끝났는데 데이터가 없을 때만 상태 화면을 띄운다(로딩 중에는 빈 폼 유지).
+  // 404(존재하지 않는 예약)만 '찾을 수 없음'이고, 그 외 오류(500·네트워크)는 조회 실패로
+  // 구분해 안내한다 — 실패를 '없음'으로 오인시키지 않는다.
   if (!isPending && !reservation) {
+    const notFound =
+      !isReservationError || isReservationNotFoundError(reservationError)
     return (
       <Page>
         <Content>
           <ReservationBackLink />
-          <NotFound>예약을 찾을 수 없습니다.</NotFound>
+          {notFound ? (
+            <NotFound>예약을 찾을 수 없습니다.</NotFound>
+          ) : (
+            <ErrorAlert role="alert">
+              단체예약을 불러오지 못했습니다. 다시 시도해 주세요.
+            </ErrorAlert>
+          )}
         </Content>
       </Page>
     )
