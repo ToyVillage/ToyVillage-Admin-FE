@@ -20,6 +20,10 @@ interface ReservationAdminQueryRuntimeItem {
   status?: unknown
   leaderCount?: unknown
   leaderPhoneNumber?: unknown
+  visitSiteCount?: unknown
+  visitSiteDate?: unknown
+  visitSiteTime?: unknown
+  visitSiteExitTime?: unknown
 }
 
 // RESERVATION_ADMIN_QUERY (GET /reservation/{id}) — id로 단체예약 상세 조회(관리자).
@@ -36,6 +40,10 @@ interface ReservationAdminQueryRuntimeItem {
 // - status             → surveyStatus (상태 라벨, 예: 사전답사 완료)
 // - leaderCount        → guideCount (인솔자 인원)
 // - leaderPhoneNumber  → guideContact (인솔자 연락처)
+// - visitSiteCount     → surveyCount (사전답사 인원)
+// - visitSiteDate      → surveyDate (사전답사 날짜)
+// - visitSiteTime      → surveyEnterTime (사전답사 입장 시간)
+// - visitSiteExitTime  → surveyExitTime (사전답사 퇴장 시간)
 export async function getReservation({
   id,
 }: ReservationQueryRequest): Promise<ReservationDetail> {
@@ -75,6 +83,10 @@ function toReservationDetail(
     surveyStatus: toText(item.status),
     guideCount: toNumber(item.leaderCount),
     guideContact: toText(item.leaderPhoneNumber),
+    surveyCount: toNumber(item.visitSiteCount),
+    surveyDate: toDateDots(item.visitSiteDate),
+    surveyEnterTime: toClock(item.visitSiteTime),
+    surveyExitTime: toClock(item.visitSiteExitTime),
   }
 }
 
