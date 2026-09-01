@@ -29,12 +29,20 @@ async function fillTime(page: Page, label: string, digits: string) {
   await page.keyboard.type(digits, { delay: 20 })
 }
 
+// 12시간제: 오후 시각은 am/pm 드롭다운에서 pm 을 선택한다.
+async function selectPm(page: Page, label: string) {
+  await page.getByRole('button', { name: `${label} 오전/오후` }).click()
+  await page.getByRole('option', { name: 'pm' }).click()
+}
+
 // 상세엔 없는 사전답사 4칸을 채운다.
 async function fillSurvey(page: Page) {
   await page.getByLabel('사전답사 인원').fill('8')
   await page.getByLabel('사전답사일을 선택해주세요').fill('20260816')
-  await fillTime(page, '사전답사 시간을 선택해주세요 (입장시간)', '1000')
-  await fillTime(page, '사전답사 시간을 선택해주세요 (퇴장시간)', '0300')
+  await fillTime(page, '사전답사 시간을 선택해주세요 (입장시간)', '1000') // 10:00 오전
+  const exitLabel = '사전답사 시간을 선택해주세요 (퇴장시간)'
+  await fillTime(page, exitLabel, '0300')
+  await selectPm(page, exitLabel) // 15:00
 }
 
 async function routeEmployees(page: Page) {
