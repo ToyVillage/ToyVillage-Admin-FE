@@ -13,7 +13,7 @@ real_server:
 
 # 목적
 
-상세·수정 페이지 권한 섹션의 mock 직원 목록(`usePermissionAssignment(mockAssignableStaff, ...)`)을 `RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL`(`GET /reservation/{reservationId}/employee`) 실 API로 교체한다. 서버가 배정됨/배정가능 두 그룹과 이름 검색을 처리한다.
+상세·수정 페이지 권한 섹션의 mock 직원 목록(`usePermissionAssignment(mockAssignableStaff, ...)`)을 `RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL`(`GET /reservation/assigned-employee/{reservationId}`) 실 API로 교체한다. 서버는 배정됨/배정가능 두 그룹을 전원 반환하고(쿼리 파라미터 없음), 이름 검색은 프론트에서 필터한다.
 
 # 대상 페이지 또는 컴포넌트
 
@@ -28,7 +28,7 @@ real_server:
 # 기대 성공 동작
 
 - 상세 진입 시 `reservationId`로 배정됨(`assigned`)·배정가능(`assignable`) 직원 목록을 조회해 권한 섹션에 표시한다(진입 시 병렬 로드).
-- 권한 섹션 검색은 `name` 쿼리 파라미터로 서버 검색(부분 일치, 생략 시 전체). 두 목록 모두 걸러진다.
+- 권한 섹션 검색은 서버 전송 없이 프론트에서 필터(부분 일치, 생략 시 전체). 두 목록 모두 걸러진다.
 
 # 기대 오류 동작
 
@@ -36,7 +36,7 @@ real_server:
 
 # 캐시 갱신 기대
 
-- query key `['reservations', id, 'employees', name]` 기준. 상세 조회(`['reservations', id]`)와 별도.
+- query key `['reservations', id, 'employees']` 기준. 상세 조회(`['reservations', id]`)와 별도.
 
 # 페이지 이동 또는 사용자 알림
 

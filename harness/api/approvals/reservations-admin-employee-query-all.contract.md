@@ -12,7 +12,7 @@
 
 | API ID | Name | Method | Full Path | Content-Type |
 | ------ | ---- | ------ | --------- | ------------ |
-| RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL | 단체예약 직원 배정 목록 조회 | GET | /reservation/{reservationId}/employee | application/json |
+| RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL | 단체예약 직원 배정 목록 조회 | GET | /reservation/assigned-employee/{reservationId} | application/json |
 
 ## Authentication and Authorization
 
@@ -30,13 +30,11 @@
 
 | Name | Type | Required | Example | Description |
 | ---- | ---- | -------- | ------- | ----------- |
-| reservationId | integer | true | 1 | 조회할 단체예약 id(LONG) |
+| reservationId | integer | true | 1 | 조회할 단체예약 id(LONG). 저장 전(생성 화면)은 `-1` → 존재검사 없이 assigned 빈 배열·전원 assignable(404 없음) |
 
 ## Query Parameters
 
-| Name | Type | Required | Default | Description |
-| ---- | ---- | -------- | ------- | ----------- |
-| name | string | false | (없음) | 직원 이름 부분 일치 검색어(생략 시 전체, 두 목록 모두 필터) |
+없음 (서버 검색 없음 — 전원 반환, 이름 검색은 프론트에서 처리)
 
 ## Request Body
 
@@ -44,7 +42,7 @@
 
 ## Request Example
 
-`GET /reservation/1/employee?name=이승`
+`GET /reservation/assigned-employee/1`
 
 ## Success Responses
 
@@ -53,7 +51,7 @@
 - `assigned` (array<object>) — 배정된 직원: `{ appAdminId: integer, name: string }`
 - `assignable` (array<object>) — 배정 가능한 직원: `{ appAdminId: integer, name: string }`
 
-> EMPLOYEE 권한 계정만(관리자 제외), 이름 오름차순. 검색어가 있으면 두 목록 모두 필터.
+> EMPLOYEE 권한 계정만(관리자 제외), 이름 오름차순. 전원 한 번에 반환하며 이름 검색은 프론트에서 처리. `reservationId=-1`(생성 화면)이면 assigned 빈 배열·전원 assignable.
 
 ## Error Responses
 
@@ -68,11 +66,11 @@
 
 ## Validation and Constraints
 
-- `reservationId`는 양의 정수(LONG). `name`은 선택.
+- `reservationId`는 LONG. 양의 정수 또는 `-1`(생성 화면). 쿼리 파라미터 없음.
 
 ## Notes
 
-- 편집 폼 권한 섹션의 배정됨/배정가능 표시·검색을 이 응답으로 채운다. 배정 추가/취소 mutation은 별도 API.
+- 편집/생성 폼 권한 섹션의 배정됨/배정가능 표시를 이 응답으로 채운다. 이름 검색은 프론트 필터. 배정 추가/취소 mutation은 별도 API.
 
 ## Backend Questions
 

@@ -19,7 +19,7 @@ const detail = {
   leaderPhoneNumber: '010-7753-9698',
 }
 
-const employeePath = /\/api\/reservation\/\d+\/employee(\?.*)?$/
+const employeePath = /\/api\/reservation\/assigned-employee\/\d+(\?.*)?$/
 const detailOrDeletePath = /\/api\/reservation\/\d+$/
 
 async function routeEmployeesEmpty(page: Page) {

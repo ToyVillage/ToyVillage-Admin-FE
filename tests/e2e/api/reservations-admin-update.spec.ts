@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 
 // 승인 시나리오(reservations-admin-update.test-scenarios.md)의 mock 변환.
-// 대상: PATCH /reservation/{reservationId}. 상세(GET)·직원(GET)은 200으로 채운다.
+// 대상: PATCH /reservation/{reservationId}. 상세(GET /reservation/{id})·직원(GET
+// /reservation/assigned-employee/{reservationId})은 200으로 채운다.
 // 상세 응답에 사전답사가 없어(백엔드 갭) 저장 전 사전답사 4칸을 채워야 검증을 통과한다.
 // 실제 서버는 호출하지 않는다.
 
@@ -20,7 +21,7 @@ const detail = {
   leaderPhoneNumber: '010-7753-9698',
 }
 
-const employeePath = /\/api\/reservation\/\d+\/employee(\?.*)?$/
+const employeePath = /\/api\/reservation\/assigned-employee\/\d+(\?.*)?$/
 const detailOrPatchPath = /\/api\/reservation\/\d+$/
 
 async function fillTime(page: Page, label: string, digits: string) {

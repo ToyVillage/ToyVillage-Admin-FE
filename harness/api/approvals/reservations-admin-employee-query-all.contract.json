@@ -3,7 +3,7 @@
   "name": "단체예약 직원 배정 목록 조회",
   "description": "단체예약별 배정됨·배정가능 직원 목록을 조회하는 기능(관리자)",
   "method": "GET",
-  "path": "/reservation/{reservationId}/employee",
+  "path": "/reservation/assigned-employee/{reservationId}",
   "authentication": {
     "required": true,
     "type": "Bearer",
@@ -32,23 +32,11 @@
       "nullable": false,
       "default": null,
       "example": 1,
-      "description": "조회할 단체예약의 id",
-      "constraints": ["양의 정수(LONG)"]
+      "description": "조회할 단체예약의 id. 저장 전(생성 화면)은 -1 → 존재검사 없이 assigned 빈 배열, 전원 assignable.",
+      "constraints": ["LONG", "양의 정수 또는 -1(생성 화면)"]
     }
   ],
-  "queryParameters": [
-    {
-      "name": "name",
-      "location": "query",
-      "type": "string",
-      "required": false,
-      "nullable": false,
-      "default": null,
-      "example": "이승",
-      "description": "직원 이름 부분 일치 검색어. 생략 시 전체. 두 목록 모두 필터.",
-      "constraints": ["부분 일치", "생략 시 전체"]
-    }
-  ],
+  "queryParameters": [],
   "requestBody": null,
   "responses": {
     "success": [
@@ -372,7 +360,7 @@
     "databaseValues": {
       "apiId": "RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL",
       "method": "GET",
-      "path": "/reservation/{reservationId}/employee",
+      "path": "/reservation/assigned-employee/{reservationId}",
       "authentication": {
         "required": true,
         "type": "Bearer",
@@ -382,7 +370,7 @@
     "detailValues": {
       "apiId": "RESERVATION_ADMIN_EMPLOYEE_QUERY_ALL",
       "method": "GET",
-      "path": "/reservation/{reservationId}/employee",
+      "path": "/reservation/assigned-employee/{reservationId}",
       "authentication": {
         "required": true,
         "type": "Bearer",
