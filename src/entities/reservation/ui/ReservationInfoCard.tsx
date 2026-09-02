@@ -86,16 +86,11 @@ function Field({
 
 const Card = styled.section`
   display: flex;
-  height: 530px;
   flex: 1 1 640px;
   flex-direction: column;
   overflow: hidden;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
-
-  @media (max-width: 980px) {
-    height: auto;
-  }
 `
 
 const CardHeader = styled.div`
@@ -142,21 +137,23 @@ const Body = styled.div`
   }
 `
 
+// 각 필드가 데이터 길이와 무관하게 고정 위치를 유지하도록 고정 그리드를 쓴다(flex-wrap 금지).
 const TopRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 24px 44px;
 `
 
 const BottomRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px 32px;
   margin-top: 8px;
 `
 
 const FieldBlock = styled.div`
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 8px;
 `

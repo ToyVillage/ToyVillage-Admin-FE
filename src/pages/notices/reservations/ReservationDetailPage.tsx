@@ -1,21 +1,23 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  getMockReservationDetail,
+  deleteReservation,
+  getReservation,
+  getReservationEmployees,
+  isReservationNotFoundError,
+  updateReservation,
   type ReservationDetail,
+  type Staff,
 } from '@/entities/reservation'
 import {
   ReservationForm,
   clock24ToParts,
-  deleteReservationMock,
   emptyReservationFormValue,
   formatMoney,
-  mockAssignableStaff,
   scrollToFirstError,
-  updateReservationMock,
-  usePermissionAssignment,
+  toCreateReservationRequest,
   validateReservationForm,
   type ReservationFormErrors,
   type ReservationFormValue,
@@ -23,11 +25,26 @@ import {
 import { DeleteConfirmationDialog } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
 
-// 조회한 상세 → 폼 값(mock 경계 매핑). 폼에만 있는 필드(사전답사 등)는 빈 값으로 둔다.
-// 초기값도 폼 입력 계약에 맞춰 서식한다: 금액 콤마, 시간은 24h→12h(raw 자릿수)+am/pm.
+// 서버 오류 응답에서 사용자용 message 를 뽑는다(없으면 기본 문구).
+function serverMessage(error: unknown): string {
+  const data = (error as { response?: { data?: unknown } })?.response?.data
+  if (
+    data &&
+    typeof data === 'object' &&
+    typeof (data as Record<string, unknown>).message === 'string'
+  ) {
+    return (data as { message: string }).message
+  }
+  return '요청 처리에 실패했습니다. 다시 시도해 주세요.'
+}
+
+// 조회한 상세 → 폼 값. 초기값을 폼 입력 계약에 맞춰 서식한다:
+// 금액 콤마, 시간은 24h→12h(raw 자릿수)+am/pm, 사전답사 섹션 포함.
 function toFormValue(detail: ReservationDetail): ReservationFormValue {
   const visit = clock24ToParts(detail.reserveTime)
   const exit = clock24ToParts(detail.reserveTimeEnd)
+  const surveyEnter = clock24ToParts(detail.surveyEnterTime ?? '')
+  const surveyExit = clock24ToParts(detail.surveyExitTime ?? '')
   return {
     ...emptyReservationFormValue,
     groupName: detail.groupName,
@@ -47,6 +64,13 @@ function toFormValue(detail: ReservationDetail): ReservationFormValue {
     visitTimeAmPm: visit.ampm,
     exitTime: exit.time,
     exitTimeAmPm: exit.ampm,
+    // 사전답사 섹션 초기값(visitSite*).
+    surveyCount: detail.surveyCount != null ? String(detail.surveyCount) : '',
+    surveyDate: detail.surveyDate ?? '',
+    surveyEnterTime: surveyEnter.time,
+    surveyEnterAmPm: surveyEnter.ampm,
+    surveyExitTime: surveyExit.time,
+    surveyExitAmPm: surveyExit.ampm,
   }
 }
 
@@ -58,12 +82,19 @@ export function ReservationDetailPage() {
   const [value, setValue] = useState<ReservationFormValue | null>(null)
   const [errors, setErrors] = useState<ReservationFormErrors>({})
   const [deleteOpen, setDeleteOpen] = useState(false)
-  // 수정 페이지는 배정팀이 채워진 상태로 보이도록 mock 시드(백엔드 배정 후보 명세 전까지).
-  const permission = usePermissionAssignment(mockAssignableStaff, ['a1', 'a2'])
+  const [actionError, setActionError] = useState('')
 
-  const { data: reservation, isPending } = useQuery({
+  // 권한 섹션 검색어(서버 검색 없음 → 프론트에서 필터).
+  const [permissionQuery, setPermissionQuery] = useState('')
+
+  const {
+    data: reservation,
+    isPending,
+    isError: isReservationError,
+    error: reservationError,
+  } = useQuery({
     queryKey: ['reservations', id],
-    queryFn: () => getMockReservationDetail(id),
+    queryFn: () => getReservation({ id: Number(id) }),
     enabled: Boolean(id),
     retry: false,
   })
@@ -75,25 +106,107 @@ export function ReservationDetailPage() {
     setValue(toFormValue(reservation))
   }
 
+  // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. 전원 반환(서버 검색 없음).
+  const { data: employees, isError: isEmployeesError } = useQuery({
+    queryKey: ['reservations', id, 'employees'],
+    queryFn: () => getReservationEmployees({ reservationId: Number(id) }),
+    enabled: Boolean(id),
+    retry: false,
+  })
+
+  // 로컬 배정 상태: 첫 응답의 배정됨 id로 1회 시드하고 이후 로컬 편집을 유지한다
+  // (검색 재조회에도 재시드하지 않음). 저장 시 이 id 목록을 함께 전송한다.
+  const [assignedIds, setAssignedIds] = useState<string[] | null>(null)
+  if (employees && assignedIds === null) {
+    setAssignedIds(employees.assigned.map((staff) => staff.id))
+  }
+  const currentAssignedIds = useMemo(() => assignedIds ?? [], [assignedIds])
+
+  // 배정됨 + 배정가능 합집합(중복 제거). 전원 반환된 풀(서버 검색 없음).
+  const staffPool = useMemo<Staff[]>(() => {
+    if (!employees) return []
+    const byId = new Map<string, Staff>()
+    for (const staff of [...employees.assigned, ...employees.assignable]) {
+      byId.set(staff.id, staff)
+    }
+    return [...byId.values()]
+  }, [employees])
+
+  // 이름 검색은 프론트에서 처리(부분 일치, 대소문자 무시).
+  const keyword = permissionQuery.trim().toLowerCase()
+  const matchesKeyword = (staff: Staff) =>
+    !keyword || staff.name.toLowerCase().includes(keyword)
+
+  const assignedStaff = useMemo(
+    () =>
+      staffPool.filter(
+        (staff) =>
+          currentAssignedIds.includes(staff.id) && matchesKeyword(staff),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [staffPool, currentAssignedIds, keyword],
+  )
+  const availableStaff = useMemo(
+    () =>
+      staffPool.filter(
+        (staff) =>
+          !currentAssignedIds.includes(staff.id) && matchesKeyword(staff),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [staffPool, currentAssignedIds, keyword],
+  )
+
+  const addStaff = (staffId: string) =>
+    setAssignedIds((prev) => {
+      const current = prev ?? []
+      return current.includes(staffId) ? current : [...current, staffId]
+    })
+  const cancelStaff = (staffId: string) =>
+    setAssignedIds((prev) => (prev ?? []).filter((sid) => sid !== staffId))
+
   const saveMutation = useMutation({
-    mutationFn: (next: ReservationFormValue) =>
-      updateReservationMock(id, next, permission.assignedIds),
+    mutationFn: (next: ReservationFormValue) => {
+      // 배정 id는 직원 조회 API에서 온 실제 숫자 id → 그대로 전송(배정 통째 교체).
+      const appAdminIds = currentAssignedIds
+        .map((staffId) => Number(staffId))
+        .filter((n) => Number.isSafeInteger(n) && n > 0)
+      return updateReservation({
+        id: Number(id),
+        body: toCreateReservationRequest(next, appAdminIds),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reservations'] })
       navigate('/notices/reservations')
     },
+    onError: (error) => setActionError(serverMessage(error)),
   })
   const deleteMutation = useMutation({
-    mutationFn: () => deleteReservationMock(id),
+    mutationFn: () => deleteReservation(Number(id)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reservations'] })
       navigate('/notices/reservations')
+    },
+    onError: (error) => {
+      setDeleteOpen(false)
+      setActionError(serverMessage(error))
     },
   })
 
   const formValue = value ?? emptyReservationFormValue
 
   function handleSave() {
+    setActionError('')
+    // 배정 직원 조회가 끝나기 전(또는 실패)에는 현재 배정을 알 수 없다. 이때 저장하면
+    // appAdminIds 가 빈 목록으로 나가 기존 배정을 전부 지운다 → 조회 성공 전까지 저장을 막는다.
+    if (assignedIds === null) {
+      setActionError(
+        isEmployeesError
+          ? '담당자 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'
+          : '담당자 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.',
+      )
+      return
+    }
     const nextErrors = validateReservationForm(formValue)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length === 0) {
@@ -103,13 +216,23 @@ export function ReservationDetailPage() {
     }
   }
 
-  // 조회가 끝났는데 데이터가 없을 때만 미조회 상태(로딩 중에는 빈 폼 유지).
+  // 조회가 끝났는데 데이터가 없을 때만 상태 화면을 띄운다(로딩 중에는 빈 폼 유지).
+  // 404(존재하지 않는 예약)만 '찾을 수 없음'이고, 그 외 오류(500·네트워크)는 조회 실패로
+  // 구분해 안내한다 — 실패를 '없음'으로 오인시키지 않는다.
   if (!isPending && !reservation) {
+    const notFound =
+      !isReservationError || isReservationNotFoundError(reservationError)
     return (
       <Page>
         <Content>
           <ReservationBackLink />
-          <NotFound>예약을 찾을 수 없습니다.</NotFound>
+          {notFound ? (
+            <NotFound>예약을 찾을 수 없습니다.</NotFound>
+          ) : (
+            <ErrorAlert role="alert">
+              단체예약을 불러오지 못했습니다. 다시 시도해 주세요.
+            </ErrorAlert>
+          )}
         </Content>
       </Page>
     )
@@ -119,17 +242,18 @@ export function ReservationDetailPage() {
     <Page>
       <Content>
         <ReservationBackLink />
+        {actionError && <ErrorAlert role="alert">{actionError}</ErrorAlert>}
         <ReservationForm
           value={formValue}
           onChange={setValue}
           errors={errors}
           permission={{
-            query: permission.query,
-            onQueryChange: permission.setQuery,
-            assigned: permission.assigned,
-            available: permission.available,
-            onAdd: permission.add,
-            onCancel: permission.cancel,
+            query: permissionQuery,
+            onQueryChange: setPermissionQuery,
+            assigned: assignedStaff,
+            available: availableStaff,
+            onAdd: addStaff,
+            onCancel: cancelStaff,
           }}
         />
         <Actions>
@@ -175,6 +299,16 @@ const Content = styled.div`
   gap: 32px;
   margin: 0 auto;
   padding-top: 76px;
+`
+
+const ErrorAlert = styled.div`
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
 `
 
 const Actions = styled.div`

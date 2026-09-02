@@ -11,6 +11,15 @@ export function clock24ToParts(value: string): { time: string; ampm: AmPm } {
   return { time: String(h12).padStart(2, '0') + minute, ampm }
 }
 
+// 폼 12시간 값(raw 자릿수 "HHMM" + am/pm) → 서버용 24시간 "HH:mm". 제출 변환용.
+// 예: ("1000","am")→"10:00", ("0600","pm")→"18:00", ("1200","am")→"00:00".
+export function partsTo24hClock(rawDigits: string, ampm: AmPm): string {
+  const digits = rawDigits.replace(/\D/g, '').slice(0, 4).padEnd(4, '0')
+  const base = Number(digits.slice(0, 2)) % 12
+  const h24 = ampm === 'pm' ? base + 12 : base
+  return `${String(h24).padStart(2, '0')}:${digits.slice(2, 4)}`
+}
+
 // 숫자 입력을 yyyy.mm.dd 형식으로 자동 서식(최대 8자리).
 export function formatDateInput(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 8)

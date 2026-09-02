@@ -425,6 +425,12 @@ const SortOption = styled.button`
   font-weight: 500;
   cursor: pointer;
 
+  /* 현재 선택된 정렬을 강조해 어떤 정렬인지 보이게 한다. */
+  &[aria-checked='true'] {
+    color: ${({ theme }) => theme.colors.accent};
+    font-weight: 700;
+  }
+
   &:hover,
   &:focus-visible {
     outline: 0;

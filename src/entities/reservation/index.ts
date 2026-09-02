@@ -20,6 +20,30 @@ export {
   grantMockReservationAccess,
   removeMockReservationAccess,
 } from './model/mock'
+export {
+  getReservation,
+  isReservationNotFoundError,
+  type ReservationQueryRequest,
+} from './api/getReservation'
+export {
+  getReservationEmployees,
+  type ReservationEmployeeQueryRequest,
+  type ReservationEmployeeGroups,
+} from './api/getReservationEmployees'
+export {
+  createReservation,
+  type ReservationCreateRequest,
+  type ReservationCreateResponse,
+} from './api/createReservation'
+export {
+  deleteReservation,
+  type ReservationDeleteResponse,
+} from './api/deleteReservation'
+export {
+  updateReservation,
+  type ReservationUpdateRequest,
+  type ReservationUpdateResponse,
+} from './api/updateReservation'
 export { ReservationTable } from './ui/ReservationTable'
 export { ReservationInfoCard } from './ui/ReservationInfoCard'
 export {

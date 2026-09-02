@@ -27,6 +27,12 @@ export interface ReservationDetail extends Reservation {
   surveyStatus: string // 상태 라벨 (예: 답사 완료)
   guideCount: number // 인솔자 인원 (예: 3)
   guideContact: string // 인솔자 연락처 (예: 010-7753-9698)
+  // 사전답사(RESERVATION_ADMIN_QUERY 응답 visitSite*) — 수정 폼의 사전답사 섹션 초기값.
+  // 실제 API는 항상 채우고, 목록 mock 상세에는 없을 수 있어 optional로 둔다.
+  surveyCount?: number // 사전답사 인원 (visitSiteCount)
+  surveyDate?: string // 사전답사 날짜 yyyy.mm.dd (visitSiteDate)
+  surveyEnterTime?: string // 사전답사 입장 시간 "HH : mm" (visitSiteTime)
+  surveyExitTime?: string // 사전답사 퇴장 시간 "HH : mm" (visitSiteExitTime)
 }
 
 export interface GrantAccessInput {

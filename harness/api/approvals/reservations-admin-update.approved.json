@@ -1,0 +1,15 @@
+{
+  "feature": "reservations-admin-update",
+  "apiId": "RESERVATION_ADMIN_UPDATE",
+  "approvedAt": "2026-08-29T14:33:53.359Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "147058fc293f922b264ea924c5a1f865959109d50decc9086149f46855b96b6a",
+  "contractHash": "ae75f1cc5583bb21d4ca670575c188427541d2b284bcd2841e6c84d35f32de53",
+  "contractMarkdownHash": "b39a201b6d2520158b81138bba3c2cc6a3c4b4e478f6b32e639be882867d7601",
+  "planHash": "27528b9851ef4c635209fd8f3100b7f713b902619cf714743a5308ffd71e33f0",
+  "scenarioHash": "e12b3bac2e1f6fe5fbf8d0b137ec7eb6fa1b459edd97fafdf793d8dedbe010a4",
+  "testHash": "01719b89d1c42c7d553903100da65c3ba0f37f444707bfb1a5813e518af41923",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-01T15:56:19.962Z"
+}
