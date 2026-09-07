@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import styled from '@emotion/styled'
+import type { AppTheme } from '../theme/theme'
 import searchIcon from './assets/search.svg'
 import filterIcon from './assets/filter.svg'
 import chevronIcon from './assets/chevron-left.svg'
@@ -23,6 +24,46 @@ export interface DataTableRow {
 
 // 셀 표현 변형. pill=분류 배지, title=제목(24), date=날짜(22 muted), text=본문(24 strong).
 export type DataTableCellVariant = 'pill' | 'title' | 'date' | 'text'
+
+type ThemeColorKey = keyof AppTheme['colors']
+
+// Figma 의 표는 계열이 둘이다 — 공지·자료실·예약(테두리 있는 조밀한 표)과
+// 업무·업무보고서(테두리 없는 넉넉한 표). 기본값은 앞쪽이고, 뒤쪽은 이 객체로만 덮어쓴다.
+export interface DataTableAppearance {
+  /** 카드 상단 여백(px) */
+  offsetTop?: number
+  /** 카드 테두리 표시 여부 */
+  bordered?: boolean
+  /** 헤더행 최소 높이(px) */
+  headerHeight?: number
+  /** 헤더행 배경 색 토큰 */
+  headerBackground?: ThemeColorKey
+  /** 헤더 텍스트 크기(px) */
+  headerFontSize?: number
+  /** 본문 행 최소 높이(px) */
+  rowHeight?: number
+  /** 행 구분선 색 토큰 */
+  dividerColor?: ThemeColorKey
+  /** 행 구분선 좌우 여백(px). 0 이면 카드 폭 전체 */
+  dividerInset?: number
+  /** 헤더·셀 가로 정렬 */
+  align?: 'left' | 'center'
+  /** 페이지네이션을 카드 안/밖 중 어디에 둘지 */
+  paginationPlacement?: 'inside' | 'outside'
+}
+
+const defaultAppearance = {
+  offsetTop: 20,
+  bordered: true,
+  headerHeight: 52,
+  headerBackground: 'tableHeader',
+  headerFontSize: 20,
+  rowHeight: 92,
+  dividerColor: 'divider',
+  dividerInset: 40,
+  align: 'left',
+  paginationPlacement: 'inside',
+} satisfies Required<DataTableAppearance>
 
 export interface DataTableColumn {
   key: string
@@ -98,6 +139,7 @@ interface DataTableProps {
   pagination?: DataTablePagination
   emptyLabel?: string
   emptyMinHeight?: number
+  appearance?: DataTableAppearance
 }
 
 export function DataTable({
@@ -111,7 +153,9 @@ export function DataTable({
   pagination,
   emptyLabel,
   emptyMinHeight,
+  appearance,
 }: DataTableProps) {
+  const look = { ...defaultAppearance, ...appearance }
   const [sortOpen, setSortOpen] = useState(false)
   const sortControlRef = useRef<HTMLDivElement>(null)
   const sortOptions = sort?.options ?? defaultSortOptions
@@ -144,165 +188,186 @@ export function DataTable({
     }
   }, [sortOpen])
 
+  // Figma 는 계열에 따라 페이지네이션을 카드 안(공지·자료실)과 밖(업무·업무보고서)에 둔다.
+  const paginationNode =
+    pagination && pagination.pageCount > 1 ? (
+      <Pagination $placement={look.paginationPlacement}>
+        <PageNav
+          type="button"
+          aria-label="이전 페이지"
+          disabled={pagination.page <= 1}
+          onClick={() => pagination.onChange(pagination.page - 1)}
+        >
+          <ChevronIcon src={chevronIcon} alt="" />
+        </PageNav>
+        <PageList>
+          {pageNumbers.map((n) => (
+            <PageButton
+              key={n}
+              type="button"
+              $active={n === pagination.page}
+              aria-label={`${n} 페이지`}
+              aria-current={n === pagination.page ? 'page' : undefined}
+              onClick={() => pagination.onChange(n)}
+            >
+              {n}
+            </PageButton>
+          ))}
+        </PageList>
+        <PageNav
+          type="button"
+          aria-label="다음 페이지"
+          disabled={pagination.page >= pagination.pageCount}
+          onClick={() => pagination.onChange(pagination.page + 1)}
+        >
+          <ChevronIcon src={chevronIcon} alt="" $flip />
+        </PageNav>
+      </Pagination>
+    ) : null
+
   return (
-    <Table>
-      <Header>
-        {selection && (
-          <SelectHeadCell>
-            <Checkbox
-              type="checkbox"
-              aria-label={selection.allLabel ?? '전체 선택'}
-              checked={allSelected}
-              onChange={selection.onToggleAll}
-            />
-          </SelectHeadCell>
-        )}
-        {columns.map((column) => (
-          <HeadCell key={column.key} $width={column.width}>
-            {column.header}
-          </HeadCell>
-        ))}
-      </Header>
+    <>
+      <Table $offsetTop={look.offsetTop} $bordered={look.bordered}>
+        <Header $height={look.headerHeight} $background={look.headerBackground}>
+          {selection && (
+            <SelectHeadCell>
+              <Checkbox
+                type="checkbox"
+                aria-label={selection.allLabel ?? '전체 선택'}
+                checked={allSelected}
+                onChange={selection.onToggleAll}
+              />
+            </SelectHeadCell>
+          )}
+          {columns.map((column) => (
+            <HeadCell
+              key={column.key}
+              $width={column.width}
+              $align={look.align}
+              $fontSize={look.headerFontSize}
+            >
+              {column.header}
+            </HeadCell>
+          ))}
+        </Header>
 
-      {(search || sort) && (
-        <ControlRow>
-          <ControlBar>
-            {search && (
-              <>
-                <SearchIcon src={searchIcon} alt="" aria-hidden="true" />
-                <SearchInput
-                  type="search"
-                  value={search.value}
-                  placeholder={search.placeholder}
-                  aria-label={search.ariaLabel ?? '검색'}
-                  onChange={(e) => search.onChange(e.target.value)}
-                />
-              </>
-            )}
-            {sort && (
-              <SortControl ref={sortControlRef}>
-                <SortButton
-                  type="button"
-                  aria-label={sort.ariaLabel ?? '날짜 정렬'}
-                  aria-haspopup="menu"
-                  aria-expanded={sortOpen}
-                  onClick={() => setSortOpen((open) => !open)}
-                >
-                  <FilterIcon src={filterIcon} alt="" aria-hidden="true" />
-                </SortButton>
-                {sortOpen && (
-                  <SortMenu role="menu" aria-label="날짜 정렬 옵션">
-                    {sortOptions.map((option) => (
-                      <SortOption
-                        key={option.value}
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={sort.value === option.value}
-                        onClick={() => {
-                          sort.onChange(option.value)
-                          setSortOpen(false)
-                        }}
-                      >
-                        {option.label}
-                      </SortOption>
-                    ))}
-                  </SortMenu>
-                )}
-              </SortControl>
-            )}
-          </ControlBar>
-        </ControlRow>
-      )}
-
-      {rows.length === 0 && emptyLabel ? (
-        <EmptyRow role="status" $minHeight={emptyMinHeight}>
-          {emptyLabel}
-        </EmptyRow>
-      ) : (
-        rows.map((r) => (
-          <Row
-            key={r.id}
-            data-testid={rowTestId}
-            role={onRowClick ? 'link' : undefined}
-            tabIndex={onRowClick ? 0 : undefined}
-            onClick={onRowClick ? () => onRowClick(r.id) : undefined}
-            onKeyDown={
-              onRowClick
-                ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      onRowClick(r.id)
-                    }
-                  }
-                : undefined
-            }
-          >
-            {selection && (
-              <SelectCell
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
-                <Checkbox
-                  type="checkbox"
-                  aria-label={selection.rowLabel?.(r) ?? `${String(r.id)} 선택`}
-                  checked={selection.selectedIds.includes(r.id)}
-                  onChange={() => selection.onToggle(r.id)}
-                />
-              </SelectCell>
-            )}
-            {columns.map((column) => {
-              const content = column.render ? column.render(r) : r[column.key]
-              return (
-                <Cell key={column.key} $width={column.width}>
-                  {column.variant === 'pill' ? (
-                    <Pill>{content}</Pill>
-                  ) : (
-                    <CellText $variant={column.variant ?? 'text'}>
-                      {content}
-                    </CellText>
+        {(search || sort) && (
+          <ControlRow>
+            <ControlBar>
+              {search && (
+                <>
+                  <SearchIcon src={searchIcon} alt="" aria-hidden="true" />
+                  <SearchInput
+                    type="search"
+                    value={search.value}
+                    placeholder={search.placeholder}
+                    aria-label={search.ariaLabel ?? '검색'}
+                    onChange={(e) => search.onChange(e.target.value)}
+                  />
+                </>
+              )}
+              {sort && (
+                <SortControl ref={sortControlRef}>
+                  <SortButton
+                    type="button"
+                    aria-label={sort.ariaLabel ?? '날짜 정렬'}
+                    aria-haspopup="menu"
+                    aria-expanded={sortOpen}
+                    onClick={() => setSortOpen((open) => !open)}
+                  >
+                    <FilterIcon src={filterIcon} alt="" aria-hidden="true" />
+                  </SortButton>
+                  {sortOpen && (
+                    <SortMenu role="menu" aria-label="날짜 정렬 옵션">
+                      {sortOptions.map((option) => (
+                        <SortOption
+                          key={option.value}
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={sort.value === option.value}
+                          onClick={() => {
+                            sort.onChange(option.value)
+                            setSortOpen(false)
+                          }}
+                        >
+                          {option.label}
+                        </SortOption>
+                      ))}
+                    </SortMenu>
                   )}
-                </Cell>
-              )
-            })}
-          </Row>
-        ))
-      )}
+                </SortControl>
+              )}
+            </ControlBar>
+          </ControlRow>
+        )}
 
-      {pagination && pagination.pageCount > 1 && (
-        <Pagination>
-          <PageNav
-            type="button"
-            aria-label="이전 페이지"
-            disabled={pagination.page <= 1}
-            onClick={() => pagination.onChange(pagination.page - 1)}
-          >
-            <ChevronIcon src={chevronIcon} alt="" />
-          </PageNav>
-          <PageList>
-            {pageNumbers.map((n) => (
-              <PageButton
-                key={n}
-                type="button"
-                $active={n === pagination.page}
-                aria-label={`${n} 페이지`}
-                aria-current={n === pagination.page ? 'page' : undefined}
-                onClick={() => pagination.onChange(n)}
-              >
-                {n}
-              </PageButton>
-            ))}
-          </PageList>
-          <PageNav
-            type="button"
-            aria-label="다음 페이지"
-            disabled={pagination.page >= pagination.pageCount}
-            onClick={() => pagination.onChange(pagination.page + 1)}
-          >
-            <ChevronIcon src={chevronIcon} alt="" $flip />
-          </PageNav>
-        </Pagination>
-      )}
-    </Table>
+        {rows.length === 0 && emptyLabel ? (
+          <EmptyRow role="status" $minHeight={emptyMinHeight}>
+            {emptyLabel}
+          </EmptyRow>
+        ) : (
+          rows.map((r) => (
+            <Row
+              key={r.id}
+              $height={look.rowHeight}
+              $dividerColor={look.dividerColor}
+              $dividerInset={look.dividerInset}
+              data-testid={rowTestId}
+              role={onRowClick ? 'link' : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              onClick={onRowClick ? () => onRowClick(r.id) : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onRowClick(r.id)
+                      }
+                    }
+                  : undefined
+              }
+            >
+              {selection && (
+                <SelectCell
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
+                  <Checkbox
+                    type="checkbox"
+                    aria-label={
+                      selection.rowLabel?.(r) ?? `${String(r.id)} 선택`
+                    }
+                    checked={selection.selectedIds.includes(r.id)}
+                    onChange={() => selection.onToggle(r.id)}
+                  />
+                </SelectCell>
+              )}
+              {columns.map((column) => {
+                const content = column.render ? column.render(r) : r[column.key]
+                return (
+                  <Cell
+                    key={column.key}
+                    $width={column.width}
+                    $align={look.align}
+                  >
+                    {column.variant === 'pill' ? (
+                      <Pill>{content}</Pill>
+                    ) : (
+                      <CellText $variant={column.variant ?? 'text'}>
+                        {content}
+                      </CellText>
+                    )}
+                  </Cell>
+                )
+              })}
+            </Row>
+          ))
+        )}
+
+        {look.paginationPlacement === 'inside' && paginationNode}
+      </Table>
+      {look.paginationPlacement === 'outside' && paginationNode}
+    </>
   )
 }
 
@@ -312,19 +377,20 @@ const cellWidth = (width?: number) =>
     ? 'flex: 1; min-width: 0;'
     : `width: ${width}px; flex: 0 0 ${width}px;`
 
-const Table = styled.div`
+const Table = styled.div<{ $offsetTop: number; $bordered: boolean }>`
   width: 100%;
-  margin-top: 20px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  margin-top: ${({ $offsetTop }) => $offsetTop}px;
+  border: ${({ theme, $bordered }) =>
+    $bordered ? `1px solid ${theme.colors.border}` : '0'};
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
   overflow: hidden;
 `
 
-const Header = styled.div`
+const Header = styled.div<{ $height: number; $background: ThemeColorKey }>`
   display: flex;
-  min-height: 52px;
-  background: ${({ theme }) => theme.colors.tableHeader};
+  min-height: ${({ $height }) => $height}px;
+  background: ${({ theme, $background }) => theme.colors[$background]};
 `
 
 const ControlRow = styled.div`
@@ -442,36 +508,49 @@ const EmptyRow = styled.div<{ $minHeight?: number }>`
   font-weight: 500;
 `
 
-const Row = styled.div`
+const Row = styled.div<{
+  $height: number
+  $dividerColor: ThemeColorKey
+  $dividerInset: number
+}>`
   position: relative;
   display: flex;
-  min-height: 92px;
+  min-height: ${({ $height }) => $height}px;
   cursor: pointer;
 
   & + &::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 40px;
-    right: 40px;
-    border-top: 1px solid ${({ theme }) => theme.colors.divider};
+    left: ${({ $dividerInset }) => $dividerInset}px;
+    right: ${({ $dividerInset }) => $dividerInset}px;
+    border-top: 1px solid
+      ${({ theme, $dividerColor }) => theme.colors[$dividerColor]};
   }
 `
 
-const HeadCell = styled.div<{ $width?: number }>`
+const HeadCell = styled.div<{
+  $width?: number
+  $align: 'left' | 'center'
+  $fontSize: number
+}>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
+  justify-content: ${({ $align }) =>
+    $align === 'center' ? 'center' : 'flex-start'};
   padding: 12px 40px;
   color: ${({ theme }) => theme.colors.text};
   font-weight: 500;
-  font-size: 20px;
+  font-size: ${({ $fontSize }) => $fontSize}px;
 `
 
-const Cell = styled.div<{ $width?: number }>`
+const Cell = styled.div<{ $width?: number; $align: 'left' | 'center' }>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
+  justify-content: ${({ $align }) =>
+    $align === 'center' ? 'center' : 'flex-start'};
   padding: 12px 40px;
 `
 
@@ -549,12 +628,14 @@ const Pill = styled.span`
   line-height: 1.2;
 `
 
-const Pagination = styled.nav`
+// 카드 밖 배치는 카드 하단에서 48px 띄운다(Figma 표 y=836 → 페이지네이션 y=884).
+const Pagination = styled.nav<{ $placement: 'inside' | 'outside' }>`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 24px 0;
+  ${({ $placement }) =>
+    $placement === 'outside' ? 'margin-top: 48px;' : 'padding: 24px 0;'}
 `
 
 const PageNav = styled.button`
@@ -581,7 +662,7 @@ const ChevronIcon = styled.img<{ $flip?: boolean }>`
 const PageList = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 `
 
 const PageButton = styled.button<{ $active: boolean }>`
@@ -597,7 +678,7 @@ const PageButton = styled.button<{ $active: boolean }>`
     $active ? theme.colors.accentBg : 'transparent'};
   color: ${({ theme, $active }) =>
     $active ? theme.colors.accent : theme.colors.pageMuted};
-  font-size: 18px;
+  font-size: ${({ $active }) => ($active ? 22 : 18)}px;
   font-weight: 500;
   line-height: 1.2;
   cursor: pointer;

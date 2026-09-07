@@ -3,6 +3,7 @@ export type {
   DataTableRow,
   DataTableColumn,
   DataTableCellVariant,
+  DataTableAppearance,
   DataTableSearch,
   DataTableSort,
   DataTableSortOption,
