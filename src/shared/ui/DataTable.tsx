@@ -32,6 +32,8 @@ export interface DataTableColumn {
   // 셀 좌우 padding(px). 생략 시 기본 40. Figma 에서 열마다 안쪽 여백이 다른
   // 표(업무일지관리 양식 관리 탭, 케밥 열 등)를 위해 열 단위로 지정한다.
   paddingX?: number
+  // 셀 내용의 가로 정렬. 생략 시 좌측. 케밥처럼 열 가운데에 놓이는 아이콘용.
+  align?: 'start' | 'center'
   variant?: DataTableCellVariant
   render?: (row: DataTableRow) => ReactNode
 }
@@ -165,6 +167,7 @@ export function DataTable({
             key={column.key}
             $width={column.width}
             $paddingX={column.paddingX}
+            $align={column.align}
           >
             {column.header}
           </HeadCell>
@@ -265,6 +268,7 @@ export function DataTable({
                   key={column.key}
                   $width={column.width}
                   $paddingX={column.paddingX}
+                  $align={column.align}
                 >
                   {column.variant === 'pill' ? (
                     <Pill>{content}</Pill>
@@ -325,6 +329,9 @@ const cellWidth = (width?: number) =>
     : `width: ${width}px; flex: 0 0 ${width}px;`
 
 const defaultCellPaddingX = 40
+
+const cellJustify = (align?: 'start' | 'center') =>
+  align === 'center' ? 'center' : 'flex-start'
 
 const Table = styled.div`
   width: 100%;
@@ -478,20 +485,30 @@ const Row = styled.div<{ $clickable: boolean }>`
   }
 `
 
-const HeadCell = styled.div<{ $width?: number; $paddingX?: number }>`
+const HeadCell = styled.div<{
+  $width?: number
+  $paddingX?: number
+  $align?: 'start' | 'center'
+}>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
+  justify-content: ${({ $align }) => cellJustify($align)};
   padding: 12px ${({ $paddingX }) => $paddingX ?? defaultCellPaddingX}px;
   color: ${({ theme }) => theme.colors.text};
   font-weight: 500;
   font-size: 20px;
 `
 
-const Cell = styled.div<{ $width?: number; $paddingX?: number }>`
+const Cell = styled.div<{
+  $width?: number
+  $paddingX?: number
+  $align?: 'start' | 'center'
+}>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
+  justify-content: ${({ $align }) => cellJustify($align)};
   padding: 12px ${({ $paddingX }) => $paddingX ?? defaultCellPaddingX}px;
 `
 
