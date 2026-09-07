@@ -18,7 +18,8 @@ paths: src/pages/tasks, src/entities/task, src/features/create-task
 
 ## 상태와 근거
 
-- Status: Approved (yunho09 승인, 시나리오 S1–S23 — 2026-09-07 yot 기준 재승인, e2e freeze 완료)
+- Status: Published (게이트 ② 재승인 2026-09-07 S1~S23 · ③~⑤ 완료 · ⑦ 육안 확인 2026-09-08 yunho09)
+  이전: Approved (yunho09, S1–S23, 2026-09-07 yot 기준 재승인 + e2e freeze). 목록 화면 자체는 퍼블리싱 완료다.
 - Last refreshed: 2026-09-07
 - **디자인 파일 교체**: `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)는 폐기됐다. 기준 파일은 `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`),
   페이지 `0:1` "토이빌리지" › 섹션 `웹 (operator)` › `업무관리`(`300:12757`) › `업무관리 · 목록`(`311:12774`).
@@ -58,8 +59,8 @@ paths: src/pages/tasks, src/entities/task, src/features/create-task
 
 - `/tasks` → 업무관리 목록을 표시한다.
 - `업무 등록하기` 클릭 → `/tasks/create` 로 이동한다.
-- 행 본문 클릭 → `/tasks/:id` 로 이동한다.
-- 케밥 메뉴 `수정` → `/tasks/:id` 로 이동한다.
+- 행 본문 클릭 → `/tasks/:id`(업무 상세)로 이동한다. `task-detail.spec.md` 가 그 화면을 소유한다.
+- 케밥 메뉴 `수정` → **`/tasks/:id/edit`(수정 폼)로 이동한다.** `task-edit.spec.md` 가 그 화면을 소유한다.
 - 목록 진입 시 항상 `전체 업무` 탭과 1페이지에서 시작한다.
 - 사이드바 `업무 관리 바로가기` → `/tasks`. 사이드바 자체 동작은 `sidebar.spec.md` 를 따른다.
 
@@ -91,7 +92,7 @@ paths: src/pages/tasks, src/entities/task, src/features/create-task
 - 메뉴가 열린 상태에서 다른 행의 `⋮` 클릭 → 이전 메뉴가 닫히고 새 메뉴가 열린다. 동시에 하나만 열린다.
 - 메뉴 바깥 클릭 또는 `Escape` → 메뉴가 닫힌다.
 - `⋮` 클릭은 행 클릭 이동을 발생시키지 않는다.
-- `수정` 클릭 → 메뉴가 닫히고 `/tasks/:id` 로 이동한다.
+- `수정` 클릭 → 메뉴가 닫히고 `/tasks/:id/edit` 로 이동한다.
 - `삭제` 클릭 → 메뉴가 닫히고 삭제 확인 모달이 열린다.
 
 ### 삭제
@@ -253,7 +254,7 @@ interface TaskListItem {
 - S2: `업무 등록하기` 클릭 → `/tasks/create` 로 이동한다.
 - S3: `진행중` 탭 클릭 → 상태가 `진행중`인 행만 남는다.
 - S4: `완료` 탭 클릭 → 상태가 `완료`인 행만 남는다.
-- S5: 행 본문 클릭 → `/tasks/:id` 로 이동한다.
+- S5: 행 본문 클릭 → `/tasks/:id`(상세)로 이동한다.
 - S6: `2 페이지` 클릭 → 2페이지 행으로 바뀐다.
 - S7: 1페이지에서 `이전 페이지`, 마지막 페이지에서 `다음 페이지`가 비활성이다.
 - S8: 2페이지를 보는 중 탭을 바꾸면 1페이지로 리셋된다.
@@ -264,7 +265,7 @@ interface TaskListItem {
 - S13: `⋮` 클릭 → `수정` / `삭제` 메뉴가 열리고, 행 이동은 일어나지 않는다.
 - S14: 메뉴가 열린 상태에서 다른 행 `⋮` 클릭 → 이전 메뉴가 닫히고 하나만 열려 있다.
 - S15: 메뉴 바깥 클릭 / `Escape` → 메뉴가 닫힌다.
-- S16: 메뉴 `수정` 클릭 → `/tasks/:id` 로 이동한다.
+- S16: 메뉴 `수정` 클릭 → `/tasks/:id/edit`(수정 폼)로 이동한다.
 - S17: 메뉴 `삭제` 클릭 → 삭제 확인 모달이 열린다.
 - S18: 모달 `취소` → 모달이 닫히고 행이 그대로 남는다.
 - S19: 모달 `확인` → 행이 사라지고 `데이터 삭제에 성공했습니다` 토스트가 뜬 뒤 사라진다.
@@ -275,7 +276,8 @@ interface TaskListItem {
 
 ## 결정 사항 (구 승인에서 승계 — 재확인 필요)
 
-- 라우트 `/tasks`, `/tasks/create`, `/tasks/:id` 를 유지한다.
+- 라우트는 `/tasks`, `/tasks/create`, `/tasks/:id`(상세), `/tasks/:id/edit`(수정)다.
+  상세·수정 분리는 2026-09-07 개발자 결정이며 `task-detail.spec.md` 가 근거다.
 - 빈 상태 문구 `등록된 업무가 없습니다.` 를 유지한다. **새 Figma 에 업무관리 빈 상태 프레임이 없다**
   문구·레이아웃은 구 결정 승계이며 Figma 근거가 없다.
 - 완료기한 위험색은 상태와 무관하게 "오늘 이전"으로만 판정한다.
@@ -301,6 +303,9 @@ interface TaskListItem {
 
 ## 미결 사항
 
+- [ ] **게이트 ② 재승인 (S16)** — 상세·수정 라우트 분리로 케밥 `수정` 의 이동 대상이
+      `/tasks/:id` → `/tasks/:id/edit` 로 바뀐다. `task-detail` / `task-edit` 승인과 함께 처리한다.
+      구현 전까지는 코드가 아직 `/tasks/:id` 로 이동하므로 e2e 도 함께 갱신·재freeze 해야 한다.
 - [ ] 담당자 다중화(`assigneeId` → `assignees[]`)는 `task-create` / `task-edit` / API 계약에 함께 영향을 준다.
 - [ ] `visibility`(공개범위) 필드의 존치 여부 — 생성·수정 폼 spec 갱신 후 결정한다.
 - [ ] `RowActionMenu` 를 `src/shared/ui` 로 승격할지 — 다른 목록 화면(`공지사항` `자료실` `휴관일 관리`

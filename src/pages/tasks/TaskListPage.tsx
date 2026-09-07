@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   deleteTask,
-  findTaskAssignee,
+  findTaskMember,
   getMockTasks,
   recordDeletedMockTask,
   TaskTable,
@@ -91,8 +91,8 @@ export function TaskListPage() {
     () =>
       allTasks.map((task) => ({
         id: task.id,
-        assigneeName: findTaskAssignee(task.assigneeId)?.name ?? '미지정',
-        assigneeExtraCount: task.additionalAssigneeCount ?? 0,
+        assigneeName: findTaskMember(task.assigneeIds[0])?.name ?? '미지정',
+        assigneeExtraCount: Math.max(task.assigneeIds.length - 1, 0),
         title: task.title,
         status: task.status,
         priority: task.priority,
@@ -205,7 +205,7 @@ export function TaskListPage() {
                 {
                   key: 'edit',
                   label: '수정',
-                  onSelect: () => navigate(`/tasks/${task.id}`),
+                  onSelect: () => navigate(`/tasks/${task.id}/edit`),
                 },
                 {
                   key: 'delete',

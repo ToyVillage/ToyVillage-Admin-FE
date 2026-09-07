@@ -169,12 +169,13 @@ test('S15: 케밥 메뉴 닫기', async ({ page }) => {
   await expect(trigger).toBeFocused()
 })
 
-test('S16: 케밥 수정 → 상세 이동', async ({ page }) => {
+test('S16: 케밥 수정 → 수정 폼 이동', async ({ page }) => {
   await page.goto('/tasks')
   await menuTrigger(page, 0).click()
   await page.getByRole('menuitem', { name: '수정' }).click()
 
-  await expect(page).toHaveURL(/\/tasks\/1$/)
+  await expect(page.getByRole('menu')).toHaveCount(0)
+  await expect(page).toHaveURL(/\/tasks\/1\/edit$/)
 })
 
 test('S17: 케밥 삭제 → 확인 모달', async ({ page }) => {
@@ -241,10 +242,8 @@ test('S21: 생성 성공 토스트', async ({ page }) => {
   await page.goto('/tasks/create')
   await page.getByRole('radio', { name: '상' }).check()
   await page.getByLabel('완료기한').fill('2027-03-02')
-  await page.getByRole('button', { name: '공개범위를 선택해주세요' }).click()
-  await page.getByRole('option', { name: '전체 직원' }).click()
-  await page.getByRole('button', { name: '담당자를 선택해주세요' }).click()
-  await page.getByRole('option', { name: '이승현 사원' }).click()
+  await page.getByRole('button', { name: '사육팀 펼치기' }).click()
+  await page.getByRole('checkbox', { name: '이승현 사원' }).check()
   await page.getByLabel(/제목/).fill('신규 업무 지시')
   await page.getByLabel(/상세 업무 내용/).fill('상세 업무 내용이 입력되어있음')
   await page.getByRole('button', { name: '생성하기' }).click()
