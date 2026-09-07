@@ -36,7 +36,11 @@ import {
   TaskReportDetailPage,
   TaskReportListPage,
 } from '@/pages/task-reports'
-import { WorkLogListPage } from '@/pages/work-logs'
+import {
+  WorkLogDetailPage,
+  WorkLogFormDetailPage,
+  WorkLogListPage,
+} from '@/pages/work-logs'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 
 function AppLayout() {
@@ -102,6 +106,11 @@ const router = createBrowserRouter([
       { path: '/task-reports', element: <TaskReportListPage /> },
       { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
       { path: '/work-logs', element: <WorkLogListPage /> },
+      // 양식 생성 화면은 아직 없다(양식 생성 spec 담당). 경로만 잡아 두지 않으면
+      // 아래 `/work-logs/forms/:id` 가 `create` 를 id 로 삼아 상세로 가로챈다.
+      { path: '/work-logs/forms/create' },
+      { path: '/work-logs/forms/:id', element: <WorkLogFormDetailPage /> },
+      { path: '/work-logs/:id', element: <WorkLogDetailPage /> },
     ],
   },
 ])
