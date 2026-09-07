@@ -28,6 +28,7 @@ import {
 } from '@/pages/notices/reservations'
 import {
   CreateTaskPage,
+  EditTaskPage,
   TaskDetailPage,
   TaskListPage,
 } from '@/pages/tasks'
@@ -93,6 +94,7 @@ const router = createBrowserRouter([
       { path: '/tasks', element: <TaskListPage /> },
       { path: '/tasks/create', element: <CreateTaskPage /> },
       { path: '/tasks/:id', element: <TaskDetailPage /> },
+      { path: '/tasks/:id/edit', element: <EditTaskPage /> },
       { path: '/task-reports', element: <TaskReportListPage /> },
       { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
     ],
