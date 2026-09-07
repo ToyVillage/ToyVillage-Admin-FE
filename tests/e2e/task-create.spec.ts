@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// 승인된 시나리오(task-create.approved.json)를 변환한 것.
+// 승인된 시나리오(task-create.approved.json, S1~S20)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않고 localStorage mock 만 사용한다.
 
@@ -10,7 +10,6 @@ const mutationLogStorageKey = 'toyvillage:tasks:mutation-log'
 type SkippableField =
   | 'priority'
   | 'dueDate'
-  | 'visibility'
   | 'assignee'
   | 'title'
   | 'content'
@@ -19,24 +18,29 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
   })
-  await page.goto('/tasks/create')
 })
 
-test('S1: 생성 화면 진입 기본 상태', async ({ page }) => {
-  await expect(page.getByRole('link', { name: '뒤로가기' })).toBeVisible()
+test('S1: 빈 폼 진입', async ({ page }) => {
+  await page.goto('/tasks')
+  await page.getByRole('link', { name: '업무 등록하기' }).click()
+
+  await expect(page).toHaveURL(/\/tasks\/create$/)
   await expect(page.getByRole('radio', { name: '상' })).not.toBeChecked()
   await expect(page.getByRole('radio', { name: '중' })).not.toBeChecked()
   await expect(page.getByRole('radio', { name: '하' })).not.toBeChecked()
   await expect(page.getByLabel('완료기한')).toHaveValue('')
-  await expect(visibilityTrigger(page)).toContainText('전체 직원')
-  await expect(assigneeTrigger(page)).toContainText('직원 목록에서 선택')
+  await expect(allEmployees(page)).not.toBeChecked()
+  await expect(page.getByText('0/18명')).toBeVisible()
   await expect(page.getByLabel(/제목/)).toHaveValue('')
   await expect(page.getByLabel(/상세 업무 내용/)).toHaveValue('')
   await expect(page.getByRole('button', { name: '생성하기' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '삭제하기' })).toHaveCount(0)
+
+  // 공개범위 필드는 yot 에서 사라졌다.
+  await expect(page.getByText('공개범위')).toHaveCount(0)
 })
 
 test('S2: 우선순위 단일 선택', async ({ page }) => {
+  await page.goto('/tasks/create')
   await page.getByRole('radio', { name: '중' }).check()
 
   await expect(page.getByRole('radio', { name: '중' })).toBeChecked()
@@ -45,6 +49,7 @@ test('S2: 우선순위 단일 선택', async ({ page }) => {
 })
 
 test('S3: 완료기한 선택', async ({ page }) => {
+  await page.goto('/tasks/create')
   await page.getByLabel('완료기한').fill('2026-12-31')
   await expect(page.getByLabel('완료기한')).toHaveValue('2026-12-31')
 
@@ -53,58 +58,79 @@ test('S3: 완료기한 선택', async ({ page }) => {
   await expect(page.getByText('2026. 12. 31')).toBeVisible()
 })
 
-test('S4: 공개범위 선택', async ({ page }) => {
-  await visibilityTrigger(page).click()
-  await page.getByRole('option', { name: '팀이름 1' }).click()
-
-  await expect(page.getByRole('listbox')).toHaveCount(0)
-  await expect(visibilityTrigger(page)).toContainText('팀이름 1')
-})
-
-test('S5: 담당자 선택', async ({ page }) => {
-  await assigneeTrigger(page).click()
-  await page.getByRole('option', { name: '김수인 사원' }).click()
-
-  await expect(page.getByRole('listbox')).toHaveCount(0)
-  await expect(assigneeTrigger(page)).toContainText('김수인 사원')
-})
-
-test('S6: 제목·상세 내용 입력', async ({ page }) => {
-  await page.getByLabel(/제목/).fill('업무 제목 입력')
-  await page.getByLabel(/상세 업무 내용/).fill('상세 업무 내용 입력')
-
-  await expect(page.getByLabel(/제목/)).toHaveValue('업무 제목 입력')
-  await expect(page.getByLabel(/상세 업무 내용/)).toHaveValue(
-    '상세 업무 내용 입력',
+test('S4: 팀 펼침·접힘', async ({ page }) => {
+  await page.goto('/tasks/create')
+  await expect(page.getByRole('checkbox', { name: '이승현 사원' })).toHaveCount(
+    0,
   )
-})
 
-test('S7: 첨부 추가', async ({ page }) => {
-  await uploadInput(page).setInputFiles([
-    filePayload('업무 지침.pdf', 'application/pdf'),
-  ])
+  await page.getByRole('button', { name: '사육팀 펼치기' }).click()
+  await expect(page.getByRole('checkbox', { name: '이승현 사원' })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: '홍길동 과장' })).toBeVisible()
 
-  await expect(attachmentGroup(page).getByText('업무 지침.pdf')).toBeVisible()
-  await expect(page.getByRole('status')).toContainText(
-    '첨부파일 등록에 성공했습니다',
-  )
-})
-
-test('S8: 첨부 제거', async ({ page }) => {
-  await uploadInput(page).setInputFiles([
-    filePayload('삭제할 파일.txt', 'text/plain'),
-  ])
-
-  const removeButton = page.locator('button[aria-label="삭제할 파일.txt 삭제"]')
-  await removeButton.locator('..').hover()
-  await removeButton.click()
-
-  await expect(attachmentGroup(page).getByText('삭제할 파일.txt')).toHaveCount(
+  await page.getByRole('button', { name: '사육팀 접기' }).click()
+  await expect(page.getByRole('checkbox', { name: '이승현 사원' })).toHaveCount(
     0,
   )
 })
 
-test('S9: 정상 생성', async ({ page }) => {
+test('S5: 팀 전체 선택', async ({ page }) => {
+  await page.goto('/tasks/create')
+  await teamCheckbox(page, '동물 관리팀').check()
+
+  await expect(teamCheckbox(page, '동물 관리팀')).toBeChecked()
+  await expect(page.getByText('5/5명')).toBeVisible()
+})
+
+test('S6: 팀 부분 선택', async ({ page }) => {
+  await page.goto('/tasks/create')
+  await page.getByRole('button', { name: '동물 관리팀 펼치기' }).click()
+  await teamCheckbox(page, '동물 관리팀').check()
+  await page.getByRole('checkbox', { name: '김수인 사원' }).uncheck()
+
+  await expect(teamRow(page, '동물 관리팀')).toHaveAttribute(
+    'aria-checked',
+    'mixed',
+  )
+  await expect(page.getByText('4/5명')).toBeVisible()
+})
+
+test('S7: 전체 직원 토글', async ({ page }) => {
+  await page.goto('/tasks/create')
+  await allEmployees(page).check()
+
+  await expect(page.getByText('18/18명')).toBeVisible()
+  await expect(teamCheckbox(page, '사육팀')).toBeChecked()
+  await expect(page.getByText('6/6명')).toBeVisible()
+
+  await allEmployees(page).uncheck()
+  await expect(page.getByText('0/18명')).toBeVisible()
+  await expect(teamCheckbox(page, '사육팀')).not.toBeChecked()
+})
+
+test('S8: 전체 직원 부분 선택 표시', async ({ page }) => {
+  await page.goto('/tasks/create')
+  await teamCheckbox(page, '창고팀').check()
+
+  await expect(allEmployeesRow(page)).toHaveAttribute('aria-checked', 'mixed')
+  await expect(page.getByText('3/18명')).toBeVisible()
+})
+
+test('S9: 접어도 선택 유지', async ({ page }) => {
+  await page.goto('/tasks/create')
+  await page.getByRole('button', { name: '사육팀 펼치기' }).click()
+  await page.getByRole('checkbox', { name: '이승현 사원' }).check()
+  await expect(page.getByText('1/6명')).toBeVisible()
+
+  await page.getByRole('button', { name: '사육팀 접기' }).click()
+  await expect(page.getByText('1/6명')).toBeVisible()
+
+  await page.getByRole('button', { name: '사육팀 펼치기' }).click()
+  await expect(page.getByRole('checkbox', { name: '이승현 사원' })).toBeChecked()
+})
+
+test('S10: 필수값 입력 후 생성', async ({ page }) => {
+  await page.goto('/tasks/create')
   await fillValidTask(page, { title: '새로 등록한 업무' })
   await page.getByRole('button', { name: '생성하기' }).click()
 
@@ -114,16 +140,8 @@ test('S9: 정상 생성', async ({ page }) => {
   )
 })
 
-test('S10: 뒤로가기 (변경 없음)', async ({ page }) => {
-  await page.getByRole('link', { name: '뒤로가기' }).click()
-
-  await expect(page).toHaveURL(/\/tasks$/)
-  await expect(
-    page.getByRole('alertdialog', { name: '정말 나가시겠습니까?' }),
-  ).toHaveCount(0)
-})
-
 test('S11: 우선순위 미선택 검증', async ({ page }) => {
+  await page.goto('/tasks/create')
   await fillValidTask(page, { skip: 'priority' })
   await page.getByRole('button', { name: '생성하기' }).click()
 
@@ -131,9 +149,11 @@ test('S11: 우선순위 미선택 검증', async ({ page }) => {
   await expect(dialog).toContainText('우선순위를 선택해주세요')
   await dialog.getByRole('button', { name: '확인' }).click()
   await expect(page).toHaveURL(/\/tasks\/create$/)
+  expect(await mutationCount(page, 'create')).toBe(0)
 })
 
 test('S12: 완료기한 미선택 검증', async ({ page }) => {
+  await page.goto('/tasks/create')
   await fillValidTask(page, { skip: 'dueDate' })
   await page.getByRole('button', { name: '생성하기' }).click()
 
@@ -143,27 +163,19 @@ test('S12: 완료기한 미선택 검증', async ({ page }) => {
   await expect(page).toHaveURL(/\/tasks\/create$/)
 })
 
-test('S13: 공개범위 미선택 검증', async ({ page }) => {
-  await fillValidTask(page, { skip: 'visibility' })
-  await page.getByRole('button', { name: '생성하기' }).click()
-
-  const dialog = page.getByRole('alertdialog')
-  await expect(dialog).toContainText('공개범위를 선택해주세요')
-  await dialog.getByRole('button', { name: '확인' }).click()
-  await expect(visibilityTrigger(page)).toBeFocused()
-})
-
-test('S14: 담당자 미선택 검증', async ({ page }) => {
+test('S13: 담당자 미선택 검증', async ({ page }) => {
+  await page.goto('/tasks/create')
   await fillValidTask(page, { skip: 'assignee' })
   await page.getByRole('button', { name: '생성하기' }).click()
 
   const dialog = page.getByRole('alertdialog')
   await expect(dialog).toContainText('담당자를 선택해주세요')
   await dialog.getByRole('button', { name: '확인' }).click()
-  await expect(assigneeTrigger(page)).toBeFocused()
+  await expect(allEmployees(page)).toBeFocused()
 })
 
-test('S15: 제목 누락 검증과 포커스 복귀', async ({ page }) => {
+test('S14: 제목 미입력 검증', async ({ page }) => {
+  await page.goto('/tasks/create')
   await fillValidTask(page, { skip: 'title' })
   await page.getByRole('button', { name: '생성하기' }).click()
 
@@ -174,7 +186,8 @@ test('S15: 제목 누락 검증과 포커스 복귀', async ({ page }) => {
   await expect(page).toHaveURL(/\/tasks\/create$/)
 })
 
-test('S16: 상세 업무 내용 누락 검증', async ({ page }) => {
+test('S15: 상세 내용 미입력 검증', async ({ page }) => {
+  await page.goto('/tasks/create')
   await fillValidTask(page, { skip: 'content' })
   await page.getByRole('button', { name: '생성하기' }).click()
 
@@ -184,51 +197,26 @@ test('S16: 상세 업무 내용 누락 검증', async ({ page }) => {
   await expect(page.getByLabel(/상세 업무 내용/)).toBeFocused()
 })
 
-test('S17: 드롭다운 Esc 로 닫기', async ({ page }) => {
-  await visibilityTrigger(page).click()
-  await expect(page.getByRole('listbox')).toBeVisible()
+test('S16: 첨부 추가·제거', async ({ page }) => {
+  await page.goto('/tasks/create')
+  await uploadInput(page).setInputFiles([
+    filePayload('업무 지침.pdf', 'application/pdf'),
+  ])
 
-  await page.keyboard.press('Escape')
+  await expect(attachmentGroup(page).getByText('업무 지침.pdf')).toBeVisible()
+  await expect(page.getByRole('status')).toContainText(
+    '첨부파일 등록에 성공했습니다',
+  )
 
-  await expect(page.getByRole('listbox')).toHaveCount(0)
-  await expect(visibilityTrigger(page)).toContainText('전체 직원')
-  await expect(visibilityTrigger(page)).toBeFocused()
+  const removeButton = page.locator('button[aria-label="업무 지침.pdf 삭제"]')
+  await removeButton.locator('..').hover()
+  await removeButton.click()
+
+  await expect(attachmentGroup(page).getByText('업무 지침.pdf')).toHaveCount(0)
 })
 
-test('S18: 드롭다운 바깥 클릭으로 닫기', async ({ page }) => {
-  await assigneeTrigger(page).click()
-  await expect(page.getByRole('listbox')).toBeVisible()
-
-  await page.locator('body').click({ position: { x: 5, y: 5 } })
-
-  await expect(page.getByRole('listbox')).toHaveCount(0)
-  await expect(assigneeTrigger(page)).toContainText('직원 목록에서 선택')
-})
-
-test('S19: 50MB 초과 파일 거부', async ({ page }) => {
-  await uploadInput(page).evaluate((input) => {
-    const oversizedFile = new File(['oversized'], '초과 파일.zip', {
-      type: 'application/zip',
-    })
-    Object.defineProperty(oversizedFile, 'size', {
-      value: 50 * 1024 * 1024 + 1,
-    })
-
-    const files = new DataTransfer()
-    files.items.add(oversizedFile)
-    input.files = files.files
-    input.dispatchEvent(new Event('change', { bubbles: true }))
-  })
-
-  await expect(
-    page.getByRole('button', { name: '초과 파일.zip 삭제' }),
-  ).toHaveCount(0)
-  await expect(
-    page.getByText('초과 파일.zip은 50MB를 초과해 첨부할 수 없습니다.'),
-  ).toBeVisible()
-})
-
-test('S20: 입력 후 이탈 보호', async ({ page }) => {
+test('S17: 이탈 보호', async ({ page }) => {
+  await page.goto('/tasks/create')
   await page.getByLabel(/제목/).fill('작성 중인 업무')
   await page.getByRole('link', { name: '뒤로가기' }).click()
 
@@ -242,19 +230,8 @@ test('S20: 입력 후 이탈 보호', async ({ page }) => {
   await expect(page.getByLabel(/제목/)).toHaveValue('작성 중인 업무')
 })
 
-test('S21: 이탈 확인 후 이동', async ({ page }) => {
-  await page.getByLabel(/제목/).fill('나갈 업무')
-  await page.getByRole('link', { name: '뒤로가기' }).click()
-
-  await page
-    .getByRole('alertdialog', { name: '정말 나가시겠습니까?' })
-    .getByRole('button', { name: '확인' })
-    .click()
-
-  await expect(page).toHaveURL(/\/tasks$/)
-})
-
-test('S22: 생성 중 중복 제출 방지', async ({ page }) => {
+test('S18: 생성 중복 제출 방지', async ({ page }) => {
+  await page.goto('/tasks/create')
   await delayTaskMutation(page)
   await fillValidTask(page, { title: '한 번만 등록할 업무' })
 
@@ -270,7 +247,20 @@ test('S22: 생성 중 중복 제출 방지', async ({ page }) => {
   expect(await mutationCount(page, 'create')).toBe(1)
 })
 
-test('S23: 키보드 전용 조작', async ({ page }) => {
+test('S19: 담당자 다중 선택 결과', async ({ page }) => {
+  await page.goto('/tasks/create')
+  await fillValidTask(page, { team: '창고팀', title: '다중 담당자 업무' })
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  await expect(page).toHaveURL(/\/tasks$/)
+  const row = page.getByTestId('task-row').first()
+  await expect(row).toContainText('다중 담당자 업무')
+  await expect(row).toContainText('이지아')
+  await expect(row).toContainText('외 2명')
+})
+
+test('S20: 키보드 조작', async ({ page }) => {
+  await page.goto('/tasks/create')
   await page.getByRole('link', { name: '뒤로가기' }).focus()
 
   await page.keyboard.press('Tab')
@@ -281,25 +271,18 @@ test('S23: 키보드 전용 조작', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(page.getByLabel('완료기한')).toBeFocused()
   await page.getByLabel('완료기한').fill('2026-12-31')
-
   await page.getByLabel('완료기한').focus()
-  await page.keyboard.press('Tab')
-  await expect(visibilityTrigger(page)).toBeFocused()
-  await page.keyboard.press('Enter')
-  await page.keyboard.press('Tab')
-  await page.keyboard.press('Enter')
-  await expect(visibilityTrigger(page)).toContainText('전체 직원')
-  await expect(visibilityTrigger(page)).toBeFocused()
 
+  // 완료기한에서 Tab 하면 담당자 트리의 첫 행으로 넘어간다.
   await page.keyboard.press('Tab')
-  await expect(assigneeTrigger(page)).toBeFocused()
-  await page.keyboard.press('Enter')
-  await page.keyboard.press('Tab')
-  await page.keyboard.press('Enter')
-  await expect(assigneeTrigger(page)).toContainText('이승현 사원')
-  await expect(assigneeTrigger(page)).toBeFocused()
+  await expect(allEmployees(page)).toBeFocused()
+  await page.keyboard.press('Space')
+  await expect(page.getByText('18/18명')).toBeVisible()
 
-  await page.keyboard.press('Tab')
+  // 팀 행 4개(체크박스 + 펼침 버튼 = 8개)를 지나면 제목 입력이다.
+  for (let index = 0; index < 9; index += 1) {
+    await page.keyboard.press('Tab')
+  }
   await expect(page.getByLabel(/제목/)).toBeFocused()
   await page.keyboard.type('키보드로 등록한 업무')
 
@@ -321,9 +304,9 @@ test('S23: 키보드 전용 조작', async ({ page }) => {
 
 async function fillValidTask(
   page: Page,
-  options: { skip?: SkippableField; title?: string } = {},
+  options: { skip?: SkippableField; title?: string; team?: string } = {},
 ) {
-  const { skip, title = '유효한 업무' } = options
+  const { skip, title = '유효한 업무', team = '사육팀' } = options
 
   if (skip !== 'priority') {
     await page.getByRole('radio', { name: '상' }).check()
@@ -331,13 +314,8 @@ async function fillValidTask(
   if (skip !== 'dueDate') {
     await page.getByLabel('완료기한').fill('2026-12-31')
   }
-  if (skip !== 'visibility') {
-    await visibilityTrigger(page).click()
-    await page.getByRole('option', { name: '전체 직원' }).click()
-  }
   if (skip !== 'assignee') {
-    await assigneeTrigger(page).click()
-    await page.getByRole('option', { name: '이승현 사원' }).click()
+    await teamCheckbox(page, team).check()
   }
   if (skip !== 'title') {
     await page.getByLabel(/제목/).fill(title)
@@ -347,12 +325,22 @@ async function fillValidTask(
   }
 }
 
-function visibilityTrigger(page: Page) {
-  return page.getByRole('button', { name: '공개범위를 선택해주세요' })
+function allEmployees(page: Page) {
+  return page.getByRole('checkbox', { name: /^전체 직원/ })
 }
 
-function assigneeTrigger(page: Page) {
-  return page.getByRole('button', { name: '담당자를 선택해주세요' })
+function allEmployeesRow(page: Page) {
+  return page.getByRole('treeitem').filter({ hasText: '전체 직원' })
+}
+
+function teamCheckbox(page: Page, teamName: string) {
+  return page.getByRole('checkbox', { name: new RegExp(`^${teamName} `) })
+}
+
+function teamRow(page: Page, teamName: string) {
+  return page
+    .getByRole('treeitem')
+    .filter({ has: page.getByRole('button', { name: new RegExp(teamName) }) })
 }
 
 function attachmentGroup(page: Page) {
@@ -373,7 +361,7 @@ async function delayTaskMutation(page: Page, ms = 1500) {
   )
 }
 
-// mock 이 기록한 요청 횟수. 저장·삭제는 두 번 실행돼도 결과가 같아 횟수로 확인한다.
+// mock 이 기록한 요청 횟수. 저장은 두 번 실행돼도 결과가 같아 횟수로 확인한다.
 async function mutationCount(page: Page, kind: 'create') {
   return page.evaluate(
     ([key, target]) => {

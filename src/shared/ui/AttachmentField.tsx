@@ -16,6 +16,11 @@ export interface AttachmentAddResult {
 }
 
 interface AttachmentFieldProps {
+  /**
+   * `task` 는 업무 폼의 `add file` 카드(yot 145:12267)다 — 첨부가 없어도 `첨부자료` 라벨이
+   * 보이고, 라벨이 20px 이며 드롭존 배경이 gray/10 이다. 공지·자료 화면은 `default` 다.
+   */
+  variant?: 'default' | 'task'
   initialFileNames?: string[]
   onFilesChange?: (hasFiles: boolean) => void
   onFileNamesChange?: (fileNames: string[]) => void
@@ -25,6 +30,7 @@ interface AttachmentFieldProps {
 }
 
 export function AttachmentField({
+  variant = 'default',
   initialFileNames = [],
   onFilesChange,
   onFileNamesChange,
@@ -117,9 +123,9 @@ export function AttachmentField({
   }
 
   return (
-    <AttachmentSection role="group" aria-label="첨부파일">
+    <AttachmentSection role="group" aria-label="첨부파일" data-variant={variant}>
       <AttachmentCard data-testid="notice-attachment-card">
-        {files.length > 0 && (
+        {(files.length > 0 || variant === 'task') && (
           <>
             <AttachmentTitle>첨부자료</AttachmentTitle>
             <FileList>
@@ -203,6 +209,10 @@ function fileKind(fileName: string) {
 
 const AttachmentSection = styled.section`
   margin-top: 32px;
+
+  &[data-variant='task'] {
+    margin-top: 0;
+  }
 `
 
 const AttachmentCard = styled.div`
@@ -222,6 +232,11 @@ const AttachmentTitle = styled.h2`
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+
+  [data-variant='task'] & {
+    font-size: 20px;
+    line-height: 1.3;
+  }
 `
 
 const FileList = styled.div`
@@ -229,6 +244,14 @@ const FileList = styled.div`
   flex-wrap: wrap;
   gap: 16px;
   margin-top: 8px;
+
+  [data-variant='task'] & {
+    margin-top: 10px;
+  }
+
+  &:empty {
+    display: none;
+  }
 `
 
 const FileChip = styled.div`
@@ -334,6 +357,11 @@ const DropZone = styled.button`
   color: ${({ theme }) => theme.colors.textGuide};
   cursor: pointer;
   font: inherit;
+
+  /* yot 업무 폼의 드롭존은 gray/10(#DDDDE3)이다. 다른 화면은 기존 값을 유지한다. */
+  [data-variant='task'] & {
+    background: ${({ theme }) => theme.colors.tableHeaderStrong};
+  }
 
   &[data-dragging='true'] {
     border-color: ${({ theme }) => theme.colors.primary};

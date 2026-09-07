@@ -3,10 +3,8 @@ import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createMockTask,
-  deleteTask,
-  recordDeletedMockTask,
-  taskAssignees,
-  taskVisibilityOptions,
+  taskMembers,
+  taskTeams,
   updateMockTask,
   type Task,
   type TaskPriority,
@@ -15,29 +13,21 @@ import {
 import {
   AttachmentField,
   DateField,
-  DeleteConfirmationDialog,
   Toast,
   ValidationDialog,
   type AttachmentAddResult,
   type ToastVariant,
 } from '@/shared/ui'
+import { TaskAssigneeTree } from './TaskAssigneeTree'
 import { TaskPriorityField } from './TaskPriorityField'
-import { TaskSelectField } from './TaskSelectField'
 
-type FieldName =
-  | 'priority'
-  | 'dueDate'
-  | 'visibility'
-  | 'assigneeId'
-  | 'title'
-  | 'content'
+type FieldName = 'priority' | 'dueDate' | 'assignees' | 'title' | 'content'
 
 // 검증 순서는 화면의 시각적 순서를 따른다(spec 결정 사항).
 const validationOrder: FieldName[] = [
   'priority',
   'dueDate',
-  'visibility',
-  'assigneeId',
+  'assignees',
   'title',
   'content',
 ]
@@ -45,8 +35,7 @@ const validationOrder: FieldName[] = [
 const validationMessages: Record<FieldName, string> = {
   priority: '우선순위를 선택해주세요',
   dueDate: '완료기한을 선택해주세요',
-  visibility: '공개범위를 선택해주세요',
-  assigneeId: '담당자를 선택해주세요',
+  assignees: '담당자를 선택해주세요',
   title: '제목을 입력해주세요',
   content: '상세 업무 내용을 입력해주세요',
 }
@@ -57,63 +46,49 @@ interface ToastState {
 }
 
 interface TaskFormProps {
+  mode: 'create' | 'edit'
   initialTask?: Task
-  onCompleted: (result: 'saved' | 'deleted') => void
+  onCompleted: () => void
   onDirtyChange: (isDirty: boolean) => void
 }
 
+// Figma `task / 업무 폼`(yot 145:12270). 생성·수정 공용이며 차이는 제출 버튼 라벨뿐이다.
+// 삭제는 이 폼에 없다(상세 화면 케밥 소관 — task-edit spec 결정 사항).
 export function TaskForm({
+  mode,
   initialTask,
   onCompleted,
   onDirtyChange,
 }: TaskFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
-  const deletingRef = useRef(false)
   const priorityRef = useRef<HTMLInputElement>(null)
   const dueDateRef = useRef<HTMLInputElement>(null)
-  const visibilityRef = useRef<HTMLButtonElement>(null)
-  const assigneeRef = useRef<HTMLButtonElement>(null)
+  const assigneeRef = useRef<HTMLInputElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
-  const deleteButtonRef = useRef<HTMLButtonElement>(null)
 
   const initialAttachmentNames = useMemo(
     () => initialTask?.attachments ?? [],
     [initialTask?.attachments],
   )
+  const initialAssigneeIds = useMemo(
+    () => initialTask?.assigneeIds ?? [],
+    [initialTask?.assigneeIds],
+  )
   const [priority, setPriority] = useState<TaskPriority | null>(
     initialTask?.priority ?? null,
   )
   const [dueDate, setDueDate] = useState(initialTask?.dueDate ?? '')
-  const [visibility, setVisibility] = useState<string | null>(
-    initialTask?.visibility ?? null,
-  )
-  const [assigneeId, setAssigneeId] = useState<string | null>(
-    initialTask?.assigneeId ?? null,
-  )
+  const [assigneeIds, setAssigneeIds] = useState(initialAssigneeIds)
   const [title, setTitle] = useState(initialTask?.title ?? '')
   const [content, setContent] = useState(initialTask?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
   const [validationError, setValidationError] = useState<FieldName | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
 
-  const isEditing = Boolean(initialTask)
-
-  const visibilityOptions = useMemo(
-    () => taskVisibilityOptions.map((option) => ({ value: option, label: option })),
-    [],
-  )
-  const assigneeOptions = useMemo(
-    () =>
-      taskAssignees.map((assignee) => ({
-        value: assignee.id,
-        label: assignee.label,
-      })),
-    [],
-  )
+  const isEditing = mode === 'edit'
 
   const mutation = useMutation({
     mutationFn: (input: UpdateTaskInput) =>
@@ -121,19 +96,12 @@ export function TaskForm({
         ? updateMockTask({ id: initialTask.id, input })
         : createMockTask(input),
   })
-  const deleteMutation = useMutation({
-    mutationFn: () => {
-      if (!initialTask) throw new Error('Task not found')
-      return deleteTask({ id: Number(initialTask.id) })
-    },
-  })
 
   useEffect(() => {
     const isDirty = Boolean(
       priority !== (initialTask?.priority ?? null) ||
         dueDate !== (initialTask?.dueDate ?? '') ||
-        visibility !== (initialTask?.visibility ?? null) ||
-        assigneeId !== (initialTask?.assigneeId ?? null) ||
+        !sameStringArray(assigneeIds, initialAssigneeIds) ||
         title !== (initialTask?.title ?? '') ||
         content !== (initialTask?.content ?? '') ||
         (isEditing
@@ -143,19 +111,28 @@ export function TaskForm({
 
     onDirtyChange(isDirty)
   }, [
-    assigneeId,
+    assigneeIds,
     attachmentNames,
     content,
     dueDate,
     hasAttachments,
+    initialAssigneeIds,
     initialAttachmentNames,
     initialTask,
     isEditing,
     onDirtyChange,
     priority,
     title,
-    visibility,
   ])
+
+  // Figma `body text section` 은 한 줄 높이(1320×137)다. 입력이 길어지면 카드가 함께
+  // 늘어나도록 textarea 높이를 내용에 맞춘다.
+  useEffect(() => {
+    const element = contentRef.current
+    if (!element) return
+    element.style.height = 'auto'
+    element.style.height = `${element.scrollHeight}px`
+  }, [content])
 
   const handleValidationConfirm = useCallback(() => {
     const error = validationError
@@ -164,8 +141,7 @@ export function TaskForm({
     requestAnimationFrame(() => {
       if (error === 'priority') priorityRef.current?.focus()
       else if (error === 'dueDate') dueDateRef.current?.focus()
-      else if (error === 'visibility') visibilityRef.current?.focus()
-      else if (error === 'assigneeId') assigneeRef.current?.focus()
+      else if (error === 'assignees') assigneeRef.current?.focus()
       else if (error === 'title') titleRef.current?.focus()
       else contentRef.current?.focus()
     })
@@ -188,8 +164,7 @@ export function TaskForm({
     const values = {
       priority,
       dueDate,
-      visibility,
-      assigneeId,
+      assignees: assigneeIds.length > 0,
       title: title.trim(),
       content: content.trim(),
     }
@@ -206,8 +181,7 @@ export function TaskForm({
       {
         priority: values.priority as TaskPriority,
         dueDate: values.dueDate,
-        visibility: values.visibility as string,
-        assigneeId: values.assigneeId as string,
+        assigneeIds,
         title: values.title,
         content: values.content,
         attachments: attachmentNames,
@@ -218,7 +192,7 @@ export function TaskForm({
           if (initialTask) {
             queryClient.removeQueries({ queryKey: ['tasks', initialTask.id] })
           }
-          onCompleted('saved')
+          onCompleted()
         },
         onError: () => {
           submittingRef.current = false
@@ -227,62 +201,35 @@ export function TaskForm({
     )
   }
 
-  function handleDelete() {
-    if (deletingRef.current || deleteMutation.isPending) return
-
-    deletingRef.current = true
-    deleteMutation.mutate(undefined, {
-      onSuccess: async () => {
-        if (initialTask) {
-          recordDeletedMockTask(initialTask.id)
-          queryClient.removeQueries({ queryKey: ['tasks', initialTask.id] })
-        }
-        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
-        onCompleted('deleted')
-      },
-      onError: () => {
-        deletingRef.current = false
-        setDeleteDialogOpen(false)
-        setToast({ variant: 'error', message: '데이터 삭제에 실패했습니다' })
-        requestAnimationFrame(() => deleteButtonRef.current?.focus())
-      },
-    })
-  }
-
-  const pending = mutation.isPending || deleteMutation.isPending
-
   return (
     <Form data-editing={isEditing} onSubmit={handleSubmit} noValidate>
-      <TaskPriorityField ref={priorityRef} value={priority} onChange={setPriority} />
-
       <FieldRow>
+        <TaskPriorityField
+          ref={priorityRef}
+          value={priority}
+          onChange={setPriority}
+        />
         <DateField
           ref={dueDateRef}
           id="task-due-date"
           label="완료기한"
+          size="md"
           value={dueDate}
           onChange={setDueDate}
-          onTabForward={() => visibilityRef.current?.focus()}
-        />
-        <TaskSelectField
-          ref={visibilityRef}
-          label="공개범위를 선택해주세요"
-          placeholder="전체 직원"
-          options={visibilityOptions}
-          value={visibility}
-          onChange={setVisibility}
-        />
-        <TaskSelectField
-          ref={assigneeRef}
-          label="담당자를 선택해주세요"
-          placeholder="직원 목록에서 선택"
-          options={assigneeOptions}
-          value={assigneeId}
-          onChange={setAssigneeId}
+          onTabForward={() => assigneeRef.current?.focus()}
         />
       </FieldRow>
 
-      <TitleCard>
+      <TaskAssigneeTree
+        ref={assigneeRef}
+        teams={taskTeams}
+        members={taskMembers}
+        selectedIds={assigneeIds}
+        onChange={setAssigneeIds}
+      />
+
+      {/* Figma `title section` / `body text section` / `add file` — 각각 별도 카드다. */}
+      <SectionCard>
         <Label htmlFor="task-title">
           제목 <Required aria-hidden="true">*</Required>
         </Label>
@@ -294,9 +241,9 @@ export function TaskForm({
           placeholder="제목을 입력해주세요"
           onChange={(event) => setTitle(event.target.value)}
         />
-      </TitleCard>
+      </SectionCard>
 
-      <ContentCard>
+      <SectionCard>
         <Label htmlFor="task-content">
           상세 업무 내용 <Required aria-hidden="true">*</Required>
         </Label>
@@ -304,13 +251,15 @@ export function TaskForm({
           ref={contentRef}
           id="task-content"
           required
+          rows={1}
           value={content}
           placeholder="상세 업무 내용을 입력해주세요"
           onChange={(event) => setContent(event.target.value)}
         />
-      </ContentCard>
+      </SectionCard>
 
       <AttachmentField
+        variant="task"
         initialFileNames={initialAttachmentNames}
         onFilesChange={setHasAttachments}
         onFileNamesChange={setAttachmentNames}
@@ -326,17 +275,7 @@ export function TaskForm({
       )}
 
       <Actions>
-        {isEditing && (
-          <DeleteButton
-            ref={deleteButtonRef}
-            type="button"
-            disabled={pending}
-            onClick={() => setDeleteDialogOpen(true)}
-          >
-            삭제하기
-          </DeleteButton>
-        )}
-        <SubmitButton type="submit" disabled={pending}>
+        <SubmitButton type="submit" disabled={mutation.isPending}>
           {mutation.isPending
             ? isEditing
               ? '저장 중'
@@ -351,17 +290,6 @@ export function TaskForm({
         <ValidationDialog
           message={validationMessages[validationError]}
           onConfirm={handleValidationConfirm}
-        />
-      )}
-
-      {deleteDialogOpen && (
-        <DeleteConfirmationDialog
-          pending={deleteMutation.isPending}
-          onCancel={() => {
-            setDeleteDialogOpen(false)
-            requestAnimationFrame(() => deleteButtonRef.current?.focus())
-          }}
-          onConfirm={handleDelete}
         />
       )}
 
@@ -390,40 +318,35 @@ const Form = styled.form`
   gap: 32px;
 `
 
+// 우선순위 카드 868 + 완료기한 카드 420, 사이 간격 32px(Figma `priority / due row`).
 const FieldRow = styled.div`
   display: flex;
-  gap: 21px;
+  gap: 32px;
 
   @media (max-width: 980px) {
     flex-direction: column;
   }
 `
 
-const TitleCard = styled.div`
+// Figma `title section`(1320×164) · `body text section`(1320×137) — 같은 규격의 카드다.
+const SectionCard = styled.div`
   display: flex;
-  min-height: 164px;
   flex-direction: column;
-  justify-content: center;
   gap: 10px;
   padding: 40px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
-`
 
-const ContentCard = styled.div`
-  display: flex;
-  min-height: 240px;
-  flex-direction: column;
-  gap: 10px;
-  padding: 40px;
-  border-radius: 20px;
-  background: ${({ theme }) => theme.colors.surface};
+  @media (max-width: 980px) {
+    padding: 24px;
+  }
 `
 
 const Label = styled.label`
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 22px;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 20px;
   font-weight: 500;
+  line-height: 1.3;
 `
 
 const Required = styled.span`
@@ -437,8 +360,9 @@ const TitleInput = styled.input`
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   font-family: inherit;
-  font-size: 40px;
-  font-weight: 500;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.4;
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textGuide};
@@ -447,15 +371,16 @@ const TitleInput = styled.input`
 
 const ContentInput = styled.textarea`
   width: 100%;
-  min-height: 120px;
-  flex: 1;
+  min-height: 28px;
+  overflow: hidden;
   border: 0;
   outline: 0;
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   font-family: inherit;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 500;
+  line-height: 1.4;
   resize: none;
 
   &::placeholder {
@@ -473,40 +398,29 @@ const SubmitStatus = styled.p`
 const Actions = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 24px;
-  flex-wrap: wrap;
 `
 
-const actionButton = `
+// Figma 제출 버튼 123×61, 본문 우측 끝 정렬.
+const SubmitButton = styled.button`
   min-height: 61px;
   padding: 16px 20px;
+  border: 0;
   border-radius: 8px;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
+  cursor: pointer;
   font-family: inherit;
   font-size: 24px;
   font-weight: 600;
-  cursor: pointer;
-`
-
-const DeleteButton = styled.button`
-  ${actionButton}
-  border: 2px solid ${({ theme }) => theme.colors.danger};
-  background: transparent;
-  color: ${({ theme }) => theme.colors.danger};
+  line-height: 1.2;
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6;
   }
-`
 
-const SubmitButton = styled.button`
-  ${actionButton}
-  border: 0;
-  background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.surface};
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 3px;
   }
 `
