@@ -11,6 +11,7 @@ import type { WorkLogForm } from '../model/types'
 
 interface WorkLogFormTableProps {
   forms: WorkLogForm[]
+  onRowClick: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   openKebabId: string | null
@@ -29,6 +30,7 @@ const emptyColumns: DataTableColumn[] = [
 
 export function WorkLogFormTable({
   forms,
+  onRowClick,
   onEdit,
   onDelete,
   openKebabId,
@@ -86,6 +88,7 @@ export function WorkLogFormTable({
         }),
       )}
       columns={columns}
+      onRowClick={onRowClick}
       rowTestId="work-log-form-row"
       pagination={pagination}
       emptyLabel={emptyLabel}
