@@ -27,6 +27,8 @@ export {
   deleteMockWorkLogForm,
   deletedWorkLogFormStorageKey,
   deletedWorkLogStorageKey,
+  getMockWorkLogDetail,
+  getMockWorkLogFormDetail,
   getMockWorkLogForms,
   getMockWorkLogs,
   mockWorkLogForms,
