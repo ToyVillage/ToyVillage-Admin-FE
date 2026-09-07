@@ -17,3 +17,4 @@ export {
   mockWorkLogForms,
   mockWorkLogs,
 } from './model/mock'
+export { WorkLogTable } from './ui/WorkLogTable'
