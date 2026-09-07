@@ -22,11 +22,14 @@ const figmaAttachments = ['당일 지침.pdf', '휴관안내.png', '휴관안내
 
 // 슬라이스용 mock. 추후 TanStack Query + Axios로 대체.
 // 1~3번은 Figma 3118:4294 의 `심사대기` 1페이지 행이다.
+// taskId 는 업무 상세(`task-detail`)의 담당자별 업무보고 목록을 만든다.
+// 업무 1 에는 r9·r10(승인) · r11(반려) · r5(심사대기) 4건이 붙어 Figma 진행도(승인 2 · 반려 1 · 심사대기 1)를 재현한다.
+// 업무 2 에는 r2(심사대기) · r13(재제출)이 붙어 `재제출` 이 진행도에서 심사대기로 합산되는 것을 보인다.
 // `심사대기` 를 7건 두어 Figma 페이지네이션(1·2·3)이 재현되게 한다.
 export const mockTaskReports: TaskReport[] = [
   {
     id: 'r1',
-    taskId: '1',
+    taskId: '4',
     assigneeId: 'emp-1',
     title: '업무 제목',
     content: figmaContent,
@@ -63,7 +66,7 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r4',
-    taskId: '4',
+    taskId: '5',
     assigneeId: 'emp-2',
     title: '여름 프로그램 준비 보고',
     content: '여름 프로그램 물품과 일정을 정리했습니다.',
@@ -76,8 +79,8 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r5',
-    taskId: '5',
-    assigneeId: 'emp-3',
+    taskId: '1',
+    assigneeId: 'emp-10',
     title: '사육장 점검 보고',
     content: '사육장 점검 결과를 정리했습니다.',
     reviewStatus: 'PENDING',
@@ -88,7 +91,7 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r6',
-    taskId: '6',
+    taskId: '7',
     assigneeId: 'emp-1',
     title: '단체예약 응대 정리 보고',
     content: '이번 달 단체예약 응대 내역을 정리했습니다.',
@@ -100,7 +103,7 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r7',
-    taskId: '7',
+    taskId: '8',
     assigneeId: 'emp-2',
     title: '휴관 안내문 게시 보고',
     content: '휴관 안내문을 게시했습니다.',
@@ -112,7 +115,7 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r8',
-    taskId: '8',
+    taskId: '9',
     assigneeId: 'emp-3',
     title: '자료실 파일 정리 보고',
     content: '자료실의 오래된 파일을 정리했습니다.',
@@ -124,7 +127,7 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r9',
-    taskId: '9',
+    taskId: '1',
     assigneeId: 'emp-1',
     title: '연간 운영 계획 초안 보고',
     content: '내년 운영 계획 초안을 작성했습니다.',
@@ -136,7 +139,7 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r10',
-    taskId: '10',
+    taskId: '1',
     assigneeId: 'emp-2',
     title: '체험 프로그램 개선 보고',
     content: '체험 프로그램 운영 개선안을 정리했습니다.',
@@ -148,6 +151,7 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r11',
+    taskId: '1',
     assigneeId: 'emp-3',
     title: '안전 점검 보고',
     content: '안전 점검 항목 일부가 누락되었습니다.',
@@ -170,6 +174,7 @@ export const mockTaskReports: TaskReport[] = [
   },
   {
     id: 'r13',
+    taskId: '2',
     assigneeId: 'emp-2',
     title: '전시물 교체 보고',
     content: '반려 사유를 반영해 다시 제출합니다.',
@@ -208,11 +213,12 @@ export async function getMockTaskReport(
   return reports.find((report) => report.id === id) ?? null
 }
 
-export async function getMockTaskReportByTaskId(
+// 업무 상세의 담당자별 업무보고 목록. 제출 순서(mock 정의 순서)를 그대로 쓴다.
+export async function getMockTaskReportsByTaskId(
   taskId: string,
-): Promise<TaskReport | null> {
+): Promise<TaskReport[]> {
   const reports = await getMockTaskReports()
-  return reports.find((report) => report.taskId === taskId) ?? null
+  return reports.filter((report) => report.taskId === taskId)
 }
 
 export async function reviewMockTaskReport({

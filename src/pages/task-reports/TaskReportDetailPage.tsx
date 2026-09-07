@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { findTaskAssignee } from '@/entities/task'
+import { findTaskMember } from '@/entities/task'
 import { getMockTaskReport, TaskReportMetaRow } from '@/entities/task-report'
 import { TaskReportReviewActions } from '@/features/review-task-report'
 import { AttachmentList } from '@/shared/ui'
@@ -52,7 +52,7 @@ export function TaskReportDetailPage() {
         <TaskReportMetaRow
           priority={report.priority}
           taskStatus={report.taskStatus}
-          assigneeName={findTaskAssignee(report.assigneeId)?.name ?? '미지정'}
+          assigneeName={findTaskMember(report.assigneeId)?.name ?? '미지정'}
           dueDate={report.dueDate}
           visibility={report.visibility}
         />

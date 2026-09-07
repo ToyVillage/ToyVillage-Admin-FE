@@ -2,9 +2,10 @@ import { taskPriorities, taskStatuses } from './types'
 import type {
   CreateTaskInput,
   Task,
-  TaskAssignee,
+  TaskMember,
   TaskPriority,
   TaskStatus,
+  TaskTeam,
   UpdateTaskInput,
 } from './types'
 
@@ -20,20 +21,42 @@ export const taskMutationLogStorageKey = 'toyvillage:tasks:mutation-log'
 
 type TaskMutationKind = 'create' | 'update'
 
-// 담당자 드롭다운 옵션. 목록 `담당자` 셀은 name, 드롭다운은 label 을 쓴다.
-export const taskAssignees: TaskAssignee[] = [
-  { id: 'emp-1', name: '이승현', label: '이승현 사원' },
-  { id: 'emp-2', name: '김수인', label: '김수인 사원' },
-  { id: 'emp-3', name: '이지아', label: '이지아 사원' },
+// 담당자 팀 트리(yot `1:3694` 담당자 섹션). 전체 18명이고 팀 인원은 Figma 카운트를 따른다.
+// Figma 실측은 사육팀 4명(이승현·홍길동·김민수·최유진)뿐이고 나머지는 보충한 mock 이다
+// (task-create.spec.md 결정 사항). 실제 직원 데이터가 들어오면 교체한다.
+export const taskTeams: TaskTeam[] = [
+  { id: 'team-1', name: '동물 관리팀' },
+  { id: 'team-2', name: '창고팀' },
+  { id: 'team-3', name: '사육장 청소팀' },
+  { id: 'team-4', name: '사육팀' },
 ]
 
-// 생성·수정 폼의 공개범위 옵션(Figma 3851:5193). 목록 표기와는 별개 값이다(spec 결정 사항).
-export const taskVisibilityOptions = ['전체 직원', '팀이름 1', '팀이름 2']
+// 목록·상세의 `담당자` 셀은 name, 트리 행은 label 을 쓴다.
+export const taskMembers: TaskMember[] = [
+  { id: 'emp-2', teamId: 'team-1', name: '김수인', label: '김수인 사원' },
+  { id: 'emp-4', teamId: 'team-1', name: '박지훈', label: '박지훈 사원' },
+  { id: 'emp-5', teamId: 'team-1', name: '정해나', label: '정해나 대리' },
+  { id: 'emp-6', teamId: 'team-1', name: '오세영', label: '오세영 사원' },
+  { id: 'emp-7', teamId: 'team-1', name: '한도윤', label: '한도윤 과장' },
+  { id: 'emp-3', teamId: 'team-2', name: '이지아', label: '이지아 대리' },
+  { id: 'emp-8', teamId: 'team-2', name: '서준호', label: '서준호 사원' },
+  { id: 'emp-9', teamId: 'team-2', name: '문가온', label: '문가온 사원' },
+  { id: 'emp-10', teamId: 'team-3', name: '김유영', label: '김유영 사원' },
+  { id: 'emp-11', teamId: 'team-3', name: '배수민', label: '배수민 사원' },
+  { id: 'emp-12', teamId: 'team-3', name: '신재원', label: '신재원 사원' },
+  { id: 'emp-13', teamId: 'team-3', name: '임하늘', label: '임하늘 대리' },
+  { id: 'emp-1', teamId: 'team-4', name: '이승현', label: '이승현 사원' },
+  { id: 'emp-14', teamId: 'team-4', name: '홍길동', label: '홍길동 과장' },
+  { id: 'emp-15', teamId: 'team-4', name: '김민수', label: '김민수 사원' },
+  { id: 'emp-16', teamId: 'team-4', name: '최유진', label: '최유진 사원' },
+  { id: 'emp-17', teamId: 'team-4', name: '강태오', label: '강태오 사원' },
+  { id: 'emp-18', teamId: 'team-4', name: '윤소린', label: '윤소린 대리' },
+]
 
 const figmaContent = '상세 업무 내용이 입력되어있음'
 
 // 슬라이스용 mock. 추후 TanStack Query + Axios로 대체.
-// 1~4번은 Figma yot 1:3267 목록 표의 4행이다(이승현 외 5명 / 김수인 / 이지아 / 이승현 외 2명).
+// 1~4번은 Figma yot 1:3267 목록 표의 4행이다(이승현 외 5명 / 김수인 / 이지아 / 이승현 외 3명).
 // 5번 이후는 페이지네이션과 빈 상태를 재현하기 위한 추가 행이다.
 // 완료기한: Figma 캡처가 2026-07 이라 그대로 두면 1페이지 4행이 전부 기한 초과(위험색)로 보인다.
 // 초과/정상을 한 화면에서 함께 확인할 수 있도록 3·4번만 미래 날짜로 옮겼다.
@@ -41,111 +64,103 @@ const figmaContent = '상세 업무 내용이 입력되어있음'
 export const mockTasks: Task[] = [
   {
     id: '1',
-    assigneeId: 'emp-1',
+    assigneeIds: ['emp-1', 'emp-2', 'emp-3', 'emp-10', 'emp-14', 'emp-15'],
     title: '업무 제목',
     content: figmaContent,
     status: 'IN_PROGRESS',
     priority: 'HIGH',
     dueDate: '2026-07-03',
-    visibility: '전체 공개',
-    additionalAssigneeCount: 5,
     attachments: ['당일 지침.pdf', '휴관안내.png', '휴관안내.jpg'],
   },
   {
     id: '2',
-    assigneeId: 'emp-2',
+    assigneeIds: ['emp-2'],
     title: '업무 제목',
     content: figmaContent,
     status: 'DONE',
     priority: 'LOW',
     dueDate: '2026-07-01',
-    visibility: '특정 파트',
   },
   {
     id: '3',
-    assigneeId: 'emp-3',
+    assigneeIds: ['emp-3'],
     title: '업무 제목',
     content: figmaContent,
     status: 'DONE',
     priority: 'HIGH',
     dueDate: '2027-02-20',
-    visibility: '특정 직원',
   },
   {
     id: '4',
-    assigneeId: 'emp-1',
+    assigneeIds: ['emp-1', 'emp-14', 'emp-15', 'emp-16'],
     title: '업무 제목',
     content: figmaContent,
     status: 'REJECTED',
     priority: 'MEDIUM',
     dueDate: '2027-02-28',
-    visibility: '전체 공개',
-    additionalAssigneeCount: 2,
   },
   {
     id: '5',
-    assigneeId: 'emp-2',
+    assigneeIds: ['emp-2'],
     title: '여름 프로그램 준비',
     content: '여름 프로그램 물품과 일정을 정리해주세요.',
     status: 'IN_PROGRESS',
     priority: 'MEDIUM',
     dueDate: '2026-12-05',
-    visibility: '전체 공개',
   },
   {
     id: '6',
-    assigneeId: 'emp-3',
+    assigneeIds: ['emp-3'],
     title: '사육장 점검 보고',
     content: '사육장 점검 결과를 정리해 보고해주세요.',
     status: 'IN_PROGRESS',
     priority: 'HIGH',
     dueDate: '2026-12-11',
-    visibility: '특정 파트',
   },
   {
     id: '7',
-    assigneeId: 'emp-1',
+    assigneeIds: ['emp-1'],
     title: '단체예약 응대 정리',
     content: '이번 달 단체예약 응대 내역을 정리해주세요.',
     status: 'DONE',
     priority: 'LOW',
     dueDate: '2026-12-18',
-    visibility: '특정 직원',
   },
   {
     id: '8',
-    assigneeId: 'emp-2',
+    assigneeIds: ['emp-2'],
     title: '휴관 안내문 게시',
     content: '휴관 안내문을 게시하고 결과를 알려주세요.',
     status: 'REJECTED',
     priority: 'MEDIUM',
     dueDate: '2026-12-24',
-    visibility: '전체 공개',
   },
   {
     id: '9',
-    assigneeId: 'emp-3',
+    assigneeIds: ['emp-3'],
     title: '자료실 파일 정리',
     content: '자료실의 오래된 파일을 정리해주세요.',
     status: 'IN_PROGRESS',
     priority: 'LOW',
     dueDate: '2027-01-08',
-    visibility: '특정 파트',
   },
   {
     id: '10',
-    assigneeId: 'emp-1',
+    assigneeIds: ['emp-1'],
     title: '연간 운영 계획 초안',
     content: '내년 운영 계획 초안을 작성해주세요.',
     status: 'DONE',
     priority: 'HIGH',
     dueDate: '2027-01-20',
-    visibility: '전체 공개',
   },
 ]
 
-export function findTaskAssignee(assigneeId: string): TaskAssignee | undefined {
-  return taskAssignees.find((assignee) => assignee.id === assigneeId)
+export function findTaskMember(memberId: string): TaskMember | undefined {
+  return taskMembers.find((member) => member.id === memberId)
+}
+
+export function findTaskTeam(teamId: string): TaskTeam | undefined {
+  return taskTeams.find((team) => team.id === teamId)
 }
 
 export async function getMockTasks(): Promise<Task[]> {
@@ -284,15 +299,13 @@ function isTask(value: unknown): value is Task {
   const task = value as Record<string, unknown>
   return (
     typeof task.id === 'string' &&
-    typeof task.assigneeId === 'string' &&
+    Array.isArray(task.assigneeIds) &&
+    task.assigneeIds.every((id) => typeof id === 'string') &&
     typeof task.title === 'string' &&
     typeof task.content === 'string' &&
     isTaskStatus(task.status) &&
     isTaskPriority(task.priority) &&
     typeof task.dueDate === 'string' &&
-    typeof task.visibility === 'string' &&
-    (task.additionalAssigneeCount === undefined ||
-      typeof task.additionalAssigneeCount === 'number') &&
     (task.attachments === undefined ||
       (Array.isArray(task.attachments) &&
         task.attachments.every((name) => typeof name === 'string')))

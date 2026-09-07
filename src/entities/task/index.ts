@@ -1,10 +1,11 @@
 export type {
   CreateTaskInput,
   Task,
-  TaskAssignee,
   TaskListItem,
+  TaskMember,
   TaskPriority,
   TaskStatus,
+  TaskTeam,
   UpdateTaskInput,
 } from './model/types'
 export { deleteTask } from './api/taskApi'
@@ -16,18 +17,20 @@ export type {
 export {
   createMockTask,
   deletedTaskStorageKey,
-  findTaskAssignee,
+  findTaskMember,
+  findTaskTeam,
   getMockTask,
   getMockTasks,
   mockTasks,
   recordDeletedMockTask,
-  taskAssignees,
+  taskMembers,
   taskStorageKey,
-  taskVisibilityOptions,
+  taskTeams,
   updateMockTask,
 } from './model/mock'
 export { taskPriorityLabels, taskStatusLabels } from './model/labels'
 export { TaskAssigneeCell } from './ui/TaskAssigneeCell'
+export { TaskInfoRow } from './ui/TaskInfoRow'
 export { TaskPriorityBadge } from './ui/TaskPriorityBadge'
 export { TaskStatusBadge } from './ui/TaskStatusBadge'
 export { TaskTable } from './ui/TaskTable'

@@ -8,21 +8,17 @@ export type TaskPriority = (typeof taskPriorities)[number]
 
 export interface Task {
   id: string
-  assigneeId: string
+  /**
+   * 담당자 (1명 이상). 목록·상세의 `외 N명` 은 이 배열 길이에서 파생된다.
+   * yot 폼이 팀 트리 다중 선택으로 바뀌면서 단일 `assigneeId` 를 대체했다.
+   */
+  assigneeIds: string[]
   title: string
   content: string
   status: TaskStatus
   priority: TaskPriority
   /** YYYY-MM-DD */
   dueDate: string
-  /** 공개범위. 폼 옵션으로만 남는다 — 새 Figma 목록 표에는 공개범위 컬럼이 없다. */
-  visibility: string
-  /**
-   * 대표 담당자를 제외한 추가 담당자 수. 목록 `외 N명` 표기 전용 표시값이다.
-   * `assigneeId` → `assignees[]` 모델 전환은 task-create·task-edit·API 계약과 함께 처리한다
-   * (task-list spec 미결 사항).
-   */
-  additionalAssigneeCount?: number
   attachments?: string[]
 }
 
@@ -38,21 +34,22 @@ export type TaskListItem = Pick<
 
 export type CreateTaskInput = Pick<
   Task,
-  | 'priority'
-  | 'dueDate'
-  | 'visibility'
-  | 'assigneeId'
-  | 'title'
-  | 'content'
-  | 'attachments'
+  'priority' | 'dueDate' | 'assigneeIds' | 'title' | 'content' | 'attachments'
 >
 
 export type UpdateTaskInput = CreateTaskInput
 
-export interface TaskAssignee {
+export interface TaskTeam {
   id: string
-  /** 목록 `담당자` 셀 표기 */
+  /** 담당자 트리의 팀 행 표기 */
   name: string
-  /** 담당자 드롭다운 옵션 표기 */
+}
+
+export interface TaskMember {
+  id: string
+  teamId: string
+  /** 목록·상세의 `담당자` 표기 */
+  name: string
+  /** 담당자 트리의 직원 행 표기 (직급 포함) */
   label: string
 }
