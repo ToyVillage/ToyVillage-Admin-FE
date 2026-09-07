@@ -18,3 +18,4 @@ export {
   mockWorkLogs,
 } from './model/mock'
 export { WorkLogTable } from './ui/WorkLogTable'
+export { WorkLogFormTable } from './ui/WorkLogFormTable'
