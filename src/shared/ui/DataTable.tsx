@@ -29,6 +29,9 @@ export interface DataTableColumn {
   header: string
   // px 고정폭. 생략 시 flex:1 로 남는 공간을 채운다.
   width?: number
+  // 셀 좌우 padding(px). 생략 시 기본 40. Figma 에서 열마다 안쪽 여백이 다른
+  // 표(업무일지관리 양식 관리 탭, 케밥 열 등)를 위해 열 단위로 지정한다.
+  paddingX?: number
   variant?: DataTableCellVariant
   render?: (row: DataTableRow) => ReactNode
 }
@@ -158,7 +161,11 @@ export function DataTable({
           </SelectHeadCell>
         )}
         {columns.map((column) => (
-          <HeadCell key={column.key} $width={column.width}>
+          <HeadCell
+            key={column.key}
+            $width={column.width}
+            $paddingX={column.paddingX}
+          >
             {column.header}
           </HeadCell>
         ))}
@@ -254,7 +261,11 @@ export function DataTable({
             {columns.map((column) => {
               const content = column.render ? column.render(r) : r[column.key]
               return (
-                <Cell key={column.key} $width={column.width}>
+                <Cell
+                  key={column.key}
+                  $width={column.width}
+                  $paddingX={column.paddingX}
+                >
                   {column.variant === 'pill' ? (
                     <Pill>{content}</Pill>
                   ) : (
@@ -312,6 +323,8 @@ const cellWidth = (width?: number) =>
   width == null
     ? 'flex: 1; min-width: 0;'
     : `width: ${width}px; flex: 0 0 ${width}px;`
+
+const defaultCellPaddingX = 40
 
 const Table = styled.div`
   width: 100%;
@@ -465,21 +478,21 @@ const Row = styled.div<{ $clickable: boolean }>`
   }
 `
 
-const HeadCell = styled.div<{ $width?: number }>`
+const HeadCell = styled.div<{ $width?: number; $paddingX?: number }>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
-  padding: 12px 40px;
+  padding: 12px ${({ $paddingX }) => $paddingX ?? defaultCellPaddingX}px;
   color: ${({ theme }) => theme.colors.text};
   font-weight: 500;
   font-size: 20px;
 `
 
-const Cell = styled.div<{ $width?: number }>`
+const Cell = styled.div<{ $width?: number; $paddingX?: number }>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
-  padding: 12px 40px;
+  padding: 12px ${({ $paddingX }) => $paddingX ?? defaultCellPaddingX}px;
 `
 
 // 체크박스는 divider(좌우 40px inset) 안쪽에 오도록 좌측 40px 정렬한다.
