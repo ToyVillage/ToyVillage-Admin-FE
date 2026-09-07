@@ -1,6 +1,7 @@
 import styled from '@emotion/styled'
 import {
   DataTable,
+  type DataTableAppearance,
   type DataTableColumn,
   type DataTablePagination,
   type DataTableRow,
@@ -25,8 +26,28 @@ interface TaskTableRow extends DataTableRow {
   overdue: boolean
 }
 
+// 업무 표는 Figma yot(P7Jhnu8qV5m9q2QJNzkwAN) 1:3267 기준 — 테두리 없는 카드(y=364),
+// 헤더 72/#DDDDE3, 행 100, 카드 폭 전체를 가로지르는 #AFAFBA 구분선, 좌측 정렬,
+// 페이지네이션은 카드 밖(y=884).
+const appearance: DataTableAppearance = {
+  offsetTop: 40,
+  bordered: false,
+  headerHeight: 72,
+  headerBackground: 'tableHeaderStrong',
+  headerFontSize: 22,
+  rowHeight: 100,
+  dividerColor: 'textFaint',
+  dividerInset: 0,
+  align: 'left',
+  paginationPlacement: 'outside',
+}
+
 const columns: DataTableColumn[] = [
-  { key: 'assigneeName', header: '담당자', render: renderPlainCell('assigneeName') },
+  {
+    key: 'assigneeName',
+    header: '담당자',
+    render: renderPlainCell('assigneeName'),
+  },
   { key: 'title', header: '제목', render: renderPlainCell('title') },
   {
     key: 'status',
@@ -52,7 +73,11 @@ const columns: DataTableColumn[] = [
       )
     },
   },
-  { key: 'visibility', header: '공개범위', render: renderPlainCell('visibility') },
+  {
+    key: 'visibility',
+    header: '공개범위',
+    render: renderPlainCell('visibility'),
+  },
 ]
 
 // Task → DataTable row 매핑. 표현은 shared/ui/DataTable 재사용.
@@ -67,23 +92,22 @@ export function TaskTable({
 
   return (
     <DataTable
-      rows={tasks.map(
-        (task): TaskTableRow => ({
-          id: task.id,
-          assigneeName: task.assigneeName,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          dueDate: task.dueDate,
-          visibility: task.visibility,
-          overdue: task.dueDate < baseline,
-        }),
-      )}
+      rows={tasks.map((task): TaskTableRow => ({
+        id: task.id,
+        assigneeName: task.assigneeName,
+        title: task.title,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        visibility: task.visibility,
+        overdue: task.dueDate < baseline,
+      }))}
       columns={columns}
       onRowClick={onRowClick}
       rowTestId="task-row"
       pagination={pagination}
       emptyLabel={emptyLabel}
+      appearance={appearance}
     />
   )
 }
