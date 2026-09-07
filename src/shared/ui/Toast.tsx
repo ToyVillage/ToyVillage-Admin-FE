@@ -29,7 +29,7 @@ export function Toast({
   return createPortal(
     <Container role={variant === 'error' ? 'alert' : 'status'}>
       <Row>
-        <Icon viewBox="0 0 40 40" aria-hidden="true">
+        <Icon viewBox="0 0 40 40" aria-hidden="true" $variant={variant}>
           {variant === 'success' ? (
             <path d="M20 3.333C10.795 3.333 3.333 10.795 3.333 20S10.795 36.667 20 36.667 36.667 29.205 36.667 20 29.205 3.333 20 3.333Zm-3.333 25L8.333 20l2.35-2.35 5.984 5.967L29.317 11.05l2.35 2.367-15 15Z" />
           ) : (
@@ -64,11 +64,13 @@ const Row = styled.div`
   gap: 24px;
 `
 
-const Icon = styled.svg`
+// Figma 토스트 아이콘 색은 결과에 따라 갈린다(성공 초록 / 실패 빨강).
+const Icon = styled.svg<{ $variant: ToastVariant }>`
   flex: 0 0 auto;
   width: 40px;
   height: 40px;
-  fill: ${({ theme }) => theme.colors.toastIcon};
+  fill: ${({ theme, $variant }) =>
+    $variant === 'error' ? theme.colors.danger : theme.colors.success};
 `
 
 const Message = styled.p`

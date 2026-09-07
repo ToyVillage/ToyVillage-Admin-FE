@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
 import {
   DataTable,
@@ -6,6 +7,7 @@ import {
   type DataTablePagination,
   type DataTableRow,
 } from '@/shared/ui'
+import { TaskAssigneeCell } from './TaskAssigneeCell'
 import { TaskPriorityBadge } from './TaskPriorityBadge'
 import { TaskStatusBadge } from './TaskStatusBadge'
 import type { TaskListItem, TaskPriority, TaskStatus } from '../model/types'
@@ -17,9 +19,17 @@ interface TaskTableProps {
   emptyLabel?: string
   /** 완료기한 위험색 판정 기준일(YYYY-MM-DD). 테스트 주입용. */
   today?: string
+  /**
+   * 행 우측 액션(케밥 메뉴). 메뉴는 features 레이어가 소유하므로
+   * entities 인 이 표는 렌더만 위임받는다. 미지정 시 액션 컬럼을 만들지 않는다.
+   */
+  renderRowAction?: (task: TaskListItem) => ReactNode
 }
 
 interface TaskTableRow extends DataTableRow {
+  assigneeName: string
+  assigneeExtraCount: number
+  title: string
   status: TaskStatus
   priority: TaskPriority
   dueDate: string
@@ -42,21 +52,33 @@ const appearance: DataTableAppearance = {
   paginationPlacement: 'outside',
 }
 
-const columns: DataTableColumn[] = [
+// Figma 컬럼 고정폭: 담당자 222 / 제목 245 / 상태 243 / 우선순위 240 / 완료기한 290 / 액션 80.
+const baseColumns: DataTableColumn[] = [
   {
     key: 'assigneeName',
     header: '담당자',
-    render: renderPlainCell('assigneeName'),
+    width: 222,
+    render: (row) => {
+      const task = row as TaskTableRow
+      return (
+        <TaskAssigneeCell
+          name={task.assigneeName}
+          extraCount={task.assigneeExtraCount}
+        />
+      )
+    },
   },
-  { key: 'title', header: '제목', render: renderPlainCell('title') },
+  { key: 'title', header: '제목', width: 245, render: renderPlainCell('title') },
   {
     key: 'status',
     header: '상태',
+    width: 243,
     render: (row) => <TaskStatusBadge status={(row as TaskTableRow).status} />,
   },
   {
     key: 'priority',
     header: '우선순위',
+    width: 240,
     render: (row) => (
       <TaskPriorityBadge priority={(row as TaskTableRow).priority} />
     ),
@@ -64,6 +86,7 @@ const columns: DataTableColumn[] = [
   {
     key: 'dueDate',
     header: '완료기한',
+    width: 290,
     render: (row) => {
       const task = row as TaskTableRow
       return (
@@ -72,11 +95,6 @@ const columns: DataTableColumn[] = [
         </DueDate>
       )
     },
-  },
-  {
-    key: 'visibility',
-    header: '공개범위',
-    render: renderPlainCell('visibility'),
   },
 ]
 
@@ -87,21 +105,43 @@ export function TaskTable({
   pagination,
   emptyLabel,
   today,
+  renderRowAction,
 }: TaskTableProps) {
   const baseline = today ?? formatToday()
+  const taskById = new Map(tasks.map((task) => [task.id, task]))
+  const columns: DataTableColumn[] = renderRowAction
+    ? [
+        ...baseColumns,
+        {
+          key: 'actions',
+          // Figma 액션 컬럼에는 헤더 라벨이 없다.
+          header: '',
+          width: 80,
+          // 케밥 버튼은 셀 내 x=18 이다.
+          paddingX: 18,
+          variant: 'action',
+          render: (row) => {
+            const task = taskById.get(row.id)
+            return task ? renderRowAction(task) : null
+          },
+        },
+      ]
+    : baseColumns
 
   return (
     <DataTable
-      rows={tasks.map((task): TaskTableRow => ({
-        id: task.id,
-        assigneeName: task.assigneeName,
-        title: task.title,
-        status: task.status,
-        priority: task.priority,
-        dueDate: task.dueDate,
-        visibility: task.visibility,
-        overdue: task.dueDate < baseline,
-      }))}
+      rows={tasks.map(
+        (task): TaskTableRow => ({
+          id: task.id,
+          assigneeName: task.assigneeName,
+          assigneeExtraCount: task.assigneeExtraCount,
+          title: task.title,
+          status: task.status,
+          priority: task.priority,
+          dueDate: task.dueDate,
+          overdue: task.dueDate < baseline,
+        }),
+      )}
       columns={columns}
       onRowClick={onRowClick}
       rowTestId="task-row"

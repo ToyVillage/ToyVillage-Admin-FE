@@ -18,7 +18,7 @@ paths: src/pages/tasks, src/entities/task, src/features/create-task
 
 ## 상태와 근거
 
-- Status: Draft (게이트 ② 재승인 대기)
+- Status: Approved (yunho09 승인, 시나리오 S1–S23 — 2026-09-07 yot 기준 재승인, e2e freeze 완료)
 - Last refreshed: 2026-09-07
 - **디자인 파일 교체**: `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)는 폐기됐다. 기준 파일은 `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`),
   페이지 `0:1` "토이빌리지" › 섹션 `웹 (operator)` › `업무관리`(`300:12757`) › `업무관리 · 목록`(`311:12774`).
@@ -203,8 +203,11 @@ interface TaskListItem {
 - `status` 는 목록 표시 전용 파생값이다. 목록에서 상태를 바꾸는 UI 는 없다.
 - 조회 endpoint 후보: `GET /tasks`, query key: `['tasks']`
 - 이번 슬라이스는 `src/entities/task/model/mock.ts` 의 고정 mock 으로 대체하고 실제 API 는 연결하지 않는다.
-  mock 은 Figma 기준 4행(이승현 외 5명/진행중/상/2026-07-03, 김수인/완료/하/2026-07-01,
-  이지아/완료/상/2026-07-20, 이승현 외 2명/반려/중/2026-07-28)과 페이지네이션·빈 상태를 재현할 추가 행을 포함한다.
+  mock 은 Figma 기준 4행(이승현 외 5명/진행중/상, 김수인/완료/하, 이지아/완료/상, 이승현 외 2명/반려/중)과
+  페이지네이션·빈 상태를 재현할 추가 행을 포함한다.
+- **완료기한 mock 값은 Figma 그대로 두지 않는다.** Figma 캡처가 2026-07 이라 그대로 두면 1페이지 4행이
+  전부 기한 초과(위험색)로 보여 정상 표시를 확인할 수 없다. 1·2행은 Figma 값(2026-07-03 / 2026-07-01)을
+  유지해 초과 표시를 남기고, 3·4행만 미래(2027-02-20 / 2027-02-28)로 옮겨 한 화면에서 두 상태를 함께 본다.
 - 탭 필터·페이지 번호·열린 케밥 행 id 는 페이지가 소유하는 로컬 상태다. 전역 상태로 올리지 않는다.
 
 ## 컴포넌트 구조/props
@@ -216,7 +219,9 @@ interface TaskListItem {
   **`align` 은 `'left'`** 다 — 구 디자인의 중앙 정렬은 폐기됐다.
   컬럼 고정폭은 `DataTableColumn.width` 로 지정한다.
 - `TaskAssigneeCell { name, extraCount }` — **신규**. 이름 + `외 N명` 2단 표기.
-- `TaskStatusBadge { status }` / `TaskPriorityBadge { priority }` — 기존. 우선순위는 42×40 pill 로 형태·색 변경.
+- `TaskStatusBadge { status }` — 기존. `task-report` 와 공유한다(두 화면 디자인이 같다).
+- `TaskPriorityBadge { priority }` — 기존. 42×40 pill 로 형태·색 변경. **업무관리 전용이다** —
+  `task-report` 는 자체 `TaskReportPriorityBadge`(36×36 원)를 쓴다.
 - `RowActionMenu { items, onOpenChange }` — **신규 공용 컴포넌트 후보**. `⋮` 버튼 + 드롭다운.
   다른 목록 화면에도 같은 패턴이 있는지는 이 spec 범위 밖이므로, 우선 `src/features` 에 두고
   승격 여부는 게이트에서 판단한다.
@@ -285,23 +290,28 @@ interface TaskListItem {
 | 셀 정렬       | 중앙                                                                    | **좌측 padding 40**                 |
 | 담당자        | 단수 이름                                                               | **이름 + `외 N명`**                 |
 | 행 액션       | 없음 (상세 진입 후 삭제)                                                | **`⋮` 수정/삭제**                   |
-| 우선순위 배지 | 36×36 원, 상=파랑·하=빨강                                               | **42×40 pill, 상=빨강·하=회색**     |
+| 우선순위 배지 | 36×36 원, 상=파랑·하=빨강                                               | **42×40 pill, 상=빨강·하=회색** (업무관리 전용) |
 | 목록 토스트   | 삭제 성공/실패                                                          | **생성 성공 추가**                  |
 | 토스트 아이콘 | `#1F1F1F`                                                               | **성공 `#00B48A` / 실패 `#FF3131`** |
 | 표 골격       | y=364 · 헤더 72 · 행 100 · 구분선 `#AFAFBA` 전체폭 · 페이지네이션 y=884 | **동일**                            |
 
 표 골격·탭바·헤더·CTA 버튼은 두 디자인이 같다. 2026-09-07 에 이 부분을 이미 구현에 반영했다
-(`DataTable.appearance`, `CategoryTabs`, `LinkButton`). `align: 'center'` 만 새 디자인 기준으로 되돌려야 한다.
+(`DataTable.appearance`, `CategoryTabs`, `LinkButton`). 좌측 정렬·고정폭·담당자 2텍스트·케밥 액션 컬럼은
+2026-09-07 퍼블리싱에서 반영했다.
 
 ## 미결 사항
 
-- [ ] **게이트 ② 재승인** — 시나리오가 S12 → S23 으로 바뀌었다.
-      `harness/publishing/approvals/task-list.scenario-draft.md` 를 갱신한 뒤
-      `node scripts/approve.mjs task-list --by <name> --scenarios S1,...,S23` 을 개발자가 실행해야 한다.
 - [ ] 담당자 다중화(`assigneeId` → `assignees[]`)는 `task-create` / `task-edit` / API 계약에 함께 영향을 준다.
 - [ ] `visibility`(공개범위) 필드의 존치 여부 — 생성·수정 폼 spec 갱신 후 결정한다.
 - [ ] `RowActionMenu` 를 `src/shared/ui` 로 승격할지 — 다른 목록 화면(`공지사항` `자료실` `휴관일 관리`
       `단체예약` `개체관리`)에도 동일 패턴이 있어 함께 판단한다.
+      현재 위치는 `src/features/row-actions` 이고, `entities` 인 `TaskTable` 은 `renderRowAction` prop 으로
+      렌더만 위임받는다(FSD import 방향 유지).
+- [x] 우선순위 배지는 **업무 전용으로 분리했다**(2026-09-07 개발자 결정 — 업무보고는 다른 배지를 쓴다).
+      `task-report` 는 `entities/task-report/ui/TaskReportPriorityBadge`(36×36 원, 구 색 배정)를 쓴다.
+      `TaskStatusBadge` 는 두 화면 디자인이 같아 계속 공유한다.
+- [ ] 토스트 아이콘 색 분기(성공 `#00B48A` / 실패 `#FF3131`)는 전 화면 공통 변경이다.
+      다른 화면 spec 의 토스트 규격과 어긋나는지 확인한다.
 - [ ] `Wanted Sans` 웹폰트가 저장소에 없다(`tokens.ts` 의 `font.body` 만 선언, `@font-face`·폰트 파일 없음).
       모든 화면이 `system-ui` 로 렌더되어 자간·글자 폭이 Figma 와 다르다. 전 화면 공통이라 별도 처리한다.
 - [ ] 실제 업무 API endpoint 계약 / 백엔드 담당 — `/api` 스킬에서 처리한다.

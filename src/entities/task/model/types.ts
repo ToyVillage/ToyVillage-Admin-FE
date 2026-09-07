@@ -15,16 +15,25 @@ export interface Task {
   priority: TaskPriority
   /** YYYY-MM-DD */
   dueDate: string
-  /** 공개범위. 목록 표기와 폼 옵션을 각각 Figma 그대로 둔다(spec 결정 사항). */
+  /** 공개범위. 폼 옵션으로만 남는다 — 새 Figma 목록 표에는 공개범위 컬럼이 없다. */
   visibility: string
+  /**
+   * 대표 담당자를 제외한 추가 담당자 수. 목록 `외 N명` 표기 전용 표시값이다.
+   * `assigneeId` → `assignees[]` 모델 전환은 task-create·task-edit·API 계약과 함께 처리한다
+   * (task-list spec 미결 사항).
+   */
+  additionalAssigneeCount?: number
   attachments?: string[]
 }
 
 export type TaskListItem = Pick<
   Task,
-  'id' | 'title' | 'status' | 'priority' | 'dueDate' | 'visibility'
+  'id' | 'title' | 'status' | 'priority' | 'dueDate'
 > & {
+  /** 대표 담당자 이름 */
   assigneeName: string
+  /** 대표를 제외한 나머지 담당자 수. 0 이면 `외 N명` 을 렌더하지 않는다. */
+  assigneeExtraCount: number
 }
 
 export type CreateTaskInput = Pick<

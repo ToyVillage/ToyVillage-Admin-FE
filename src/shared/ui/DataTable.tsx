@@ -22,8 +22,9 @@ export interface DataTableRow {
   [key: string]: ReactNode
 }
 
-// 셀 표현 변형. pill=분류 배지, title=제목(24), date=날짜(22 muted), text=본문(24 strong).
-export type DataTableCellVariant = 'pill' | 'title' | 'date' | 'text'
+// 셀 표현 변형. pill=분류 배지, title=제목(24), date=날짜(22 muted), text=본문(24 strong),
+// action=행 액션(텍스트 래퍼 없이 그대로 두고 행 클릭을 가로챈다).
+export type DataTableCellVariant = 'pill' | 'title' | 'date' | 'text' | 'action'
 
 type ThemeColorKey = keyof AppTheme['colors']
 
@@ -70,6 +71,8 @@ export interface DataTableColumn {
   header: string
   // px 고정폭. 생략 시 flex:1 로 남는 공간을 채운다.
   width?: number
+  // 셀 좌우 padding(px). 생략 시 40.
+  paddingX?: number
   variant?: DataTableCellVariant
   render?: (row: DataTableRow) => ReactNode
 }
@@ -243,6 +246,7 @@ export function DataTable({
             <HeadCell
               key={column.key}
               $width={column.width}
+              $paddingX={column.paddingX}
               $align={look.align}
               $fontSize={look.headerFontSize}
             >
@@ -344,14 +348,30 @@ export function DataTable({
               )}
               {columns.map((column) => {
                 const content = column.render ? column.render(r) : r[column.key]
+                // 액션 셀은 자체 컨트롤을 담으므로 행 이동을 일으키는 입력만 여기서 멈춘다.
+                // (Escape 등 다른 키는 셀 안 컨트롤이 document 에서 받아야 한다.)
+                const isAction = column.variant === 'action'
                 return (
                   <Cell
                     key={column.key}
                     $width={column.width}
+                    $paddingX={column.paddingX}
                     $align={look.align}
+                    onClick={isAction ? (e) => e.stopPropagation() : undefined}
+                    onKeyDown={
+                      isAction
+                        ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation()
+                            }
+                          }
+                        : undefined
+                    }
                   >
                     {column.variant === 'pill' ? (
                       <Pill>{content}</Pill>
+                    ) : isAction ? (
+                      content
                     ) : (
                       <CellText $variant={column.variant ?? 'text'}>
                         {content}
@@ -531,6 +551,7 @@ const Row = styled.div<{
 
 const HeadCell = styled.div<{
   $width?: number
+  $paddingX?: number
   $align: 'left' | 'center'
   $fontSize: number
 }>`
@@ -539,19 +560,23 @@ const HeadCell = styled.div<{
   align-items: center;
   justify-content: ${({ $align }) =>
     $align === 'center' ? 'center' : 'flex-start'};
-  padding: 12px 40px;
+  padding: 12px ${({ $paddingX }) => $paddingX ?? 40}px;
   color: ${({ theme }) => theme.colors.text};
   font-weight: 500;
   font-size: ${({ $fontSize }) => $fontSize}px;
 `
 
-const Cell = styled.div<{ $width?: number; $align: 'left' | 'center' }>`
+const Cell = styled.div<{
+  $width?: number
+  $paddingX?: number
+  $align: 'left' | 'center'
+}>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
   justify-content: ${({ $align }) =>
     $align === 'center' ? 'center' : 'flex-start'};
-  padding: 12px 40px;
+  padding: 12px ${({ $paddingX }) => $paddingX ?? 40}px;
 `
 
 // 체크박스는 divider(좌우 40px inset) 안쪽에 오도록 좌측 40px 정렬한다.

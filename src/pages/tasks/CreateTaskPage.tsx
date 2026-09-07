@@ -30,9 +30,10 @@ export function CreateTaskPage() {
     ),
   )
 
+  // 생성 성공으로 목록에 돌아오면 목록이 `데이터 생성에 성공했습니다` 토스트를 띄운다.
   const handleCompleted = useCallback(() => {
     allowNavigationRef.current = true
-    navigate('/tasks')
+    navigate('/tasks', { state: { toast: 'create-success' } })
   }, [navigate])
 
   return (

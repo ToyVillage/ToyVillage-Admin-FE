@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createMockTask,
   deleteTask,
+  recordDeletedMockTask,
   taskAssignees,
   taskVisibilityOptions,
   updateMockTask,
@@ -232,10 +233,11 @@ export function TaskForm({
     deletingRef.current = true
     deleteMutation.mutate(undefined, {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
         if (initialTask) {
+          recordDeletedMockTask(initialTask.id)
           queryClient.removeQueries({ queryKey: ['tasks', initialTask.id] })
         }
+        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
         onCompleted('deleted')
       },
       onError: () => {

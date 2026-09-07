@@ -20,12 +20,14 @@ export {
   getMockTask,
   getMockTasks,
   mockTasks,
+  recordDeletedMockTask,
   taskAssignees,
   taskStorageKey,
   taskVisibilityOptions,
   updateMockTask,
 } from './model/mock'
 export { taskPriorityLabels, taskStatusLabels } from './model/labels'
+export { TaskAssigneeCell } from './ui/TaskAssigneeCell'
 export { TaskPriorityBadge } from './ui/TaskPriorityBadge'
 export { TaskStatusBadge } from './ui/TaskStatusBadge'
 export { TaskTable } from './ui/TaskTable'

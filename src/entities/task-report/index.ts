@@ -15,4 +15,5 @@ export {
 } from './model/mock'
 export { taskReportReviewStatusLabels } from './model/labels'
 export { TaskReportMetaRow } from './ui/TaskReportMetaRow'
+export { TaskReportPriorityBadge } from './ui/TaskReportPriorityBadge'
 export { TaskReportTable } from './ui/TaskReportTable'

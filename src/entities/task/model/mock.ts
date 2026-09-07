@@ -33,7 +33,11 @@ export const taskVisibilityOptions = ['전체 직원', '팀이름 1', '팀이름
 const figmaContent = '상세 업무 내용이 입력되어있음'
 
 // 슬라이스용 mock. 추후 TanStack Query + Axios로 대체.
-// 1~4번은 Figma 3056:2599 기준 행이다.
+// 1~4번은 Figma yot 1:3267 목록 표의 4행이다(이승현 외 5명 / 김수인 / 이지아 / 이승현 외 2명).
+// 5번 이후는 페이지네이션과 빈 상태를 재현하기 위한 추가 행이다.
+// 완료기한: Figma 캡처가 2026-07 이라 그대로 두면 1페이지 4행이 전부 기한 초과(위험색)로 보인다.
+// 초과/정상을 한 화면에서 함께 확인할 수 있도록 3·4번만 미래 날짜로 옮겼다.
+// 1·2번은 Figma 값(2026-07-03 / 2026-07-01)을 유지해 초과 표시를 남긴다.
 export const mockTasks: Task[] = [
   {
     id: '1',
@@ -44,6 +48,7 @@ export const mockTasks: Task[] = [
     priority: 'HIGH',
     dueDate: '2026-07-03',
     visibility: '전체 공개',
+    additionalAssigneeCount: 5,
     attachments: ['당일 지침.pdf', '휴관안내.png', '휴관안내.jpg'],
   },
   {
@@ -63,7 +68,7 @@ export const mockTasks: Task[] = [
     content: figmaContent,
     status: 'DONE',
     priority: 'HIGH',
-    dueDate: '2026-07-20',
+    dueDate: '2027-02-20',
     visibility: '특정 직원',
   },
   {
@@ -73,8 +78,9 @@ export const mockTasks: Task[] = [
     content: figmaContent,
     status: 'REJECTED',
     priority: 'MEDIUM',
-    dueDate: '2026-07-28',
+    dueDate: '2027-02-28',
     visibility: '전체 공개',
+    additionalAssigneeCount: 2,
   },
   {
     id: '5',
@@ -150,10 +156,20 @@ export async function getMockTasks(): Promise<Task[]> {
     .filter((task) => !deletedIds.has(task.id))
     .map((task) => storedById.get(task.id) ?? task)
   const createdTasks = storedTasks.filter(
-    (task) => !mockTasks.some((mockTask) => mockTask.id === task.id),
+    (task) =>
+      !deletedIds.has(task.id) &&
+      !mockTasks.some((mockTask) => mockTask.id === task.id),
   )
 
   return [...createdTasks, ...mergedMocks]
+}
+
+// 목록은 아직 mock 이라 서버의 삭제 결과를 모른다. 삭제 성공을 로컬에 기록해
+// 다음 조회에서 제외한다. 실제 목록 조회 API 로 교체할 때 이 기록도 함께 제거한다.
+export function recordDeletedMockTask(id: string): void {
+  const deletedIds = readDeletedTaskIds()
+  deletedIds.add(id)
+  localStorage.setItem(deletedTaskStorageKey, JSON.stringify([...deletedIds]))
 }
 
 export async function getMockTask(id: string): Promise<Task | null> {
@@ -275,6 +291,8 @@ function isTask(value: unknown): value is Task {
     isTaskPriority(task.priority) &&
     typeof task.dueDate === 'string' &&
     typeof task.visibility === 'string' &&
+    (task.additionalAssigneeCount === undefined ||
+      typeof task.additionalAssigneeCount === 'number') &&
     (task.attachments === undefined ||
       (Array.isArray(task.attachments) &&
         task.attachments.every((name) => typeof name === 'string')))
