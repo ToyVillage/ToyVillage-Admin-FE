@@ -223,6 +223,7 @@ export function DataTable({
           <Row
             key={r.id}
             data-testid={rowTestId}
+            $clickable={onRowClick != null}
             role={onRowClick ? 'link' : undefined}
             tabIndex={onRowClick ? 0 : undefined}
             onClick={onRowClick ? () => onRowClick(r.id) : undefined}
@@ -448,11 +449,11 @@ const EmptyRow = styled.div<{ $minHeight?: number }>`
   font-weight: 500;
 `
 
-const Row = styled.div`
+const Row = styled.div<{ $clickable: boolean }>`
   position: relative;
   display: flex;
   min-height: 92px;
-  cursor: pointer;
+  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
 
   & + &::before {
     content: '';
