@@ -36,6 +36,7 @@ import {
   TaskReportDetailPage,
   TaskReportListPage,
 } from '@/pages/task-reports'
+import { WorkLogListPage } from '@/pages/work-logs'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 
 function AppLayout() {
@@ -100,6 +101,7 @@ const router = createBrowserRouter([
       { path: '/tasks/:id', element: <TaskDetailPage /> },
       { path: '/task-reports', element: <TaskReportListPage /> },
       { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
+      { path: '/work-logs', element: <WorkLogListPage /> },
     ],
   },
 ])
