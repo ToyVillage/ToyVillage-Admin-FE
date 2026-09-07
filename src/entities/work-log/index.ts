@@ -37,3 +37,4 @@ export {
 export { WorkLogTable } from './ui/WorkLogTable'
 export { WorkLogFormTable } from './ui/WorkLogFormTable'
 export { WorkLogSheet } from './ui/WorkLogSheet'
+export { WorkLogFormQuestionCard } from './ui/WorkLogFormQuestionCard'
