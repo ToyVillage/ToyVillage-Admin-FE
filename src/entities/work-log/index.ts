@@ -1,4 +1,19 @@
-export type { WorkLog, WorkLogDate, WorkLogForm } from './model/types'
+export type {
+  WorkLog,
+  WorkLogDate,
+  WorkLogDetail,
+  WorkLogForm,
+  WorkLogFormDetail,
+  WorkLogFormQuestion,
+  WorkLogFormQuestionType,
+  WorkLogQuestionType,
+  WorkLogSheetColumn,
+  WorkLogSheetRow,
+} from './model/types'
+export {
+  workLogFormQuestionTypes,
+  workLogQuestionTypes,
+} from './model/types'
 export {
   clampWorkLogDate,
   daysInMonth,
