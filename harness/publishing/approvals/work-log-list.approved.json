@@ -1,0 +1,28 @@
+{
+  "feature": "work-log-list",
+  "approvedAt": "2026-09-07T14:50:16.666Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S17",
+    "S18",
+    "S19"
+  ],
+  "scenarioHash": "521f412a7697b125f7870c8f35d6a370a694d668db7f779e67e65ea829ba9882",
+  "e2eHash": "fd5ae61a5d6af874a68c64fd438d2e8d719fa7555cc18340dcdfb455ece67dd3"
+}
