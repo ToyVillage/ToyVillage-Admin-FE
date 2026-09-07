@@ -7,3 +7,13 @@ export {
   todayWorkLogDate,
   workLogYearSpan,
 } from './model/date'
+export {
+  deleteMockWorkLog,
+  deleteMockWorkLogForm,
+  deletedWorkLogFormStorageKey,
+  deletedWorkLogStorageKey,
+  getMockWorkLogForms,
+  getMockWorkLogs,
+  mockWorkLogForms,
+  mockWorkLogs,
+} from './model/mock'
