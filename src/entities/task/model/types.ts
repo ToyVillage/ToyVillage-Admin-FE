@@ -1,6 +1,10 @@
-// 상태는 목록 표시 전용 파생값이다(spec: 변경 UI 없음).
-// 저장소 값 검증(mock.ts)과 레이블(labels.ts)이 같은 목록을 쓰도록 값으로 둔다.
-export const taskStatuses = ['IN_PROGRESS', 'DONE', 'REJECTED'] as const
+// 저장되는 진행 상태. `지연` 은 완료기한에서 파생되므로 여기에 없다.
+export const taskProgressStatuses = ['IN_PROGRESS', 'DONE'] as const
+export type TaskProgressStatus = (typeof taskProgressStatuses)[number]
+
+// 화면에 찍히는 상태. 완료되지 않은 업무의 완료기한이 지나면 `OVERDUE`(지연)다.
+// 목록에서 상태를 바꾸는 UI 는 없다(spec). `resolveTaskStatus` 가 유일한 산출 경로다.
+export const taskStatuses = ['IN_PROGRESS', 'DONE', 'OVERDUE'] as const
 export type TaskStatus = (typeof taskStatuses)[number]
 
 export const taskPriorities = ['HIGH', 'MEDIUM', 'LOW'] as const
@@ -15,7 +19,7 @@ export interface Task {
   assigneeIds: string[]
   title: string
   content: string
-  status: TaskStatus
+  status: TaskProgressStatus
   priority: TaskPriority
   /** YYYY-MM-DD */
   dueDate: string
@@ -24,8 +28,10 @@ export interface Task {
 
 export type TaskListItem = Pick<
   Task,
-  'id' | 'title' | 'status' | 'priority' | 'dueDate'
+  'id' | 'title' | 'priority' | 'dueDate'
 > & {
+  /** 화면 표기용 상태(`resolveTaskStatus` 결과). 저장값과 달리 `OVERDUE` 를 포함한다. */
+  status: TaskStatus
   /** 대표 담당자 이름 */
   assigneeName: string
   /** 대표를 제외한 나머지 담당자 수. 0 이면 `외 N명` 을 렌더하지 않는다. */

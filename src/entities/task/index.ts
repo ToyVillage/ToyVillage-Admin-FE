@@ -4,6 +4,7 @@ export type {
   TaskListItem,
   TaskMember,
   TaskPriority,
+  TaskProgressStatus,
   TaskStatus,
   TaskTeam,
   UpdateTaskInput,
@@ -29,6 +30,7 @@ export {
   updateMockTask,
 } from './model/mock'
 export { taskPriorityLabels, taskStatusLabels } from './model/labels'
+export { resolveTaskStatus, taskToday } from './model/status'
 export { TaskAssigneeCell } from './ui/TaskAssigneeCell'
 export { TaskInfoRow } from './ui/TaskInfoRow'
 export { TaskPriorityBadge } from './ui/TaskPriorityBadge'

@@ -26,7 +26,8 @@ const Badge = styled.span<{ $status: TaskStatus }>`
     if ($status === 'DONE') {
       return `background: ${theme.colors.accentBg}; color: ${theme.colors.accent};`
     }
-    if ($status === 'REJECTED') {
+    // Figma 의 세 번째 pill(구 `반려`) 색을 `지연` 이 그대로 쓴다.
+    if ($status === 'OVERDUE') {
       return `background: ${theme.colors.warningBg}; color: ${theme.colors.warning};`
     }
     return `background: ${theme.colors.tableHeaderStrong}; color: ${theme.colors.textGuide};`

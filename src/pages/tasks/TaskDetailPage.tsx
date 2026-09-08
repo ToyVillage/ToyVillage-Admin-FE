@@ -7,6 +7,7 @@ import {
   findTaskMember,
   getMockTask,
   recordDeletedMockTask,
+  resolveTaskStatus,
   TaskInfoRow,
 } from '@/entities/task'
 import {
@@ -161,7 +162,7 @@ export function TaskDetailPage() {
         <TaskInfoRow
           assigneeName={findTaskMember(leadAssigneeId)?.name ?? '미지정'}
           assigneeExtraCount={restAssigneeIds.length}
-          status={task.status}
+          status={resolveTaskStatus(task)}
           priority={task.priority}
           dueDate={task.dueDate}
         />

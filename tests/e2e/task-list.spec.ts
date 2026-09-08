@@ -6,7 +6,10 @@ import { expect, test, type Page } from '@playwright/test'
 // 삭제(S19·S20)만 이미 연동된 TASK_DELETE 를 page.route() 로 mock 한다.
 
 const deletedTaskStorageKey = 'toyvillage:tasks:deleted'
-const allMockTaskIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+const allMockTaskIds = [
+  '1', '2', '3', '4', '5', '6', '7',
+  '8', '9', '10', '11', '12', '13', '14',
+]
 const deleteApiPattern = /\/api\/tasks\/[^/?]+(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
@@ -24,7 +27,7 @@ test('S1: 목록 진입 기본 상태', async ({ page }) => {
     'aria-pressed',
     'true',
   )
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
 })
 
 test('S2: 업무 등록하기 이동', async ({ page }) => {
@@ -40,7 +43,7 @@ test('S3: 진행중 탭 필터', async ({ page }) => {
   await tab.click()
 
   await expect(tab).toHaveAttribute('aria-pressed', 'true')
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(6)
   for (const row of await rows(page).all()) {
     await expect(row).toContainText('진행중')
   }
@@ -52,9 +55,21 @@ test('S4: 완료 탭 필터', async ({ page }) => {
   await tab.click()
 
   await expect(tab).toHaveAttribute('aria-pressed', 'true')
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(5)
   for (const row of await rows(page).all()) {
     await expect(row).toContainText('완료')
+  }
+})
+
+test('S24: 지연 탭 필터', async ({ page }) => {
+  await page.goto('/tasks')
+  const tab = page.getByRole('button', { name: '지연', exact: true })
+  await tab.click()
+
+  await expect(tab).toHaveAttribute('aria-pressed', 'true')
+  await expect(rows(page)).toHaveCount(3)
+  for (const row of await rows(page).all()) {
+    await expect(row).toContainText('지연')
   }
 })
 
@@ -70,7 +85,7 @@ test('S6: 페이지네이션 이동', async ({ page }) => {
   await page.getByRole('button', { name: '2 페이지' }).click()
 
   await expect(rows(page)).toHaveCount(4)
-  await expect(rows(page).first()).toContainText('여름 프로그램 준비')
+  await expect(rows(page).first()).toContainText('동절기 급수설비 점검')
 })
 
 test('S7: 페이지네이션 경계 비활성', async ({ page }) => {
@@ -79,7 +94,7 @@ test('S7: 페이지네이션 경계 비활성', async ({ page }) => {
   await expect(page.getByRole('button', { name: '이전 페이지' })).toBeDisabled()
   await expect(page.getByRole('button', { name: '다음 페이지' })).toBeEnabled()
 
-  await page.getByRole('button', { name: '3 페이지' }).click()
+  await page.getByRole('button', { name: '2 페이지' }).click()
 
   await expect(page.getByRole('button', { name: '다음 페이지' })).toBeDisabled()
   await expect(page.getByRole('button', { name: '이전 페이지' })).toBeEnabled()
@@ -88,7 +103,7 @@ test('S7: 페이지네이션 경계 비활성', async ({ page }) => {
 test('S8: 탭 전환 시 1페이지로 리셋', async ({ page }) => {
   await page.goto('/tasks')
   await page.getByRole('button', { name: '2 페이지' }).click()
-  await expect(rows(page).first()).toContainText('여름 프로그램 준비')
+  await expect(rows(page).first()).toContainText('동절기 급수설비 점검')
 
   await page.getByRole('button', { name: '진행중', exact: true }).click()
   await page.getByRole('button', { name: '전체 업무' }).click()
@@ -195,7 +210,7 @@ test('S18: 삭제 취소', async ({ page }) => {
   await page.getByRole('button', { name: '취소' }).click()
 
   await expect(page.getByRole('alertdialog')).toHaveCount(0)
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
   await expect(rows(page).first()).toContainText('이승현')
   await expect(rows(page).first()).toContainText('2026-07-03')
 })
@@ -215,7 +230,7 @@ test('S19: 삭제 확인 → 성공 토스트', async ({ page }) => {
   const toast = page.getByText('데이터 삭제에 성공했습니다')
   await expect(toast).toBeVisible()
   await expect(rows(page).first()).toContainText('김수인')
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
   await expect(toast).toBeHidden({ timeout: 6000 })
 })
 
@@ -234,7 +249,7 @@ test('S20: 삭제 실패 토스트', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText(
     '데이터 삭제에 실패했습니다',
   )
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
   await expect(rows(page).first()).toContainText('2026-07-03')
 })
 
@@ -266,7 +281,7 @@ test('S22: 키보드 조작', async ({ page }) => {
   const secondPage = page.getByRole('button', { name: '2 페이지' })
   await secondPage.focus()
   await page.keyboard.press('Enter')
-  await expect(rows(page).first()).toContainText('여름 프로그램 준비')
+  await expect(rows(page).first()).toContainText('동절기 급수설비 점검')
 
   // 케밥 메뉴도 키보드만으로 열고 항목을 실행할 수 있다.
   const trigger = menuTrigger(page, 0)
@@ -282,7 +297,7 @@ test('S22: 키보드 조작', async ({ page }) => {
   await firstRow.focus()
   await expect(firstRow).toBeFocused()
   await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/\/tasks\/5$/)
+  await expect(page).toHaveURL(/\/tasks\/11$/)
 })
 
 test('S23: 사이드바 업무관리 메뉴 이동', async ({ page }) => {

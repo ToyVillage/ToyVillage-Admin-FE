@@ -7,7 +7,9 @@ import {
   findTaskMember,
   getMockTasks,
   recordDeletedMockTask,
+  resolveTaskStatus,
   TaskTable,
+  taskToday,
   type TaskListItem,
   type TaskStatus,
 } from '@/entities/task'
@@ -20,14 +22,15 @@ import {
   type ToastVariant,
 } from '@/shared/ui'
 
-const TABLE_PAGE_SIZE = 4
+const TABLE_PAGE_SIZE = 10
 
-const tabs = ['전체 업무', '진행중', '완료']
+const tabs = ['전체 업무', '진행중', '완료', '지연']
 
 const tabStatuses: Record<string, TaskStatus | null> = {
   '전체 업무': null,
   진행중: 'IN_PROGRESS',
   완료: 'DONE',
+  지연: 'OVERDUE',
 }
 
 type TaskListToastKey = 'delete-success' | 'delete-error' | 'create-success'
@@ -87,6 +90,9 @@ export function TaskListPage() {
   const toastKey = localToast ?? stateToast
   const toast = toastKey ? toastByKey[toastKey] : undefined
 
+  // 탭 필터와 표의 기한 표시가 어긋나지 않도록 기준일을 한 번만 잡는다.
+  const today = useMemo(() => taskToday(), [])
+
   const items = useMemo<TaskListItem[]>(
     () =>
       allTasks.map((task) => ({
@@ -94,11 +100,11 @@ export function TaskListPage() {
         assigneeName: findTaskMember(task.assigneeIds[0])?.name ?? '미지정',
         assigneeExtraCount: Math.max(task.assigneeIds.length - 1, 0),
         title: task.title,
-        status: task.status,
+        status: resolveTaskStatus(task, today),
         priority: task.priority,
         dueDate: task.dueDate,
       })),
-    [allTasks],
+    [allTasks, today],
   )
 
   const filtered = useMemo(() => {
@@ -189,6 +195,7 @@ export function TaskListPage() {
 
         <TaskTable
           tasks={tasks}
+          today={today}
           onRowClick={(id) => navigate(`/tasks/${id}`)}
           pagination={{ page: currentPage, pageCount, onChange: setPage }}
           emptyLabel="등록된 업무가 없습니다."

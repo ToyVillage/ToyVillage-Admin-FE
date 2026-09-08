@@ -3,7 +3,7 @@ import type { TaskPriority, TaskStatus } from './types'
 export const taskStatusLabels: Record<TaskStatus, string> = {
   IN_PROGRESS: '진행중',
   DONE: '완료',
-  REJECTED: '반려',
+  OVERDUE: '지연',
 }
 
 export const taskPriorityLabels: Record<TaskPriority, string> = {

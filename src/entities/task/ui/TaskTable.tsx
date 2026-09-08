@@ -9,6 +9,7 @@ import {
 } from '@/shared/ui'
 import { TaskAssigneeCell } from './TaskAssigneeCell'
 import { TaskPriorityBadge } from './TaskPriorityBadge'
+import { taskToday } from '../model/status'
 import { TaskStatusBadge } from './TaskStatusBadge'
 import type { TaskListItem, TaskPriority, TaskStatus } from '../model/types'
 
@@ -107,7 +108,7 @@ export function TaskTable({
   today,
   renderRowAction,
 }: TaskTableProps) {
-  const baseline = today ?? formatToday()
+  const baseline = today ?? taskToday()
   const taskById = new Map(tasks.map((task) => [task.id, task]))
   const columns: DataTableColumn[] = renderRowAction
     ? [
@@ -156,14 +157,6 @@ function renderPlainCell(key: keyof TaskListItem) {
   return function render(row: DataTableRow) {
     return <PlainCell>{row[key]}</PlainCell>
   }
-}
-
-function formatToday() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }
 
 const PlainCell = styled.span`

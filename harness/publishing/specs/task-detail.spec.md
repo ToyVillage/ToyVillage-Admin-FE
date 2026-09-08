@@ -73,7 +73,7 @@ paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/feature
 ### 요약행
 
 - `담당자` — 대표 1명 이름 + `외 N명`. 담당자가 1명이면 이름만 표시한다(`task-list` 와 같은 규칙).
-- `상태` — `진행중` / `완료` / `반려` pill. 목록과 같은 `TaskStatusBadge` 를 쓴다.
+- `상태` — `진행중` / `완료` / `지연` pill. 목록과 같은 `TaskStatusBadge` 를 쓴다.
 - `우선순위` — `상` / `중` / `하` 배지. 목록과 같은 `TaskPriorityBadge`(42×40 pill)를 쓴다.
 - `완료기한` — `YYYY-MM-DD`. **여기서는 기한 초과 위험색을 적용하지 않는다**(Figma 가 검정이다).
 

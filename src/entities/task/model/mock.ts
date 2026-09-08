@@ -1,10 +1,10 @@
-import { taskPriorities, taskStatuses } from './types'
+import { taskPriorities, taskProgressStatuses } from './types'
 import type {
   CreateTaskInput,
   Task,
   TaskMember,
   TaskPriority,
-  TaskStatus,
+  TaskProgressStatus,
   TaskTeam,
   UpdateTaskInput,
 } from './types'
@@ -95,9 +95,9 @@ export const mockTasks: Task[] = [
     assigneeIds: ['emp-1', 'emp-14', 'emp-15', 'emp-16'],
     title: '업무 제목',
     content: figmaContent,
-    status: 'REJECTED',
+    status: 'IN_PROGRESS',
     priority: 'MEDIUM',
-    dueDate: '2027-02-28',
+    dueDate: '2026-08-14',
   },
   {
     id: '5',
@@ -106,7 +106,7 @@ export const mockTasks: Task[] = [
     content: '여름 프로그램 물품과 일정을 정리해주세요.',
     status: 'IN_PROGRESS',
     priority: 'MEDIUM',
-    dueDate: '2026-12-05',
+    dueDate: '2027-04-10',
   },
   {
     id: '6',
@@ -115,7 +115,7 @@ export const mockTasks: Task[] = [
     content: '사육장 점검 결과를 정리해 보고해주세요.',
     status: 'IN_PROGRESS',
     priority: 'HIGH',
-    dueDate: '2026-12-11',
+    dueDate: '2027-04-17',
   },
   {
     id: '7',
@@ -131,9 +131,9 @@ export const mockTasks: Task[] = [
     assigneeIds: ['emp-2'],
     title: '휴관 안내문 게시',
     content: '휴관 안내문을 게시하고 결과를 알려주세요.',
-    status: 'REJECTED',
+    status: 'IN_PROGRESS',
     priority: 'MEDIUM',
-    dueDate: '2026-12-24',
+    dueDate: '2026-09-02',
   },
   {
     id: '9',
@@ -152,6 +152,42 @@ export const mockTasks: Task[] = [
     status: 'DONE',
     priority: 'HIGH',
     dueDate: '2027-01-20',
+  },
+  {
+    id: '11',
+    assigneeIds: ['emp-11'],
+    title: '동절기 급수설비 점검',
+    content: '동파 우려 구역의 급수설비를 점검하고 결과를 보고해주세요.',
+    status: 'IN_PROGRESS',
+    priority: 'HIGH',
+    dueDate: '2027-01-28',
+  },
+  {
+    id: '12',
+    assigneeIds: ['emp-5'],
+    title: '체험학습 안전교육',
+    content: '체험학습 인솔자 대상 안전교육을 진행해주세요.',
+    status: 'DONE',
+    priority: 'MEDIUM',
+    dueDate: '2027-02-05',
+  },
+  {
+    id: '13',
+    assigneeIds: ['emp-8', 'emp-9'],
+    title: '사료 재고 정리',
+    content: '창고 사료 재고를 실사하고 부족분을 정리해주세요.',
+    status: 'IN_PROGRESS',
+    priority: 'LOW',
+    dueDate: '2027-02-12',
+  },
+  {
+    id: '14',
+    assigneeIds: ['emp-13'],
+    title: '봄맞이 시설 보수',
+    content: '개장 전 노후 시설을 확인하고 보수 계획을 세워주세요.',
+    status: 'IN_PROGRESS',
+    priority: 'MEDIUM',
+    dueDate: '2027-03-02',
   },
 ]
 
@@ -303,7 +339,7 @@ function isTask(value: unknown): value is Task {
     task.assigneeIds.every((id) => typeof id === 'string') &&
     typeof task.title === 'string' &&
     typeof task.content === 'string' &&
-    isTaskStatus(task.status) &&
+    isTaskProgressStatus(task.status) &&
     isTaskPriority(task.priority) &&
     typeof task.dueDate === 'string' &&
     (task.attachments === undefined ||
@@ -313,8 +349,9 @@ function isTask(value: unknown): value is Task {
 }
 
 // 열거형 밖의 값이 통과하면 taskStatusLabels·taskPriorityLabels 조회가 빈 값이 된다.
-function isTaskStatus(value: unknown): value is TaskStatus {
-  return taskStatuses.some((status) => status === value)
+// 저장값은 진행 상태(`IN_PROGRESS`/`DONE`)뿐이다 — `OVERDUE` 는 완료기한에서 파생된다.
+function isTaskProgressStatus(value: unknown): value is TaskProgressStatus {
+  return taskProgressStatuses.some((status) => status === value)
 }
 
 function isTaskPriority(value: unknown): value is TaskPriority {
