@@ -142,9 +142,9 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
 
 1. 우선순위 미선택 → `우선순위를 선택해주세요` (`1:5608`)
 2. 완료기한 미선택 → `완료기한을 선택해주세요` (`1:5629`)
-3. 담당자 미선택 → `담당자를 선택해주세요` (`1:5587`)
-4. 제목 공백 → `제목을 입력해주세요` (`1:5545`)
-5. 상세 업무 내용 공백 → `상세 업무 내용을 입력해주세요` (`1:5566`)
+3. 제목 공백 → `제목을 입력해주세요` (`1:5545`)
+4. 상세 업무 내용 공백 → `상세 업무 내용을 입력해주세요` (`1:5566`)
+5. 담당자 미선택 → `담당자를 선택해주세요` (`1:5587`)
 
 **`공개범위를 선택해주세요` 검증은 삭제한다** — yot 에 해당 프레임이 없고 필드 자체가 사라졌다.
 
@@ -168,7 +168,12 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
    - 완료기한 카드 420×194 @900 — 라벨 `완료기한` 20px Medium @40,40.
      입력 340×68 @40,86, radius 8px, 배경 `colors.background`, padding 20/24px,
      값 22px Medium + 캘린더 아이콘 28px 우측.
-4. `assignee section`(1320×가변, 기본 5행): 라벨 `담당자를 선택해주세요` 20px Medium @40,40(높이 26).
+4. `title section`(1320×164 @y=226): 단독 카드. 라벨 `제목 *` 20px Medium(별표는 `colors.danger`)
+   @40,40(높이 26), 입력 32px SemiBold @40,76(높이 48, placeholder `colors.textGuide`).
+5. `body text section`(1320×137 @y=422): 단독 카드. 라벨 `상세 업무 내용 *` 20px Medium @40,40,
+   입력 20px Medium @40,76(placeholder `colors.textGuide`).
+   Figma 는 한 줄 높이지만 입력이 길어지면 카드가 함께 늘어난다(아래 결정 사항).
+6. `assignee section`(1320×가변 @y=591, 기본 5행): 라벨 `담당자를 선택해주세요` 20px Medium @40,40(높이 26).
    행 영역 @40,98 폭 1240.
    - 행 높이 56px, **pitch 72px**.
    - `전체 직원` 행 아래에만 구분선 1px `colors.textFaint` (@y=72).
@@ -177,11 +182,6 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
    - 팀 chevron: 접힘 `>` 6×14 @x=1234 / 펼침 `⌄` 14×6 @x=1226.
    - 체크박스 3상태 아이콘은 기존 `DataTable` 의 체크박스 에셋 계열을 먼저 확인해 재사용한다.
      `mixed` 는 가운데 가로 막대(`−`)다.
-5. `title section`(1320×164): 단독 카드. 라벨 `제목 *` 20px Medium(별표는 `colors.danger`)
-   @40,40(높이 26), 입력 32px SemiBold @40,76(높이 48, placeholder `colors.textGuide`).
-6. `body text section`(1320×137): 단독 카드. 라벨 `상세 업무 내용 *` 20px Medium @40,40,
-   입력 20px Medium @40,76(placeholder `colors.textGuide`).
-   Figma 는 한 줄 높이지만 입력이 길어지면 카드가 함께 늘어난다(아래 결정 사항).
 7. `add file`(1320×140): 단독 카드. 라벨 `첨부자료` 20px Medium `colors.textGuide` @40,24(높이 26).
    파일 chip @40,60, 높이 56px, radius 8px, 테두리 1px `colors.dialogBorder`,
    유형 아이콘 20px + 파일명 18px + 다운로드 24px + 제거 24px.
@@ -263,7 +263,7 @@ interface CreateTaskInput {
 - 파일 chip 은 `${파일명} 다운로드`, `${파일명} 삭제` 이름을 제공한다.
 - 업로드 드롭존은 키보드로 조작 가능한 `파일 업로드` 버튼이다.
 - 검증 모달과 이탈 확인 모달은 modal semantics, 포커스 트랩, 호출 컨트롤 복귀를 제공한다.
-- 기본 키보드 순서: 뒤로가기 → 우선순위 → 완료기한 → 담당자 트리 → 제목 → 상세 내용 →
+- 기본 키보드 순서: 뒤로가기 → 우선순위 → 완료기한 → 제목 → 상세 내용 → 담당자 트리 →
   첨부 컨트롤 → 파일 업로드 → 생성하기.
 
 ## 반응형
@@ -300,7 +300,7 @@ interface CreateTaskInput {
 
 - 라우트는 `/tasks/create` 로 유지한다.
 - **공개범위 필드와 그 검증을 삭제한다**(2026-09-07, yot 근거).
-- 검증 순서는 화면 시각 순서(우선순위 → 완료기한 → 담당자 → 제목 → 상세 내용)로 확정한다.
+- 검증 순서는 화면 시각 순서(우선순위 → 완료기한 → 제목 → 상세 내용 → 담당자)로 확정한다.
 - 완료기한은 과거 날짜를 허용한다. 표시 형식은 공용 `DateField` 의 기존 포맷을 그대로 쓴다
   (구 spec ⑦ 육안 확인에서 수용한 결정 승계).
 - 생성 성공 토스트는 목록 화면이 띄운다(`task-list` S21). 이 화면에서는 띄우지 않는다.
@@ -310,6 +310,9 @@ interface CreateTaskInput {
   선택 표현을 하나로 묶기 위해서다. 규격(252×68, radius 800px)과 미선택 색은 Figma 그대로다.
 - **제목·상세 내용·첨부자료는 각각 독립 카드다**(2026-09-08 Figma 갱신 반영, `145:12270`).
   세로 간격은 다른 카드와 같은 32px 다. 이전 렌더의 `내용 카드`(한 카드 3단)는 폐기했다.
+- **담당자 카드는 상세 업무 내용 아래·첨부자료 위로 내린다**(2026-09-08 Figma 갱신 반영,
+  `145:12270` 자식 순서 = priority/due → title → body text → assignee → add file → upload file).
+  검증 순서와 키보드 순서도 이 시각 순서를 따라간다.
 - 상세 내용 입력의 최소 높이는 Figma 의 한 줄(21px)에 맞추되, 입력이 늘어나면 textarea 높이를
   내용에 맞춰 키운다. Figma 에 여러 줄 상태가 없어 스크롤 대신 카드가 늘어나는 쪽을 택했다.
 

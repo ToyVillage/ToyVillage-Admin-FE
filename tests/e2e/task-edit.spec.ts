@@ -202,16 +202,25 @@ test('S16: 키보드 조작', async ({ page }) => {
 
   await page.keyboard.press('Tab')
   await expect(page.getByLabel('완료기한')).toBeFocused()
-  await page.keyboard.press('Tab')
-  await expect(allEmployees(page)).toBeFocused()
 
-  await page.getByLabel(/제목/).focus()
+  // 완료기한 다음은 제목이다. Tab 진입은 값을 전체 선택하므로 End 로 캐럿을 끝에 둔다.
+  await page.keyboard.press('Tab')
+  await expect(page.getByLabel(/제목/)).toBeFocused()
+  await page.keyboard.press('End')
   await page.keyboard.type(' (키보드 수정)')
 
   await page.keyboard.press('Tab')
   await expect(page.getByLabel(/상세 업무 내용/)).toBeFocused()
+
+  // 상세 내용 다음이 담당자 트리이고, 팀 행 4개(체크박스 + 펼침 버튼 = 8개)를 지나면 첨부 chip 이다.
   await page.keyboard.press('Tab')
-  await expect(page.getByRole('button', { name: /다운로드$/ }).first()).toBeFocused()
+  await expect(allEmployees(page)).toBeFocused()
+  for (let index = 0; index < 9; index += 1) {
+    await page.keyboard.press('Tab')
+  }
+  await expect(
+    page.getByRole('button', { name: /다운로드$/ }).first(),
+  ).toBeFocused()
 
   await page.getByRole('button', { name: '저장하기' }).focus()
   await page.keyboard.press('Enter')

@@ -273,16 +273,8 @@ test('S20: 키보드 조작', async ({ page }) => {
   await page.getByLabel('완료기한').fill('2026-12-31')
   await page.getByLabel('완료기한').focus()
 
-  // 완료기한에서 Tab 하면 담당자 트리의 첫 행으로 넘어간다.
+  // 완료기한에서 Tab 하면 제목 입력으로 넘어간다.
   await page.keyboard.press('Tab')
-  await expect(allEmployees(page)).toBeFocused()
-  await page.keyboard.press('Space')
-  await expect(page.getByText('18/18명')).toBeVisible()
-
-  // 팀 행 4개(체크박스 + 펼침 버튼 = 8개)를 지나면 제목 입력이다.
-  for (let index = 0; index < 9; index += 1) {
-    await page.keyboard.press('Tab')
-  }
   await expect(page.getByLabel(/제목/)).toBeFocused()
   await page.keyboard.type('키보드로 등록한 업무')
 
@@ -290,7 +282,16 @@ test('S20: 키보드 조작', async ({ page }) => {
   await expect(page.getByLabel(/상세 업무 내용/)).toBeFocused()
   await page.keyboard.type('키보드로 입력한 상세 내용')
 
+  // 상세 내용 다음이 담당자 트리의 첫 행이다.
   await page.keyboard.press('Tab')
+  await expect(allEmployees(page)).toBeFocused()
+  await page.keyboard.press('Space')
+  await expect(page.getByText('18/18명')).toBeVisible()
+
+  // 팀 행 4개(체크박스 + 펼침 버튼 = 8개)를 지나면 첨부 컨트롤이다.
+  for (let index = 0; index < 9; index += 1) {
+    await page.keyboard.press('Tab')
+  }
   await expect(page.getByRole('button', { name: '파일 업로드' })).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(page.getByRole('button', { name: '생성하기' })).toBeFocused()

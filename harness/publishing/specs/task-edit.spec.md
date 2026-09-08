@@ -107,6 +107,8 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
 3. `add file` 카드(1320×140)에 기존 첨부 chip 3개가 @40,60 부터 220 pitch 로 놓인다.
 
 제목·상세 내용·첨부자료는 생성 화면과 같이 **각각 독립 카드**다(2026-09-08 Figma 갱신 반영).
+카드 순서도 생성 화면과 같다 — **담당자 카드는 상세 업무 내용 아래·첨부자료 위**다
+(2026-09-08 Figma 갱신 반영, `145:11744` 자식 순서). 검증·키보드 순서는 `task-create.spec.md` 를 따른다.
 
 ## 데이터와 API 경계
 

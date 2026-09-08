@@ -27,9 +27,9 @@ type FieldName = 'priority' | 'dueDate' | 'assignees' | 'title' | 'content'
 const validationOrder: FieldName[] = [
   'priority',
   'dueDate',
-  'assignees',
   'title',
   'content',
+  'assignees',
 ]
 
 const validationMessages: Record<FieldName, string> = {
@@ -216,17 +216,9 @@ export function TaskForm({
           size="md"
           value={dueDate}
           onChange={setDueDate}
-          onTabForward={() => assigneeRef.current?.focus()}
+          onTabForward={() => titleRef.current?.focus()}
         />
       </FieldRow>
-
-      <TaskAssigneeTree
-        ref={assigneeRef}
-        teams={taskTeams}
-        members={taskMembers}
-        selectedIds={assigneeIds}
-        onChange={setAssigneeIds}
-      />
 
       {/* Figma `title section` / `body text section` / `add file` — 각각 별도 카드다. */}
       <SectionCard>
@@ -257,6 +249,14 @@ export function TaskForm({
           onChange={(event) => setContent(event.target.value)}
         />
       </SectionCard>
+
+      <TaskAssigneeTree
+        ref={assigneeRef}
+        teams={taskTeams}
+        members={taskMembers}
+        selectedIds={assigneeIds}
+        onChange={setAssigneeIds}
+      />
 
       <AttachmentField
         variant="task"
