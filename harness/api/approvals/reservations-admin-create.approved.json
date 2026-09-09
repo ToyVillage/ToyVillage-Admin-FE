@@ -1,0 +1,15 @@
+{
+  "feature": "reservations-admin-create",
+  "apiId": "RESERVATION_ADMIN_CREATE",
+  "approvedAt": "2026-08-29T10:47:18.039Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "bedfe2b0f82c830cf60776ef289ade6ecc9c5c439d681b4f942051e4b48d4958",
+  "contractHash": "513085b2e4db03de1b4e84b456e345d9a59b3fcf663dc3b29eeb4812f24eaf88",
+  "contractMarkdownHash": "67bdb84ce9bb947c1c932142139b988b1104e9eed4d3c9810fddd40b6231cddf",
+  "planHash": "89849eb81fece96edf61715e94dfedcb692ca5cb6665c6e226dcad27ea82b470",
+  "scenarioHash": "dfe725f111058dda3c4f238df80676fadb39508c117ee5774a99a8fa5f93f0c9",
+  "testHash": "d43ff81d63debb7f58cd5b01e6b8e2bfba8c2965d28fb74b007c6ec4f41c0960",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-08-29T10:50:43.597Z"
+}

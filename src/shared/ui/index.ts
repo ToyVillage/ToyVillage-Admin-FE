@@ -11,6 +11,7 @@ export type {
   DataTableSelection,
   DataTablePagination,
 } from './DataTable'
+export { SearchBar } from './SearchBar'
 export { LinkButton } from './LinkButton'
 export { DeleteConfirmationDialog } from './DeleteConfirmationDialog'
 export { LeaveConfirmationDialog } from './LeaveConfirmationDialog'

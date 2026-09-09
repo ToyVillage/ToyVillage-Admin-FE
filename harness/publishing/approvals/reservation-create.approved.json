@@ -1,0 +1,16 @@
+{
+  "feature": "reservation-create",
+  "approvedAt": "2026-08-22T17:41:03.996Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7"
+  ],
+  "scenarioHash": "2e9ce903a66644554a2e8345db06dcfc8e9544fc1c53b607c896445a7f779ebf",
+  "e2eHash": "7b16b5b597eef51f2337c3f646f3fa239e42aa63d7d685a8da79906957506d0a"
+}
