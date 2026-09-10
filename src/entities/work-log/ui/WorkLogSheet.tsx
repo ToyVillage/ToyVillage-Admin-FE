@@ -141,7 +141,6 @@ const ZoneCell = styled.div<{ $last: boolean }>`
 const Cell = styled.div<{ $wide: boolean; $last: boolean }>`
   ${cellFrame}
   ${({ $wide }) => columnWidth($wide)}
-  min-width: 0;
   ${({ theme, $last }) =>
     $last
       ? ''
