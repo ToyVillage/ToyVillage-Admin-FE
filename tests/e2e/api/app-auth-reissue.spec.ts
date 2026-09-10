@@ -184,6 +184,9 @@ test('S9: 로그인 API 의 401 은 재발급·로그아웃을 유발하지 않�
   await expect(page.getByLabel('아이디')).toHaveValue('admin')
   await expect(page).toHaveURL(/\/login$/)
   expect(reissue.count()).toBe(0)
+  // 실패한 로그인은 이전 세션을 남기지 않는다(submitLogin 의 clearSession).
+  expect(await readStorage(page, 'accessToken')).toBeNull()
+  expect(await readStorage(page, 'refreshToken')).toBeNull()
 })
 
 test('S11: 401·403 이 아닌 오류는 세션을 건드리지 않는다', async ({ page }) => {
