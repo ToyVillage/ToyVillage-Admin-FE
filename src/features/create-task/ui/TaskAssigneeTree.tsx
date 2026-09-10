@@ -1,70 +1,76 @@
 import { forwardRef, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
-import type { TaskMember, TaskTeam } from '@/entities/task'
+import type { TeamMember, TeamTreeGroup } from '@/entities/team'
 
 type CheckState = 'on' | 'off' | 'mixed'
 
 interface TaskAssigneeTreeProps {
-  teams: TaskTeam[]
-  members: TaskMember[]
-  selectedIds: string[]
-  onChange: (selectedIds: string[]) => void
+  /** 팀 목록. 미배정 그룹이 마지막 항목이다. 조회 전에는 빈 배열이다. */
+  groups: TeamTreeGroup[]
+  /** 전체 직원 수(`전체 직원` 행의 분모). */
+  totalMemberCount: number
+  selectedIds: number[]
+  onChange: (selectedIds: number[]) => void
+  /** 팀 구조 조회 실패 문구. 있으면 트리 대신 이 문구를 보여준다. */
+  errorMessage?: string
 }
 
 // Figma `assignee section`(yot 1:3694). `전체 직원` 한 행 + 팀 행 + 펼쳐진 직원 행으로 이뤄진
-// 3상태 체크박스 트리다. 펼침 상태는 선택과 독립이며, 선택이 있는 팀은 펼친 채로 시작한다.
+// 3상태 체크박스 트리다. 데이터는 `TEAM_QUERY_TREE`(GET /team/tree)가 준다.
 export const TaskAssigneeTree = forwardRef<
   HTMLInputElement,
   TaskAssigneeTreeProps
->(function TaskAssigneeTree({ teams, members, selectedIds, onChange }, ref) {
-  const membersByTeam = useMemo(
-    () =>
-      new Map(
-        teams.map((team) => [
-          team.id,
-          members.filter((member) => member.teamId === team.id),
-        ]),
-      ),
-    [members, teams],
+>(function TaskAssigneeTree(
+  { groups, totalMemberCount, selectedIds, onChange, errorMessage },
+  ref,
+) {
+  const allMembers = useMemo(
+    () => groups.flatMap((group) => group.members),
+    [groups],
   )
   // 진입 시에는 팀이 모두 접혀 있다. 수정 화면에서 담당자가 복원돼도 마찬가지이며
   // 선택 상태는 팀 행의 3상태 체크박스와 `n/m명` 카운트로 읽는다(2026-09-08 개발자 결정).
-  const [expandedTeamIds, setExpandedTeamIds] = useState(
+  const [expandedGroupKeys, setExpandedGroupKeys] = useState(
     () => new Set<string>(),
   )
 
   const selected = useMemo(() => new Set(selectedIds), [selectedIds])
-  const allState = checkState(selected.size, members.length)
+  // 카운트 표기는 서버가 준 `totalMemberCount`, 3상태 판정은 실제 렌더된 직원 수를 쓴다.
+  // 두 값이 어긋나도(미배정 포함 여부 미확정) 전체 선택이 `mixed` 에 갇히지 않게 한다.
+  const allState = checkState(selected.size, allMembers.length)
 
-  function replaceSelection(nextIds: Iterable<string>) {
+  function replaceSelection(nextIds: Iterable<number>) {
     // 트리 순서를 유지해 `외 N명` 의 대표 담당자가 화면 순서와 같아지게 한다.
     const nextSet = new Set(nextIds)
-    onChange(members.filter((member) => nextSet.has(member.id)).map((m) => m.id))
+    onChange(
+      allMembers
+        .filter((member) => nextSet.has(member.id))
+        .map((member) => member.id),
+    )
   }
 
   function toggleAll() {
     replaceSelection(
-      allState === 'off' ? members.map((member) => member.id) : [],
+      allState === 'off' ? allMembers.map((member) => member.id) : [],
     )
   }
 
-  function toggleTeam(teamId: string) {
-    const teamMembers = membersByTeam.get(teamId) ?? []
-    const teamState = checkState(
-      teamMembers.filter((member) => selected.has(member.id)).length,
-      teamMembers.length,
+  function toggleGroup(group: TeamTreeGroup) {
+    const groupState = checkState(
+      group.members.filter((member) => selected.has(member.id)).length,
+      group.members.length,
     )
     const nextIds = new Set(selected)
 
-    for (const member of teamMembers) {
-      if (teamState === 'off') nextIds.add(member.id)
+    for (const member of group.members) {
+      if (groupState === 'off') nextIds.add(member.id)
       else nextIds.delete(member.id)
     }
 
     replaceSelection(nextIds)
   }
 
-  function toggleMember(memberId: string) {
+  function toggleMember(memberId: number) {
     const nextIds = new Set(selected)
     if (nextIds.has(memberId)) nextIds.delete(memberId)
     else nextIds.add(memberId)
@@ -72,11 +78,11 @@ export const TaskAssigneeTree = forwardRef<
     replaceSelection(nextIds)
   }
 
-  function toggleExpanded(teamId: string) {
-    setExpandedTeamIds((current) => {
+  function toggleExpanded(groupKey: string) {
+    setExpandedGroupKeys((current) => {
       const next = new Set(current)
-      if (next.has(teamId)) next.delete(teamId)
-      else next.add(teamId)
+      if (next.has(groupKey)) next.delete(groupKey)
+      else next.add(groupKey)
       return next
     })
   }
@@ -84,83 +90,97 @@ export const TaskAssigneeTree = forwardRef<
   return (
     <Card>
       <Label id="task-assignee-label">담당자를 선택해주세요</Label>
-      <Tree role="tree" aria-labelledby="task-assignee-label">
-        <AllRow role="treeitem" aria-checked={ariaChecked(allState)}>
-          <Checkbox
-            ref={ref}
-            type="checkbox"
-            data-state={allState}
-            checked={allState === 'on'}
-            aria-label={`전체 직원 ${selected.size}/${members.length}명`}
-            onChange={toggleAll}
-          />
-          <RowLabel>전체 직원</RowLabel>
-          <Count>
-            {selected.size}/{members.length}명
-          </Count>
-        </AllRow>
+      {errorMessage ? (
+        <ErrorMessage role="alert">{errorMessage}</ErrorMessage>
+      ) : (
+        <Tree role="tree" aria-labelledby="task-assignee-label">
+          <AllRow role="treeitem" aria-checked={ariaChecked(allState)}>
+            <Checkbox
+              ref={ref}
+              type="checkbox"
+              data-state={allState}
+              checked={allState === 'on'}
+              aria-label={`전체 직원 ${selected.size}/${totalMemberCount}명`}
+              onChange={toggleAll}
+            />
+            <RowLabel>전체 직원</RowLabel>
+            <Count>
+              {selected.size}/{totalMemberCount}명
+            </Count>
+          </AllRow>
 
-        {teams.map((team) => {
-          const teamMembers = membersByTeam.get(team.id) ?? []
-          const selectedCount = teamMembers.filter((member) =>
-            selected.has(member.id),
-          ).length
-          const teamState = checkState(selectedCount, teamMembers.length)
-          const expanded = expandedTeamIds.has(team.id)
+          {groups.map((group) => {
+            // 미배정 그룹은 id 가 null 이라 팀 id 를 행 key 로 쓸 수 없다.
+            const groupKey = String(group.id ?? 'unassigned')
+            const selectedCount = group.members.filter((member) =>
+              selected.has(member.id),
+            ).length
+            const groupState = checkState(selectedCount, group.members.length)
+            const expanded = expandedGroupKeys.has(groupKey)
 
-          return (
-            <TeamGroup key={team.id} role="group">
-              <Row role="treeitem" aria-expanded={expanded} aria-checked={ariaChecked(teamState)}>
-                <Checkbox
-                  type="checkbox"
-                  data-state={teamState}
-                  checked={teamState === 'on'}
-                  aria-label={`${team.name} ${selectedCount}/${teamMembers.length}명`}
-                  onChange={() => toggleTeam(team.id)}
-                />
-                <RowLabel>{team.name}</RowLabel>
-                <Count>
-                  {selectedCount}/{teamMembers.length}명
-                </Count>
-                <ExpandButton
-                  type="button"
-                  aria-label={`${team.name} ${expanded ? '접기' : '펼치기'}`}
-                  onClick={() => toggleExpanded(team.id)}
+            return (
+              <TeamGroup key={groupKey} role="group">
+                <Row
+                  role="treeitem"
+                  aria-expanded={expanded}
+                  aria-checked={ariaChecked(groupState)}
                 >
-                  <Chevron
-                    data-expanded={expanded}
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
+                  <Checkbox
+                    type="checkbox"
+                    data-state={groupState}
+                    checked={groupState === 'on'}
+                    aria-label={`${group.name} ${selectedCount}/${group.memberCount}명`}
+                    onChange={() => toggleGroup(group)}
+                  />
+                  <RowLabel>{group.name}</RowLabel>
+                  <Count>
+                    {selectedCount}/{group.memberCount}명
+                  </Count>
+                  <ExpandButton
+                    type="button"
+                    aria-label={`${group.name} ${expanded ? '접기' : '펼치기'}`}
+                    onClick={() => toggleExpanded(groupKey)}
                   >
-                    <path d="m9 4 8 8-8 8" />
-                  </Chevron>
-                </ExpandButton>
-              </Row>
+                    <Chevron
+                      data-expanded={expanded}
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 4 8 8-8 8" />
+                    </Chevron>
+                  </ExpandButton>
+                </Row>
 
-              {expanded &&
-                teamMembers.map((member) => (
-                  <MemberRow
-                    key={member.id}
-                    role="treeitem"
-                    aria-checked={selected.has(member.id)}
-                  >
-                    <Checkbox
-                      type="checkbox"
-                      data-state={selected.has(member.id) ? 'on' : 'off'}
-                      checked={selected.has(member.id)}
-                      aria-label={member.label}
-                      onChange={() => toggleMember(member.id)}
-                    />
-                    <RowLabel>{member.label}</RowLabel>
-                  </MemberRow>
-                ))}
-            </TeamGroup>
-          )
-        })}
-      </Tree>
+                {expanded &&
+                  group.members.map((member) => (
+                    <MemberRow
+                      key={member.id}
+                      role="treeitem"
+                      aria-checked={selected.has(member.id)}
+                    >
+                      <Checkbox
+                        type="checkbox"
+                        data-state={selected.has(member.id) ? 'on' : 'off'}
+                        checked={selected.has(member.id)}
+                        aria-label={memberLabel(member)}
+                        onChange={() => toggleMember(member.id)}
+                      />
+                      <RowLabel>{memberLabel(member)}</RowLabel>
+                    </MemberRow>
+                  ))}
+              </TeamGroup>
+            )
+          })}
+        </Tree>
+      )}
     </Card>
   )
 })
+
+// 트리 행 표기는 `이승현 사원`. 직급이 없는 직원은 이름만 쓴다.
+function memberLabel(member: TeamMember) {
+  return member.position ? `${member.name} ${member.position}` : member.name
+}
 
 function checkState(selectedCount: number, total: number): CheckState {
   if (total > 0 && selectedCount === total) return 'on'
@@ -212,6 +232,15 @@ const Label = styled.legend`
 `
 
 // 행 높이 56 + gap 16 = Figma pitch 72.
+const ErrorMessage = styled.p`
+  clear: both;
+  margin: 0;
+  color: ${({ theme }) => theme.colors.danger};
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.3;
+`
+
 const Tree = styled.div`
   display: flex;
   clear: both;

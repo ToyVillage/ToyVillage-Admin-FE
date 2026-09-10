@@ -9,7 +9,6 @@ import {
 } from '@/shared/ui'
 import { TaskAssigneeCell } from './TaskAssigneeCell'
 import { TaskPriorityBadge } from './TaskPriorityBadge'
-import { taskToday } from '../model/status'
 import { TaskStatusBadge } from './TaskStatusBadge'
 import type { TaskListItem, TaskPriority, TaskStatus } from '../model/types'
 
@@ -108,7 +107,7 @@ export function TaskTable({
   today,
   renderRowAction,
 }: TaskTableProps) {
-  const baseline = today ?? taskToday()
+  const baseline = today ?? todayString()
   const taskById = new Map(tasks.map((task) => [task.id, task]))
   const columns: DataTableColumn[] = renderRowAction
     ? [
@@ -151,6 +150,15 @@ export function TaskTable({
       appearance={appearance}
     />
   )
+}
+
+/** 완료기한 위험색 판정 기준일(YYYY-MM-DD). 로컬 날짜를 쓴다. */
+function todayString() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function renderPlainCell(key: keyof TaskListItem) {

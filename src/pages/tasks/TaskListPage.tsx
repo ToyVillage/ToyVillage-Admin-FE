@@ -1,16 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   deleteTask,
-  findTaskMember,
-  getMockTasks,
-  recordDeletedMockTask,
-  resolveTaskStatus,
+  getTasks,
   TaskTable,
-  taskToday,
-  type TaskListItem,
   type TaskStatus,
 } from '@/entities/task'
 import { CreateTaskButton } from '@/features/create-task'
@@ -26,11 +21,12 @@ const TABLE_PAGE_SIZE = 10
 
 const tabs = ['전체 업무', '진행중', '완료', '지연']
 
-const tabStatuses: Record<string, TaskStatus | null> = {
-  '전체 업무': null,
+// 탭은 서버 `status` query parameter 로 전달한다. `전체 업무` 는 보내지 않는다.
+const tabStatuses: Record<string, TaskStatus | undefined> = {
+  '전체 업무': undefined,
   진행중: 'IN_PROGRESS',
-  완료: 'DONE',
-  지연: 'OVERDUE',
+  완료: 'COMPLETED',
+  지연: 'EXPIRED',
 }
 
 type TaskListToastKey = 'delete-success' | 'delete-error' | 'create-success'
@@ -74,12 +70,30 @@ export function TaskListPage() {
     requestAnimationFrame(() => menuTriggersRef.current.get(taskId)?.focus())
   }, [])
 
+  // 탭이 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
+  const [prevActive, setPrevActive] = useState(active)
+  if (prevActive !== active) {
+    setPrevActive(active)
+    setPage(1)
+  }
+
+  const status = tabStatuses[active]
   const {
-    data: queryTasks,
+    data,
     isPending,
     isError,
-  } = useQuery({ queryKey: ['tasks'], queryFn: getMockTasks })
-  const allTasks = useMemo(() => queryTasks ?? [], [queryTasks])
+  } = useQuery({
+    queryKey: ['tasks', 'list', { page, size: TABLE_PAGE_SIZE, status }],
+    queryFn: () => getTasks({ page: page - 1, size: TABLE_PAGE_SIZE, status }),
+    placeholderData: (previousData) => previousData,
+  })
+  const tasks = data?.items ?? []
+  // 페이지 수는 서버가 준 총 페이지 수를 그대로 쓴다.
+  const pageCount = Math.max(1, data?.totalPageSize ?? 1)
+
+  // 삭제로 마지막 페이지가 사라지면 범위 밖 페이지에 고착되지 않게 되돌린다.
+  // 탭 보정과 같은 렌더 중 상태 보정이다(effect 불필요).
+  if (data && page > pageCount) setPage(pageCount)
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteTask({ id: Number(id) }),
@@ -89,47 +103,6 @@ export function TaskListPage() {
   const stateToast = (location.state as TaskListLocationState | null)?.toast
   const toastKey = localToast ?? stateToast
   const toast = toastKey ? toastByKey[toastKey] : undefined
-
-  // 탭 필터와 표의 기한 표시가 어긋나지 않도록 기준일을 한 번만 잡는다.
-  const today = useMemo(() => taskToday(), [])
-
-  const items = useMemo<TaskListItem[]>(
-    () =>
-      allTasks.map((task) => ({
-        id: task.id,
-        assigneeName: findTaskMember(task.assigneeIds[0])?.name ?? '미지정',
-        assigneeExtraCount: Math.max(task.assigneeIds.length - 1, 0),
-        title: task.title,
-        status: resolveTaskStatus(task, today),
-        priority: task.priority,
-        dueDate: task.dueDate,
-      })),
-    [allTasks, today],
-  )
-
-  const filtered = useMemo(() => {
-    const status = tabStatuses[active]
-    return status ? items.filter((item) => item.status === status) : items
-  }, [active, items])
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / TABLE_PAGE_SIZE))
-
-  // 탭이 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
-  const [prevActive, setPrevActive] = useState(active)
-  if (prevActive !== active) {
-    setPrevActive(active)
-    setPage(1)
-  }
-  const currentPage = Math.min(page, pageCount)
-
-  const tasks = useMemo(
-    () =>
-      filtered.slice(
-        (currentPage - 1) * TABLE_PAGE_SIZE,
-        currentPage * TABLE_PAGE_SIZE,
-      ),
-    [filtered, currentPage],
-  )
 
   const dismissToast = useCallback(() => {
     setLocalToast(null)
@@ -147,7 +120,6 @@ export function TaskListPage() {
       onSuccess: async () => {
         deletingRef.current = false
         setDeleteTargetId(null)
-        recordDeletedMockTask(targetId)
         queryClient.removeQueries({ queryKey: ['tasks', targetId] })
         await queryClient.invalidateQueries({ queryKey: ['tasks'] })
         setLocalToast('delete-success')
@@ -195,9 +167,8 @@ export function TaskListPage() {
 
         <TaskTable
           tasks={tasks}
-          today={today}
           onRowClick={(id) => navigate(`/tasks/${id}`)}
-          pagination={{ page: currentPage, pageCount, onChange: setPage }}
+          pagination={{ page: Math.min(page, pageCount), pageCount, onChange: setPage }}
           emptyLabel="등록된 업무가 없습니다."
           renderRowAction={(task) => (
             <RowActionMenu

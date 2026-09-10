@@ -1,21 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { uploadFile } from '@/entities/file'
 import {
-  createMockTask,
-  taskMembers,
-  taskTeams,
-  updateMockTask,
+  createTask,
+  updateTask,
   type Task,
   type TaskPriority,
-  type UpdateTaskInput,
 } from '@/entities/task'
+import { getTeamTree } from '@/entities/team'
 import {
   AttachmentField,
   DateField,
   Toast,
   ValidationDialog,
   type AttachmentAddResult,
+  type AttachmentItem,
   type ToastVariant,
 } from '@/shared/ui'
 import { TaskAssigneeTree } from './TaskAssigneeTree'
@@ -45,6 +45,19 @@ interface ToastState {
   message: string
 }
 
+// 폼이 모아 제출하는 값. 첨부는 제출 시점에 업로드되어 fileKey 로 바뀐다.
+interface TaskSubmitValues {
+  priority: TaskPriority
+  dueDate: string
+  assigneeIds: number[]
+  title: string
+  content: string
+  attachments: AttachmentItem[]
+}
+
+const assigneeLoadErrorMessage =
+  '담당자 목록을 불러오지 못했습니다. 다시 시도해 주세요.'
+
 interface TaskFormProps {
   mode: 'create' | 'edit'
   initialTask?: Task
@@ -72,9 +85,14 @@ export function TaskForm({
     () => initialTask?.attachments ?? [],
     [initialTask?.attachments],
   )
+  const initialAttachmentFiles = useMemo(
+    () => initialTask?.attachmentFiles ?? [],
+    [initialTask?.attachmentFiles],
+  )
+  // 담당자 체크 복원은 상세 조회(`TASK_QUERY`)의 assignees[].id 로 한다.
   const initialAssigneeIds = useMemo(
-    () => initialTask?.assigneeIds ?? [],
-    [initialTask?.assigneeIds],
+    () => initialTask?.assignees.map(({ id }) => id) ?? [],
+    [initialTask?.assignees],
   )
   const [priority, setPriority] = useState<TaskPriority | null>(
     initialTask?.priority ?? null,
@@ -85,27 +103,65 @@ export function TaskForm({
   const [content, setContent] = useState(initialTask?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
+  const [attachmentItems, setAttachmentItems] = useState<AttachmentItem[]>(() =>
+    initialAttachmentFiles.map(({ fileName, fileKey }) => ({
+      name: fileName,
+      fileKey,
+    })),
+  )
   const [validationError, setValidationError] = useState<FieldName | null>(null)
   const [toast, setToast] = useState<ToastState | null>(null)
 
   const isEditing = mode === 'edit'
 
+  // 담당자 트리의 유일한 데이터 출처. 업무지시 캐시(`['tasks']`)와 분리한다.
+  const {
+    data: teamTree,
+    isError: isTeamTreeError,
+  } = useQuery({ queryKey: ['teams', 'tree'], queryFn: getTeamTree })
+
   const mutation = useMutation({
-    mutationFn: (input: UpdateTaskInput) =>
-      initialTask
-        ? updateMockTask({ id: initialTask.id, input })
-        : createMockTask(input),
+    mutationFn: async (values: TaskSubmitValues) => {
+      // 기존 첨부는 fileKey 를 그대로 재전송하고, 새로 고른 파일만 업로드한다.
+      const files: string[] = []
+      for (const attachment of values.attachments) {
+        if (attachment.fileKey) {
+          files.push(attachment.fileKey)
+          continue
+        }
+        if (!attachment.file) continue
+
+        const { fileKey } = await uploadFile({ files: attachment.file })
+        files.push(fileKey)
+      }
+
+      const input = {
+        title: values.title,
+        content: values.content,
+        assigneeIds: values.assigneeIds,
+        finishDate: values.dueDate,
+        priority: values.priority,
+        files,
+      }
+
+      if (initialTask) {
+        await updateTask({ id: Number(initialTask.id), input })
+        return
+      }
+
+      await createTask(input)
+    },
   })
 
   useEffect(() => {
     const isDirty = Boolean(
       priority !== (initialTask?.priority ?? null) ||
         dueDate !== (initialTask?.dueDate ?? '') ||
-        !sameStringArray(assigneeIds, initialAssigneeIds) ||
+        !sameArray(assigneeIds, initialAssigneeIds) ||
         title !== (initialTask?.title ?? '') ||
         content !== (initialTask?.content ?? '') ||
         (isEditing
-          ? !sameStringArray(attachmentNames, initialAttachmentNames)
+          ? !sameArray(attachmentNames, initialAttachmentNames)
           : hasAttachments),
     )
 
@@ -184,7 +240,7 @@ export function TaskForm({
         assigneeIds,
         title: values.title,
         content: values.content,
-        attachments: attachmentNames,
+        attachments: attachmentItems,
       },
       {
         onSuccess: async () => {
@@ -252,17 +308,19 @@ export function TaskForm({
 
       <TaskAssigneeTree
         ref={assigneeRef}
-        teams={taskTeams}
-        members={taskMembers}
+        groups={teamTree?.groups ?? []}
+        totalMemberCount={teamTree?.totalMemberCount ?? 0}
         selectedIds={assigneeIds}
         onChange={setAssigneeIds}
+        errorMessage={isTeamTreeError ? assigneeLoadErrorMessage : undefined}
       />
 
       <AttachmentField
         variant="task"
-        initialFileNames={initialAttachmentNames}
+        initialFiles={initialAttachmentFiles}
         onFilesChange={setHasAttachments}
         onFileNamesChange={setAttachmentNames}
+        onFileItemsChange={setAttachmentItems}
         onAddResult={handleAttachmentResult}
       />
 
@@ -275,7 +333,10 @@ export function TaskForm({
       )}
 
       <Actions>
-        <SubmitButton type="submit" disabled={mutation.isPending}>
+        <SubmitButton
+          type="submit"
+          disabled={mutation.isPending || isTeamTreeError}
+        >
           {mutation.isPending
             ? isEditing
               ? '저장 중'
@@ -304,7 +365,7 @@ export function TaskForm({
   )
 }
 
-function sameStringArray(left: string[], right: string[]) {
+function sameArray<T>(left: T[], right: T[]) {
   return (
     left.length === right.length &&
     left.every((value, index) => value === right[index])

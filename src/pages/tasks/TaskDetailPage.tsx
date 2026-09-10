@@ -2,14 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import {
-  deleteTask,
-  findTaskMember,
-  getMockTask,
-  recordDeletedMockTask,
-  resolveTaskStatus,
-  TaskInfoRow,
-} from '@/entities/task'
+import { deleteTask, getTask, TaskInfoRow } from '@/entities/task'
 import {
   getMockTaskReportsByTaskId,
   TaskProgressCard,
@@ -43,7 +36,7 @@ export function TaskDetailPage() {
     isError,
   } = useQuery({
     queryKey: ['tasks', id],
-    queryFn: () => getMockTask(id),
+    queryFn: () => getTask({ id: Number(id) }),
     enabled: Boolean(id),
   })
 
@@ -61,7 +54,7 @@ export function TaskDetailPage() {
     () =>
       (reports ?? []).map((report) => ({
         reportId: report.id,
-        assigneeName: findTaskMember(report.assigneeId)?.name ?? '미지정',
+        assigneeName: report.assigneeName,
         reviewStatus: report.reviewStatus,
       })),
     [reports],
@@ -95,7 +88,6 @@ export function TaskDetailPage() {
     deleteMutation.mutate(undefined, {
       onSuccess: async () => {
         deletingRef.current = false
-        recordDeletedMockTask(id)
         queryClient.removeQueries({ queryKey: ['tasks', id] })
         await queryClient.invalidateQueries({ queryKey: ['tasks'] })
         navigate('/tasks', { state: { toast: 'delete-success' } })
@@ -128,8 +120,7 @@ export function TaskDetailPage() {
     )
   }
 
-  const [leadAssigneeId, ...restAssigneeIds] = task.assigneeIds
-  const attachments = task.attachments ?? []
+  const attachments = task.attachments
 
   return (
     <Page>
@@ -160,9 +151,9 @@ export function TaskDetailPage() {
         </TopRow>
 
         <TaskInfoRow
-          assigneeName={findTaskMember(leadAssigneeId)?.name ?? '미지정'}
-          assigneeExtraCount={restAssigneeIds.length}
-          status={resolveTaskStatus(task)}
+          assigneeName={task.assignees[0]?.name ?? ''}
+          assigneeExtraCount={Math.max(task.assigneeCount - 1, 0)}
+          status={task.status}
           priority={task.priority}
           dueDate={task.dueDate}
         />

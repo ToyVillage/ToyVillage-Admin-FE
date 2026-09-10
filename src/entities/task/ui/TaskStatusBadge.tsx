@@ -23,11 +23,11 @@ const Badge = styled.span<{ $status: TaskStatus }>`
   font-weight: 500;
   line-height: 1.2;
   ${({ theme, $status }) => {
-    if ($status === 'DONE') {
+    if ($status === 'COMPLETED') {
       return `background: ${theme.colors.accentBg}; color: ${theme.colors.accent};`
     }
     // Figma 의 세 번째 pill(구 `반려`) 색을 `지연` 이 그대로 쓴다.
-    if ($status === 'OVERDUE') {
+    if ($status === 'EXPIRED') {
       return `background: ${theme.colors.warningBg}; color: ${theme.colors.warning};`
     }
     return `background: ${theme.colors.tableHeaderStrong}; color: ${theme.colors.textGuide};`

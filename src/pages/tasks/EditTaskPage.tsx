@@ -8,7 +8,7 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import { getMockTask } from '@/entities/task'
+import { getTask } from '@/entities/task'
 import { TaskForm } from '@/features/create-task'
 import { LeaveConfirmationDialog } from '@/shared/ui'
 import { TaskBackLink } from './ui/TaskBackLink'
@@ -46,7 +46,7 @@ export function EditTaskPage() {
     isError,
   } = useQuery({
     queryKey: ['tasks', id],
-    queryFn: () => getMockTask(id),
+    queryFn: () => getTask({ id: Number(id) }),
     enabled: Boolean(id),
   })
 

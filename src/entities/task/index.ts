@@ -1,36 +1,44 @@
 export type {
-  CreateTaskInput,
   Task,
+  TaskAssignee,
+  TaskAttachmentFile,
   TaskListItem,
-  TaskMember,
   TaskPriority,
-  TaskProgressStatus,
   TaskStatus,
-  TaskTeam,
-  UpdateTaskInput,
 } from './model/types'
-export { deleteTask } from './api/taskApi'
+export { taskPriorities, taskStatuses } from './model/types'
+export {
+  createTask,
+  deleteTask,
+  getTask,
+  getTasks,
+  updateTask,
+  type TaskListPage,
+} from './api/taskApi'
 export type {
+  TaskCreateErrorResponse,
+  TaskCreateRequest,
+  TaskCreateResponse,
   TaskDeleteErrorResponse,
   TaskDeleteRequest,
   TaskDeleteResponse,
+  TaskQueryAllErrorResponse,
+  TaskQueryAllRequest,
+  TaskQueryAllResponse,
+  TaskQueryAllResponseItem,
+  TaskQueryAssigneeResponse,
+  TaskQueryErrorResponse,
+  TaskQueryFileResponse,
+  TaskQueryProgressResponse,
+  TaskQueryReportResponse,
+  TaskQueryReportStatus,
+  TaskQueryRequest,
+  TaskQueryResponse,
+  TaskUpdateErrorResponse,
+  TaskUpdateRequest,
+  TaskUpdateResponse,
 } from './api/types'
-export {
-  createMockTask,
-  deletedTaskStorageKey,
-  findTaskMember,
-  findTaskTeam,
-  getMockTask,
-  getMockTasks,
-  mockTasks,
-  recordDeletedMockTask,
-  taskMembers,
-  taskStorageKey,
-  taskTeams,
-  updateMockTask,
-} from './model/mock'
 export { taskPriorityLabels, taskStatusLabels } from './model/labels'
-export { resolveTaskStatus, taskToday } from './model/status'
 export { TaskAssigneeCell } from './ui/TaskAssigneeCell'
 export { TaskInfoRow } from './ui/TaskInfoRow'
 export { TaskPriorityBadge } from './ui/TaskPriorityBadge'
