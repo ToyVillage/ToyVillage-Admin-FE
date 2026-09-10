@@ -128,11 +128,15 @@ test('S4: 유효 입력 + 서버 400 → 생성 실패 다이얼로그', async (
   await expectCreateFailureDialog(page)
 })
 
-test('S5: 401 만료된 토큰 → 생성 실패 다이얼로그', async ({ page }) => {
+test('S5: 401 만료된 토큰 → 세션을 비우고 로그인으로 이동', async ({ page }) => {
   await routeStatus(page, 401, '만료된 토큰입니다.')
   await fillValidForm(page)
   await page.getByRole('button', { name: '생성하기' }).click()
-  await expectCreateFailureDialog(page)
+
+  await expect(page).toHaveURL(/\/login$/)
+  expect(
+    await page.evaluate(() => localStorage.getItem('accessToken')),
+  ).toBeNull()
 })
 
 test('S6: 404 존재하지 않는 파일 → 생성 실패 다이얼로그', async ({ page }) => {
