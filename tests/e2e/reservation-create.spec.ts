@@ -70,7 +70,7 @@ test('S3: 필수 미입력 검증(인라인)', async ({ page }) => {
 
 test('S4: 정상 생성', async ({ page }) => {
   // POST /reservation 성공 mock (실제 서버 미호출).
-  await page.route(/\/api\/reservation$/, async (route) => {
+  await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback()
     await route.fulfill({
       status: 200,
@@ -99,7 +99,7 @@ test('S5: 시간 am/pm 선택', async ({ page }) => {
 test('S6: 페이지 권한 배정 추가/취소', async ({ page }) => {
   // 생성 화면은 reservationId=-1 로 직원 목록을 조회한다(전원 assignable).
   await page.route(
-    /\/api\/reservation\/assigned-employee\/-?\d+(\?.*)?$/,
+    /^https:\/\/[^/]+\/reservation\/assigned-employee\/-?\d+(\?.*)?$/,
     async (route) => {
       await route.fulfill({
         status: 200,

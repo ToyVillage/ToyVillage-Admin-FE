@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const apiPath = /\/api\/reservation(?:\?.*)?$/
+const apiPath = /^https:\/\/[^/]+\/reservation(?:\?.*)?$/
 
 interface ItemOverrides {
   id?: number

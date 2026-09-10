@@ -21,8 +21,8 @@ const detail = {
   leaderPhoneNumber: '010-7753-9698',
 }
 
-const employeePath = /\/api\/reservation\/assigned-employee\/\d+(\?.*)?$/
-const detailOrPatchPath = /\/api\/reservation\/\d+$/
+const employeePath = /^https:\/\/[^/]+\/reservation\/assigned-employee\/\d+(\?.*)?$/
+const detailOrPatchPath = /^https:\/\/[^/]+\/reservation\/\d+$/
 
 async function fillTime(page: Page, label: string, digits: string) {
   await page.getByLabel(`${label} 시`, { exact: true }).click()
@@ -89,7 +89,7 @@ test('S1: 저장 → PATCH 바디 매핑 후 목록 이동', async ({ page }) =>
   await page.getByRole('button', { name: '저장하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/reservations$/)
-  expect(new URL(patchUrl).pathname).toBe('/api/reservation/1')
+  expect(new URL(patchUrl).pathname).toBe('/reservation/1')
   expect(body).toMatchObject({
     title: '대덕소프트웨어마이스터고',
     location: '대전광역시 유성구 장동',
