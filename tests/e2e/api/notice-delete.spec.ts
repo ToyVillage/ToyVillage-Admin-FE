@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-const detailApiPath = /\/api\/notice\/[^/?]+(?:\?.*)?$/
-const listApiPath = /\/api\/notice(?:\?.*)?$/
+const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
+const listApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
 test('S1: route ID로 공지를 한 번 삭제하고 목록으로 이동한다', async ({
   page,

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const noticeApiPath = /\/api\/notice(?:\?.*)?$/
+const noticeApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/notices/list/create')
