@@ -32,7 +32,7 @@ test('S1: 폼 값이 Contract 바디로 매핑돼 전송되고 201 후 목록 �
   page,
 }) => {
   let body: Record<string, unknown> | null = null
-  await page.route(/\/api\/reservation$/, async (route) => {
+  await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback()
     body = route.request().postDataJSON()
     await route.fulfill({
@@ -73,7 +73,7 @@ test('S1: 폼 값이 Contract 바디로 매핑돼 전송되고 201 후 목록 �
 
 test('S3: 필수 누락 → 인라인 에러, 요청 미발생', async ({ page }) => {
   let requested = false
-  await page.route(/\/api\/reservation$/, async (route) => {
+  await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
     if (route.request().method() === 'POST') requested = true
     await route.fulfill({
       status: 201,
@@ -91,7 +91,7 @@ test('S3: 필수 누락 → 인라인 에러, 요청 미발생', async ({ page }
 })
 
 test('S4: 서버 400 → 서버 message 알림, 이동 없음', async ({ page }) => {
-  await page.route(/\/api\/reservation$/, async (route) => {
+  await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback()
     await route.fulfill({
       status: 400,

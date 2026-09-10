@@ -20,8 +20,8 @@ const detail = {
   leaderPhoneNumber: '010-7753-9698',
 }
 
-const employeePath = /\/api\/reservation\/assigned-employee\/\d+(\?.*)?$/
-const detailPath = /\/api\/reservation\/\d+$/
+const employeePath = /^https:\/\/[^/]+\/reservation\/assigned-employee\/\d+(\?.*)?$/
+const detailPath = /^https:\/\/[^/]+\/reservation\/\d+$/
 
 async function routeDetailOk(page: Page) {
   await page.route(detailPath, async (route) => {
@@ -59,7 +59,7 @@ test('S1: 배정됨/배정가능 목록 표시 + path 확인', async ({ page }) 
 
   expect(employeeURLs.length).toBeGreaterThan(0)
   expect(new URL(employeeURLs[0]).pathname).toBe(
-    '/api/reservation/assigned-employee/1',
+    '/reservation/assigned-employee/1',
   )
 })
 
