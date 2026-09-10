@@ -31,8 +31,10 @@
 - Mock request: `DELETE /api/notice/7`
 - Mock response: HTTP 401 Contract 오류 body
 - 사용자 동작: 상세 화면에서 삭제 확인
-- 기대 결과: 저장된 토큰을 비우고 `/login` 으로 이동하며 삭제를 성공으로
-  처리하지 않음
+- 전제: 세션 fixture 에 refresh token 이 없고 APP_AUTH_REISSUE mock 도 없다.
+  재발급 성공 경로는 app-auth-reissue 시나리오가 담당한다.
+- 기대 결과: 재발급 시도 없이 저장된 토큰을 비우고 `/login` 으로 이동하며
+  삭제를 성공으로 처리하지 않음
 - 비고: 전역 인증 처리 도입 전에는 상세 화면 유지가 기대값이었다.
 
 ## Mock S4 — 존재하지 않는 공지
