@@ -8,6 +8,14 @@ interface AttachedFile {
   id: string
   name: string
   file?: File
+  /** 기존 첨부의 저장소 키. 수정 시 그대로 재전송한다. */
+  fileKey?: string
+}
+
+export interface AttachmentItem {
+  name: string
+  file?: File
+  fileKey?: string
 }
 
 export interface AttachmentAddResult {
@@ -22,9 +30,16 @@ interface AttachmentFieldProps {
    */
   variant?: 'default' | 'task'
   initialFileNames?: string[]
+  /**
+   * 이름과 저장소 키를 함께 가진 기존 첨부. 수정 화면에서 쓴다.
+   * `initialFileNames` 와 함께 쓰지 않는다.
+   */
+  initialFiles?: { fileName: string; fileKey: string }[]
   onFilesChange?: (hasFiles: boolean) => void
   onFileNamesChange?: (fileNames: string[]) => void
   onFileObjectsChange?: (files: File[]) => void
+  /** 현재 첨부 목록을 순서대로 알린다. 업로드는 호출부가 한다. */
+  onFileItemsChange?: (items: AttachmentItem[]) => void
   /** 첨부 시도 결과. 토스트가 필요한 화면만 사용한다. */
   onAddResult?: (result: AttachmentAddResult) => void
 }
@@ -32,17 +47,25 @@ interface AttachmentFieldProps {
 export function AttachmentField({
   variant = 'default',
   initialFileNames = [],
+  initialFiles,
   onFilesChange,
   onFileNamesChange,
   onFileObjectsChange,
+  onFileItemsChange,
   onAddResult,
 }: AttachmentFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<AttachedFile[]>(() =>
-    initialFileNames.map((name, index) => ({
-      id: `existing:${index}:${name}`,
-      name,
-    })),
+    initialFiles
+      ? initialFiles.map(({ fileName, fileKey }, index) => ({
+          id: `existing:${index}:${fileName}`,
+          name: fileName,
+          fileKey,
+        }))
+      : initialFileNames.map((name, index) => ({
+          id: `existing:${index}:${name}`,
+          name,
+        })),
   )
   const [isDragging, setIsDragging] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -51,7 +74,16 @@ export function AttachmentField({
     onFilesChange?.(files.length > 0)
     onFileNamesChange?.(files.map(({ name }) => name))
     onFileObjectsChange?.(files.flatMap(({ file }) => (file ? [file] : [])))
-  }, [files, onFileNamesChange, onFileObjectsChange, onFilesChange])
+    onFileItemsChange?.(
+      files.map(({ name, file, fileKey }) => ({ name, file, fileKey })),
+    )
+  }, [
+    files,
+    onFileItemsChange,
+    onFileNamesChange,
+    onFileObjectsChange,
+    onFilesChange,
+  ])
 
   function addFiles(fileList: FileList | File[]) {
     const incomingFiles = Array.from(fileList)
