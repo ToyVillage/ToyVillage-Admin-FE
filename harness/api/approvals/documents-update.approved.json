@@ -1,15 +1,15 @@
 {
   "feature": "documents-update",
   "apiId": "DOCUMENTS_UPDATE",
-  "approvedAt": "2026-09-10T08:10:00.044Z",
+  "approvedAt": "2026-09-10T13:08:26.843Z",
   "approvedBy": "kimjihwan8",
   "taskSpecHash": "0bdae95824a9ea0c0e78600102d1a2bac65ffa1f13108b65c83a0b3106a28675",
   "contractHash": "b1cba11f810f0b22d7b929e8ac842897f7f9a31d51026c8863152a02ba4adf42",
   "contractMarkdownHash": "67abafa8a87aeb1c7e25c8c691dce95bd7818fe9e649d22f1ed5b8db75ba3159",
   "planHash": "8bba53a1f74d5851f5eec2ca2f5c0ff238f5ad4ccb352a6cecc65614c55ad111",
-  "scenarioHash": "2a396a3406689cfd681c3c4e744154f9375179491236d5da532a58abb0190f50",
+  "scenarioHash": "aad9857fb22ec44b662c09b1654e005e009fc25ce7d5b5b653face688f4b163c",
   "testHash": "05e649289f4515c551620aef08e6a15df913620f220c9a41b24b07575c12a433",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-10T08:10:50.663Z"
+  "testApprovedAt": "2026-09-10T13:08:27.289Z"
 }
