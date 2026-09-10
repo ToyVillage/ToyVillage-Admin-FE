@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const openTimeApiPath = /\/api\/open-time\/date(?:\?.*)?$/
+const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
 
 test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표시한다', async ({
   page,
@@ -45,7 +45,7 @@ test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표�
   )
   expect(openTimeRequests).toHaveLength(1)
   const request = new URL(openTimeRequests[0])
-  expect(request.pathname).toBe('/api/open-time/date')
+  expect(request.pathname).toBe('/open-time/date')
   expect(request.searchParams.get('date')).toBe('2026-07-01')
 })
 
