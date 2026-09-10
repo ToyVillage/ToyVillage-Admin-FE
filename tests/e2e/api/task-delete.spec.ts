@@ -1,7 +1,10 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
+import { mockTaskApi } from '../support/task-api'
 
 // 승인된 시나리오(task-delete.test-scenarios.md)를 변환한 것.
-// 목록·상세 조회는 아직 localStorage mock 이므로 /tasks/1 mock 상세에서 진행한다.
+// 목록·상세 조회도 API 연동이라 `support/task-api` mock 상세에서 진행하고,
+// 삭제 응답만 각 시나리오가 덮어쓴다(나중에 등록한 route 가 먼저 매칭된다).
+// 삭제는 상세 화면의 케밥 메뉴가 소유한다.
 
 const taskDeleteApiPath = /\/api\/tasks\/[^/?]+(?:\?.*)?$/
 
@@ -10,6 +13,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.clear()
     localStorage.setItem('accessToken', 'task-delete-test-token')
   })
+  await mockTaskApi(page)
 })
 
 test('S1: route ID로 업무를 한 번 삭제하고 목록으로 이동해 성공 토스트를 표시한다', async ({
@@ -23,6 +27,8 @@ test('S1: route ID로 업무를 한 번 삭제하고 목록으로 이동해 성�
 
   await page.route(taskDeleteApiPath, async (route) => {
     const request = route.request()
+    if (request.method() !== 'DELETE') return route.fallback()
+
     deleteRequestCount += 1
     deleteRequestBody = request.postData()
     deleteRequestHeaders = request.headers()
@@ -66,7 +72,7 @@ test('S3: HTTP 401이면 상세 화면과 입력값을 유지한다', async ({ p
   await confirmDelete(page)
 
   await expectDeleteFailure(page, 1)
-  await expect(page.getByLabel(/제목/)).toHaveValue('업무 제목')
+  await expect(page.getByRole('heading', { name: '업무 제목' })).toBeVisible()
 })
 
 test('S4: HTTP 403이면 삭제 성공으로 처리하지 않는다', async ({ page }) => {
@@ -106,13 +112,15 @@ test('S7: 연속 확인에도 삭제 요청은 한 번만 전송한다', async (
   })
 
   await page.route(taskDeleteApiPath, async (route) => {
+    if (route.request().method() !== 'DELETE') return route.fallback()
+
     deleteRequestCount += 1
     await responseGate
     await fulfillDeleteSuccess(route)
   })
 
   await openDeleteTarget(page)
-  await page.getByRole('button', { name: '삭제하기' }).click()
+  await openDeleteDialog(page)
   await page
     .getByRole('alertdialog')
     .getByRole('button', { name: '확인', exact: true })
@@ -154,11 +162,17 @@ test('S9: HTTP 201은 승인된 성공 Status가 아니므로 거부한다', asy
 
 async function openDeleteTarget(page: Page, id = 1) {
   await page.goto(`/tasks/${id}`)
-  await expect(page.getByRole('button', { name: '삭제하기' })).toBeVisible()
+  await expect(menuTrigger(page)).toBeVisible()
+}
+
+// 상세 케밥 메뉴에서 `삭제` 를 골라 확인 다이얼로그를 연다.
+async function openDeleteDialog(page: Page) {
+  await menuTrigger(page).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
 }
 
 async function confirmDelete(page: Page) {
-  await page.getByRole('button', { name: '삭제하기' }).click()
+  await openDeleteDialog(page)
   await page
     .getByRole('alertdialog')
     .getByRole('button', { name: '확인', exact: true })
@@ -171,7 +185,11 @@ async function expectDeleteFailure(page: Page, id: number) {
   )
   await expect(page).toHaveURL(new RegExp(`/tasks/${id}$`))
   await expect(page.getByRole('alertdialog')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: '삭제하기' })).toBeEnabled()
+  await expect(menuTrigger(page)).toBeEnabled()
+}
+
+function menuTrigger(page: Page) {
+  return page.getByRole('button', { name: /업무 메뉴 열기$/ })
 }
 
 async function mockDeleteError(
@@ -181,6 +199,8 @@ async function mockDeleteError(
   onDelete?: () => void,
 ) {
   await page.route(taskDeleteApiPath, async (route) => {
+    if (route.request().method() !== 'DELETE') return route.fallback()
+
     onDelete?.()
     await route.fulfill({
       status,
@@ -201,6 +221,8 @@ async function mockDeleteResponse(
   body: Record<string, unknown>,
 ) {
   await page.route(taskDeleteApiPath, async (route) => {
+    if (route.request().method() !== 'DELETE') return route.fallback()
+
     await route.fulfill({
       status,
       contentType: 'application/json',
