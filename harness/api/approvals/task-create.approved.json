@@ -1,0 +1,15 @@
+{
+  "feature": "task-create",
+  "apiId": "TASK_CREATE",
+  "approvedAt": "2026-09-09T13:27:49.434Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "a0b2e3517b012f649c8f600b27d5264d0543fd49435cbd1ffdafc74f9119b3b3",
+  "contractHash": "32559a27c118e33d86b99db46247f020233dbdbde84d5fc0ee6adabbf27b81b8",
+  "contractMarkdownHash": "77dfc4b68148fff68a6445ab2da052311c74756e4e095143ec197057734747b3",
+  "planHash": "de3e211cdaea6025a1e95557b419a5c378ff9a44dc3fcb77527d0b247b922a26",
+  "scenarioHash": "0e51f273f36d979fb2b3c7eed02661fae72a3704ce60eec6d46ae05169f0843f",
+  "testHash": "975837278cba15e65c0072bacb9ee784f74ae1e63703ea2322a335cfd7f539c9",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-09T13:42:36.449Z"
+}
