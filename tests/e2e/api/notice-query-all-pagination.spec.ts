@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const apiPath = /\/api\/notice(?:\?.*)?$/
+const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
 test('서버의 다음 페이지까지 조회해 11번째 공지와 카테고리를 표시한다', async ({
   page,

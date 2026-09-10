@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const apiPath = /\/api\/notice(?:\?.*)?$/
+const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
 test('S1: page=0, size=10으로 조회하고 목록을 표시한다', async ({ page }) => {
   const requestURLs: string[] = []
