@@ -29,6 +29,11 @@ export interface DataTableColumn {
   header: string
   // px 고정폭. 생략 시 flex:1 로 남는 공간을 채운다.
   width?: number
+  // 셀 좌우 padding(px). 생략 시 기본 40. Figma 에서 열마다 안쪽 여백이 다른
+  // 표(업무일지관리 양식 관리 탭, 케밥 열 등)를 위해 열 단위로 지정한다.
+  paddingX?: number
+  // 셀 내용의 가로 정렬. 생략 시 좌측. 케밥처럼 열 가운데에 놓이는 아이콘용.
+  align?: 'start' | 'center'
   variant?: DataTableCellVariant
   render?: (row: DataTableRow) => ReactNode
 }
@@ -158,7 +163,12 @@ export function DataTable({
           </SelectHeadCell>
         )}
         {columns.map((column) => (
-          <HeadCell key={column.key} $width={column.width}>
+          <HeadCell
+            key={column.key}
+            $width={column.width}
+            $paddingX={column.paddingX}
+            $align={column.align}
+          >
             {column.header}
           </HeadCell>
         ))}
@@ -223,6 +233,7 @@ export function DataTable({
           <Row
             key={r.id}
             data-testid={rowTestId}
+            $clickable={onRowClick != null}
             role={onRowClick ? 'link' : undefined}
             tabIndex={onRowClick ? 0 : undefined}
             onClick={onRowClick ? () => onRowClick(r.id) : undefined}
@@ -253,7 +264,12 @@ export function DataTable({
             {columns.map((column) => {
               const content = column.render ? column.render(r) : r[column.key]
               return (
-                <Cell key={column.key} $width={column.width}>
+                <Cell
+                  key={column.key}
+                  $width={column.width}
+                  $paddingX={column.paddingX}
+                  $align={column.align}
+                >
                   {column.variant === 'pill' ? (
                     <Pill>{content}</Pill>
                   ) : (
@@ -311,6 +327,11 @@ const cellWidth = (width?: number) =>
   width == null
     ? 'flex: 1; min-width: 0;'
     : `width: ${width}px; flex: 0 0 ${width}px;`
+
+const defaultCellPaddingX = 40
+
+const cellJustify = (align?: 'start' | 'center') =>
+  align === 'center' ? 'center' : 'flex-start'
 
 const Table = styled.div`
   width: 100%;
@@ -448,11 +469,11 @@ const EmptyRow = styled.div<{ $minHeight?: number }>`
   font-weight: 500;
 `
 
-const Row = styled.div`
+const Row = styled.div<{ $clickable: boolean }>`
   position: relative;
   display: flex;
   min-height: 92px;
-  cursor: pointer;
+  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
 
   & + &::before {
     content: '';
@@ -464,21 +485,31 @@ const Row = styled.div`
   }
 `
 
-const HeadCell = styled.div<{ $width?: number }>`
+const HeadCell = styled.div<{
+  $width?: number
+  $paddingX?: number
+  $align?: 'start' | 'center'
+}>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
-  padding: 12px 40px;
+  justify-content: ${({ $align }) => cellJustify($align)};
+  padding: 12px ${({ $paddingX }) => $paddingX ?? defaultCellPaddingX}px;
   color: ${({ theme }) => theme.colors.text};
   font-weight: 500;
   font-size: 20px;
 `
 
-const Cell = styled.div<{ $width?: number }>`
+const Cell = styled.div<{
+  $width?: number
+  $paddingX?: number
+  $align?: 'start' | 'center'
+}>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
   align-items: center;
-  padding: 12px 40px;
+  justify-content: ${({ $align }) => cellJustify($align)};
+  padding: 12px ${({ $paddingX }) => $paddingX ?? defaultCellPaddingX}px;
 `
 
 // 체크박스는 divider(좌우 40px inset) 안쪽에 오도록 좌측 40px 정렬한다.

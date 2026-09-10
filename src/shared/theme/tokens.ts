@@ -12,7 +12,9 @@ export const tokens = {
     textStrong: '#36363F',
     textSub: '#838383', // 부제목
     textGuide: '#848491',
+    textBody: '#484854', // gray/90 — 업무일지 시트 셀 값·양식 질문 텍스트
     textFaint: '#AFAFBA', // gray/40 — 검색 placeholder·"검색결과가 없습니다"
+    optionMuted: '#9999A5', // gray/50 — 셀렉트 드롭다운 비선택 항목
     textMuted: '#7C7C7C', // 비활성 탭
     textDate: '#747474',
     background: '#F5F5F7', // 페이지 배경
