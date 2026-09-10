@@ -12,7 +12,7 @@ export function WorkLogSheet({ columns, rows }: WorkLogSheetProps) {
   return (
     <Scroll>
       <Sheet>
-        <HeaderRow>
+        <HeaderRow data-testid="work-log-sheet-header">
           <ZoneHeadCell>설정된 구역</ZoneHeadCell>
           {columns.map((column) => (
             <HeadCell key={column.id} $wide={column.type === 'LONG_TEXT'}>
