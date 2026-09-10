@@ -1,9 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const loginMockResultKey = 'toyvillage.login.mockResult'
+const loginApiPath = /^https:\/\/[^/]+\/app\/auth\/login(?:\?.*)?$/
+
+// 로그인 화면은 세션이 없는 상태에서 시작한다.
+test.use({ storageState: { cookies: [], origins: [] } })
 
 test.beforeEach(async ({ page }) => {
   await trackLoginSubmissions(page)
+  await mockLoginSuccess(page)
   await page.goto('/login')
 })
 
@@ -113,7 +117,7 @@ test('S8: 제출 중 연속 submit에도 한 번만 제출한다', async ({ page
 test('S9: 제출 실패 후 아이디를 유지하고 비밀번호를 비운다', async ({
   page,
 }) => {
-  await page.evaluate((key) => sessionStorage.setItem(key, 'failure'), loginMockResultKey)
+  await mockLoginFailure(page)
   await fillValidCredentials(page)
   await page.getByRole('button', { name: '로그인' }).click()
 
@@ -154,6 +158,38 @@ test('S11: 키보드만으로 입력, 표시 전환과 제출을 조작한다', 
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/$/)
 })
+
+// 제출 함수가 성공하는 경로. 응답 형식은 APP_AUTH_LOGIN Contract 를 따른다.
+async function mockLoginSuccess(page: Page) {
+  await page.route(loginApiPath, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access_token: 'a1',
+        refresh_token: 'r1',
+        name: '김직원',
+        role: 'EMPLOYEE',
+      }),
+    })
+  })
+}
+
+// 제출 함수가 실패하는 경로. 자격증명 오류(401)를 쓴다.
+async function mockLoginFailure(page: Page) {
+  await page.route(loginApiPath, async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: '아이디 또는 비밀번호를 확인해주세요',
+        status: 401,
+        timestamp: '2026-08-10T22:30:00.000000',
+        description: '아이디 또는 비밀번호를 확인해주세요',
+      }),
+    })
+  })
+}
 
 async function fillValidCredentials(page: Page) {
   await page.getByLabel('아이디').fill('admin')
