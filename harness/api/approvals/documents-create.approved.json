@@ -1,15 +1,15 @@
 {
   "feature": "documents-create",
   "apiId": "DOCUMENTS_CREATE",
-  "approvedAt": "2026-09-10T08:09:59.127Z",
+  "approvedAt": "2026-09-10T13:08:25.103Z",
   "approvedBy": "kimjihwan8",
   "taskSpecHash": "847490511c5ad84e4f285308cd5bcd8818ed9ed80f60f9de7f1c29ebb28146b2",
   "contractHash": "d2e537fb6ef59d9ee29e4b91eceb3577428612ed4a67542bea746e96ca5d27e3",
   "contractMarkdownHash": "ef7bb8383ec2586441400adbfc6961aca757772cd0738fb3eddc53a121c12f8d",
   "planHash": "3462a915501364015700cea6097a812d9a51537e09ed4e1a63f5f682350b6077",
-  "scenarioHash": "6b56e595cd9f16de0bc7269dfa87fe728180324ffbe4ae902a148a69a2e99ef7",
+  "scenarioHash": "9a53b1decbb995e6ceee9ffc5ce73a6a0eb0d0f471f858ef06423ec2a2d42cda",
   "testHash": "67aa677046bfcdd29fb4d2db25e14780cd4ef3149177f4b4732a07d3a1969460",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-10T08:10:49.761Z"
+  "testApprovedAt": "2026-09-10T13:08:25.539Z"
 }
