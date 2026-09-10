@@ -3,7 +3,6 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 const reissueApiPath = /^https:\/\/[^/]+\/app\/auth\/reissue(?:\?.*)?$/
 const loginApiPath = /^https:\/\/[^/]+\/app\/auth\/login(?:\?.*)?$/
 const noticeListApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
-const noticeDetailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
 const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
 
@@ -330,20 +329,6 @@ function fulfillNoticeList(route: Route) {
     body: JSON.stringify([
       { id: 7, title: '재발급 대상 공지', kind: 'ALL', createAt: '2026-08-01' },
     ]),
-  })
-}
-
-function fulfillNoticeDetail(route: Route) {
-  return route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({
-      id: 7,
-      title: '재발급 대상 공지',
-      kind: 'ALL',
-      content: '내용',
-      createdAt: '2026-08-01',
-    }),
   })
 }
 
