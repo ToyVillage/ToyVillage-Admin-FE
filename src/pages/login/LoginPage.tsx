@@ -1,15 +1,12 @@
 import styled from '@emotion/styled'
 import { useNavigate } from 'react-router-dom'
-import { LoginForm, submitLogin } from '@/features/login'
-import { queryClient } from '@/shared/config/queryClient'
+import { LoginForm, submitMockLogin } from '@/features/login'
 import toVillageLogo from './assets/toyvillage-logo.png'
 
 export function LoginPage() {
   const navigate = useNavigate()
 
   function handleLoginSuccess() {
-    // 이전 사용자의 서버 데이터가 남지 않게 비운다.
-    queryClient.clear()
     navigate('/')
   }
 
@@ -27,7 +24,7 @@ export function LoginPage() {
             </Description>
           </HeadingGroup>
         </Brand>
-        <LoginForm onSubmit={submitLogin} onSuccess={handleLoginSuccess} />
+        <LoginForm onSubmit={submitMockLogin} onSuccess={handleLoginSuccess} />
       </Card>
     </Page>
   )

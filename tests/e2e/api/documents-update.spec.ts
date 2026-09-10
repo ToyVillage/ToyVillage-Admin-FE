@@ -160,7 +160,7 @@ test('S7: 기존 파일 제거 → 남은 키만 전송', async ({ page }) => {
   expect(putBody.files).toEqual(['key-1'])
 })
 
-test('S6: 401 만료된 토큰 → 세션을 비우고 로그인으로 이동', async ({ page }) => {
+test('S6: 401 만료된 토큰 → 저장 실패 다이얼로그, 목록 미이동', async ({ page }) => {
   await routePut(page, {
     status: 401,
     body: errorBody(401, '만료된 토큰입니다.'),
@@ -169,8 +169,6 @@ test('S6: 401 만료된 토큰 → 세션을 비우고 로그인으로 이동', 
   await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
   await page.getByRole('button', { name: '저장하기' }).click()
 
-  await expect(page).toHaveURL(/\/login$/)
-  expect(
-    await page.evaluate(() => localStorage.getItem('accessToken')),
-  ).toBeNull()
+  await expect(page.getByRole('alertdialog')).toContainText('저장에 실패')
+  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
 })

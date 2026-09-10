@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
+const detailApiPath = /\/api\/notice\/[^/?]+(?:\?.*)?$/
 
 test('실제 서버의 완화된 상세 응답도 공지 폼에 표시한다', async ({ page }) => {
   await page.route(detailApiPath, async (route) => {

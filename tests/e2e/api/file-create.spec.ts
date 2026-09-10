@@ -9,8 +9,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-const fileApiPath = /^https:\/\/[^/]+\/file(?:\?.*)?$/
-const noticeApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
+const fileApiPath = /\/api\/file(?:\?.*)?$/
+const noticeApiPath = /\/api\/notice(?:\?.*)?$/
 
 test('S1: 파일 하나를 multipart로 업로드하고 fileKey를 공지 생성에 전달한다', async ({
   page,

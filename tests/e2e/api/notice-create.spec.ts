@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-const noticeApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
+const noticeApiPath = /\/api\/notice(?:\?.*)?$/
 
 test('S1: JSON body로 공지를 한 번 생성하고 갱신된 목록으로 이동한다', async ({
   page,

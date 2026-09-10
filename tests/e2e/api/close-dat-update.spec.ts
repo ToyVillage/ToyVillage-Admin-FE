@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-const closeScheduleApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
-const closeScheduleDetailApiPath = /^https:\/\/[^/]+\/close-day\/[^/?]+(?:\?.*)?$/
+const closeScheduleApiPath = /\/api\/close-day(?:\?.*)?$/
+const closeScheduleDetailApiPath = /\/api\/close-day\/[^/?]+(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {

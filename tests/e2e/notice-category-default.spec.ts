@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
+const apiPath = /\/api\/notice(?:\?.*)?$/
 
 test('공지 분류 ALL은 전체로 표시하고 전체 탭을 기본 선택한다', async ({
   page,

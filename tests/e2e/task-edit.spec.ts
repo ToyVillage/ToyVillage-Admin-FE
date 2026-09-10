@@ -11,9 +11,6 @@ const mutationLogStorageKey = 'toyvillage:tasks:mutation-log'
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
-    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. mock 상태만 비우고
-    // 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
-    localStorage.setItem('accessToken', 'test-access-token')
   })
 })
 

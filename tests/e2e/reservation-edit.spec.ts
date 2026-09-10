@@ -26,9 +26,9 @@ const employees = {
   assignable: [{ appAdminId: 7, name: '김직원' }],
 }
 
-const employeePath = /^https:\/\/[^/]+\/reservation\/assigned-employee\/\d+(\?.*)?$/
+const employeePath = /\/api\/reservation\/assigned-employee\/\d+(\?.*)?$/
 // 상세(GET)·수정(PATCH)·삭제(DELETE)가 같은 경로를 공유한다.
-const reservationPath = /^https:\/\/[^/]+\/reservation\/\d+$/
+const reservationPath = /\/api\/reservation\/\d+$/
 
 async function routeEmployees(page: Page) {
   await page.route(employeePath, async (route) => {

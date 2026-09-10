@@ -1,3 +1,7 @@
 export { LoginForm } from './ui/LoginForm'
-export { loginSubmitEvent, submitLogin } from './model/loginSubmit'
+export {
+  loginMockResultKey,
+  loginMockSubmitEvent,
+  submitMockLogin,
+} from './model/mockLogin'
 export type { LoginCredentials, LoginSubmit } from './model/types'

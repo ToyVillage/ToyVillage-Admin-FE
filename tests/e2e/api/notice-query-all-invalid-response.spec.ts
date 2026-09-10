@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
+const apiPath = /\/api\/notice(?:\?.*)?$/
 
 test('날짜가 없는 응답도 공지 목록을 표시한다', async ({ page }) => {
   await page.route(apiPath, async (route) => {

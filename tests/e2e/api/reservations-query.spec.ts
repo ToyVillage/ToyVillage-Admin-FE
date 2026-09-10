@@ -27,8 +27,8 @@ const errorBody = (status: number, message: string) => ({
 })
 
 async function routeDetail(page: Page, status: number, body: unknown) {
-  // 상세(/reservation/{id})만 가로챈다.
-  await page.route(/^https:\/\/[^/]+\/reservation\/\d+$/, async (route) => {
+  // 상세(/api/reservation/{id})만 가로챈다.
+  await page.route(/\/api\/reservation\/\d+$/, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
     await route.fulfill({
       status,
@@ -40,7 +40,7 @@ async function routeDetail(page: Page, status: number, body: unknown) {
 
 test('S1: 상세 조회 성공 → 편집 폼 필드에 매핑 값 채움', async ({ page }) => {
   const requestURLs: string[] = []
-  await page.route(/^https:\/\/[^/]+\/reservation\/\d+$/, async (route) => {
+  await page.route(/\/api\/reservation\/\d+$/, async (route) => {
     requestURLs.push(route.request().url())
     await route.fulfill({
       status: 200,
@@ -80,7 +80,7 @@ test('S1: 상세 조회 성공 → 편집 폼 필드에 매핑 값 채움', asyn
 
   // 요청 path 확인
   expect(requestURLs).toHaveLength(1)
-  expect(new URL(requestURLs[0]).pathname).toBe('/reservation/7')
+  expect(new URL(requestURLs[0]).pathname).toBe('/api/reservation/7')
 })
 
 test('S2: 404 → 예약을 찾을 수 없습니다', async ({ page }) => {
