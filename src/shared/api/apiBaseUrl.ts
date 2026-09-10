@@ -3,7 +3,9 @@ const loopbackHosts = ['localhost', '127.0.0.1', '[::1]']
 
 // proxy 를 걷어낸 뒤로 Bearer 토큰이 이 주소로 그대로 실려 나간다.
 // 평문 HTTP 로 새어 나가지 않도록 기동 시 한 번 검사한다.
-export function assertSecureApiBaseUrl(value: string | undefined): void {
+export function assertSecureApiBaseUrl(
+  value: string | undefined,
+): asserts value is string {
   if (!value) {
     throw new Error('VITE_API_BASE_URL 환경 변수가 필요합니다.')
   }
