@@ -79,16 +79,19 @@ mock 단일 조회(`getMockTask`)를 `TASK_QUERY` API 연동으로 교체한다.
 - 실제 서버 테스트는 비활성화한다.
 - 개발자 승인 전 API 코드와 테스트 코드를 작성하지 않는다.
 
+# 확정된 사항 (2026-09-09 백엔드 확인)
+
+- `assignees`는 담당자 **전원**을 반환한다. 수정 화면의 담당자 체크 복원은
+  이 배열을 그대로 쓴다. 명세 예시가 `assignees` 3명 · `assigneeCount` 4로
+  어긋나 있는 것은 문서 오류이므로 예시만 정정하면 된다.
+
 # 확인이 필요한 명세 항목
 
-1. `assignees`가 담당자 전원인지 일부인지 명시가 없다. 예시는 `assignees`가
-   3명인데 `assigneeCount`는 `4`다. 일부만 준다면 수정 화면이 담당자 선택을
-   복원할 수 없으므로 전원 반환이 필요하다.
-2. `reports[].status`의 Allowed Values가 없다. 예시에 `APPROVED`,
+1. `reports[].status`의 Allowed Values가 없다. 예시에 `APPROVED`,
    `REJECTED`, `MISSING`이 보이고 `progress`에는 `pending`과 `missing`이
    있는데, 화면의 심사 상태는 `PENDING`/`APPROVED`/`REJECTED`/`RESUBMITTED`다.
    `MISSING`(미제출)과 `RESUBMITTED`(재제출)의 대응을 확정해야 한다.
-3. `assignees[].position`이 `null`일 수 있는지 확인이 필요하다
+2. `assignees[].position`이 `null`일 수 있는지 확인이 필요하다
    (`TEAM_QUERY_TREE`는 `null`을 허용한다).
-4. 각 필드의 Required·Nullable 표기가 없다. 특히 `files`, `reports`가 빈
+3. 각 필드의 Required·Nullable 표기가 없다. 특히 `files`, `reports`가 빈
    배열인지 null인지.
