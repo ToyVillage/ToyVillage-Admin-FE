@@ -1,21 +1,17 @@
 import { expect, test, type Page } from '@playwright/test'
+import { mockTaskApi } from './support/task-api'
 
 // 승인된 시나리오(task-list.approved.json, S1~S23)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 퍼블리싱 슬라이스이므로 목록 조회는 localStorage mock 이고,
-// 삭제(S19·S20)만 이미 연동된 TASK_DELETE 를 page.route() 로 mock 한다.
-
-const deletedTaskStorageKey = 'toyvillage:tasks:deleted'
-const allMockTaskIds = [
-  '1', '2', '3', '4', '5', '6', '7',
-  '8', '9', '10', '11', '12', '13', '14',
-]
-const deleteApiPattern = /\/api\/tasks\/[^/?]+(?:\?.*)?$/
+// 목록·생성·삭제가 API 연동으로 바뀌어 localStorage mock 대신
+// `support/task-api` 의 page.route mock 을 쓴다(검증 의도는 그대로다).
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('accessToken', 'task-list-test-token')
   })
+  await mockTaskApi(page)
 })
 
 test('S1: 목록 진입 기본 상태', async ({ page }) => {
@@ -113,7 +109,7 @@ test('S8: 탭 전환 시 1페이지로 리셋', async ({ page }) => {
 })
 
 test('S9: 결과 없음 → 빈 상태', async ({ page }) => {
-  await seedDeletedTasks(page, allMockTaskIds)
+  await mockTaskApi(page, { tasks: [] })
   await page.goto('/tasks')
 
   await expect(rows(page)).toHaveCount(0)
@@ -216,13 +212,6 @@ test('S18: 삭제 취소', async ({ page }) => {
 })
 
 test('S19: 삭제 확인 → 성공 토스트', async ({ page }) => {
-  await page.route(deleteApiPattern, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ message: '업무지시가 삭제되었습니다.' }),
-    })
-  })
   await page.goto('/tasks')
   await openDeleteDialog(page, 0)
   await page.getByRole('button', { name: '확인' }).click()
@@ -235,13 +224,7 @@ test('S19: 삭제 확인 → 성공 토스트', async ({ page }) => {
 })
 
 test('S20: 삭제 실패 토스트', async ({ page }) => {
-  await page.route(deleteApiPattern, async (route) => {
-    await route.fulfill({
-      status: 500,
-      contentType: 'application/json',
-      body: JSON.stringify({ message: '삭제에 실패했습니다.' }),
-    })
-  })
+  await mockTaskApi(page, { deleteStatus: 500 })
   await page.goto('/tasks')
   await openDeleteDialog(page, 0)
   await page.getByRole('button', { name: '확인' }).click()
@@ -331,11 +314,3 @@ async function openDeleteDialog(page: Page, rowIndex: number) {
   ).toBeVisible()
 }
 
-async function seedDeletedTasks(page: Page, ids: string[]) {
-  await page.addInitScript(
-    ([key, value]) => {
-      localStorage.setItem(key as string, value as string)
-    },
-    [deletedTaskStorageKey, JSON.stringify(ids)],
-  )
-}

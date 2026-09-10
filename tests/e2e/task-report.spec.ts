@@ -1,4 +1,5 @@
 import { expect, test as base, type Page } from '@playwright/test'
+import { mockTaskApi } from './support/task-api'
 
 // 승인된 시나리오(task-report.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
@@ -222,6 +223,8 @@ test('S15: 없는 보고 진입', async ({ page }) => {
 })
 
 test('S16: 업무 상세에서 그 업무의 업무보고 상세로 진입', async ({ page }) => {
+  // 업무 상세는 API 연동이라 진입에 필요한 조회만 mock 한다(업무보고는 그대로 mock).
+  await mockTaskApi(page)
   await page.goto('/tasks/1')
   await page.getByRole('button', { name: '업무 보고 상세조회' }).click()
 

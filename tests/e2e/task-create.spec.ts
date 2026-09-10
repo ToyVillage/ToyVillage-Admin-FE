@@ -1,11 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
+import { mockTaskApi, type TaskApiHandle } from './support/task-api'
 
 // 승인된 시나리오(task-create.approved.json, S1~S20)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않고 localStorage mock 만 사용한다.
-
-const mutationDelayStorageKey = 'toyvillage:tasks:mutation-delay'
-const mutationLogStorageKey = 'toyvillage:tasks:mutation-log'
+// 생성·담당자 트리가 API 연동으로 바뀌어 localStorage mock 대신
+// `support/task-api` 의 page.route mock 을 쓴다(검증 의도는 그대로다).
 
 type SkippableField =
   | 'priority'
@@ -14,10 +13,14 @@ type SkippableField =
   | 'title'
   | 'content'
 
+let taskApi: TaskApiHandle
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('accessToken', 'task-create-test-token')
   })
+  taskApi = await mockTaskApi(page)
 })
 
 test('S1: 빈 폼 진입', async ({ page }) => {
@@ -149,7 +152,7 @@ test('S11: 우선순위 미선택 검증', async ({ page }) => {
   await expect(dialog).toContainText('우선순위를 선택해주세요')
   await dialog.getByRole('button', { name: '확인' }).click()
   await expect(page).toHaveURL(/\/tasks\/create$/)
-  expect(await mutationCount(page, 'create')).toBe(0)
+  expect(taskApi.requests.create).toBe(0)
 })
 
 test('S12: 완료기한 미선택 검증', async ({ page }) => {
@@ -231,8 +234,8 @@ test('S17: 이탈 보호', async ({ page }) => {
 })
 
 test('S18: 생성 중복 제출 방지', async ({ page }) => {
+  taskApi = await mockTaskApi(page, { mutationDelayMs: 1500 })
   await page.goto('/tasks/create')
-  await delayTaskMutation(page)
   await fillValidTask(page, { title: '한 번만 등록할 업무' })
 
   await page.getByRole('button', { name: '생성하기' }).click()
@@ -244,7 +247,7 @@ test('S18: 생성 중복 제출 방지', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/tasks$/)
   await expect(page.getByText('한 번만 등록할 업무')).toHaveCount(1)
-  expect(await mutationCount(page, 'create')).toBe(1)
+  expect(taskApi.requests.create).toBe(1)
 })
 
 test('S19: 담당자 다중 선택 결과', async ({ page }) => {
@@ -288,8 +291,8 @@ test('S20: 키보드 조작', async ({ page }) => {
   await page.keyboard.press('Space')
   await expect(page.getByText('18/18명')).toBeVisible()
 
-  // 팀 행 4개(체크박스 + 펼침 버튼 = 8개)를 지나면 첨부 컨트롤이다.
-  for (let index = 0; index < 9; index += 1) {
+  // 팀 행 4개 + 미배정 행 1개(각 체크박스 + 펼침 버튼 = 10개)를 지나면 첨부 컨트롤이다.
+  for (let index = 0; index < 11; index += 1) {
     await page.keyboard.press('Tab')
   }
   await expect(page.getByRole('button', { name: '파일 업로드' })).toBeFocused()
@@ -350,32 +353,6 @@ function attachmentGroup(page: Page) {
 
 function uploadInput(page: Page) {
   return page.getByLabel('첨부파일 선택')
-}
-
-// mock mutation 완료를 늦춘다. 진행 중 상태가 유지돼야 재클릭을 시도할 수 있다.
-async function delayTaskMutation(page: Page, ms = 1500) {
-  await page.evaluate(
-    ([key, value]) => {
-      localStorage.setItem(key, value)
-    },
-    [mutationDelayStorageKey, String(ms)],
-  )
-}
-
-// mock 이 기록한 요청 횟수. 저장은 두 번 실행돼도 결과가 같아 횟수로 확인한다.
-async function mutationCount(page: Page, kind: 'create') {
-  return page.evaluate(
-    ([key, target]) => {
-      const rawLog = localStorage.getItem(key)
-      if (!rawLog) return 0
-
-      const log: unknown = JSON.parse(rawLog)
-      return Array.isArray(log)
-        ? log.filter((entry) => entry === target).length
-        : 0
-    },
-    [mutationLogStorageKey, kind],
-  )
 }
 
 function filePayload(name: string, mimeType: string) {
