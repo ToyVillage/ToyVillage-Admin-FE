@@ -45,7 +45,10 @@ test('S4: 시트 열이 양식의 질문 순서대로 놓인다', async ({ page 
   await page.goto('/work-logs/wl-1')
 
   // wl-1 은 질문 유형이 모두 나오는 시트(Figma 541:14081)를 쓴다.
-  for (const label of [
+  // S4 는 `설정된 구역` + 질문 순서를 요구하므로 헤더 셀의 나열 순서를 단언한다.
+  await expect(
+    page.getByTestId('work-log-sheet-header').locator('> *'),
+  ).toHaveText([
     '설정된 구역',
     '온도',
     '청소방법이 뭔가요?',
@@ -53,9 +56,7 @@ test('S4: 시트 열이 양식의 질문 순서대로 놓인다', async ({ page 
     '청소여부',
     '급여량',
     '사진',
-  ]) {
-    await expect(page.getByText(label, { exact: true }).first()).toBeVisible()
-  }
+  ])
 })
 
 test('S5: 구역 행 표기', async ({ page }) => {
