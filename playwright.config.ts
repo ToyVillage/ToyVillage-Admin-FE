@@ -38,6 +38,10 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: `yarn dev --host 127.0.0.1 --port ${serverPort}`,
+    // mock e2e 는 실제 서버를 호출하지 않는다. 도달 불가 호스트로 고정해
+    // page.route() 로 가로채지 못한 요청이 staging 으로 새지 않게 한다.
+    // (route 패턴은 오리진을 특정하지 않으므로 그대로 매칭된다)
+    env: { VITE_API_BASE_URL: 'https://api.e2e.invalid' },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
