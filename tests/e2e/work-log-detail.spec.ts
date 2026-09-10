@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 // 승인된 시나리오(work-log-detail.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
@@ -29,9 +29,7 @@ test('S2: 목록 행 클릭 → 상세 진입', async ({ page }) => {
   await page.getByTestId('work-log-row').first().click()
 
   await expect(page).toHaveURL(/\/work-logs\/wl-1$/)
-  await expect(
-    page.getByRole('heading', { name: /업무일지$/ }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: /업무일지$/ })).toBeVisible()
 })
 
 test('S3: 뒤로가기 → 목록 복귀', async ({ page }) => {
@@ -57,6 +55,30 @@ test('S4: 시트 열이 양식의 질문 순서대로 놓인다', async ({ page 
     '급여량',
     '사진',
   ])
+})
+
+// S4 회귀: 헤더 셀 하한(min-width)이 본문 셀에서 덮어써져 열이 어긋난 적이 있다.
+test('S4: 시트 헤더와 본문의 열 폭이 일치한다', async ({ page }) => {
+  for (const width of [1440, 1024, 768]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/work-logs/wl-1')
+
+    const headWidths = await columnWidths(
+      page.getByTestId('work-log-sheet-header'),
+    )
+    // 시트가 안 그려지면 빈 배열끼리 비교돼 공허하게 통과한다.
+    expect(headWidths).toHaveLength(7)
+
+    const rows = page.getByTestId('work-log-sheet-row')
+    await expect(rows).toHaveCount(3)
+
+    for (let index = 0; index < (await rows.count()); index += 1) {
+      expect(
+        await columnWidths(rows.nth(index)),
+        `${width}px 행 ${index}`,
+      ).toEqual(headWidths)
+    }
+  }
 })
 
 test('S5: 구역 행 표기', async ({ page }) => {
@@ -116,7 +138,9 @@ test('S10: 없는 일지로 진입', async ({ page }) => {
   await page.goto('/work-logs/wl-1')
 
   await expect(page).toHaveURL(/\/work-logs$/)
-  await expect(page.getByRole('heading', { name: '업무일지관리' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: '업무일지관리' }),
+  ).toBeVisible()
 })
 
 function rows(page: Page) {
@@ -125,4 +149,12 @@ function rows(page: Page) {
 
 function chips(page: Page, rowIndex: number) {
   return rows(page).nth(rowIndex).locator('> div').nth(4).locator('span')
+}
+
+function columnWidths(row: Locator) {
+  return row
+    .locator('> *')
+    .evaluateAll((cells) =>
+      cells.map((cell) => Math.round(cell.getBoundingClientRect().width)),
+    )
 }
