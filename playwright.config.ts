@@ -10,6 +10,21 @@ if (!/^\d+$/.test(serverPort)) {
   throw new Error('PLAYWRIGHT_BASE_URL의 포트가 유효하지 않습니다')
 }
 
+// 인증 가드가 붙은 뒤로 보호 경로 테스트는 세션이 필요하다.
+// 테스트마다 토큰을 심는 대신 기본 storageState로 한 번에 seed 한다.
+// 세션이 없는 상태를 검증하는 테스트는 test.use({ storageState: ... })로 비운다.
+const authenticatedStorageState = {
+  cookies: [],
+  origins: [
+    {
+      origin: baseURL,
+      // refresh token은 넣지 않는다. 재발급 흐름을 검증하는 테스트만
+      // addInitScript로 직접 심어 실제 서버로 요청이 새지 않게 한다.
+      localStorage: [{ name: 'accessToken', value: 'test-access-token' }],
+    },
+  ],
+}
+
 // 하네스 기능 테스트 설정. 로컬 dev 서버를 띄워 테스트한다.
 export default defineConfig({
   testDir: './tests/e2e',
@@ -17,6 +32,7 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL,
+    storageState: authenticatedStorageState,
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
