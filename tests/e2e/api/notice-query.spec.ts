@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const detailApiPath = /\/api\/notice\/[^/?]+(?:\?.*)?$/
+const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
 
 test('S1: route ID로 상세 조회하고 기존 폼에 표시한다', async ({ page }) => {
   const requestURLs: string[] = []
@@ -36,7 +36,7 @@ test('S1: route ID로 상세 조회하고 기존 폼에 표시한다', async ({ 
     page.getByRole('group', { name: '첨부파일' }).getByText('notice.pdf'),
   ).toBeVisible()
   expect(requestURLs).toHaveLength(1)
-  expect(new URL(requestURLs[0]).pathname).toBe('/api/notice/7')
+  expect(new URL(requestURLs[0]).pathname).toBe('/notice/7')
 })
 
 test('S2: HTTP 404는 기존 복구 UI로 표시한다', async ({ page }) => {

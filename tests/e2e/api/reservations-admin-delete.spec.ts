@@ -19,8 +19,8 @@ const detail = {
   leaderPhoneNumber: '010-7753-9698',
 }
 
-const employeePath = /\/api\/reservation\/assigned-employee\/\d+(\?.*)?$/
-const detailOrDeletePath = /\/api\/reservation\/\d+$/
+const employeePath = /^https:\/\/[^/]+\/reservation\/assigned-employee\/\d+(\?.*)?$/
+const detailOrDeletePath = /^https:\/\/[^/]+\/reservation\/\d+$/
 
 async function routeEmployeesEmpty(page: Page) {
   await page.route(employeePath, async (route) => {
@@ -58,7 +58,7 @@ test('S1: 삭제 확인 → DELETE 호출 후 목록 이동', async ({ page }) =
   await page.getByRole('button', { name: '확인' }).click()
 
   await expect(page).toHaveURL(/\/notices\/reservations$/)
-  expect(new URL(deleteUrl).pathname).toBe('/api/reservation/1')
+  expect(new URL(deleteUrl).pathname).toBe('/reservation/1')
 })
 
 test('S2: 삭제 404 → 서버 message 알림, 이동 없음', async ({ page }) => {

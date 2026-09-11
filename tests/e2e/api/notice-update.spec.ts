@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-const detailApiPath = /\/api\/notice\/[^/?]+(?:\?.*)?$/
-const listApiPath = /\/api\/notice(?:\?.*)?$/
+const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
+const listApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
 test('S1: route ID와 JSON body로 공지를 한 번 수정하고 목록으로 이동한다', async ({
   page,
@@ -63,16 +63,17 @@ test('S2: HTTP 400이면 입력을 보존하고 다시 제출할 수 있다', as
   await expectUpdateFailure(page, '검증 오류 공지', '검증 오류 내용')
 })
 
-test('S3: HTTP 403이면 입력을 보존하고 목록으로 이동하지 않는다', async ({
-  page,
-}) => {
+test('S3: HTTP 403이면 세션을 비우고 로그인으로 보낸다', async ({ page }) => {
   await mockUpdateError(page, 403, '접근할 수 있는 권한이 없습니다.')
 
   await page.goto('/notices/list/7')
   await fillNotice(page, '권한 오류 공지', '권한 오류 내용')
   await page.getByRole('button', { name: '저장하기' }).click()
 
-  await expectUpdateFailure(page, '권한 오류 공지', '권한 오류 내용')
+  await expect(page).toHaveURL(/\/login$/)
+  expect(
+    await page.evaluate(() => localStorage.getItem('accessToken')),
+  ).toBeNull()
 })
 
 test('S4: HTTP 404이면 mock 저장으로 대체하지 않는다', async ({ page }) => {

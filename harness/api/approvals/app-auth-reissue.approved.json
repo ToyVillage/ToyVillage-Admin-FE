@@ -1,0 +1,15 @@
+{
+  "feature": "app-auth-reissue",
+  "apiId": "APP_AUTH_REISSUE",
+  "approvedAt": "2026-09-10T13:08:24.206Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "e470046a4ee8656ed8b65f0562b3a5a54db89396f09cbcee92978fe318492bc5",
+  "contractHash": "a53c8bc2f1fa2af49920a6466a337981956fe2477c1cb93978165a189de4c172",
+  "contractMarkdownHash": "0dcc89938aadc044694b9ef7f322ff3d5004881f5528ee12d17e322e81a5077c",
+  "planHash": "14679c0568b002fe560816824d55756de726bc6a88422b361abd4efb8306757a",
+  "scenarioHash": "49e22df3b485e5798b53413548845b8fa540939094fdb40d83aae5ade98d8b54",
+  "testHash": "0bd332ff73ded444df0b1f7ec138fbd298d3ec7815a8c03e32c21b5a1629a7ce",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-10T13:08:24.657Z"
+}

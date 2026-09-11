@@ -87,7 +87,7 @@ function buildBody(url: URL) {
 }
 
 async function routeList(page: Page) {
-  await page.route(/\/api\/reservation\?/, async (route) => {
+  await page.route(/^https:\/\/[^/]+\/reservation\?/, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
     await route.fulfill({
       status: 200,
@@ -195,7 +195,7 @@ test('S7: 페이지네이션·리셋', async ({ page }) => {
 
 test('S8: 데이터 없음 빈 상태', async ({ page }) => {
   // 전체가 빈 응답(카운트·목록 모두 0).
-  await page.route(/\/api\/reservation\?/, async (route) => {
+  await page.route(/^https:\/\/[^/]+\/reservation\?/, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
     await route.fulfill({
       status: 200,
