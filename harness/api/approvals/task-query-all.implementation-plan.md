@@ -57,10 +57,16 @@ export interface TaskQueryAllRequest {
   status?: TaskStatusFilter
 }
 
+export interface TaskQueryAssigneeResponse {
+  id: number
+  name: string
+  position: string | null
+}
+
 export interface TaskQueryAllResponseItem {
   id: number
   title: string
-  assigneeName: string
+  assignees: TaskQueryAssigneeResponse[]
   assigneeCount: number
   status: TaskStatusFilter
   priority: TaskPriorityValue
@@ -85,10 +91,11 @@ export interface TaskQueryAllErrorResponse {
   - `api.get<unknown>('/tasks', { params })` — `status`가 없으면 params에서
     생략한다(`전체 업무` 탭)
   - runtime 검증: `tasks` 배열, 각 항목의 `id`·`assigneeCount` 정수,
-    `title`·`assigneeName`·`finishDate` 문자열, `status`·`priority`가 허용값,
-    `totalPageSize` 정수
+    `title`·`finishDate` 문자열, `assignees`가 `{ id, name, position }` 배열,
+    `status`·`priority`가 허용값, `totalPageSize` 정수
   - 반환: `{ items: TaskListItem[]; totalPageSize: number }`
     - `id: String(task.id)` (라우트가 문자열 id를 쓴다 — notice와 같은 규칙)
+    - `assigneeName: assignees[0]?.name ?? ''` (대표 담당자)
     - `assigneeExtraCount: Math.max(assigneeCount - 1, 0)`
     - `dueDate: finishDate`
 - 응답이 검증에 실패하면 명시적 Error를 던진다. 빈 배열이나 mock으로

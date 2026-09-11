@@ -1,15 +1,15 @@
 {
   "feature": "task-query-all",
   "apiId": "TASK_QUERY_ALL",
-  "approvedAt": "2026-09-09T13:39:51.897Z",
+  "approvedAt": "2026-09-10T23:45:22.425Z",
   "approvedBy": "yunho",
-  "taskSpecHash": "bbe70da1a5f15677efd4810c2489ec722b31cbac6ba7806c494f7ec200b5cff4",
-  "contractHash": "4a58403c068a4442de1b88967c93996d4c07ad71a6508669f8226482237e425f",
-  "contractMarkdownHash": "0ef6c8f2bf1119c84efc45d12695eb34eb579428f3571ebd7600c56188db2ca3",
-  "planHash": "ab816a5fd81aae718a29bbf8b9839911cd6dd51dcb35cea9cf3a5481738e8013",
-  "scenarioHash": "d3590ba35d9dcd68463368c68e0e5caad4681a5c054f5a0253d4cd72cb2fd124",
-  "testHash": "a5ed52a8e47be02a3bf90c32e5df8cde5f3df50341e15d8dcbd916f68eaf94c7",
+  "taskSpecHash": "7d06487a43a724f2b8b4ea250d08ab0d73270372c8a64e56a56d83ffa0e3e231",
+  "contractHash": "039abc5e671faad5a48fff5a9033be047af3ba911ec820cc0d38a6872c7fcee3",
+  "contractMarkdownHash": "6162e4d6b147220ef4af434d2bd5812826664b7faf55656a789d443358614580",
+  "planHash": "36194e1ec28e4b6660e10af5b5bce257b45dd2e62498c257c285248cb6e4667a",
+  "scenarioHash": "5b20a6587171a55db440bd7671c864d3ac4d40eb0f37d43177de10dd45b84f0c",
+  "testHash": "c4324ec2905e987497b1fa1e1e2470bcfafe6d1b2b17f6c639880eccdaed3836",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-09T13:39:52.500Z"
+  "testApprovedAt": "2026-09-10T23:45:30.184Z"
 }

@@ -447,7 +447,7 @@ function toListItem(task: MockTask, members: MockMember[]) {
   return {
     id: task.id,
     title: task.title,
-    assigneeName: assignees[0]?.name ?? '',
+    assignees,
     assigneeCount: assignees.length,
     status: task.status,
     priority: task.priority,

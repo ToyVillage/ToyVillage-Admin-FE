@@ -53,7 +53,8 @@ export async function getTasks({
     items: data.tasks.map((task) => ({
       id: String(task.id),
       title: task.title,
-      assigneeName: task.assigneeName,
+      // 목록 셀은 대표 담당자 한 명만 쓴다. 나머지 인원은 assigneeCount 로 센다.
+      assigneeName: task.assignees[0]?.name ?? '',
       assigneeExtraCount: Math.max(task.assigneeCount - 1, 0),
       status: task.status,
       priority: task.priority,
@@ -172,7 +173,8 @@ function isTaskQueryAllResponseItem(
   return (
     Number.isInteger(task.id) &&
     typeof task.title === 'string' &&
-    typeof task.assigneeName === 'string' &&
+    Array.isArray(task.assignees) &&
+    task.assignees.every(isTaskQueryAssignee) &&
     Number.isInteger(task.assigneeCount) &&
     isTaskStatus(task.status) &&
     isTaskPriority(task.priority) &&

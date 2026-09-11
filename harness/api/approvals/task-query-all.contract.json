@@ -129,15 +129,50 @@
                   "constraints": []
                 },
                 {
-                  "name": "assigneeName",
+                  "name": "assignees",
                   "location": "body",
-                  "type": "string",
+                  "type": "array<object>",
                   "required": true,
                   "nullable": false,
                   "default": null,
-                  "example": "이승현",
-                  "description": "대표 담당자 이름",
-                  "constraints": []
+                  "example": null,
+                  "description": "담당자 목록. 목록 화면은 대표(첫 번째) 이름만 쓴다.",
+                  "constraints": [],
+                  "fields": [
+                    {
+                      "name": "id",
+                      "location": "body",
+                      "type": "integer",
+                      "required": true,
+                      "nullable": false,
+                      "default": null,
+                      "example": 2,
+                      "description": "담당자(유저) id",
+                      "constraints": []
+                    },
+                    {
+                      "name": "name",
+                      "location": "body",
+                      "type": "string",
+                      "required": true,
+                      "nullable": false,
+                      "default": null,
+                      "example": "이승현",
+                      "description": "담당자 이름",
+                      "constraints": []
+                    },
+                    {
+                      "name": "position",
+                      "location": "body",
+                      "type": "string",
+                      "required": true,
+                      "nullable": true,
+                      "default": null,
+                      "example": "사원",
+                      "description": "담당자 직급",
+                      "constraints": []
+                    }
+                  ]
                 },
                 {
                   "name": "assigneeCount",
@@ -388,7 +423,7 @@
     "notionDataSource": "collection://65d7a4d6-1474-82e1-8615-07f152254595",
     "resolvedNotionPage": "https://app.notion.com/p/0707a4d61474828eb8a1012a5c5ef73b",
     "requestedNotionPage": null,
-    "checkedAt": "2026-09-09T20:10:00+09:00",
+    "checkedAt": "2026-09-11T08:40:00+09:00",
     "apiIdMatchCount": 1,
     "databaseValues": {
       "apiId": "TASK_QUERY_ALL",
@@ -413,6 +448,12 @@
           "ADMIN"
         ]
       }
+    },
+    "serverObservation": {
+      "checkedAt": "2026-09-11T08:40:00+09:00",
+      "environment": "staging",
+      "request": "GET /tasks?page=0&size=10",
+      "note": "Notion 명세의 `tasks[].assigneeName` 대신 서버가 `tasks[].assignees[{id,name,position}]`를 내려주는 것을 브라우저 200 응답에서 확인했다. TASK_QUERY(상세) 응답과 같은 형태다. Notion 문서 갱신은 백엔드 질문으로 남겼다(task.backend-questions.md #4)."
     }
   }
 }

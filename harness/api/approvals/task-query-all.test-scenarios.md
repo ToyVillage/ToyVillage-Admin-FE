@@ -8,19 +8,33 @@
 ```json
 {
   "tasks": [
-    { "id": 12, "title": "9월 정기 안전점검", "assigneeName": "이승현",
+    { "id": 12, "title": "9월 정기 안전점검",
+      "assignees": [
+        { "id": 3, "name": "이승현", "position": "사원" },
+        { "id": 4, "name": "김수인", "position": "사원" },
+        { "id": 5, "name": "이지아", "position": "대리" },
+        { "id": 6, "name": "박도윤", "position": null }
+      ],
       "assigneeCount": 4, "status": "IN_PROGRESS", "priority": "HIGH",
       "finishDate": "2026-09-05" },
-    { "id": 13, "title": "사료 재고 정리", "assigneeName": "김수인",
+    { "id": 13, "title": "사료 재고 정리",
+      "assignees": [{ "id": 4, "name": "김수인", "position": "사원" }],
       "assigneeCount": 1, "status": "COMPLETED", "priority": "LOW",
       "finishDate": "2026-08-20" },
-    { "id": 14, "title": "급수설비 점검", "assigneeName": "이지아",
+    { "id": 14, "title": "급수설비 점검",
+      "assignees": [
+        { "id": 5, "name": "이지아", "position": "대리" },
+        { "id": 6, "name": "박도윤", "position": null }
+      ],
       "assigneeCount": 2, "status": "EXPIRED", "priority": "MEDIUM",
       "finishDate": "2026-07-01" }
   ],
   "totalPageSize": 2
 }
 ```
+
+담당자 셀의 대표 이름은 `assignees[0].name`, `외 N명`의 N은 `assigneeCount - 1`
+이다(2026-09-08 개발자 결정 — `assigneeCount`는 총원).
 
 오류 body는 Contract 형식 `{ message, status, timestamp, description }`을 쓴다.
 
@@ -102,6 +116,15 @@
 - 사용자 동작: 첫 행 케밥 → `삭제` → 다이얼로그 `확인`
 - 기대 결과: 삭제 후 GET 재요청 1회, 재조회 응답(2건)이 표에 반영,
   `데이터 삭제에 성공했습니다` 토스트. localStorage 삭제 기록에 의존하지 않음
+
+## Mock S13 — 옛 스키마(`assigneeName`) 응답
+
+- 목적: 담당자 필드가 `assignees` 배열이 아닌 응답을 성공으로 처리하지 않는다.
+- Mock response: HTTP 200, `tasks[0]`에서 `assignees`를 빼고
+  `"assigneeName": "이승현"`만 넣은 body
+- 기대 결과: 성공 처리하지 않고 오류 화면
+  (2026-09-11 회귀: 서버가 `assignees`로 바뀌었는데 검증이 `assigneeName`을
+  요구해 200 응답에도 오류 화면이 떴다. 반대 방향을 고정한다)
 
 ## Staging R1
 

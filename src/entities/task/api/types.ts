@@ -8,10 +8,17 @@ export interface TaskQueryAllRequest {
   status?: TaskStatus
 }
 
+export interface TaskQueryAssigneeResponse {
+  id: number
+  name: string
+  position: string | null
+}
+
 export interface TaskQueryAllResponseItem {
   id: number
   title: string
-  assigneeName: string
+  /** 담당자 목록. 목록 화면은 대표(첫 번째) 이름만 쓴다. */
+  assignees: TaskQueryAssigneeResponse[]
   assigneeCount: number
   status: TaskStatus
   priority: TaskPriority
@@ -33,12 +40,6 @@ export interface TaskQueryAllErrorResponse {
 
 export interface TaskQueryRequest {
   id: number
-}
-
-export interface TaskQueryAssigneeResponse {
-  id: number
-  name: string
-  position: string | null
 }
 
 export interface TaskQueryFileResponse {

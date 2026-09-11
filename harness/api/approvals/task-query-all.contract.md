@@ -59,7 +59,10 @@
 | `tasks` | array\<object\> | true | false | — | 업무지시 목록. 비어 있을 수 있다. |
 | `tasks[].id` | integer | true | false | `12` | 업무지시 id |
 | `tasks[].title` | string | true | false | `"9월 정기 안전점검"` | 업무 제목 |
-| `tasks[].assigneeName` | string | true | false | `"이승현"` | 대표 담당자 이름 |
+| `tasks[].assignees` | array\<object\> | true | false | — | 담당자 목록. 목록 화면은 대표(첫 번째) 이름만 쓴다. |
+| `tasks[].assignees[].id` | integer | true | false | `2` | 담당자(유저) id |
+| `tasks[].assignees[].name` | string | true | false | `"이승현"` | 담당자 이름 |
+| `tasks[].assignees[].position` | string | true | true | `"사원"` | 담당자 직급 |
 | `tasks[].assigneeCount` | integer | true | false | `4` | 담당자 총원 |
 | `tasks[].status` | enum | true | false | `"IN_PROGRESS"` | 업무 상태(서버 계산) — 허용값 `IN_PROGRESS`, `COMPLETED`, `EXPIRED` |
 | `tasks[].priority` | enum | true | false | `"HIGH"` | 업무 중요도 — 허용값 `HIGH`, `MEDIUM`, `LOW` |

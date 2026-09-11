@@ -11,7 +11,12 @@ const tasks = [
   {
     id: 12,
     title: '9월 정기 안전점검',
-    assigneeName: '이승현',
+    assignees: [
+      { id: 3, name: '이승현', position: '사원' },
+      { id: 4, name: '김수인', position: '사원' },
+      { id: 5, name: '이지아', position: '대리' },
+      { id: 6, name: '박도윤', position: null },
+    ],
     assigneeCount: 4,
     status: 'IN_PROGRESS',
     priority: 'HIGH',
@@ -20,7 +25,7 @@ const tasks = [
   {
     id: 13,
     title: '사료 재고 정리',
-    assigneeName: '김수인',
+    assignees: [{ id: 4, name: '김수인', position: '사원' }],
     assigneeCount: 1,
     status: 'COMPLETED',
     priority: 'LOW',
@@ -29,7 +34,10 @@ const tasks = [
   {
     id: 14,
     title: '급수설비 점검',
-    assigneeName: '이지아',
+    assignees: [
+      { id: 5, name: '이지아', position: '대리' },
+      { id: 6, name: '박도윤', position: null },
+    ],
     assigneeCount: 2,
     status: 'EXPIRED',
     priority: 'MEDIUM',
@@ -274,6 +282,30 @@ test('S12: 삭제 성공 후 목록을 재조회한다', async ({ page }) => {
   await expect(rows(page)).toHaveCount(2)
   expect(deleteRequestCount).toBe(1)
   expect(listRequestCount).toBeGreaterThan(1)
+})
+
+// 2026-09-11 회귀: 서버가 assignees 배열로 바뀌었는데 검증이 assigneeName 을
+// 요구해 200 응답에도 오류 화면이 떴다. 반대 방향(옛 스키마)을 고정한다.
+test('S13: 옛 스키마(assigneeName) 응답은 성공으로 처리하지 않는다', async ({
+  page,
+}) => {
+  await mockList(page, 200, {
+    tasks: [
+      {
+        id: 12,
+        title: '9월 정기 안전점검',
+        assigneeName: '이승현',
+        assigneeCount: 4,
+        status: 'IN_PROGRESS',
+        priority: 'HIGH',
+        finishDate: '2026-09-05',
+      },
+    ],
+    totalPageSize: 1,
+  })
+  await page.goto('/tasks')
+
+  await expectListError(page)
 })
 
 async function mockList(page: Page, status: number, body: unknown) {

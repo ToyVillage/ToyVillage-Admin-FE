@@ -32,9 +32,11 @@ real_server:
 
 - 업무관리 화면 진입 시 업무지시 전체 조회 API를 호출한다.
 - 서버가 반환한 `tasks[]`를 기존 `TaskTable`에 표시한다.
-  - 담당자 셀: `assigneeName`(대표)과 `assigneeCount`(담당자 총원).
+  - 담당자 셀: `assignees[0].name`(대표)과 `assigneeCount`(담당자 총원).
     `외 N명`의 N은 `assigneeCount - 1`이며 0이면 렌더하지 않는다
     (2026-09-08 개발자 결정 — `assigneeCount`는 총원이다).
+    (2026-09-11 staging 확인 — 목록 응답의 담당자 필드는 Notion 명세의
+    `assigneeName`이 아니라 상세 조회와 같은 `assignees` 배열이다.)
   - 제목 `title`, 상태 `status`, 우선순위 `priority`, 완료기한 `finishDate`
 - 페이지네이션은 서버 쿼리(`page`, `size`)를 사용하고 현재 화면의 한 페이지
   10행을 유지한다. `size=10`, `page`는 0부터 시작한다.

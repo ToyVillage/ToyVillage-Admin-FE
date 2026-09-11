@@ -305,7 +305,7 @@ test('S14: 성공 후 목록 캐시를 무효화한다', async ({ page }) => {
         {
           id: 12,
           title: validTask.title,
-          assigneeName: '이승현',
+          assignees: [{ id: 3, name: '이승현', position: '사원' }],
           assigneeCount: 1,
           status: 'IN_PROGRESS',
           priority: 'HIGH',
