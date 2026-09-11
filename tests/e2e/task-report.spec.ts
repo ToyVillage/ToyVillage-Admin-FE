@@ -223,14 +223,15 @@ test('S15: 없는 보고 진입', async ({ page }) => {
 })
 
 test('S16: 업무 상세에서 그 업무의 업무보고 상세로 진입', async ({ page }) => {
-  // 업무 상세는 API 연동이라 진입에 필요한 조회만 mock 한다(업무보고는 그대로 mock).
+  // 업무 상세의 담당자별 보고 현황은 상세 조회 응답(`reports`)에서 온다.
   await mockTaskApi(page)
   await page.goto('/tasks/1')
-  await page.getByRole('button', { name: '업무 보고 상세조회' }).click()
+  await page.getByTestId('task-report-row').first().click()
 
-  // 1번 업무의 보고는 r1 이다.
-  await expect(page).toHaveURL(/\/task-reports\/r1$/)
-  await expect(page.getByText('담당자: 이승현')).toBeVisible()
+  // 1번 업무 첫 담당자(이승현)의 보고 id 는 31 이다.
+  await expect(page).toHaveURL(/\/task-reports\/31$/)
+  // 업무보고 상세는 아직 localStorage mock 이라 이 id 를 찾지 못한다.
+  // 업무보고 API 가 붙으면 여기서 보고 내용을 확인하도록 되돌린다.
 })
 
 test('S17: 사이드바 업무보고 메뉴 이동', async ({ page }) => {

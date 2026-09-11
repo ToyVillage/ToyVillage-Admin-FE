@@ -61,35 +61,43 @@ test('S4: 첨부 없음', async ({ page }) => {
 test('S5: 업무보고 목록', async ({ page }) => {
   await page.goto('/tasks/1')
 
-  const reports = reportItems(page)
-  await expect(reports).toHaveCount(4)
-  await expect(reports.nth(0)).toContainText('김유영')
-  await expect(reports.nth(0)).toContainText('심사대기')
-  await expect(reports.nth(1)).toContainText('이승현')
-  await expect(reports.nth(1)).toContainText('승인')
-  await expect(reports.nth(3)).toContainText('이지아')
-  await expect(reports.nth(3)).toContainText('반려')
+  // 담당자별 현황이라 담당자 전원이 한 줄씩 나온다(아직 내지 않은 사람 포함).
+  const rows = reportRows(page)
+  await expect(rows).toHaveCount(6)
+  await expect(rows.nth(0)).toContainText('이승현')
+  await expect(rows.nth(0)).toContainText('승인')
+  await expect(rows.nth(2)).toContainText('이지아')
+  await expect(rows.nth(2)).toContainText('반려')
+  await expect(rows.nth(3)).toContainText('김유영')
+  await expect(rows.nth(3)).toContainText('심사대기')
+  // 서버 `MISSING`(미제출)도 `심사대기` 로 보여준다.
+  await expect(rows.nth(4)).toContainText('홍길동')
+  await expect(rows.nth(4)).toContainText('심사대기')
 })
 
 test('S6: 업무보고 상세 진입', async ({ page }) => {
   await page.goto('/tasks/1')
-  await reportItems(page).first().click()
 
-  await expect(page).toHaveURL(/\/task-reports\/r5$/)
+  // 열 보고가 없는 줄은 누를 수 없다. 제출된 4건만 버튼이다.
+  await expect(reportItems(page)).toHaveCount(4)
+
+  await reportItems(page).first().click()
+  await expect(page).toHaveURL(/\/task-reports\/31$/)
 })
 
 test('S7: 진행도 요약', async ({ page }) => {
+  // 심사대기 3 = 심사대기 1 + 미제출 2(미제출은 심사대기에 합산한다).
   await page.goto('/tasks/1')
   await expect(
-    page.getByText('전체 4 · 승인 2 · 반려 1 · 심사대기 1'),
+    page.getByText('전체 6 · 승인 2 · 반려 1 · 심사대기 3'),
   ).toBeVisible()
 
-  // `재제출` 은 별도 문구 없이 `심사대기` 에 합산된다. 항목 배지에는 그대로 보인다.
+  // 아무도 내지 않은 업무는 전부 심사대기로 모인다.
   await page.goto('/tasks/2')
   await expect(
-    page.getByText('전체 2 · 승인 0 · 반려 0 · 심사대기 2'),
+    page.getByText('전체 1 · 승인 0 · 반려 0 · 심사대기 1'),
   ).toBeVisible()
-  await expect(reportItems(page).filter({ hasText: '재제출' })).toHaveCount(1)
+  await expect(reportRows(page).filter({ hasText: '심사대기' })).toHaveCount(1)
 })
 
 test('S8: 업무보고 없음', async ({ page }) => {
@@ -212,7 +220,7 @@ test('S19: 키보드 조작', async ({ page }) => {
   await firstReport.focus()
   await expect(firstReport).toBeFocused()
   await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/\/task-reports\/r5$/)
+  await expect(page).toHaveURL(/\/task-reports\/31$/)
 })
 
 function infoRow(page: Page) {
@@ -232,9 +240,15 @@ function attachmentGroup(page: Page) {
   return page.getByRole('group', { name: '첨부자료' })
 }
 
+// 제출된 보고만 버튼이다(미제출 줄은 누를 수 없다).
 function reportItems(page: Page) {
   return page
     .locator('section')
     .filter({ hasText: '업무 보고' })
     .getByRole('button')
+}
+
+// 미제출을 포함한 담당자별 현황 전체.
+function reportRows(page: Page) {
+  return page.getByTestId('task-report-row')
 }

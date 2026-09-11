@@ -30,6 +30,16 @@ export interface MockTaskFile {
   fileKey: string
 }
 
+export type MockReportStatus = 'APPROVED' | 'REJECTED' | 'PENDING' | 'MISSING'
+
+// 담당자별 업무보고 현황. 서버는 담당자 전원을 한 줄씩 주고, 내지 않은 사람은
+// `workReportId: null` · `MISSING` 이다.
+export interface MockTaskReport {
+  appAdminId: number
+  workReportId: number | null
+  status: MockReportStatus
+}
+
 export interface MockTask {
   id: number
   title: string
@@ -39,6 +49,8 @@ export interface MockTask {
   priority: MockTaskPriority
   finishDate: string
   files: MockTaskFile[]
+  /** 생략하면 담당자 전원이 미제출이다(보고를 아무도 내지 않은 새 업무). */
+  reports?: MockTaskReport[]
 }
 
 // 담당자 트리. 이름과 팀 구성은 퍼블리싱 시나리오가 참조하는 값이다(전체 18명).
@@ -108,6 +120,15 @@ export const mockTasks: MockTask[] = [
     priority: 'HIGH',
     finishDate: '2026-07-03',
     files: figmaFiles,
+    // 네 가지 상태를 모두 한 화면에서 보이게 둔다(승인 2 · 반려 1 · 심사대기 1 · 미제출 2).
+    reports: [
+      { appAdminId: 1, workReportId: 31, status: 'APPROVED' },
+      { appAdminId: 2, workReportId: 32, status: 'APPROVED' },
+      { appAdminId: 3, workReportId: 33, status: 'REJECTED' },
+      { appAdminId: 10, workReportId: 34, status: 'PENDING' },
+      { appAdminId: 14, workReportId: null, status: 'MISSING' },
+      { appAdminId: 15, workReportId: null, status: 'MISSING' },
+    ],
   },
   {
     id: 2,
@@ -198,6 +219,8 @@ export const mockTasks: MockTask[] = [
     priority: 'HIGH',
     finishDate: '2027-01-20',
     files: [],
+    // 보고 현황이 비어 온 경우. 빈 상태 분기를 재현하려고 비워둔다.
+    reports: [],
   },
   {
     id: 11,
@@ -457,6 +480,7 @@ function toListItem(task: MockTask, members: MockMember[]) {
 
 function toDetail(task: MockTask, members: MockMember[]) {
   const assignees = toAssignees(task, members)
+  const reports = toReports(task, assignees)
 
   return {
     id: task.id,
@@ -469,15 +493,41 @@ function toDetail(task: MockTask, members: MockMember[]) {
     finishDate: task.finishDate,
     createdAt: '2026-06-28T10:15:30',
     files: task.files,
-    reports: [],
+    reports,
     progress: {
-      total: assignees.length,
-      approved: 0,
-      rejected: 0,
-      pending: assignees.length,
-      missing: 0,
+      total: reports.length,
+      approved: countBy(reports, 'APPROVED'),
+      rejected: countBy(reports, 'REJECTED'),
+      pending: countBy(reports, 'PENDING'),
+      missing: countBy(reports, 'MISSING'),
     },
   }
+}
+
+// 담당자 전원이 한 줄이다. fixture 가 지정하지 않으면 전원 미제출로 둔다.
+function toReports(task: MockTask, assignees: MockMember[]) {
+  const byId = new Map(task.reports?.map((report) => [report.appAdminId, report]))
+
+  return assignees.flatMap((assignee) => {
+    if (task.reports && !byId.has(assignee.id)) return []
+
+    const report = byId.get(assignee.id)
+    return [
+      {
+        workReportId: report?.workReportId ?? null,
+        appAdminId: assignee.id,
+        name: assignee.name,
+        status: report?.status ?? 'MISSING',
+      },
+    ]
+  })
+}
+
+function countBy(
+  reports: ReturnType<typeof toReports>,
+  status: MockReportStatus,
+) {
+  return reports.filter((report) => report.status === status).length
 }
 
 // 대표 담당자는 assigneeIds 의 첫 번째다. 서버 응답 순서를 그대로 흉내 낸다.

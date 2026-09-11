@@ -41,6 +41,16 @@ mock 단일 조회(`getMockTask`)를 `TASK_QUERY` API 연동으로 교체한다.
   - 본문 카드: `title`, `content`
   - 첨부자료: `files[].fileName` (`files`가 비면 `AttachmentList`를 렌더하지
     않는다)
+  - 업무 보고 카드(2026-09-11 추가): `reports[]`가 담당자별 현황이다. 한 줄에
+    `name`과 심사 상태 배지를 그린다. `workReportId`가 있으면 누를 수 있고
+    `/task-reports/{workReportId}`로 이동한다. `MISSING`(미제출)은 화면에서
+    `심사대기`로 표시하며, `workReportId`가 `null`이라 열 보고가 없으므로
+    누를 수 없는 줄로 그린다. `reports`가 비면 기존 빈 문구를 표시한다.
+  - 진행도 카드(2026-09-11 추가): 숫자는 `progress`에서 온다. 클라이언트가
+    `reports`로 다시 세지 않는다. 요약 문구는 기존
+    `전체 N · 승인 N · 반려 N · 심사대기 N`이고 도넛 조각도 기존 세 가지다.
+    `심사대기`는 `progress.pending + progress.missing`이다
+    (미제출을 심사대기에 합산 — 2026-09-11 개발자 결정).
 - 로딩 중에는 기존 `업무를 불러오는 중입니다.` 상태를 유지한다.
 
 # 기대 오류 동작
@@ -72,9 +82,11 @@ mock 단일 조회(`getMockTask`)를 `TASK_QUERY` API 연동으로 교체한다.
 
 - `TASK_QUERY` 단일 조회만 연동한다. 목록·생성·수정 API는 각 API ID의 별도
   범위이며 해당 mock은 유지한다.
-- 응답의 `reports`·`progress`는 상세 하단 `TaskReportSummaryCard`·
-  `TaskProgressCard`가 쓰는 값과 대응하지만, 이번 범위에서는 연결하지 않고
-  `@/entities/task-report` mock을 유지한다(아래 확인 항목 2 참고).
+- 응답의 `reports`·`progress`를 상세 하단 `TaskReportSummaryCard`·
+  `TaskProgressCard`에 연결한다(2026-09-11 범위 추가). 같은 응답에 들어 있어
+  추가 요청이 없다. `@/entities/task-report`의 mock 조회
+  (`getMockTaskReportsByTaskId`)는 상세 화면에서 더 쓰지 않는다. 업무보고
+  목록·상세 화면은 여전히 mock이며 별도 API 범위다.
 - 응답의 `createdAt`은 현재 화면에 표시 위치가 없어 사용하지 않는다.
 - 실제 서버 테스트는 비활성화한다.
 - 개발자 승인 전 API 코드와 테스트 코드를 작성하지 않는다.
@@ -87,10 +99,13 @@ mock 단일 조회(`getMockTask`)를 `TASK_QUERY` API 연동으로 교체한다.
 
 # 확인이 필요한 명세 항목
 
-1. `reports[].status`의 Allowed Values가 없다. 예시에 `APPROVED`,
-   `REJECTED`, `MISSING`이 보이고 `progress`에는 `pending`과 `missing`이
-   있는데, 화면의 심사 상태는 `PENDING`/`APPROVED`/`REJECTED`/`RESUBMITTED`다.
-   `MISSING`(미제출)과 `RESUBMITTED`(재제출)의 대응을 확정해야 한다.
+1. `reports[].status`의 Allowed Values가 없다 — **2026-09-11 결정으로 진행**.
+   예시에 `APPROVED`, `REJECTED`, `MISSING`이 보이고 `progress`에는 `pending`이
+   따로 있으므로, 제출 후 심사 전 상태를 `PENDING`으로 보고 네 값을 받는다.
+   화면 대응은 `APPROVED`→`승인`, `REJECTED`→`반려`, `PENDING`→`심사대기`,
+   `MISSING`→`심사대기`(열 보고가 없어 누를 수 없는 줄)이다. `RESUBMITTED`(재제출)는 서버 상태에
+   없어 이 화면에서 나타나지 않는다. 확인 요청은 백엔드 질문 5번에 있다.
+   허용값 밖의 status가 오면 오류 화면으로 처리한다.
 2. `assignees[].position`이 `null`일 수 있는지 확인이 필요하다
    (`TEAM_QUERY_TREE`는 `null`을 허용한다).
 3. 각 필드의 Required·Nullable 표기가 없다. 특히 `files`, `reports`가 빈

@@ -47,7 +47,14 @@ export interface TaskQueryFileResponse {
   fileKey: string
 }
 
-export type TaskQueryReportStatus = 'APPROVED' | 'REJECTED' | 'MISSING'
+// `MISSING` 은 담당자가 보고를 내지 않은 상태다(`workReportId` 가 null).
+// 명세 예시에는 `PENDING` 이 없지만 같은 응답의 `progress.pending` 이 제출 후
+// 심사 전 건수를 세므로 값으로 받는다(백엔드 확인 대기 — task.backend-questions #5).
+export type TaskQueryReportStatus =
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'PENDING'
+  | 'MISSING'
 
 export interface TaskQueryReportResponse {
   /** 미제출이면 null 이다. */

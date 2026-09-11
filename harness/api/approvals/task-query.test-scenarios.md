@@ -2,7 +2,7 @@
 
 공통 사전 조건: `accessToken`을 localStorage에 넣고 `page.route()`로
 `GET **/tasks/12`를 mock 한 뒤 `/tasks/12`로 진입한다. 실제 서버는 호출하지
-않는다. 업무보고 카드는 기존 mock을 그대로 쓴다.
+않는다. 업무보고·진행도 카드는 같은 응답의 `reports`·`progress`를 쓴다.
 
 기본 성공 body
 
@@ -114,6 +114,32 @@
 - 사용자 동작: 상세에서 케밥 `삭제` → 다이얼로그 `확인`
 - 기대 결과: `/tasks`로 이동, 삭제 성공 토스트, 상세로 되돌아오면 GET 재요청
 
+## Mock S15 — 담당자별 보고 현황 표시 (2026-09-11 추가)
+
+- 목적: `reports[]`가 담당자 전원이고 미제출 줄도 그려진다.
+- Mock response: HTTP 200, `reports` 4건
+  (`APPROVED` 31 · `REJECTED` 33 · `PENDING` 34 · `MISSING` null)
+- 사용자 동작: `/tasks/12` 진입
+- 기대 결과: 줄 4개, 배지가 `승인`·`반려`·`심사대기`·`심사대기`
+  (`MISSING` 도 `심사대기` 로 표시한다). 누를 수 있는 줄은 3개이고, 첫 줄을
+  누르면 `/task-reports/31` 로 이동한다. `workReportId` 가 null 인 줄은
+  버튼이 아니다.
+
+## Mock S16 — 진행도는 서버 집계를 쓰고 미제출을 심사대기에 합산 (2026-09-11 추가)
+
+- 목적: 클라이언트가 `reports`로 다시 세지 않고, 미제출을 심사대기에 합산한다.
+- Mock response: HTTP 200, `reports` 4건에 대해 `progress` 를 일부러 다르게
+  (`{ total: 9, approved: 5, rejected: 2, pending: 1, missing: 1 }`) 내려준다.
+- 기대 결과: 요약 문구가 `전체 9 · 승인 5 · 반려 2 · 심사대기 2` 이다
+  (`심사대기` 만 `pending + missing`, 나머지는 응답 값 그대로).
+
+## Mock S17 — 허용값 밖의 보고 상태 (2026-09-11 추가)
+
+- 목적: 모르는 심사 상태를 성공으로 처리하지 않는다.
+- Mock response: HTTP 200, `reports[0].status = "RESUBMITTED"`
+- 기대 결과: 성공 처리하지 않고 `업무를 찾을 수 없습니다.` 오류 화면
+  (빈 배지를 그리지 않는다)
+
 ## Staging R1
 
 - 실행 여부: disabled
@@ -128,7 +154,8 @@
 
 - Mock 시나리오는 실제 서버 요청 없음
 - 승인 Contract 밖의 request/response 필드 없음
-- `reports`·`progress`는 화면에 연결하지 않음(업무보고 카드는 기존 mock)
+- `reports`·`progress`는 같은 응답에서 업무보고·진행도 카드에 연결됨
+  (추가 요청 없음). 허용값 밖의 `reports[].status`는 오류로 처리
 - 공통 Axios와 기존 인증 interceptor 사용
 - 실패 시 localStorage mock 상세로 fallback하지 않음
 - Staging 실제 서버 테스트는 실행하지 않음

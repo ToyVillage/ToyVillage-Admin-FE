@@ -5,7 +5,7 @@ export interface TaskReportProgressCounts {
   total: number
   approved: number
   rejected: number
-  /** 심사대기 + 재제출. 재제출은 별도 조각 없이 심사대기에 합산한다(spec 결정 사항). */
+  /** 심사대기 + 재제출 + 미제출. 별도 조각 없이 심사대기에 합산한다(spec 결정 사항). */
   pending: number
 }
 

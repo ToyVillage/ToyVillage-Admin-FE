@@ -1,5 +1,9 @@
 import { api } from '@/shared/api/axios'
-import { taskPriorities, taskStatuses } from '../model/types'
+import {
+  taskPriorities,
+  taskReportStatuses,
+  taskStatuses,
+} from '../model/types'
 import type {
   Task,
   TaskListItem,
@@ -16,6 +20,8 @@ import type {
   TaskQueryAllResponseItem,
   TaskQueryAssigneeResponse,
   TaskQueryFileResponse,
+  TaskQueryProgressResponse,
+  TaskQueryReportResponse,
   TaskQueryRequest,
   TaskQueryResponse,
   TaskUpdateRequest,
@@ -86,6 +92,17 @@ export async function getTask({ id }: TaskQueryRequest): Promise<Task> {
     dueDate: data.finishDate,
     attachments: data.files.map(({ fileName }) => fileName),
     attachmentFiles: data.files,
+    // 담당자 전원이 한 줄씩 온다. 미제출이면 `workReportId` 가 null 이라
+    // 열 보고가 없다는 뜻이므로 id 도 null 로 남긴다.
+    reports: data.reports.map((report) => ({
+      reportId:
+        report.workReportId === null ? null : String(report.workReportId),
+      assigneeId: report.appAdminId,
+      name: report.name,
+      status: report.status,
+    })),
+    // 집계는 서버 값을 그대로 쓴다. reports 로 다시 세지 않는다.
+    progress: data.progress,
   }
 }
 
@@ -200,12 +217,35 @@ function isTaskQueryResponse(value: unknown): value is TaskQueryResponse {
     typeof task.createdAt === 'string' &&
     Array.isArray(task.files) &&
     task.files.every(isTaskQueryFile) &&
-    // reports·progress 는 이번 범위에서 화면에 연결하지 않는다.
-    // 존재만 확인하고 내부 값은 검증하지 않는다(허용값 확정 전 — Contract Backend Question).
     Array.isArray(task.reports) &&
-    typeof task.progress === 'object' &&
-    task.progress !== null
+    task.reports.every(isTaskQueryReport) &&
+    isTaskQueryProgress(task.progress)
   )
+}
+
+function isTaskQueryReport(value: unknown): value is TaskQueryReportResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  const report = value as Record<string, unknown>
+
+  return (
+    (report.workReportId === null || Number.isInteger(report.workReportId)) &&
+    Number.isInteger(report.appAdminId) &&
+    typeof report.name === 'string' &&
+    taskReportStatuses.some((status) => status === report.status)
+  )
+}
+
+function isTaskQueryProgress(
+  value: unknown,
+): value is TaskQueryProgressResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  const progress = value as Record<string, unknown>
+
+  return (
+    ['total', 'approved', 'rejected', 'pending', 'missing'] as const
+  ).every((key) => Number.isInteger(progress[key]))
 }
 
 function isTaskQueryAssignee(

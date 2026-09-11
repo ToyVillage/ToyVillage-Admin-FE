@@ -136,7 +136,8 @@ export interface Task {
   본 뒤 수정으로 들어오면 캐시를 재사용한다.
 - 목록 prefix `['tasks']` 무효화가 `['tasks', id]`에도 prefix로 매칭된다.
 - 삭제 성공 시 `removeQueries({ queryKey: ['tasks', id] })` 유지.
-- `['task-reports','by-task',id]` mock query는 그대로 둔다.
+- `['task-reports','by-task',id]` mock query는 제거한다(2026-09-11). 담당자별
+  보고 현황이 상세 응답에 함께 오므로 추가 조회가 없다.
 
 ## UI 연결
 
@@ -148,6 +149,14 @@ export interface Task {
 - 첨부: `task.attachments.length > 0`일 때만 `AttachmentList` 렌더
 - 로딩: 기존 `업무를 불러오는 중입니다.`
 - 오류(404 포함): 기존 `업무를 찾을 수 없습니다.` + `목록으로 돌아가기`
+- `TaskReportSummaryCard`(2026-09-11 추가)
+  - `reviewStatus` 는 `status === 'MISSING' ? 'PENDING' : status` 로 매핑한다
+    (미제출을 화면에서 `심사대기` 로 보여준다 — 개발자 결정)
+  - `reportId`가 `null`이면 버튼이 아닌 줄로 그리고 chevron 을 뺀다
+  - `onSelect={(reportId) => navigate(`/task-reports/${reportId}`)}`
+- `TaskProgressCard`(2026-09-11 추가): `total`·`approved`·`rejected` 는
+  `progress` 그대로, `pending` 은 `progress.pending + progress.missing` 이다.
+  도넛 조각과 요약 문구는 기존 승인·반려·심사대기 세 가지를 유지한다
 - `TaskForm`의 담당자 초기 선택: `initialTask.assignees.map(({ id }) => id)`
 - `TaskForm`의 첨부 초기값: `initialTask.attachmentFiles`
 
@@ -155,7 +164,7 @@ export interface Task {
 
 - `tests/e2e/task-detail.spec.ts`: `page.goto('/tasks/1')` 전에
   `GET /api/tasks/1`을 route mock 한다. 담당자·상태·우선순위·첨부 검증 의도는
-  유지한다. 업무보고 카드는 mock 그대로다.
+  유지한다. 업무보고 카드는 응답 `reports` 기준으로 바꾼다(2026-09-11).
 - `tests/e2e/task-edit.spec.ts`: 진입 시 상세 조회를 mock 한다. 담당자 체크
   복원 검증은 `assignees` 응답 기준으로 바꾼다.
 
@@ -177,4 +186,9 @@ export interface Task {
   복원은 이 배열만으로 성립한다. 명세 예시의 개수 불일치는 문서 오류다.
 - `assignees[].id`가 `TEAM_QUERY_TREE`의 `members[].id`와 다른 체계면 재승인.
 - `files`·`reports`가 배열이 아니라 `null`로 오면 재승인.
-- `reports`·`progress`를 화면에 연결하지 않는다(별도 범위).
+- `reports`·`progress`를 화면에 연결한다(2026-09-11 범위 추가). 업무보고
+  목록·상세 화면(`/task-reports`)은 여전히 mock이며 별도 API 범위다.
+- `reports[].status`에 네 값(`APPROVED`/`REJECTED`/`PENDING`/`MISSING`) 밖의
+  값이 오면 오류로 처리한다. 명세에 허용값 표가 없어 `PENDING`은 같은 응답의
+  `progress.pending` 을 근거로 받는다(백엔드 질문 5번). 다른 값이 확인되면
+  재승인한다.

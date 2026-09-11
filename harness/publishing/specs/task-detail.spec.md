@@ -90,18 +90,25 @@ paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/feature
 
 ### 업무보고
 
-- 이 업무에 제출된 업무보고를 담당자별로 나열한다. 각 항목은 담당자 이름 + 심사 상태 배지 + `>` 다.
+- 이 업무의 **담당자별 보고 현황**을 나열한다. 제출한 사람만이 아니라 담당자 전원이 한 줄이다
+  (2026-09-11 `TASK_QUERY` 연동 — 서버 `reports[]` 가 담당자 전원을 준다).
+- 각 항목은 담당자 이름 + 심사 상태 배지 + `>` 다.
 - 심사 상태 배지는 `승인` / `반려` / `심사대기` / `재제출` 네 가지를 그대로 표시한다
   (합산은 진행도 요약에서만 한다).
-- 항목 클릭 → `/task-reports/:reportId` 로 이동한다.
-- 제출된 업무보고가 없으면 `제출된 업무 보고가 없습니다.` 를 표시하고 진행도 카드를 숨긴다.
+- **서버의 `MISSING`(미제출)은 화면에서 `심사대기` 로 보여준다**(2026-09-11 개발자 결정).
+  미제출을 따로 표기하지 않는다. `재제출` 은 현재 서버 상태에 없다.
+- 제출된 보고가 있는 항목만 클릭 → `/task-reports/:reportId` 로 이동한다.
+- 아직 보고가 없는 줄(`workReportId: null`)은 열 대상이 없어 버튼이 아니고 `>` 도 없다.
+  배지는 다른 `심사대기` 줄과 같다.
+- 보고 현황이 비면 `제출된 업무 보고가 없습니다.` 를 표시하고 진행도 카드를 숨긴다.
 
 ### 진행도
 
 - 도넛 차트로 심사 상태 분포를 표시하고, 아래에 `전체 N · 승인 N · 반려 N · 심사대기 N` 을 쓴다.
 - 도넛 조각은 세 개다 — 승인 `colors.accent`, 반려 `colors.warning`, 심사대기 `colors.pageMuted`.
-- **`재제출` 은 `심사대기` 에 합산한다**(2026-09-07 개발자 결정). 별도 조각도 별도 문구도 만들지 않는다.
-  즉 `심사대기 N` 은 심사대기 + 재제출 건수다. 업무보고 목록의 항목 배지에는 `재제출` 이 그대로 보인다.
+- 숫자는 서버 집계(`progress`)에서 온다. 화면에서 `reports` 로 다시 세지 않는다.
+- **`재제출` 과 `미제출` 은 `심사대기` 에 합산한다**(재제출 2026-09-07, 미제출 2026-09-11 개발자 결정).
+  별도 조각도 별도 문구도 만들지 않는다. 즉 `심사대기 N` 은 `progress.pending + progress.missing` 이다.
 - 도넛은 차트 라이브러리를 새로 넣지 않고 인라인 SVG 로 그린다.
 
 ### 케밥 메뉴
@@ -168,16 +175,17 @@ interface TaskDetail {
 }
 
 interface TaskReportSummaryItem {
-  reportId: string
+  reportId: string | null // null = 아직 보고가 없다(누를 수 없다)
   assigneeName: string
   reviewStatus: TaskReportReviewStatus // 승인 / 반려 / 심사대기 / 재제출
 }
 ```
 
 - 담당자 모델(`assignees`)과 `visibility` 제거는 `task-create.spec.md` 의 데이터 절을 따른다.
-- 조회 endpoint 후보: `GET /tasks/:id`, query key: `['tasks', id]`
-- 업무보고 목록은 기존 `entities/task-report` 의 mock 을 업무 id 로 걸러 쓴다.
-- 이번 슬라이스는 mock 으로 대체하고 실제 API 는 연결하지 않는다.
+- 조회 endpoint: `GET /tasks/:id`, query key: `['tasks', id]`
+- 업무보고·진행도는 **같은 상세 응답**의 `reports`·`progress` 를 쓴다(2026-09-11).
+  추가 조회가 없고, `entities/task-report` 의 mock 조회는 이 화면에서 쓰지 않는다.
+- 업무보고 목록·상세 화면(`/task-reports`)은 아직 mock 이다(별도 API 범위).
 
 ## 컴포넌트 구조/props
 
@@ -244,8 +252,14 @@ interface TaskReportSummaryItem {
 
 - [x] **게이트 ② 승인**(2026-09-07 yunho09, S1~S19). e2e 변환·freeze·통과 완료(19/19).
 - [x] **`task-list` 재승인** — S16(케밥 `수정` → `/tasks/:id/edit`) 재승인·재변환 완료(2026-09-07).
-- [ ] **`task-report` 재승인** — 그 spec 의 S16 이 `업무 보고 상세조회` 버튼을 When 으로 삼는데,
-      이 화면이 그 버튼을 담당자별 업무보고 목록으로 대체했다. `specs/task-report.spec.md` 미결 사항 참조.
+- [x] **`task-report` 재승인**(2026-09-11) — 그 spec 의 S16 이 `업무 보고 상세조회` 버튼을 When 으로
+      삼았는데, 이 화면이 담당자별 보고 현황 줄로 대체했다. S16 을 그 줄 클릭으로 고치고 재freeze 했다.
+      업무보고 상세는 아직 mock 이라 이동한 뒤 내용까지는 확인하지 않는다.
 - [x] `재제출` 은 진행도 요약에서 `심사대기` 에 합산한다(2026-09-07 개발자 결정).
 - [ ] 업무보고 빈 상태 문구는 Figma 근거가 없다(`제출된 업무 보고가 없습니다.` 는 임시안).
+      서버가 담당자 전원을 주므로 이 문구는 담당자가 없는 업무에서만 보인다. 문구를 바꿀지 재검토 필요.
+- [ ] `reports[].status` 의 허용값이 명세에 없다. `PENDING` 은 같은 응답의 `progress.pending` 을 근거로
+      받고 있다(`harness/artifacts/api/task.backend-questions.md` 5번).
+- [x] 서버 `MISSING`(미제출)은 `심사대기` 로 표시하고 진행도에서도 심사대기에 합산한다
+      (2026-09-11 개발자 결정). 미제출을 별도 배지·조각으로 두지 않는다.
 - [ ] 첨부 다운로드의 실제 동작(서버 파일 URL) — `/api` 스킬 담당.

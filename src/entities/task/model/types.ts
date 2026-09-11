@@ -12,6 +12,33 @@ export interface TaskAssignee {
   position: string | null
 }
 
+/** 담당자별 업무보고 심사 상태. `MISSING` 은 미제출이다. */
+export const taskReportStatuses = [
+  'APPROVED',
+  'REJECTED',
+  'PENDING',
+  'MISSING',
+] as const
+export type TaskReportStatus = (typeof taskReportStatuses)[number]
+
+/** 업무 상세의 담당자별 보고 현황 한 줄. 담당자 전원이 들어오며 미제출도 한 줄이다. */
+export interface TaskAssigneeReport {
+  /** 업무보고 id. 미제출이면 null 이다. */
+  reportId: string | null
+  assigneeId: number
+  name: string
+  status: TaskReportStatus
+}
+
+/** 서버가 집계해 내려주는 보고 진행 현황. 클라이언트가 다시 세지 않는다. */
+export interface TaskProgressCounts {
+  total: number
+  approved: number
+  rejected: number
+  pending: number
+  missing: number
+}
+
 export interface TaskAttachmentFile {
   fileName: string
   fileKey: string
@@ -33,6 +60,10 @@ export interface Task {
   attachments: string[]
   /** 첨부 파일명과 저장소 키. 수정 시 기존 첨부를 그대로 재전송하는 데 쓴다. */
   attachmentFiles: TaskAttachmentFile[]
+  /** 담당자별 보고 현황. 상세 화면의 `업무 보고` 카드가 쓴다. */
+  reports: TaskAssigneeReport[]
+  /** 보고 진행 현황 집계. 상세 화면의 `진행도` 카드가 쓴다. */
+  progress: TaskProgressCounts
 }
 
 export type TaskListItem = Pick<

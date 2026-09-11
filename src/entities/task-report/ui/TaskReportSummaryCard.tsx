@@ -2,7 +2,8 @@ import styled from '@emotion/styled'
 import type { TaskReportReviewStatus } from '../model/types'
 
 export interface TaskReportSummaryItem {
-  reportId: string
+  /** 업무보고 id. 아직 제출되지 않았으면 null 이고 열 보고가 없어 누를 수 없다. */
+  reportId: string | null
   assigneeName: string
   reviewStatus: TaskReportReviewStatus
 }
@@ -31,21 +32,44 @@ export function TaskReportSummaryCard({
       <Title>업무 보고</Title>
       {items.length > 0 ? (
         <List>
-          {items.map((item) => (
-            <Item
-              key={item.reportId}
-              type="button"
-              onClick={() => onSelect(item.reportId)}
-            >
-              <Name>{item.assigneeName}</Name>
+          {items.map((item, index) => {
+            const badge = (
               <Badge $status={item.reviewStatus}>
                 {reviewStatusLabels[item.reviewStatus]}
               </Badge>
-              <Chevron viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m9 4 8 8-8 8" />
-              </Chevron>
-            </Item>
-          ))}
+            )
+
+            // 아직 제출되지 않은 줄은 열 보고가 없다. 누를 수 없는 줄로 그려
+            // chevron 도 빼둔다(배지는 그대로 `심사대기`).
+            if (item.reportId === null) {
+              return (
+                <StaticItem
+                  key={`no-report-${item.assigneeName}-${index}`}
+                  data-testid="task-report-row"
+                >
+                  <Name>{item.assigneeName}</Name>
+                  {badge}
+                </StaticItem>
+              )
+            }
+
+            const reportId = item.reportId
+
+            return (
+              <Item
+                key={reportId}
+                type="button"
+                data-testid="task-report-row"
+                onClick={() => onSelect(reportId)}
+              >
+                <Name>{item.assigneeName}</Name>
+                {badge}
+                <Chevron viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m9 4 8 8-8 8" />
+                </Chevron>
+              </Item>
+            )
+          })}
         </List>
       ) : (
         <EmptyText>제출된 업무 보고가 없습니다.</EmptyText>
@@ -102,6 +126,17 @@ const Item = styled.button`
     outline: 2px solid ${({ theme }) => theme.colors.accent};
     outline-offset: 2px;
   }
+`
+
+// 제출 전 줄. 항목과 같은 크기·간격을 쓰되 버튼이 아니다.
+const StaticItem = styled.div`
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 16px;
+  padding: 0 30px 0 24px;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.background};
 `
 
 const Name = styled.span`

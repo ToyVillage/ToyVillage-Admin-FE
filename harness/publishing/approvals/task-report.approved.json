@@ -1,6 +1,6 @@
 {
   "feature": "task-report",
-  "approvedAt": "2026-08-23T08:45:06.539Z",
+  "approvedAt": "2026-09-11T00:38:07.523Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -28,6 +28,6 @@
     "S23",
     "S24"
   ],
-  "scenarioHash": "77b7b13aadfca81dda8bff567bee8a1abb157e591ebbf12f254586ddae9a31ed",
-  "e2eHash": "c5fcf783457ef9a53347808ce1cb0aaf6e40d780ccc40c0199989c93ea025b79"
+  "scenarioHash": "6bc4f5b3b3b89dd2cb365993b7f65f3fa465a752f11929c24918a943d412494e",
+  "e2eHash": "02c144f0c8404ef113154db91d92c767fcd5ea498dca876fac5556cfa8cecff5"
 }

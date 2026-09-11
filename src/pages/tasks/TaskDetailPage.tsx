@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteTask, getTask, TaskInfoRow } from '@/entities/task'
 import {
-  getMockTaskReportsByTaskId,
   TaskProgressCard,
   TaskReportSummaryCard,
   type TaskReportProgressCounts,
@@ -40,41 +39,32 @@ export function TaskDetailPage() {
     enabled: Boolean(id),
   })
 
-  const { data: reports } = useQuery({
-    queryKey: ['task-reports', 'by-task', id],
-    queryFn: () => getMockTaskReportsByTaskId(id),
-    enabled: Boolean(id),
-  })
-
   const deleteMutation = useMutation({
     mutationFn: () => deleteTask({ id: Number(id) }),
   })
 
+  // 담당자별 보고 현황과 집계는 상세 조회 응답에 함께 온다. 따로 조회하지 않는다.
+  // 서버 `MISSING`(미제출)은 화면에서 `심사대기` 로 보여준다(개발자 결정).
   const reportItems = useMemo<TaskReportSummaryItem[]>(
     () =>
-      (reports ?? []).map((report) => ({
-        reportId: report.id,
-        assigneeName: report.assigneeName,
-        reviewStatus: report.reviewStatus,
+      (task?.reports ?? []).map((report) => ({
+        reportId: report.reportId,
+        assigneeName: report.name,
+        reviewStatus: report.status === 'MISSING' ? 'PENDING' : report.status,
       })),
-    [reports],
+    [task],
   )
 
-  // `재제출` 은 별도 조각 없이 `심사대기` 에 합산한다(spec 결정 사항).
-  const progress = useMemo<TaskReportProgressCounts>(
-    () => ({
-      total: reportItems.length,
-      approved: reportItems.filter((item) => item.reviewStatus === 'APPROVED')
-        .length,
-      rejected: reportItems.filter((item) => item.reviewStatus === 'REJECTED')
-        .length,
-      pending: reportItems.filter(
-        (item) =>
-          item.reviewStatus === 'PENDING' ||
-          item.reviewStatus === 'RESUBMITTED',
-      ).length,
-    }),
-    [reportItems],
+  // 진행도도 같은 규칙이다. `재제출` 합산과 마찬가지로 미제출을 심사대기에 더한다.
+  const progress = useMemo<TaskReportProgressCounts | undefined>(
+    () =>
+      task && {
+        total: task.progress.total,
+        approved: task.progress.approved,
+        rejected: task.progress.rejected,
+        pending: task.progress.pending + task.progress.missing,
+      },
+    [task],
   )
 
   const focusMenuTrigger = useCallback(() => {
@@ -170,7 +160,9 @@ export function TaskDetailPage() {
             items={reportItems}
             onSelect={(reportId) => navigate(`/task-reports/${reportId}`)}
           />
-          {reportItems.length > 0 && <TaskProgressCard counts={progress} />}
+          {reportItems.length > 0 && progress && (
+            <TaskProgressCard counts={progress} />
+          )}
         </BottomRow>
       </Content>
 

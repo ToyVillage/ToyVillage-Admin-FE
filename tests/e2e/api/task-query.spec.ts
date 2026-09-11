@@ -282,6 +282,77 @@ test('S14: 삭제 성공 후 상세 캐시를 비운다', async ({ page }) => {
   expect(detailRequestCount).toBe(2)
 })
 
+// 2026-09-11 추가 범위: 업무보고·진행도 카드가 같은 응답의 reports·progress 를 쓴다.
+const reports = [
+  { workReportId: 31, appAdminId: 3, name: '이승현', status: 'APPROVED' },
+  { workReportId: 33, appAdminId: 4, name: '홍길동', status: 'REJECTED' },
+  { workReportId: 34, appAdminId: 6, name: '배준영', status: 'PENDING' },
+  { workReportId: null, appAdminId: 7, name: '김유영', status: 'MISSING' },
+]
+
+test('S15: 담당자별 보고 현황을 표시하고 제출 전 줄은 누를 수 없다', async ({
+  page,
+}) => {
+  await mockDetail(page, 200, {
+    ...detail,
+    reports,
+    progress: { total: 4, approved: 1, rejected: 1, pending: 1, missing: 1 },
+  })
+  await page.goto('/tasks/12')
+
+  const rows = page.getByTestId('task-report-row')
+  await expect(rows).toHaveCount(4)
+  await expect(rows.nth(0)).toContainText('이승현')
+  await expect(rows.nth(0)).toContainText('승인')
+  await expect(rows.nth(1)).toContainText('반려')
+  await expect(rows.nth(2)).toContainText('심사대기')
+  // 서버 `MISSING`(미제출)도 화면에서는 `심사대기` 다.
+  await expect(rows.nth(3)).toContainText('김유영')
+  await expect(rows.nth(3)).toContainText('심사대기')
+  await expect(rows.nth(3)).not.toContainText('미제출')
+
+  // 열 보고가 없는 줄(workReportId: null)은 버튼이 아니다.
+  await expect(reportButtons(page)).toHaveCount(3)
+
+  await reportButtons(page).first().click()
+  await expect(page).toHaveURL(/\/task-reports\/31$/)
+})
+
+test('S16: 진행도는 서버 집계를 쓰고 미제출을 심사대기에 합산한다', async ({
+  page,
+}) => {
+  // reports 로 다시 세면 이 값과 어긋난다.
+  await mockDetail(page, 200, {
+    ...detail,
+    reports,
+    progress: { total: 9, approved: 5, rejected: 2, pending: 1, missing: 1 },
+  })
+  await page.goto('/tasks/12')
+
+  // 심사대기 2 = pending 1 + missing 1. 나머지는 응답 값 그대로다.
+  await expect(
+    page.getByText('전체 9 · 승인 5 · 반려 2 · 심사대기 2'),
+  ).toBeVisible()
+})
+
+test('S17: 허용값 밖 보고 상태는 성공으로 처리하지 않는다', async ({ page }) => {
+  await mockDetail(page, 200, {
+    ...detail,
+    reports: [{ ...reports[0], status: 'RESUBMITTED' }],
+    progress: { total: 1, approved: 0, rejected: 0, pending: 1, missing: 0 },
+  })
+  await page.goto('/tasks/12')
+
+  await expect(page.getByText('업무를 찾을 수 없습니다.')).toBeVisible()
+})
+
+function reportButtons(page: Page) {
+  return page
+    .locator('section')
+    .filter({ hasText: '업무 보고' })
+    .getByRole('button')
+}
+
 async function mockDetail(page: Page, status: number, body: unknown) {
   await page.route(taskDetailPath, async (route) => {
     await fulfillJson(route, status, body)
