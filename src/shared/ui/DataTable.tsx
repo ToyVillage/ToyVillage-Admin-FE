@@ -397,6 +397,9 @@ const cellWidth = (width?: number) =>
     ? 'flex: 1; min-width: 0;'
     : `width: ${width}px; flex: 0 0 ${width}px;`
 
+// overflow 를 숨기지 않는다. 마지막 행의 케밥 메뉴처럼 표 밖으로 나가는
+// 팝오버가 잘리기 때문이다. 둥근 모서리는 배경을 가진 헤더에 직접 준다
+// (행은 배경이 없어 표의 radius 로 충분하다).
 const Table = styled.div<{ $offsetTop: number; $bordered: boolean }>`
   width: 100%;
   margin-top: ${({ $offsetTop }) => $offsetTop}px;
@@ -404,12 +407,12 @@ const Table = styled.div<{ $offsetTop: number; $bordered: boolean }>`
     $bordered ? `1px solid ${theme.colors.border}` : '0'};
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
-  overflow: hidden;
 `
 
 const Header = styled.div<{ $height: number; $background: ThemeColorKey }>`
   display: flex;
   min-height: ${({ $height }) => $height}px;
+  border-radius: 20px 20px 0 0;
   background: ${({ theme, $background }) => theme.colors[$background]};
 `
 
