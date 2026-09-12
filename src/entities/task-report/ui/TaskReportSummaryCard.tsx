@@ -39,8 +39,14 @@ export function TaskReportSummaryCard({
               </Badge>
             )
 
-            // 아직 제출되지 않은 줄은 열 보고가 없다. 누를 수 없는 줄로 그려
-            // chevron 도 빼둔다(배지는 그대로 `심사대기`).
+            const chevron = (
+              <Chevron viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m9 4 8 8-8 8" />
+              </Chevron>
+            )
+
+            // 아직 제출되지 않은 줄은 열 보고가 없어 누를 수 없다. 다만 chevron 은
+            // 나머지 줄과 같은 자리에 그대로 둔다(Figma 152:11510 은 전 줄에 있다).
             if (item.reportId === null) {
               return (
                 <StaticItem
@@ -49,6 +55,7 @@ export function TaskReportSummaryCard({
                 >
                   <Name>{item.assigneeName}</Name>
                   {badge}
+                  {chevron}
                 </StaticItem>
               )
             }
@@ -64,9 +71,7 @@ export function TaskReportSummaryCard({
               >
                 <Name>{item.assigneeName}</Name>
                 {badge}
-                <Chevron viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m9 4 8 8-8 8" />
-                </Chevron>
+                {chevron}
               </Item>
             )
           })}
