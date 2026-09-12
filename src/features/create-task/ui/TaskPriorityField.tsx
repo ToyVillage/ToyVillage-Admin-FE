@@ -9,7 +9,9 @@ interface TaskPriorityFieldProps {
 
 const priorities: TaskPriority[] = ['HIGH', 'MEDIUM', 'LOW']
 
-// Figma "Frame 406/393" — 우선순위 3분할 pill. 단일 선택이며 해제는 없다.
+// Figma `priority` 카드(yot 1:3694, 868×194). 252×68 pill 3개이며 단일 선택이고 해제는 없다.
+// 선택색만 Figma(`#DDDDE3` 회색 채움)와 다르다 — 담당자 체크박스와 같은 accent 로 통일한다
+// (2026-09-07 개발자 결정, task-create.spec.md 참조).
 export const TaskPriorityField = forwardRef<
   HTMLInputElement,
   TaskPriorityFieldProps
@@ -36,48 +38,71 @@ export const TaskPriorityField = forwardRef<
   )
 })
 
+// fieldset 은 block 으로 둔다. flex 로 두면 legend 가 padding 을 무시하고
+// 카드 최상단(border box)에 붙는다 — 아래 Legend 의 float 과 짝을 이룬다.
 const Fieldset = styled.fieldset`
-  display: flex;
-  width: min(100%, 815px);
-  flex-direction: column;
-  gap: 20px;
+  display: block;
+  min-width: 0;
+  flex: 1 1 868px;
   margin: 0;
-  padding: 0;
+  padding: 40px;
   border: 0;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 980px) {
+    flex-basis: auto;
+    padding: 24px;
+  }
 `
 
+// float + width 100% 로 legend 를 일반 흐름에 되돌려 카드 padding 안에 들어오게 한다.
 const Legend = styled.legend`
+  float: left;
+  width: 100%;
+  margin: 0 0 20px;
   padding: 0;
   color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 500;
+  line-height: 1.3;
 `
 
 const Options = styled.div`
   display: flex;
-  gap: 24px;
+  clear: both;
+  gap: 16px;
+
+  @media (max-width: 980px) {
+    gap: 8px;
+  }
 `
 
 const Option = styled.label<{ $selected: boolean }>`
   position: relative;
   display: flex;
+  width: 252px;
   min-width: 0;
-  height: 88px;
-  flex: 1;
+  height: 68px;
   align-items: center;
   justify-content: center;
   border-radius: 800px;
   background: ${({ theme, $selected }) =>
-    $selected ? theme.colors.accentBg : theme.colors.surface};
+    $selected ? theme.colors.accentBg : theme.colors.background};
   color: ${({ theme, $selected }) =>
-    $selected ? theme.colors.accent : theme.colors.text};
-  font-size: 32px;
+    $selected ? theme.colors.accent : theme.colors.textGuide};
+  font-size: 22px;
   font-weight: 500;
   cursor: pointer;
 
   &:has(input:focus-visible) {
     outline: 2px solid ${({ theme }) => theme.colors.accent};
     outline-offset: 2px;
+  }
+
+  @media (max-width: 980px) {
+    width: auto;
+    flex: 1;
   }
 `
 

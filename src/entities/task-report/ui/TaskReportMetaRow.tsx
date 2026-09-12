@@ -1,10 +1,10 @@
 import styled from '@emotion/styled'
 import {
-  TaskPriorityBadge,
   TaskStatusBadge,
   type TaskPriority,
   type TaskStatus,
 } from '@/entities/task'
+import { TaskReportPriorityBadge } from './TaskReportPriorityBadge'
 
 interface TaskReportMetaRowProps {
   priority: TaskPriority
@@ -15,7 +15,7 @@ interface TaskReportMetaRowProps {
   visibility: string
 }
 
-// Figma 3350:3974 상세 상단 요약행. 배지는 목록과 같은 것을 쓴다.
+// Figma 3350:3974 상세 상단 요약행. 배지는 업무보고 목록과 같은 것을 쓴다.
 export function TaskReportMetaRow({
   priority,
   taskStatus,
@@ -27,7 +27,7 @@ export function TaskReportMetaRow({
     <Row>
       <Group>
         <Label>우선순위:</Label>
-        <TaskPriorityBadge priority={priority} />
+        <TaskReportPriorityBadge priority={priority} />
       </Group>
       <Group>
         <Label>상태:</Label>

@@ -27,7 +27,12 @@ import {
   NoticeReservationsPage,
   ReservationDetailPage,
 } from '@/pages/notices/reservations'
-import { CreateTaskPage, TaskDetailPage, TaskListPage } from '@/pages/tasks'
+import {
+  CreateTaskPage,
+  EditTaskPage,
+  TaskDetailPage,
+  TaskListPage,
+} from '@/pages/tasks'
 import { TaskReportDetailPage, TaskReportListPage } from '@/pages/task-reports'
 import {
   WorkLogDetailPage,
@@ -100,6 +105,7 @@ const router = createBrowserRouter([
           { path: '/tasks', element: <TaskListPage /> },
           { path: '/tasks/create', element: <CreateTaskPage /> },
           { path: '/tasks/:id', element: <TaskDetailPage /> },
+          { path: '/tasks/:id/edit', element: <EditTaskPage /> },
           { path: '/task-reports', element: <TaskReportListPage /> },
           { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
           { path: '/work-logs', element: <WorkLogListPage /> },

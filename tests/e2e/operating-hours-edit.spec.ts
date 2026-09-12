@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { operatingHoursStorageKey } from '@/entities/operating-hours'
+import { operatingHoursStorageKey } from '@/entities/operating-hours/model/mock'
 
 const date = '2026-07-13'
 

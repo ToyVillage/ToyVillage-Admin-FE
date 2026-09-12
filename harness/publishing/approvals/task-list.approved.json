@@ -1,6 +1,6 @@
 {
   "feature": "task-list",
-  "approvedAt": "2026-08-11T08:30:54.625Z",
+  "approvedAt": "2026-09-11T05:01:36.378Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -17,9 +17,17 @@
     "S12",
     "S13",
     "S14",
+    "S15",
     "S16",
-    "S17"
+    "S17",
+    "S18",
+    "S19",
+    "S20",
+    "S21",
+    "S22",
+    "S23",
+    "S24"
   ],
-  "scenarioHash": "95a85e066f470079fee58e652d89397f9c21ae9ae8b4328f8ccc6d846dac2029",
-  "e2eHash": "6c4fa5b517ab7fbfe9d93a6458018bbbbdff3fedf4cc2775904639a3c4e33307"
+  "scenarioHash": "3ea18ffd142fa772f17835a5e2582a94f39f892a8eef6152c3e03aea57432a32",
+  "e2eHash": "c399a74f20c5d2f0089df450c0111678e207c4738d33d1dd99a9703cc3ac9143"
 }

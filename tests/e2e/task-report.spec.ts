@@ -1,4 +1,5 @@
 import { expect, test as base, type Page } from '@playwright/test'
+import { mockTaskApi } from './support/task-api'
 
 // 승인된 시나리오(task-report.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
@@ -225,12 +226,21 @@ test('S15: 없는 보고 진입', async ({ page }) => {
 })
 
 test('S16: 업무 상세에서 그 업무의 업무보고 상세로 진입', async ({ page }) => {
+  // 업무 상세의 담당자별 보고 현황은 상세 조회 응답(`reports`)에서 온다.
+  await mockTaskApi(page)
   await page.goto('/tasks/1')
-  await page.getByRole('button', { name: '업무 보고 상세조회' }).click()
 
-  // 1번 업무의 보고는 r1 이다.
-  await expect(page).toHaveURL(/\/task-reports\/r1$/)
-  await expect(page.getByText('담당자: 이승현')).toBeVisible()
+  // 진입은 막아 뒀다. 실 API 의 `workReportId`(숫자)로는 아직 localStorage mock 을 읽는
+  // 업무보고 상세를 열 수 없어 항상 `찾을 수 없습니다` 였다. 줄은 그대로 보이되 버튼이 아니다.
+  await expect(page.getByTestId('task-report-row').first()).toBeVisible()
+  await expect(
+    page
+      .locator('section')
+      .filter({ hasText: '업무 보고' })
+      .getByRole('button'),
+  ).toHaveCount(0)
+  await expect(page).toHaveURL(/\/tasks\/1$/)
+  // 업무보고 API 가 붙으면 여기서 보고 내용을 확인하도록 되돌린다.
 })
 
 test('S17: 사이드바 업무보고 메뉴 이동', async ({ page }) => {

@@ -8,6 +8,14 @@ interface AttachedFile {
   id: string
   name: string
   file?: File
+  /** 기존 첨부의 저장소 키. 수정 시 그대로 재전송한다. */
+  fileKey?: string
+}
+
+export interface AttachmentItem {
+  name: string
+  file?: File
+  fileKey?: string
 }
 
 export interface AttachmentAddResult {
@@ -16,27 +24,48 @@ export interface AttachmentAddResult {
 }
 
 interface AttachmentFieldProps {
+  /**
+   * `task` 는 업무 폼의 `add file` 카드(yot 145:12267)다 — 첨부가 없어도 `첨부자료` 라벨이
+   * 보이고, 라벨이 20px 이며 드롭존 배경이 gray/10 이다. 공지·자료 화면은 `default` 다.
+   */
+  variant?: 'default' | 'task'
   initialFileNames?: string[]
+  /**
+   * 이름과 저장소 키를 함께 가진 기존 첨부. 수정 화면에서 쓴다.
+   * `initialFileNames` 와 함께 쓰지 않는다.
+   */
+  initialFiles?: { fileName: string; fileKey: string }[]
   onFilesChange?: (hasFiles: boolean) => void
   onFileNamesChange?: (fileNames: string[]) => void
   onFileObjectsChange?: (files: File[]) => void
+  /** 현재 첨부 목록을 순서대로 알린다. 업로드는 호출부가 한다. */
+  onFileItemsChange?: (items: AttachmentItem[]) => void
   /** 첨부 시도 결과. 토스트가 필요한 화면만 사용한다. */
   onAddResult?: (result: AttachmentAddResult) => void
 }
 
 export function AttachmentField({
+  variant = 'default',
   initialFileNames = [],
+  initialFiles,
   onFilesChange,
   onFileNamesChange,
   onFileObjectsChange,
+  onFileItemsChange,
   onAddResult,
 }: AttachmentFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<AttachedFile[]>(() =>
-    initialFileNames.map((name, index) => ({
-      id: `existing:${index}:${name}`,
-      name,
-    })),
+    initialFiles
+      ? initialFiles.map(({ fileName, fileKey }, index) => ({
+          id: `existing:${index}:${fileName}`,
+          name: fileName,
+          fileKey,
+        }))
+      : initialFileNames.map((name, index) => ({
+          id: `existing:${index}:${name}`,
+          name,
+        })),
   )
   const [isDragging, setIsDragging] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -45,7 +74,16 @@ export function AttachmentField({
     onFilesChange?.(files.length > 0)
     onFileNamesChange?.(files.map(({ name }) => name))
     onFileObjectsChange?.(files.flatMap(({ file }) => (file ? [file] : [])))
-  }, [files, onFileNamesChange, onFileObjectsChange, onFilesChange])
+    onFileItemsChange?.(
+      files.map(({ name, file, fileKey }) => ({ name, file, fileKey })),
+    )
+  }, [
+    files,
+    onFileItemsChange,
+    onFileNamesChange,
+    onFileObjectsChange,
+    onFilesChange,
+  ])
 
   function addFiles(fileList: FileList | File[]) {
     const incomingFiles = Array.from(fileList)
@@ -117,9 +155,9 @@ export function AttachmentField({
   }
 
   return (
-    <AttachmentSection role="group" aria-label="첨부파일">
+    <AttachmentSection role="group" aria-label="첨부파일" data-variant={variant}>
       <AttachmentCard data-testid="notice-attachment-card">
-        {files.length > 0 && (
+        {(files.length > 0 || variant === 'task') && (
           <>
             <AttachmentTitle>첨부자료</AttachmentTitle>
             <FileList>
@@ -203,6 +241,10 @@ function fileKind(fileName: string) {
 
 const AttachmentSection = styled.section`
   margin-top: 32px;
+
+  &[data-variant='task'] {
+    margin-top: 0;
+  }
 `
 
 const AttachmentCard = styled.div`
@@ -222,6 +264,11 @@ const AttachmentTitle = styled.h2`
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+
+  [data-variant='task'] & {
+    font-size: 20px;
+    line-height: 1.3;
+  }
 `
 
 const FileList = styled.div`
@@ -229,6 +276,14 @@ const FileList = styled.div`
   flex-wrap: wrap;
   gap: 16px;
   margin-top: 8px;
+
+  [data-variant='task'] & {
+    margin-top: 10px;
+  }
+
+  &:empty {
+    display: none;
+  }
 `
 
 const FileChip = styled.div`
@@ -334,6 +389,11 @@ const DropZone = styled.button`
   color: ${({ theme }) => theme.colors.textGuide};
   cursor: pointer;
   font: inherit;
+
+  /* yot 업무 폼의 드롭존은 gray/10(#DDDDE3)이다. 다른 화면은 기존 값을 유지한다. */
+  [data-variant='task'] & {
+    background: ${({ theme }) => theme.colors.tableHeaderStrong};
+  }
 
   &[data-dragging='true'] {
     border-color: ${({ theme }) => theme.colors.primary};

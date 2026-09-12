@@ -1,76 +1,74 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  findTaskAssignee,
-  getMockTasks,
+  deleteTask,
+  getTasks,
   TaskTable,
-  type TaskListItem,
   type TaskStatus,
 } from '@/entities/task'
 import { CreateTaskButton } from '@/features/create-task'
-import { CategoryTabs, Toast, type ToastVariant } from '@/shared/ui'
+import { RowActionMenu } from '@/features/row-actions'
+import {
+  CategoryTabs,
+  DeleteConfirmationDialog,
+  Toast,
+  type ToastVariant,
+} from '@/shared/ui'
 
-const TABLE_PAGE_SIZE = 4
+const TABLE_PAGE_SIZE = 10
 
-const tabs = ['전체 업무', '진행중', '완료']
+const tabs = ['전체 업무', '진행중', '완료', '지연']
 
-const tabStatuses: Record<string, TaskStatus | null> = {
-  '전체 업무': null,
+// 탭은 서버 `status` query parameter 로 전달한다. `전체 업무` 는 보내지 않는다.
+const tabStatuses: Record<string, TaskStatus | undefined> = {
+  '전체 업무': undefined,
   진행중: 'IN_PROGRESS',
-  완료: 'DONE',
+  완료: 'COMPLETED',
+  지연: 'EXPIRED',
 }
+
+type TaskListToastKey = 'delete-success' | 'delete-error' | 'create-success'
 
 interface TaskListLocationState {
-  toast?: 'delete-success' | 'delete-error'
+  toast?: TaskListToastKey
 }
 
-const toastByKey: Record<string, { variant: ToastVariant; message: string }> = {
+const toastByKey: Record<
+  TaskListToastKey,
+  { variant: ToastVariant; message: string }
+> = {
   'delete-success': {
     variant: 'success',
     message: '데이터 삭제에 성공했습니다',
   },
   'delete-error': { variant: 'error', message: '데이터 삭제에 실패했습니다' },
+  'create-success': {
+    variant: 'success',
+    message: '데이터 생성에 성공했습니다',
+  },
 }
 
 export function TaskListPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
   const [active, setActive] = useState(tabs[0])
   const [page, setPage] = useState(1)
+  // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  // 페이지 안에서 발생한 토스트(삭제 결과). 진입 시 전달받는 토스트와 별개다.
+  const [localToast, setLocalToast] = useState<TaskListToastKey | null>(null)
+  const deletingRef = useRef(false)
+  // 행별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
+  const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
 
-  const {
-    data: queryTasks,
-    isPending,
-    isError,
-  } = useQuery({ queryKey: ['tasks'], queryFn: getMockTasks })
-  const allTasks = useMemo(() => queryTasks ?? [], [queryTasks])
-
-  // 삭제 결과는 이동 state 로 전달받아 표시하고, 닫을 때 state 를 비워 재방문 시 다시 뜨지 않게 한다.
-  const stateToast = (location.state as TaskListLocationState | null)?.toast
-  const toast = stateToast ? toastByKey[stateToast] : undefined
-
-  const items = useMemo<TaskListItem[]>(
-    () =>
-      allTasks.map((task) => ({
-        id: task.id,
-        assigneeName: findTaskAssignee(task.assigneeId)?.name ?? '미지정',
-        title: task.title,
-        status: task.status,
-        priority: task.priority,
-        dueDate: task.dueDate,
-        visibility: task.visibility,
-      })),
-    [allTasks],
-  )
-
-  const filtered = useMemo(() => {
-    const status = tabStatuses[active]
-    return status ? items.filter((item) => item.status === status) : items
-  }, [active, items])
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / TABLE_PAGE_SIZE))
+  const focusMenuTrigger = useCallback((taskId: string) => {
+    // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
+    requestAnimationFrame(() => menuTriggersRef.current.get(taskId)?.focus())
+  }, [])
 
   // 탭이 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
   const [prevActive, setPrevActive] = useState(active)
@@ -78,16 +76,63 @@ export function TaskListPage() {
     setPrevActive(active)
     setPage(1)
   }
-  const currentPage = Math.min(page, pageCount)
 
-  const tasks = useMemo(
-    () =>
-      filtered.slice(
-        (currentPage - 1) * TABLE_PAGE_SIZE,
-        currentPage * TABLE_PAGE_SIZE,
-      ),
-    [filtered, currentPage],
-  )
+  const status = tabStatuses[active]
+  const {
+    data,
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ['tasks', 'list', { page, size: TABLE_PAGE_SIZE, status }],
+    queryFn: () => getTasks({ page: page - 1, size: TABLE_PAGE_SIZE, status }),
+    placeholderData: (previousData) => previousData,
+  })
+  const tasks = data?.items ?? []
+  // 페이지 수는 서버가 준 총 페이지 수를 그대로 쓴다.
+  const pageCount = Math.max(1, data?.totalPageSize ?? 1)
+
+  // 삭제로 마지막 페이지가 사라지면 범위 밖 페이지에 고착되지 않게 되돌린다.
+  // 탭 보정과 같은 렌더 중 상태 보정이다(effect 불필요).
+  if (data && page > pageCount) setPage(pageCount)
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteTask({ id: Number(id) }),
+  })
+
+  // 생성·삭제 결과는 이동 state 로 전달받아 표시하고, 닫을 때 state 를 비워 재방문 시 다시 뜨지 않게 한다.
+  const stateToast = (location.state as TaskListLocationState | null)?.toast
+  const toastKey = localToast ?? stateToast
+  const toast = toastKey ? toastByKey[toastKey] : undefined
+
+  const dismissToast = useCallback(() => {
+    setLocalToast(null)
+    if (stateToast) navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, navigate, stateToast])
+
+  function handleDelete() {
+    if (!deleteTargetId || deletingRef.current || deleteMutation.isPending) {
+      return
+    }
+
+    deletingRef.current = true
+    const targetId = deleteTargetId
+    deleteMutation.mutate(targetId, {
+      onSuccess: async () => {
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        queryClient.removeQueries({ queryKey: ['tasks', targetId] })
+        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        setLocalToast('delete-success')
+        focusMenuTrigger(targetId)
+      },
+      onError: () => {
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        setLocalToast('delete-error')
+        focusMenuTrigger(targetId)
+      },
+    })
+  }
 
   if (isPending) {
     return (
@@ -123,18 +168,52 @@ export function TaskListPage() {
         <TaskTable
           tasks={tasks}
           onRowClick={(id) => navigate(`/tasks/${id}`)}
-          pagination={{ page: currentPage, pageCount, onChange: setPage }}
+          pagination={{ page: Math.min(page, pageCount), pageCount, onChange: setPage }}
           emptyLabel="등록된 업무가 없습니다."
+          renderRowAction={(task) => (
+            <RowActionMenu
+              triggerLabel={`${task.assigneeName} ${task.title} 업무 메뉴 열기`}
+              open={openMenuId === task.id}
+              onOpenChange={(open) => setOpenMenuId(open ? task.id : null)}
+              onTriggerRef={(node) => {
+                if (node) menuTriggersRef.current.set(task.id, node)
+                else menuTriggersRef.current.delete(task.id)
+              }}
+              items={[
+                {
+                  key: 'edit',
+                  label: '수정',
+                  onSelect: () => navigate(`/tasks/${task.id}/edit`),
+                },
+                {
+                  key: 'delete',
+                  label: '삭제',
+                  tone: 'danger',
+                  onSelect: () => setDeleteTargetId(task.id),
+                },
+              ]}
+            />
+          )}
         />
       </Content>
+
+      {deleteTargetId && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={() => {
+            const targetId = deleteTargetId
+            setDeleteTargetId(null)
+            focusMenuTrigger(targetId)
+          }}
+          onConfirm={handleDelete}
+        />
+      )}
 
       {toast && (
         <Toast
           variant={toast.variant}
           message={toast.message}
-          onDismiss={() =>
-            navigate(location.pathname, { replace: true, state: null })
-          }
+          onDismiss={dismissToast}
         />
       )}
     </Page>

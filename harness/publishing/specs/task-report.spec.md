@@ -48,8 +48,12 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 - `/task-reports` → 업무보고 목록.
 - `/task-reports/:id` → 업무보고 상세(심사).
-- `/tasks/:id`(업무 상세)의 `업무 보고 상세조회` 버튼 → **그 업무에 올라온 업무보고 상세**(`/task-reports/:reportId`)로 이동한다.
-  해당 업무의 보고가 없으면 이동할 상세가 없으므로 버튼을 비활성으로 둔다(기존 동작 유지).
+- ~~`/tasks/:id`(업무 상세)의 `업무 보고 상세조회` 버튼 → **그 업무에 올라온 업무보고 상세**(`/task-reports/:reportId`)로 이동한다.
+  해당 업무의 보고가 없으면 이동할 상세가 없으므로 버튼을 비활성으로 둔다(기존 동작 유지).~~
+  **2026-09-07 폐기.** `task-detail.spec.md`(`133:9725`)가 `/tasks/:id` 를 읽기 전용 상세로 가져가면서
+  단건 버튼이 **담당자별 업무보고 목록**으로 바뀌었다. 이제 그 목록의 항목을 클릭해
+  `/task-reports/:reportId` 로 이동한다(`task-detail` S6). 진입 자체는 그대로 있고 컨트롤만 바뀌었다.
+  → **이 spec 의 승인 시나리오 S16 재승인 필요**(아래 미결 사항).
 - 사이드바에 `업무 보고 바로가기` 항목을 추가한다. 클릭 → `/task-reports` 로 이동하고 사이드바가 닫힌다.
   사이드바 자체의 동작 계약은 `harness/publishing/specs/sidebar.spec.md` 를 따르며 이 spec 은 항목 추가만 한다.
   아이콘은 Figma 에 업무보고용 에셋이 없어 업무관리와 같은 `task` 아이콘을 재사용한다.
@@ -188,6 +192,15 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 ## 육안 확인 결과 (⑦ 통과, 2026-08-11)
 
 개발자가 `yarn dev` 로 Figma 원본(`3118:4294`, `3350:3962`)과 비교해 승인했다. 재작업 항목 없음.
+
+## 미결 사항
+
+- [ ] **S16 재승인 필요** — 승인본(`approvals/task-report.scenario-draft.md` S16)의 When 이
+      `업무 보고 상세조회` 버튼 클릭인데, `task-detail` 퍼블리싱(2026-09-07)으로 그 버튼이 사라지고
+      업무보고 목록 항목 클릭으로 바뀌었다. Then(`/task-reports/:reportId` 이동)은 그대로다.
+      승인 게이트를 우회하지 않기 위해 `tests/e2e/task-report.spec.ts` S16 은 손대지 않았고 현재 실패한다.
+      개발자가 초안 S16 의 When 을 고쳐 재승인하면 그때 변환한다
+      (`node scripts/approve.mjs task-report --by <name> --scenarios S1,...`).
 
 ## 비고 / 제약 (게이트 결정 사항)
 

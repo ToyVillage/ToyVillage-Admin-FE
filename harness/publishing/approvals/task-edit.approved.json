@@ -1,6 +1,6 @@
 {
   "feature": "task-edit",
-  "approvedAt": "2026-08-11T12:50:08.562Z",
+  "approvedAt": "2026-09-11T05:01:36.200Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -18,13 +18,8 @@
     "S13",
     "S14",
     "S15",
-    "S16",
-    "S17",
-    "S18",
-    "S19",
-    "S20",
-    "S21"
+    "S16"
   ],
-  "scenarioHash": "2da62a6ee9a1072606fb3d065575e356ba870c3ecd1e0f8863af4dccabe0946d",
-  "e2eHash": "2c22a80916d34dc1d35f5fd2ebdb305f40ff0f30e051cd704d3985a1ece603b3"
+  "scenarioHash": "0a2664b9132af7959ed054079a9f09bb8f5e420f4eedcec13f7ad8f4d9766de1",
+  "e2eHash": "4b53f28d24727b5547628a983edc4d5c49f652a3777594eac5be6bf650627b81"
 }

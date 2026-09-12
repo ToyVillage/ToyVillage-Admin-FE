@@ -37,17 +37,18 @@ const Tabs = styled.div`
 const Tab = styled.button<{ $active: boolean }>`
   border: 0;
   border-bottom: ${({ $active, theme }) =>
-    $active ? `4px solid ${theme.colors.text}` : '4px solid transparent'};
+    $active ? `2px solid ${theme.colors.text}` : '2px solid transparent'};
   cursor: pointer;
   padding: 10px 40px;
   font-weight: 600;
   font-size: 22px;
-  line-height: 1.2;
+  /* Figma 탭바 높이 46 = padding 10 + 라인 24 + padding 10 + 하단선 2 */
+  line-height: 24px;
   background: transparent;
-  color: ${({ theme, $active }) => ($active ? theme.colors.text : theme.colors.textMuted)};
+  color: ${({ theme, $active }) =>
+    $active ? theme.colors.text : theme.colors.textGuide};
 
   &[aria-pressed='false'] {
-    font-size: 20px;
     font-weight: 500;
   }
 `
