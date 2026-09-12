@@ -7,8 +7,6 @@ type CheckState = 'on' | 'off' | 'mixed'
 interface TaskAssigneeTreeProps {
   /** 팀 목록. 미배정 그룹이 마지막 항목이다. 조회 전에는 빈 배열이다. */
   groups: TeamTreeGroup[]
-  /** 전체 직원 수(`전체 직원` 행의 분모). */
-  totalMemberCount: number
   selectedIds: number[]
   onChange: (selectedIds: number[]) => void
   /** 팀 구조 조회 실패 문구. 있으면 트리 대신 이 문구를 보여준다. */
@@ -21,7 +19,7 @@ export const TaskAssigneeTree = forwardRef<
   HTMLInputElement,
   TaskAssigneeTreeProps
 >(function TaskAssigneeTree(
-  { groups, totalMemberCount, selectedIds, onChange, errorMessage },
+  { groups, selectedIds, onChange, errorMessage },
   ref,
 ) {
   const allMembers = useMemo(
@@ -35,8 +33,8 @@ export const TaskAssigneeTree = forwardRef<
   )
 
   const selected = useMemo(() => new Set(selectedIds), [selectedIds])
-  // 카운트 표기는 서버가 준 `totalMemberCount`, 3상태 판정은 실제 렌더된 직원 수를 쓴다.
-  // 두 값이 어긋나도(미배정 포함 여부 미확정) 전체 선택이 `mixed` 에 갇히지 않게 한다.
+  // 표기와 3상태 판정 모두 실제 렌더된 직원 수를 분모로 쓴다. 서버 `totalMemberCount` 는
+  // 미배정 포함 여부가 확정 전이라, 섞어 쓰면 `8/10명` 인데 `전체 선택` 인 모순이 보인다.
   const allState = checkState(selected.size, allMembers.length)
 
   function replaceSelection(nextIds: Iterable<number>) {
@@ -100,12 +98,12 @@ export const TaskAssigneeTree = forwardRef<
               type="checkbox"
               data-state={allState}
               checked={allState === 'on'}
-              aria-label={`전체 직원 ${selected.size}/${totalMemberCount}명`}
+              aria-label={`전체 직원 ${selected.size}/${allMembers.length}명`}
               onChange={toggleAll}
             />
             <RowLabel>전체 직원</RowLabel>
             <Count>
-              {selected.size}/{totalMemberCount}명
+              {selected.size}/{allMembers.length}명
             </Count>
           </AllRow>
 

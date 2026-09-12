@@ -309,7 +309,6 @@ export function TaskForm({
       <TaskAssigneeTree
         ref={assigneeRef}
         groups={teamTree?.groups ?? []}
-        totalMemberCount={teamTree?.totalMemberCount ?? 0}
         selectedIds={assigneeIds}
         onChange={setAssigneeIds}
         errorMessage={isTeamTreeError ? assigneeLoadErrorMessage : undefined}
