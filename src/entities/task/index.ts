@@ -31,7 +31,6 @@ export type {
   TaskQueryFileResponse,
   TaskQueryProgressResponse,
   TaskQueryReportResponse,
-  TaskQueryReportStatus,
   TaskQueryRequest,
   TaskQueryResponse,
   TaskUpdateErrorResponse,

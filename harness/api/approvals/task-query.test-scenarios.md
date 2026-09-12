@@ -133,12 +133,14 @@
 - 기대 결과: 요약 문구가 `전체 9 · 승인 5 · 반려 2 · 심사대기 2` 이다
   (`심사대기` 만 `pending + missing`, 나머지는 응답 값 그대로).
 
-## Mock S17 — 허용값 밖의 보고 상태 (2026-09-11 추가)
+## Mock S17 — 허용값 밖의 보고 상태 (2026-09-11 추가, 2026-09-12 수정)
 
-- 목적: 모르는 심사 상태를 성공으로 처리하지 않는다.
-- Mock response: HTTP 200, `reports[0].status = "RESUBMITTED"`
-- 기대 결과: 성공 처리하지 않고 `업무를 찾을 수 없습니다.` 오류 화면
-  (빈 배지를 그리지 않는다)
+- 목적: 보고 상태 열거값이 확정 전이므로(task.backend-questions #5) 모르는 값이
+  와도 상세 화면을 살린다. 값 하나가 응답 검증을 깨 화면 전체를 날리면 안 된다.
+- Mock response: HTTP 200, `reports[0].status = "RESUBMITTED"`,
+  `reports[1].status = "UNKNOWN"` (`workReportId` 는 null)
+- 기대 결과: 오류 화면 없이 줄 2개를 그리고 둘 다 `심사대기` 배지다
+  (제출된 줄은 `PENDING`, 미제출 줄은 `MISSING` 으로 낙관 처리한다)
 
 ## Staging R1
 

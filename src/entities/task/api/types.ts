@@ -47,21 +47,15 @@ export interface TaskQueryFileResponse {
   fileKey: string
 }
 
-// `MISSING` 은 담당자가 보고를 내지 않은 상태다(`workReportId` 가 null).
-// 명세 예시에는 `PENDING` 이 없지만 같은 응답의 `progress.pending` 이 제출 후
-// 심사 전 건수를 세므로 값으로 받는다(백엔드 확인 대기 — task.backend-questions #5).
-export type TaskQueryReportStatus =
-  | 'APPROVED'
-  | 'REJECTED'
-  | 'PENDING'
-  | 'MISSING'
-
 export interface TaskQueryReportResponse {
   /** 미제출이면 null 이다. */
   workReportId: number | null
   appAdminId: number
   name: string
-  status: TaskQueryReportStatus
+  // 열거값이 아직 확정 전이라(`PENDING` 포함 여부 — task.backend-questions #5)
+  // 원문 문자열로 받고 `toTaskReportStatus` 가 화면 값으로 좁힌다. 모르는 값 하나가
+  // 응답 검증을 깨서 업무 상세 화면을 통째로 날리지 않게 하려는 것이다.
+  status: string
 }
 
 export interface TaskQueryProgressResponse {

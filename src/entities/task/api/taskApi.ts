@@ -8,6 +8,7 @@ import type {
   Task,
   TaskListItem,
   TaskPriority,
+  TaskReportStatus,
   TaskStatus,
 } from '../model/types'
 import type {
@@ -99,7 +100,7 @@ export async function getTask({ id }: TaskQueryRequest): Promise<Task> {
         report.workReportId === null ? null : String(report.workReportId),
       assigneeId: report.appAdminId,
       name: report.name,
-      status: report.status,
+      status: toTaskReportStatus(report.status, report.workReportId),
     })),
     // 집계는 서버 값을 그대로 쓴다. reports 로 다시 세지 않는다.
     progress: data.progress,
@@ -232,8 +233,20 @@ function isTaskQueryReport(value: unknown): value is TaskQueryReportResponse {
     (report.workReportId === null || Number.isInteger(report.workReportId)) &&
     Number.isInteger(report.appAdminId) &&
     typeof report.name === 'string' &&
-    taskReportStatuses.some((status) => status === report.status)
+    typeof report.status === 'string'
   )
+}
+
+// 보고 상태는 아직 확정 전이다(task.backend-questions #5). 모르는 값이 와도 상세 화면을
+// 살려야 하므로, 제출된 줄은 심사 대기로 미제출 줄은 `MISSING` 으로 낙관 처리한다.
+function toTaskReportStatus(
+  status: string,
+  workReportId: number | null,
+): TaskReportStatus {
+  const known = taskReportStatuses.find((value) => value === status)
+  if (known) return known
+
+  return workReportId === null ? 'MISSING' : 'PENDING'
 }
 
 function isTaskQueryProgress(

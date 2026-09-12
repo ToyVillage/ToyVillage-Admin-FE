@@ -335,15 +335,27 @@ test('S16: 진행도는 서버 집계를 쓰고 미제출을 심사대기에 합
   ).toBeVisible()
 })
 
-test('S17: 허용값 밖 보고 상태는 성공으로 처리하지 않는다', async ({ page }) => {
+test('S17: 모르는 보고 상태가 와도 상세 화면을 살린다', async ({ page }) => {
+  // 보고 상태 열거값은 아직 확정 전이다(task.backend-questions #5). 값 하나 때문에
+  // 응답 검증이 통째로 깨져 상세가 오류 화면으로 떨어지면 안 된다.
   await mockDetail(page, 200, {
     ...detail,
-    reports: [{ ...reports[0], status: 'RESUBMITTED' }],
-    progress: { total: 1, approved: 0, rejected: 0, pending: 1, missing: 0 },
+    reports: [
+      { ...reports[0], status: 'RESUBMITTED' },
+      { ...reports[3], status: 'UNKNOWN' },
+    ],
+    progress: { total: 2, approved: 0, rejected: 0, pending: 1, missing: 1 },
   })
   await page.goto('/tasks/12')
 
-  await expect(page.getByText('업무를 찾을 수 없습니다.')).toBeVisible()
+  const rows = page.getByTestId('task-report-row')
+  await expect(rows).toHaveCount(2)
+  // 제출된 줄은 심사대기로, 미제출(`workReportId: null`) 줄도 심사대기로 낙관 처리한다.
+  await expect(rows.nth(0)).toContainText('이승현')
+  await expect(rows.nth(0)).toContainText('심사대기')
+  await expect(rows.nth(1)).toContainText('김유영')
+  await expect(rows.nth(1)).toContainText('심사대기')
+  await expect(page.getByText('업무를 찾을 수 없습니다.')).toHaveCount(0)
 })
 
 function reportButtons(page: Page) {
