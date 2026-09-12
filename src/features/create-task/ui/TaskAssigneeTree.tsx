@@ -33,18 +33,27 @@ export const TaskAssigneeTree = forwardRef<
   )
 
   const selected = useMemo(() => new Set(selectedIds), [selectedIds])
+  // 수정 화면에서 복원된 담당자 중 `/team/tree` 에 없는 사람(퇴사·소속 변경 등)이다.
+  // 트리로는 끄고 켤 수 없으니 선택에서 빼지 않고 그대로 들고 간다. 대신 몇 명인지 화면에 적는다.
+  const outsideIds = useMemo(() => {
+    const memberIds = new Set(allMembers.map((member) => member.id))
+    return selectedIds.filter((id) => !memberIds.has(id))
+  }, [allMembers, selectedIds])
+  const selectedInTreeCount = selectedIds.length - outsideIds.length
   // 표기와 3상태 판정 모두 실제 렌더된 직원 수를 분모로 쓴다. 서버 `totalMemberCount` 는
   // 미배정 포함 여부가 확정 전이라, 섞어 쓰면 `8/10명` 인데 `전체 선택` 인 모순이 보인다.
-  const allState = checkState(selected.size, allMembers.length)
+  const allState = checkState(selectedInTreeCount, allMembers.length)
 
   function replaceSelection(nextIds: Iterable<number>) {
     // 트리 순서를 유지해 `외 N명` 의 대표 담당자가 화면 순서와 같아지게 한다.
+    // 트리 밖 선택은 순서를 건드리지 않도록 뒤에 붙인다.
     const nextSet = new Set(nextIds)
-    onChange(
-      allMembers
+    onChange([
+      ...allMembers
         .filter((member) => nextSet.has(member.id))
         .map((member) => member.id),
-    )
+      ...outsideIds,
+    ])
   }
 
   function toggleAll() {
@@ -98,14 +107,20 @@ export const TaskAssigneeTree = forwardRef<
               type="checkbox"
               data-state={allState}
               checked={allState === 'on'}
-              aria-label={`전체 직원 ${selected.size}/${allMembers.length}명`}
+              aria-label={`전체 직원 ${selectedInTreeCount}/${allMembers.length}명`}
               onChange={toggleAll}
             />
             <RowLabel>전체 직원</RowLabel>
             <Count>
-              {selected.size}/{allMembers.length}명
+              {selectedInTreeCount}/{allMembers.length}명
             </Count>
           </AllRow>
+
+          {outsideIds.length > 0 && (
+            <OutsideNote>
+              목록에 없는 담당자 {outsideIds.length}명이 그대로 유지됩니다.
+            </OutsideNote>
+          )}
 
           {groups.map((group) => {
             // 미배정 그룹은 id 가 null 이라 팀 id 를 행 key 로 쓸 수 없다.
@@ -244,6 +259,16 @@ const Tree = styled.div`
   clear: both;
   flex-direction: column;
   gap: 16px;
+`
+
+// 트리에 없는 담당자가 남아 있을 때만 나오는 안내 줄. 체크박스 자리를 비우고
+// `전체 직원` 행 라벨과 같은 위치에서 시작한다(체크박스 26 + gap 16).
+const OutsideNote = styled.p`
+  margin: 0 0 0 42px;
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.3;
 `
 
 const Row = styled.div`
