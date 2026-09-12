@@ -10,7 +10,8 @@ export interface TaskReportSummaryItem {
 
 interface TaskReportSummaryCardProps {
   items: TaskReportSummaryItem[]
-  onSelect: (reportId: string) => void
+  /** 없으면 모든 줄이 정적으로 그려진다. 열 수 있는 보고 상세가 아직 없을 때 쓴다. */
+  onSelect?: (reportId: string) => void
 }
 
 // 업무 상세의 심사 상태 배지는 `승인` 을 그대로 쓴다.
@@ -45,12 +46,14 @@ export function TaskReportSummaryCard({
               </Chevron>
             )
 
-            // 아직 제출되지 않은 줄은 열 보고가 없어 누를 수 없다. 다만 chevron 은
-            // 나머지 줄과 같은 자리에 그대로 둔다(Figma 152:11510 은 전 줄에 있다).
-            if (item.reportId === null) {
+            // 아직 제출되지 않은 줄은 열 보고가 없어 누를 수 없고, `onSelect` 가 없으면
+            // 어느 줄도 누를 수 없다. 다만 chevron 은 나머지 줄과 같은 자리에
+            // 그대로 둔다(Figma 152:11510 은 전 줄에 있다).
+            const reportId = item.reportId
+            if (reportId === null || !onSelect) {
               return (
                 <StaticItem
-                  key={`no-report-${item.assigneeName}-${index}`}
+                  key={reportId ?? `no-report-${item.assigneeName}-${index}`}
                   data-testid="task-report-row"
                 >
                   <Name>{item.assigneeName}</Name>
@@ -59,8 +62,6 @@ export function TaskReportSummaryCard({
                 </StaticItem>
               )
             }
-
-            const reportId = item.reportId
 
             return (
               <Item

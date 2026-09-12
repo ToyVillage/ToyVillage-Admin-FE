@@ -78,11 +78,11 @@ test('S5: 업무보고 목록', async ({ page }) => {
 test('S6: 업무보고 상세 진입', async ({ page }) => {
   await page.goto('/tasks/1')
 
-  // 열 보고가 없는 줄은 누를 수 없다. 제출된 4건만 버튼이다.
-  await expect(reportItems(page)).toHaveCount(4)
-
-  await reportItems(page).first().click()
-  await expect(page).toHaveURL(/\/task-reports\/31$/)
+  // 진입은 업무보고 API 연동까지 막아 뒀다. 여기 id 는 실 API 의 `workReportId`(숫자)인데
+  // `/task-reports/:id` 는 아직 mock(`r1` 형식)을 읽어 항상 `찾을 수 없습니다` 로 떨어졌다.
+  // 연동하면 이 테스트를 시나리오 원안(제출된 4건만 버튼 → 이동)으로 되돌린다.
+  await expect(reportItems(page)).toHaveCount(0)
+  await expect(reportRows(page)).toHaveCount(6)
 })
 
 test('S7: 진행도 요약', async ({ page }) => {
@@ -216,11 +216,8 @@ test('S19: 키보드 조작', async ({ page }) => {
   await page.keyboard.press('Escape')
   await expect(trigger).toBeFocused()
 
-  const firstReport = reportItems(page).first()
-  await firstReport.focus()
-  await expect(firstReport).toBeFocused()
-  await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/\/task-reports\/31$/)
+  // 업무보고 줄은 진입을 막아 둔 동안 탭 순서에서도 빠진다(S6 참고).
+  await expect(reportItems(page)).toHaveCount(0)
 })
 
 function infoRow(page: Page) {

@@ -229,11 +229,17 @@ test('S16: 업무 상세에서 그 업무의 업무보고 상세로 진입', asy
   // 업무 상세의 담당자별 보고 현황은 상세 조회 응답(`reports`)에서 온다.
   await mockTaskApi(page)
   await page.goto('/tasks/1')
-  await page.getByTestId('task-report-row').first().click()
 
-  // 1번 업무 첫 담당자(이승현)의 보고 id 는 31 이다.
-  await expect(page).toHaveURL(/\/task-reports\/31$/)
-  // 업무보고 상세는 아직 localStorage mock 이라 이 id 를 찾지 못한다.
+  // 진입은 막아 뒀다. 실 API 의 `workReportId`(숫자)로는 아직 localStorage mock 을 읽는
+  // 업무보고 상세를 열 수 없어 항상 `찾을 수 없습니다` 였다. 줄은 그대로 보이되 버튼이 아니다.
+  await expect(page.getByTestId('task-report-row').first()).toBeVisible()
+  await expect(
+    page
+      .locator('section')
+      .filter({ hasText: '업무 보고' })
+      .getByRole('button'),
+  ).toHaveCount(0)
+  await expect(page).toHaveURL(/\/tasks\/1$/)
   // 업무보고 API 가 붙으면 여기서 보고 내용을 확인하도록 되돌린다.
 })
 

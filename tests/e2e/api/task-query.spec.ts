@@ -311,11 +311,9 @@ test('S15: 담당자별 보고 현황을 표시하고 제출 전 줄은 누를 �
   await expect(rows.nth(3)).toContainText('심사대기')
   await expect(rows.nth(3)).not.toContainText('미제출')
 
-  // 열 보고가 없는 줄(workReportId: null)은 버튼이 아니다.
-  await expect(reportButtons(page)).toHaveCount(3)
-
-  await reportButtons(page).first().click()
-  await expect(page).toHaveURL(/\/task-reports\/31$/)
+  // 진입은 업무보고 API 연동까지 막아 뒀다. 여기 id 는 `workReportId`(숫자)인데
+  // `/task-reports/:id` 는 아직 mock(`r1` 형식)을 읽어 항상 `찾을 수 없습니다` 였다.
+  await expect(reportButtons(page)).toHaveCount(0)
 })
 
 test('S16: 진행도는 서버 집계를 쓰고 미제출을 심사대기에 합산한다', async ({

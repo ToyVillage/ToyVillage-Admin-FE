@@ -156,10 +156,12 @@ export function TaskDetailPage() {
         {attachments.length > 0 && <AttachmentList fileNames={attachments} />}
 
         <BottomRow>
-          <TaskReportSummaryCard
-            items={reportItems}
-            onSelect={(reportId) => navigate(`/task-reports/${reportId}`)}
-          />
+          {/*
+            보고 줄은 아직 열 수 없다. 여기 id 는 실 API 의 `workReportId`(숫자)인데
+            `/task-reports/:id` 는 아직 mock(`r1` 형식)을 읽어 항상 `찾을 수 없습니다` 로
+            떨어졌다. 업무보고 API 를 연동하면 `onSelect` 로 이동을 되살린다.
+          */}
+          <TaskReportSummaryCard items={reportItems} />
           {reportItems.length > 0 && progress && (
             <TaskProgressCard counts={progress} />
           )}
