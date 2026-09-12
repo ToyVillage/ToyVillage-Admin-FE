@@ -51,6 +51,7 @@ export const mockSidebarItems: SidebarNavItem[] = [
   {
     id: 'work-logs',
     label: '업무일지관리 바로가기',
+    to: '/work-logs',
     icon: 'workLog',
   },
 ]

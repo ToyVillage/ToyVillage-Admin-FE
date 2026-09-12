@@ -41,3 +41,6 @@ playwright-report/
 *.njsproj
 *.sln
 *.sw?
+
+# 로컬 환경 변수 (.env.example 만 커밋)
+.env

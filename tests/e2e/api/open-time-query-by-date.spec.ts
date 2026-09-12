@@ -1,6 +1,19 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
-const openTimeApiPath = /\/api\/open-time\/date(?:\?.*)?$/
+const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
+const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
+
+// 운영안내 화면은 휴관일도 함께 불러온다. 이 스펙의 대상이 아니므로
+// 성공으로 고정해 영업시간 오류만 화면에 남게 한다.
+async function mockCloseDays(page: Page) {
+  await page.route(closeDayApiPath, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: '[]',
+    })
+  })
+}
 
 test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표시한다', async ({
   page,
@@ -40,16 +53,16 @@ test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표�
       .getByRole('button', { name: '오후' }),
   ).toHaveAttribute('aria-pressed', 'true')
 
-  const openTimeRequests = requests.filter((url) =>
-    openTimeApiPath.test(new URL(url).pathname + new URL(url).search),
-  )
+  const openTimeRequests = requests.filter((url) => openTimeApiPath.test(url))
   expect(openTimeRequests).toHaveLength(1)
   const request = new URL(openTimeRequests[0])
-  expect(request.pathname).toBe('/api/open-time/date')
+  expect(request.pathname).toBe('/open-time/date')
   expect(request.searchParams.get('date')).toBe('2026-07-01')
 })
 
 test('S2: 서버 오류를 기본 영업시간으로 숨기지 않는다', async ({ page }) => {
+  await mockCloseDays(page)
+
   await page.route(openTimeApiPath, async (route) => {
     await route.fulfill({
       status: 500,
@@ -72,6 +85,8 @@ test('S2: 서버 오류를 기본 영업시간으로 숨기지 않는다', async
 })
 
 test('S3: Contract 필수 필드가 누락된 응답을 거부한다', async ({ page }) => {
+  await mockCloseDays(page)
+
   await page.route(openTimeApiPath, async (route) => {
     await route.fulfill({
       status: 200,

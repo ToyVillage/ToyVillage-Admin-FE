@@ -73,6 +73,9 @@ export interface DataTableColumn {
   width?: number
   // 셀 좌우 padding(px). 생략 시 40.
   paddingX?: number
+  // 셀 내용의 가로 정렬. 생략 시 표 외형(appearance)의 정렬을 따른다.
+  // 케밥처럼 열 가운데에 놓이는 아이콘용이다.
+  align?: 'start' | 'center'
   variant?: DataTableCellVariant
   render?: (row: DataTableRow) => ReactNode
 }
@@ -247,7 +250,7 @@ export function DataTable({
               key={column.key}
               $width={column.width}
               $paddingX={column.paddingX}
-              $align={look.align}
+              $align={resolveAlign(column.align, look.align)}
               $fontSize={look.headerFontSize}
             >
               {column.header}
@@ -316,6 +319,7 @@ export function DataTable({
               $height={look.rowHeight}
               $dividerColor={look.dividerColor}
               $dividerInset={look.dividerInset}
+              $clickable={onRowClick != null}
               data-testid={rowTestId}
               role={onRowClick ? 'link' : undefined}
               tabIndex={onRowClick ? 0 : undefined}
@@ -356,7 +360,7 @@ export function DataTable({
                     key={column.key}
                     $width={column.width}
                     $paddingX={column.paddingX}
-                    $align={look.align}
+                    $align={resolveAlign(column.align, look.align)}
                     onClick={isAction ? (e) => e.stopPropagation() : undefined}
                     onKeyDown={
                       isAction
@@ -389,6 +393,16 @@ export function DataTable({
       {look.paginationPlacement === 'outside' && paginationNode}
     </>
   )
+}
+
+// 열이 정렬을 지정하면 그 값이 표 외형(appearance)의 정렬을 덮어쓴다.
+const resolveAlign = (
+  columnAlign: 'start' | 'center' | undefined,
+  lookAlign: 'left' | 'center',
+): 'left' | 'center' => {
+  if (columnAlign === 'center') return 'center'
+  if (columnAlign === 'start') return 'left'
+  return lookAlign
 }
 
 // 컬럼 폭: 고정 px 또는 flex:1(잔여 공간).
@@ -541,11 +555,12 @@ const Row = styled.div<{
   $height: number
   $dividerColor: ThemeColorKey
   $dividerInset: number
+  $clickable: boolean
 }>`
   position: relative;
   display: flex;
   min-height: ${({ $height }) => $height}px;
-  cursor: pointer;
+  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
 
   & + &::before {
     content: '';

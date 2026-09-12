@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-const detailApiPath = /\/api\/notice\/[^/?]+(?:\?.*)?$/
-const listApiPath = /\/api\/notice(?:\?.*)?$/
+const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
+const listApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
 test('S1: route ID로 공지를 한 번 삭제하고 목록으로 이동한다', async ({
   page,
@@ -53,14 +53,17 @@ test('S2: HTTP 400이면 mock 삭제로 대체하지 않고 다시 삭제할 수
   expect(await getDeletedMockIds(page)).toEqual([])
 })
 
-test('S3: HTTP 401이면 상세 화면과 캐시를 유지한다', async ({ page }) => {
+test('S3: HTTP 401이면 세션을 비우고 로그인으로 보낸다', async ({ page }) => {
   await mockDeleteError(page, 401, '만료된 토큰입니다.')
 
   await page.goto('/notices/list/7')
   await confirmDelete(page)
 
-  await expectDeleteFailure(page, 7)
-  await expect(page.getByLabel('제목')).toHaveValue('삭제 대상 공지')
+  await expect(page).toHaveURL(/\/login$/)
+  expect(await getDeletedMockIds(page)).toEqual([])
+  expect(
+    await page.evaluate(() => localStorage.getItem('accessToken')),
+  ).toBeNull()
 })
 
 test('S4: HTTP 404이면 삭제 성공으로 처리하지 않는다', async ({ page }) => {

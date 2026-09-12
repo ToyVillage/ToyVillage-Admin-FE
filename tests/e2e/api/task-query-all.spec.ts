@@ -4,8 +4,8 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 // 대상: GET /tasks. 서버 사이드 페이지네이션(page/size=10)과 상태 탭 필터를 검증한다.
 // 조회는 목록 진입 시 발생하므로 goto 전에 route 를 건다. 실제 서버는 호출하지 않는다.
 
-const taskListPath = /\/api\/tasks(?:\?.*)?$/
-const taskDeletePath = /\/api\/tasks\/\d+(?:\?.*)?$/
+const taskListPath = /^https:\/\/[^/]+\/tasks(?:\?.*)?$/
+const taskDeletePath = /^https:\/\/[^/]+\/tasks\/\d+(?:\?.*)?$/
 
 const tasks = [
   {

@@ -4,9 +4,9 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 // 대상: POST /tasks. 담당자 트리(GET /team/tree)와 첨부 업로드(POST /file)가 선행한다.
 // 실제 서버는 호출하지 않는다.
 
-const taskListPath = /\/api\/tasks(?:\?.*)?$/
-const teamTreePath = /\/api\/team\/tree(?:\?.*)?$/
-const filePath = /\/api\/file(?:\?.*)?$/
+const taskListPath = /^https:\/\/[^/]+\/tasks(?:\?.*)?$/
+const teamTreePath = /^https:\/\/[^/]+\/team\/tree(?:\?.*)?$/
+const filePath = /^https:\/\/[^/]+\/file(?:\?.*)?$/
 
 const teamTree = {
   totalMemberCount: 2,

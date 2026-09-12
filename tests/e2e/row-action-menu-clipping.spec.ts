@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
 // 열리는 케밥 메뉴를 잘라, 마지막 행에서 `수정`·`삭제` 가 화면에 보이지 않았다.
 // 행이 하나뿐일 때 표가 가장 짧아 재현이 확실하다.
 
-const taskListPath = /\/api\/tasks(?:\?.*)?$/
+const taskListPath = /^https:\/\/[^/]+\/tasks(?:\?.*)?$/
 
 const singleRowBody = {
   tasks: [

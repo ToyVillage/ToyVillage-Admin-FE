@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const apiPath = /\/api\/close-day(?:\?.*)?$/
-const openTimeApiPath = /\/api\/open-time\/date(?:\?.*)?$/
+const apiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
+const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
 
 async function mockOperatingHours(page: Page, date: string) {
   await page.route(openTimeApiPath, async (route) => {
@@ -51,7 +51,7 @@ test('S1: 날짜별 정상 조회 결과를 상세 화면에 표시한다', asyn
   expect(requests).toHaveLength(1)
 
   const request = new URL(requests[0])
-  expect(request.pathname).toBe('/api/close-day')
+  expect(request.pathname).toBe('/close-day')
   expect(request.searchParams.get('date')).toBe('2026-07-13')
   expect([...request.searchParams.keys()]).toEqual(['date'])
 })
@@ -79,6 +79,8 @@ test('S2: 빈 결과는 오류 없이 기존 상세 UI를 표시한다', async (
 })
 
 test('S3: HTTP 404를 빈 결과로 해석하지 않는다', async ({ page }) => {
+  await mockOperatingHours(page, '2026-07-13')
+
   await page.route(apiPath, async (route) => {
     await route.fulfill({
       status: 404,
@@ -101,6 +103,8 @@ test('S3: HTTP 404를 빈 결과로 해석하지 않는다', async ({ page }) =>
 })
 
 test('S4: 서버 오류를 빈 배열로 숨기지 않는다', async ({ page }) => {
+  await mockOperatingHours(page, '2026-07-13')
+
   await page.route(apiPath, async (route) => {
     await route.fulfill({
       status: 500,
@@ -138,6 +142,8 @@ test('S5: 잘못된 route date는 API를 호출하지 않는다', async ({ page 
 test('S6: Contract 필수 필드가 누락된 응답을 거부한다', async ({
   page,
 }) => {
+  await mockOperatingHours(page, '2026-07-13')
+
   await page.route(apiPath, async (route) => {
     await route.fulfill({
       status: 200,

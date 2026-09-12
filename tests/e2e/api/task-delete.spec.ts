@@ -6,7 +6,7 @@ import { mockTaskApi } from '../support/task-api'
 // 삭제 응답만 각 시나리오가 덮어쓴다(나중에 등록한 route 가 먼저 매칭된다).
 // 삭제는 상세 화면의 케밥 메뉴가 소유한다.
 
-const taskDeleteApiPath = /\/api\/tasks\/[^/?]+(?:\?.*)?$/
+const taskDeleteApiPath = /^https:\/\/[^/]+\/tasks\/[^/?]+(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -45,7 +45,7 @@ test('S1: route ID로 업무를 한 번 삭제하고 목록으로 이동해 성�
     '데이터 삭제에 성공했습니다',
   )
   expect(deleteRequestCount).toBe(1)
-  expect(deleteRequestPath).toBe('/api/tasks/1')
+  expect(deleteRequestPath).toBe('/tasks/1')
   expect(deleteRequestBody).toBeNull()
   expect(deleteRequestSearch).toBe('')
   expect(deleteRequestHeaders.authorization).toMatch(/^Bearer /)

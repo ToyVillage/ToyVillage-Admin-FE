@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const apiPath = /\/api\/notice(?:\?.*)?$/
+const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
 test('accessToken이 있으면 Bearer 인증 헤더를 전송한다', async ({ page }) => {
   await page.addInitScript(() => {

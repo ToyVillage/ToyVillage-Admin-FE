@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const apiPath = /\/api\/close-day(?:\?.*)?$/
+const apiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 
 test('S1: 휴관일 전체 조회 결과를 목록과 달력에 표시한다', async ({ page }) => {
   const requests: string[] = []
@@ -32,7 +32,7 @@ test('S1: 휴관일 전체 조회 결과를 목록과 달력에 표시한다', a
   expect(requests).toHaveLength(1)
 
   const request = new URL(requests[0])
-  expect(request.pathname).toBe('/api/close-day')
+  expect(request.pathname).toBe('/close-day')
   expect(request.search).toBe('')
 })
 

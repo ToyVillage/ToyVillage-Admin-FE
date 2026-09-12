@@ -4,9 +4,9 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 // 대상: GET /team/tree. 담당자 선택 트리의 유일한 데이터 출처다.
 // 조회는 폼 진입 시 발생하므로 goto 전에 route 를 건다. 실제 서버는 호출하지 않는다.
 
-const teamTreePath = /\/api\/team\/tree(?:\?.*)?$/
-const taskListPath = /\/api\/tasks(?:\?.*)?$/
-const taskDetailPath = /\/api\/tasks\/12(?:\?.*)?$/
+const teamTreePath = /^https:\/\/[^/]+\/team\/tree(?:\?.*)?$/
+const taskListPath = /^https:\/\/[^/]+\/tasks(?:\?.*)?$/
+const taskDetailPath = /^https:\/\/[^/]+\/tasks\/12(?:\?.*)?$/
 
 const teamTree = {
   totalMemberCount: 5,

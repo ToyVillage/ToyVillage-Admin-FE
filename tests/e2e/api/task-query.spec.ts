@@ -4,9 +4,9 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 // 대상: GET /tasks/{id}. 상세와 수정 화면이 같은 query key 로 공유한다.
 // 조회는 진입 시 발생하므로 goto 전에 route 를 건다. 실제 서버는 호출하지 않는다.
 
-const taskDetailPath = /\/api\/tasks\/12(?:\?.*)?$/
-const taskListPath = /\/api\/tasks(?:\?.*)?$/
-const teamTreePath = /\/api\/team\/tree(?:\?.*)?$/
+const taskDetailPath = /^https:\/\/[^/]+\/tasks\/12(?:\?.*)?$/
+const taskListPath = /^https:\/\/[^/]+\/tasks(?:\?.*)?$/
+const teamTreePath = /^https:\/\/[^/]+\/team\/tree(?:\?.*)?$/
 
 const detail = {
   id: 12,

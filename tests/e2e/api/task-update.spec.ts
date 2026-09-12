@@ -4,10 +4,10 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 // 대상: PUT /tasks/{id}. 상세 조회(초기값)와 팀 트리(담당자)가 선행하고,
 // 새 첨부만 POST /file 로 업로드해 기존 fileKey 와 합쳐 보낸다. 실제 서버는 호출하지 않는다.
 
-const taskDetailPath = /\/api\/tasks\/12(?:\?.*)?$/
-const taskListPath = /\/api\/tasks(?:\?.*)?$/
-const teamTreePath = /\/api\/team\/tree(?:\?.*)?$/
-const filePath = /\/api\/file(?:\?.*)?$/
+const taskDetailPath = /^https:\/\/[^/]+\/tasks\/12(?:\?.*)?$/
+const taskListPath = /^https:\/\/[^/]+\/tasks(?:\?.*)?$/
+const teamTreePath = /^https:\/\/[^/]+\/team\/tree(?:\?.*)?$/
+const filePath = /^https:\/\/[^/]+\/file(?:\?.*)?$/
 
 const existingFileKey = '2026/08/28/guide_a1b2c3.pdf'
 

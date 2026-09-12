@@ -5,10 +5,10 @@ import type { Page, Route } from '@playwright/test'
 // 실제 서버는 호출하지 않으며, 각 spec 은 필요한 응답만 page.route 로 덮어쓴다
 // (Playwright 는 나중에 등록한 route 를 먼저 매칭한다).
 
-export const taskListPattern = /\/api\/tasks(?:\?.*)?$/
-export const taskItemPattern = /\/api\/tasks\/[^/?]+(?:\?.*)?$/
-export const teamTreePattern = /\/api\/team\/tree(?:\?.*)?$/
-export const filePattern = /\/api\/file(?:\?.*)?$/
+export const taskListPattern = /^https:\/\/[^/]+\/tasks(?:\?.*)?$/
+export const taskItemPattern = /^https:\/\/[^/]+\/tasks\/[^/?]+(?:\?.*)?$/
+export const teamTreePattern = /^https:\/\/[^/]+\/team\/tree(?:\?.*)?$/
+export const filePattern = /^https:\/\/[^/]+\/file(?:\?.*)?$/
 
 export type MockTaskStatus = 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED'
 export type MockTaskPriority = 'HIGH' | 'MEDIUM' | 'LOW'
