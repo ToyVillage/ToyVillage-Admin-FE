@@ -6,9 +6,10 @@ interface TaskReportReviewBadgeProps {
   className?: string
 }
 
-// Figma `status / 업무 보고`. 승인 변형은 `승인` 이라 목록 탭 라벨(`완료`)과 문구가 다르다.
+// Figma `status / 업무 보고`. 승인 변형의 Figma 문구는 `승인` 이지만 목록 탭 라벨과 맞춰 `완료` 로 쓴다
+// (개발자 결정 2026-09-13).
 const labels: Record<TaskReportReviewStatus, string> = {
-  APPROVED: '승인',
+  APPROVED: '완료',
   REJECTED: '반려',
   PENDING: '심사대기',
 }
