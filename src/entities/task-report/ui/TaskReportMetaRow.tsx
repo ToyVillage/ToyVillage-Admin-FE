@@ -1,41 +1,36 @@
 import styled from '@emotion/styled'
-import {
-  TaskStatusBadge,
-  type TaskPriority,
-  type TaskStatus,
-} from '@/entities/task'
-import { TaskReportPriorityBadge } from './TaskReportPriorityBadge'
+import { TaskPriorityBadge, type TaskPriority } from '@/entities/task'
+import { TaskReportReviewBadge } from './TaskReportReviewBadge'
+import type { TaskReportReviewStatus } from '../model/types'
 
 interface TaskReportMetaRowProps {
   priority: TaskPriority
-  taskStatus: TaskStatus
+  reviewStatus: TaskReportReviewStatus
   assigneeName: string
   /** YYYY-MM-DD */
   dueDate: string
-  visibility: string
 }
 
-// Figma 3350:3974 상세 상단 요약행. 배지는 업무보고 목록과 같은 것을 쓴다.
+// Figma `report / 보고 상세 카드`(yot 145:15468) 상단 요약행. 배지는 업무보고 목록과 같은 것을 쓴다.
+// Figma 의 `공개 범위` 는 그리지 않는다(개발자 결정 2026-09-13).
 export function TaskReportMetaRow({
   priority,
-  taskStatus,
+  reviewStatus,
   assigneeName,
   dueDate,
-  visibility,
 }: TaskReportMetaRowProps) {
   return (
     <Row>
       <Group>
         <Label>우선순위:</Label>
-        <TaskReportPriorityBadge priority={priority} />
+        <TaskPriorityBadge priority={priority} />
       </Group>
       <Group>
         <Label>상태:</Label>
-        <TaskStatusBadge status={taskStatus} />
+        <TaskReportReviewBadge status={reviewStatus} />
       </Group>
       <Value>담당자: {assigneeName}</Value>
       <Value>완료 기한: {dueDate}</Value>
-      <Value>공개 범위: {visibility}</Value>
     </Row>
   )
 }
