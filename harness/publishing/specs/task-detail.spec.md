@@ -16,7 +16,8 @@ paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/feature
 
 ## 상태와 근거
 
-- Status: Published (게이트 ② 승인 2026-09-07 · ③~⑤ 완료 · ⑦ 육안 확인 2026-09-08 yunho09)
+- Status: Published — 2026-09-13 S5 재승인(yunho09) · 배지 승인 문구 `승인` → `완료` · e2e 재freeze 19/19.
+  직전: Published (게이트 ② 승인 2026-09-07 · ③~⑤ 완료 · ⑦ 육안 확인 2026-09-08 yunho09)
 - Last refreshed: 2026-09-08
 - 기준 파일은 `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`), 페이지 `0:1` "토이빌리지" › 섹션 `웹 (operator)` ›
   `업무관리`(`300:12757`) › `업무관리 · 상세`(`311:12775`).
@@ -93,8 +94,10 @@ paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/feature
 - 이 업무의 **담당자별 보고 현황**을 나열한다. 제출한 사람만이 아니라 담당자 전원이 한 줄이다
   (2026-09-11 `TASK_QUERY` 연동 — 서버 `reports[]` 가 담당자 전원을 준다).
 - 각 항목은 담당자 이름 + 심사 상태 배지 + `>` 다.
-- 심사 상태 배지는 `승인` / `반려` / `심사대기` / `재제출` 네 가지를 그대로 표시한다
-  (합산은 진행도 요약에서만 한다).
+- 심사 상태 배지는 `완료` / `반려` / `심사대기` / `재제출` 네 가지를 그대로 표시한다
+  (합산은 진행도 요약에서만 한다). **승인된 보고의 배지 문구는 `승인` 이 아니라 `완료` 다**(2026-09-13 개발자 결정 —
+  업무보고 목록 탭 `완료` 와 맞춘다. 공유 배지 `TaskReportReviewBadge` 를 쓰는 곳 전부에 적용. `task-report` spec TODO-4).
+  진행도 요약 문구(`전체 N · 승인 N · …`)는 그대로 둔다.
 - **서버의 `MISSING`(미제출)은 화면에서 `심사대기` 로 보여준다**(2026-09-11 개발자 결정).
   미제출을 따로 표기하지 않는다. `재제출` 은 현재 서버 상태에 없다.
 - 제출된 보고가 있는 항목만 클릭 → `/task-reports/:reportId` 로 이동한다.
@@ -143,7 +146,7 @@ paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/feature
    - 완료기한 22px `colors.text`.
 4. 제목·상세 내용 카드(`137:9734`, `@y=186` 1320×172): padding 40px.
    제목 32px SemiBold `colors.text`(높이 47), 상세 내용은 제목에서 71px 아래 20px Medium `colors.textGuide`.
-5. 첨부자료 카드(`134:9762`, `@y=390` 1320×140): 라벨 `첨부자료` 20px `colors.textGuide` @40,24.
+5. 첨부자료 카드(`134:9762`, `@y=390` 1320×140): 라벨 `첨부자료` 20px `colors.text` @40,24 (Figma 는 `textGuide` 이지만 개발자 결정 2026-09-13 으로 검정 — 업무보고 상세와 공통 `AttachmentList`).
    chip 은 @40,60 부터 높이 56, radius 8px, 테두리 `colors.dialogBorder`, chip 간 간격 48px.
    chip 내부: 확장자 아이콘 20px @12 + 파일명 18px @40 + 다운로드 아이콘 24px(우측 12px 안쪽).
    기존 `AttachmentList` 의 chip 과 같은 계열이므로 먼저 재사용을 검토한다.
@@ -255,6 +258,7 @@ interface TaskReportSummaryItem {
 - [x] **`task-report` 재승인**(2026-09-11) — 그 spec 의 S16 이 `업무 보고 상세조회` 버튼을 When 으로
       삼았는데, 이 화면이 담당자별 보고 현황 줄로 대체했다. S16 을 그 줄 클릭으로 고치고 재freeze 했다.
       업무보고 상세는 아직 mock 이라 이동한 뒤 내용까지는 확인하지 않는다.
+- [x] **게이트 ② 재승인(S5)** — 배지 승인 문구를 `완료` 로 바꿨다(2026-09-13 yunho09 승인 · e2e 재freeze 19/19). 초안 `harness/artifacts/publishing/task-detail.scenario-draft.md`.
 - [x] `재제출` 은 진행도 요약에서 `심사대기` 에 합산한다(2026-09-07 개발자 결정).
 - [ ] 업무보고 빈 상태 문구는 Figma 근거가 없다(`제출된 업무 보고가 없습니다.` 는 임시안).
       서버가 담당자 전원을 주므로 이 문구는 담당자가 없는 업무에서만 보인다. 문구를 바꿀지 재검토 필요.

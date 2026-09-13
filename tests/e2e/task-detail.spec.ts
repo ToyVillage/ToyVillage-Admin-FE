@@ -65,7 +65,9 @@ test('S5: 업무보고 목록', async ({ page }) => {
   const rows = reportRows(page)
   await expect(rows).toHaveCount(6)
   await expect(rows.nth(0)).toContainText('이승현')
-  await expect(rows.nth(0)).toContainText('승인')
+  // 승인된 보고의 배지 문구는 `승인` 이 아니라 `완료` 다.
+  await expect(rows.nth(0)).toContainText('완료')
+  await expect(rows.nth(0)).not.toContainText('승인')
   await expect(rows.nth(2)).toContainText('이지아')
   await expect(rows.nth(2)).toContainText('반려')
   await expect(rows.nth(3)).toContainText('김유영')
