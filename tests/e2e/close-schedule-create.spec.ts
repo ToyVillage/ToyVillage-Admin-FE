@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { closeScheduleStorageKey } from '../../src/entities/close-schedule'
+import { closeScheduleStorageKey } from '../../src/entities/close-schedule/model/mock'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/notices/guide/create')

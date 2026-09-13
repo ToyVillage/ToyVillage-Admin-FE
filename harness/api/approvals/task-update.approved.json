@@ -1,0 +1,15 @@
+{
+  "feature": "task-update",
+  "apiId": "TASK_UPDATE",
+  "approvedAt": "2026-09-09T14:51:15.580Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "7b669c026964b6e5c2bb29266df0b7effcf351098c1dfe96efab034e5f6de8cc",
+  "contractHash": "180fa0956bb3490171fe9b8211954c788f8cc010da33ccc1587bf2fc2a47d805",
+  "contractMarkdownHash": "96f5671f8a4d47158bdaf12e8f08fcd36a0be6cc7d7c7564cad61292cb5797a8",
+  "planHash": "0f4e9b17a88dbb3d37698ab7638df0a33f265c35b099e148b6310c71c18e7b50",
+  "scenarioHash": "32825a79f81c486af0d5c70541637c25d29e62e44202de75c04e50b0be3f7684",
+  "testHash": "3c49a58bcb39ed8ab7a565ee0beb086e27a7b8a6342b641c3ca7785744163c4e",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-09T14:51:16.258Z"
+}

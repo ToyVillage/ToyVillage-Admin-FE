@@ -30,16 +30,21 @@ export function CreateTaskPage() {
     ),
   )
 
+  // 생성 성공으로 목록에 돌아오면 목록이 `데이터 생성에 성공했습니다` 토스트를 띄운다.
   const handleCompleted = useCallback(() => {
     allowNavigationRef.current = true
-    navigate('/tasks')
+    navigate('/tasks', { state: { toast: 'create-success' } })
   }, [navigate])
 
   return (
     <Page>
       <Content>
         <TaskBackLink />
-        <TaskForm onCompleted={handleCompleted} onDirtyChange={setIsDirty} />
+        <TaskForm
+          mode="create"
+          onCompleted={handleCompleted}
+          onDirtyChange={setIsDirty}
+        />
       </Content>
       {blocker.state === 'blocked' && (
         <LeaveConfirmationDialog
@@ -62,7 +67,7 @@ const Content = styled.div`
   display: flex;
   width: min(100%, 1320px);
   flex-direction: column;
-  gap: 108px;
+  gap: 32px;
   margin: 0 auto;
   padding-top: 75px;
 `

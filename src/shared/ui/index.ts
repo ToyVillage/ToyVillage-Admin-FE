@@ -3,6 +3,7 @@ export type {
   DataTableRow,
   DataTableColumn,
   DataTableCellVariant,
+  DataTableAppearance,
   DataTableSearch,
   DataTableSort,
   DataTableSortOption,
@@ -17,7 +18,7 @@ export { LeaveConfirmationDialog } from './LeaveConfirmationDialog'
 export { ValidationDialog } from './ValidationDialog'
 export { ErrorDialog } from './ErrorDialog'
 export { AttachmentField } from './AttachmentField'
-export type { AttachmentAddResult } from './AttachmentField'
+export type { AttachmentAddResult, AttachmentItem } from './AttachmentField'
 export { AttachmentList } from './AttachmentList'
 export { RemoveIconButton } from './RemoveIconButton'
 export { DateField } from './DateField'

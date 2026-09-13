@@ -23,8 +23,8 @@ export const tokens = {
     tableHeaderStrong: '#DDDDE3', // 업무 테이블 헤더 / 진행중 pill / 업로드 드롭존
     warning: '#FDB542', // 반려 상태 / 우선순위 중
     warningBg: '#FFE8C3', // 반려 상태 배경 / 우선순위 중 배경
-    dangerBg: '#FFCECE', // 우선순위 하 배경
-    toastIcon: '#1F1F1F', // 토스트 아이콘
+    dangerBg: '#FFCECE', // 우선순위 상 배경 / 삭제 모달 아이콘 배경
+    success: '#00B48A', // 성공 토스트 아이콘
     border: '#A1A1A1',
     dialogBorder: '#C6C6CE',
     divider: '#727272',

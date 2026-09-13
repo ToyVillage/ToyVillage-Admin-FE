@@ -14,6 +14,8 @@ export interface TaskReport {
   /** 이 보고가 속한 업무. 업무 상세의 `업무 보고 상세조회` 진입에 쓴다. 없으면 업무 목록 밖의 보고다. */
   taskId?: string
   assigneeId: string
+  /** 담당자 이름. 업무보고 API 연동 시 응답 필드로 대체된다. */
+  assigneeName: string
   title: string
   content: string
   reviewStatus: TaskReportReviewStatus

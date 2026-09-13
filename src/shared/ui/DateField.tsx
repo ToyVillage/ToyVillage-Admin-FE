@@ -8,17 +8,22 @@ interface DateFieldProps {
   onChange: (value: string) => void
   onTabForward: () => void
   onTabBackward?: () => void
+  /**
+   * 카드 타이포 규격. `lg` 는 휴관일 폼(라벨 24 / 값 24),
+   * `md` 는 업무 폼(라벨 20 / 값 22, 카드 420×194)이다.
+   */
+  size?: 'lg' | 'md'
 }
 
 export const DateField = forwardRef<
   HTMLInputElement,
   DateFieldProps
 >(function DateField(
-  { id, label, value, onChange, onTabForward, onTabBackward },
+  { id, label, value, onChange, onTabForward, onTabBackward, size = 'lg' },
   ref,
 ) {
   return (
-    <Card>
+    <Card data-size={size}>
       <Label htmlFor={id}>{label}</Label>
       <Field>
         <DateText $empty={!value} aria-hidden="true">
@@ -73,8 +78,20 @@ const Card = styled.div`
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
 
+  &[data-size='md'] {
+    width: 420px;
+    min-height: 194px;
+    justify-content: flex-start;
+    gap: 20px;
+  }
+
   @media (max-width: 980px) {
     width: 100%;
+    padding: 24px;
+
+    &[data-size='md'] {
+      width: 100%;
+    }
   }
 `
 
@@ -83,6 +100,11 @@ const Label = styled.label`
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+
+  [data-size='md'] & {
+    font-size: 20px;
+    line-height: 1.3;
+  }
 `
 
 const Field = styled.div`
@@ -116,6 +138,10 @@ const DateText = styled.span<{ $empty: boolean }>`
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+
+  [data-size='md'] & {
+    font-size: 22px;
+  }
 `
 
 const CalendarIcon = styled.svg`
@@ -141,4 +167,8 @@ const NativeInput = styled.input`
   font-weight: 500;
   line-height: 1.2;
   opacity: 0;
+
+  [data-size='md'] & {
+    font-size: 22px;
+  }
 `

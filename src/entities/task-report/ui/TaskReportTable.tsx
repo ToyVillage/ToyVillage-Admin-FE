@@ -1,6 +1,5 @@
 import styled from '@emotion/styled'
 import {
-  TaskPriorityBadge,
   TaskStatusBadge,
   type TaskPriority,
   type TaskStatus,
@@ -11,6 +10,7 @@ import {
   type DataTablePagination,
   type DataTableRow,
 } from '@/shared/ui'
+import { TaskReportPriorityBadge } from './TaskReportPriorityBadge'
 import type { TaskReportListItem } from '../model/types'
 
 interface TaskReportTableProps {
@@ -44,7 +44,7 @@ const columns: DataTableColumn[] = [
     key: 'priority',
     header: '우선순위',
     render: (row) => (
-      <TaskPriorityBadge priority={(row as TaskReportTableRow).priority} />
+      <TaskReportPriorityBadge priority={(row as TaskReportTableRow).priority} />
     ),
   },
   { key: 'dueDate', header: '완료기한', render: renderPlainCell('dueDate') },

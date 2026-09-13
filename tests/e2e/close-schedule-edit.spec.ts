@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { closeScheduleStorageKey } from '@/entities/close-schedule'
+import { closeScheduleStorageKey } from '@/entities/close-schedule/model/mock'
 
 const scheduleId = 'animal-checkup'
 const editPath = `/notices/guide/${scheduleId}/edit`

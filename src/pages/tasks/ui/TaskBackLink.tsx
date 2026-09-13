@@ -1,9 +1,14 @@
 import styled from '@emotion/styled'
 import { Link } from 'react-router-dom'
 
-export function TaskBackLink() {
+interface TaskBackLinkProps {
+  /** 돌아갈 경로. 생성·상세는 목록, 수정은 그 업무의 상세로 돌아간다. */
+  to?: string
+}
+
+export function TaskBackLink({ to = '/tasks' }: TaskBackLinkProps) {
   return (
-    <BackLink to="/tasks">
+    <BackLink to={to}>
       <BackIcon viewBox="0 0 24 24" aria-hidden="true">
         <path d="m15 4-8 8 8 8" />
       </BackIcon>

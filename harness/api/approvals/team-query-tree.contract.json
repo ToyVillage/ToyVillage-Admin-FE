@@ -1,0 +1,446 @@
+{
+  "apiId": "TEAM_QUERY_TREE",
+  "name": "팀 전체 구조 조회 기능",
+  "description": "직원 목록을 트리 형태로 조회하는 기능",
+  "method": "GET",
+  "path": "/team/tree",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "JWT 액세스 토큰",
+      "constraints": [
+        "Bearer 스킴"
+      ]
+    }
+  ],
+  "pathParameters": [],
+  "queryParameters": [],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "팀별 소속 직원과 미배정 직원을 트리 형태로 반환",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "전체 인원 수 + 팀 목록 + 미배정 그룹",
+          "fields": [
+            {
+              "name": "totalMemberCount",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 19,
+              "description": "전체 멤버의 사람 수",
+              "constraints": []
+            },
+            {
+              "name": "teams",
+              "location": "body",
+              "type": "array<object>",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": null,
+              "description": "팀과 해당되는 사람을 리스트 형태로 전달한다. 팀이 없으면 빈 배열.",
+              "constraints": [],
+              "fields": [
+                {
+                  "name": "id",
+                  "location": "body",
+                  "type": "integer",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": 1,
+                  "description": "팀 id",
+                  "constraints": []
+                },
+                {
+                  "name": "name",
+                  "location": "body",
+                  "type": "string",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "동물 관리팀",
+                  "description": "팀 이름",
+                  "constraints": []
+                },
+                {
+                  "name": "memberCount",
+                  "location": "body",
+                  "type": "integer",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": 5,
+                  "description": "팀 소속 직원 수",
+                  "constraints": []
+                },
+                {
+                  "name": "members",
+                  "location": "body",
+                  "type": "array<object>",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": null,
+                  "description": "팀 소속 직원 목록. 비어 있을 수 있다.",
+                  "constraints": [],
+                  "fields": [
+                    {
+                      "name": "id",
+                      "location": "body",
+                      "type": "integer",
+                      "required": true,
+                      "nullable": false,
+                      "default": null,
+                      "example": 2,
+                      "description": "직원(유저) id. 업무지시 assigneeIds에 넣는 값이다.",
+                      "constraints": []
+                    },
+                    {
+                      "name": "name",
+                      "location": "body",
+                      "type": "string",
+                      "required": true,
+                      "nullable": false,
+                      "default": null,
+                      "example": "이승현",
+                      "description": "직원 이름",
+                      "constraints": []
+                    },
+                    {
+                      "name": "position",
+                      "location": "body",
+                      "type": "string",
+                      "required": true,
+                      "nullable": true,
+                      "default": null,
+                      "example": "사원",
+                      "description": "직원 직급",
+                      "constraints": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "unassigned",
+              "location": "body",
+              "type": "object",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": null,
+              "description": "팀이 배정되지 않은 직원들을 TeamNode 형태로 반환한다.",
+              "constraints": [],
+              "fields": [
+                {
+                  "name": "id",
+                  "location": "body",
+                  "type": "integer",
+                  "required": true,
+                  "nullable": true,
+                  "default": null,
+                  "example": null,
+                  "description": "팀 id",
+                  "constraints": []
+                },
+                {
+                  "name": "name",
+                  "location": "body",
+                  "type": "string",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "미배정",
+                  "description": "팀 이름",
+                  "constraints": []
+                },
+                {
+                  "name": "memberCount",
+                  "location": "body",
+                  "type": "integer",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": 5,
+                  "description": "팀 소속 직원 수",
+                  "constraints": []
+                },
+                {
+                  "name": "members",
+                  "location": "body",
+                  "type": "array<object>",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": null,
+                  "description": "팀 소속 직원 목록. 비어 있을 수 있다.",
+                  "constraints": [],
+                  "fields": [
+                    {
+                      "name": "id",
+                      "location": "body",
+                      "type": "integer",
+                      "required": true,
+                      "nullable": false,
+                      "default": null,
+                      "example": 2,
+                      "description": "직원(유저) id. 업무지시 assigneeIds에 넣는 값이다.",
+                      "constraints": []
+                    },
+                    {
+                      "name": "name",
+                      "location": "body",
+                      "type": "string",
+                      "required": true,
+                      "nullable": false,
+                      "default": null,
+                      "example": "이승현",
+                      "description": "직원 이름",
+                      "constraints": []
+                    },
+                    {
+                      "name": "position",
+                      "location": "body",
+                      "type": "string",
+                      "required": true,
+                      "nullable": true,
+                      "default": null,
+                      "example": "사원",
+                      "description": "직원 직급",
+                      "constraints": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 401,
+        "description": "토큰이 잘못되었거나 만료됨",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "만료된 토큰입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 401,
+              "description": "HTTP status code",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "에러 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": null,
+              "description": "에러 설명",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 404,
+        "description": "명세에 정의된 오류 응답",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "존재하지 않는 자료입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 404,
+              "description": "HTTP status code",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "에러 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": null,
+              "description": "에러 설명",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "예상하지 못한 서버 오류",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "예상하지 못한 에러가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status code",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "에러 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": null,
+              "description": "에러 설명",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "https://app.notion.com/p/3d67a4d614748030af5dc94e59b3d9b7",
+    "notionDataSource": "collection://65d7a4d6-1474-82e1-8615-07f152254595",
+    "resolvedNotionPage": "https://app.notion.com/p/3ae7a4d61474828393b081e282c38f70",
+    "requestedNotionPage": null,
+    "checkedAt": "2026-09-09T20:10:00+09:00",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "TEAM_QUERY_TREE",
+      "method": "GET",
+      "path": "/team/tree",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
+    },
+    "detailValues": {
+      "apiId": "TEAM_QUERY_TREE",
+      "method": "GET",
+      "path": "/team/tree",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
+    }
+  }
+}

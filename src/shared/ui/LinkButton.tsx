@@ -23,7 +23,7 @@ const Button = styled(Link)`
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.textStrong};
   color: ${({ theme }) => theme.colors.surface};
   border-radius: 53px;
   text-decoration: none;

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { findTaskAssignee } from '@/entities/task'
 import {
   getMockTaskReports,
   taskReportReviewStatusLabels,
@@ -54,7 +53,7 @@ export function TaskReportListPage() {
         .filter((report) => report.reviewStatus === activeStatus)
         .map((report) => ({
           id: report.id,
-          assigneeName: findTaskAssignee(report.assigneeId)?.name ?? '미지정',
+          assigneeName: report.assigneeName,
           title: report.title,
           taskStatus: report.taskStatus,
           priority: report.priority,
