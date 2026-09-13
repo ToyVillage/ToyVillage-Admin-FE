@@ -1,3 +1,4 @@
+import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -6,13 +7,25 @@ import {
   TaskReportContentCard,
   TaskReportMetaRow,
 } from '@/entities/task-report'
-import { TaskReportReviewActions } from '@/features/review-task-report'
-import { BackLink } from '@/shared/ui'
+import {
+  TaskReportReviewActions,
+  taskReportReviewToasts,
+  type TaskReportReviewResult,
+} from '@/features/review-task-report'
+import { BackLink, Toast } from '@/shared/ui'
 
 // Figma yot 1:7503 `report management`.
 export function TaskReportDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  // 상세에 머무는 결과는 실패뿐이다. 성공하면 목록으로 이동해 거기서 토스트를 보인다.
+  // 같은 실패가 연달아 나와도 토스트를 새로 띄우도록 매번 id 를 바꾼다.
+  const [errorToast, setErrorToast] = useState<{
+    result: TaskReportReviewResult
+    id: number
+  } | null>(null)
+  const toastIdRef = useRef(0)
+  const dismissToast = useCallback(() => setErrorToast(null), [])
 
   const {
     data: report,
@@ -43,6 +56,10 @@ export function TaskReportDetailPage() {
     )
   }
 
+  const toast = errorToast
+    ? taskReportReviewToasts[errorToast.result]
+    : undefined
+
   return (
     <Page>
       <Content>
@@ -65,9 +82,26 @@ export function TaskReportDetailPage() {
 
         <TaskReportReviewActions
           reportId={report.id}
-          onCompleted={() => navigate('/task-reports')}
+          onSuccess={(action) =>
+            navigate('/task-reports', {
+              state: { toast: `${action}-success` },
+            })
+          }
+          onError={(action) => {
+            toastIdRef.current += 1
+            setErrorToast({ result: `${action}-error`, id: toastIdRef.current })
+          }}
         />
       </Content>
+
+      {errorToast && toast && (
+        <Toast
+          key={errorToast.id}
+          variant={toast.variant}
+          message={toast.message}
+          onDismiss={dismissToast}
+        />
+      )}
     </Page>
   )
 }

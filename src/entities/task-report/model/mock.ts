@@ -17,6 +17,11 @@ export const taskReportMutationDelayStorageKey =
 export const taskReportMutationLogStorageKey =
   'toyvillage:task-reports:mutation-log'
 
+// 결과 토스트의 실패 경로 검증용 실패 주입 플래그. mock 은 항상 성공하므로,
+// 이 키에 'approve' | 'reject' 를 넣으면 해당 요청이 한 번 실패한다.
+// 실제 API 로 교체할 때 함께 제거한다.
+export const taskReportFailStorageKey = 'toyvillage:task-reports:fail'
+
 const figmaContent = '상세 업무 내용이 입력되어있음'
 const figmaAttachments = ['당일 지침.pdf', '휴관안내.png', '휴관안내.jpg']
 
@@ -186,6 +191,10 @@ export async function reviewMockTaskReport({
 }): Promise<TaskReport> {
   await startMockMutation(reviewStatus)
 
+  if (consumeInjectedFailure(reviewStatus)) {
+    throw new Error('Injected task report review failure')
+  }
+
   const currentReport = await getMockTaskReport(id)
   if (!currentReport) throw new Error('Task report not found')
 
@@ -199,6 +208,15 @@ export async function reviewMockTaskReport({
   if (rejectReason !== undefined) storeRejectReason(id, rejectReason)
 
   return { ...currentReport, reviewStatus }
+}
+
+// 주입된 실패가 이번 요청(승인/반려)과 맞을 때만 한 번 소비한다.
+function consumeInjectedFailure(reviewStatus: TaskReportReviewStatus): boolean {
+  const action = reviewStatus === 'REJECTED' ? 'reject' : 'approve'
+  if (localStorage.getItem(taskReportFailStorageKey) !== action) return false
+
+  localStorage.removeItem(taskReportFailStorageKey)
+  return true
 }
 
 function storeRejectReason(id: string, rejectReason: string): void {
