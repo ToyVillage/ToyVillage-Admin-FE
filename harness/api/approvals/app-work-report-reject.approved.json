@@ -1,0 +1,15 @@
+{
+  "feature": "app-work-report-reject",
+  "apiId": "APP_WORK_REPORT_REJECT",
+  "approvedAt": "2026-09-13T12:43:44.895Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "d50ad2a51b58243f3297e144178d29becd83c35b54a9c9ef66aeefe55d3d051f",
+  "contractHash": "6e65c5e54a0e1c6a10653d8a7820b6e9eddd832a2bf112e697fa17274a1a77cb",
+  "contractMarkdownHash": "6b37048b9d3fad226fd8ea4c591d0c268fcaa312681d06a84d7fd81df5cf572e",
+  "planHash": "b4e3d6dc25a0826f629f3bb42c5d3da570e8f0960f5287de681910cd2f32f3f0",
+  "scenarioHash": "56b5f52e789f88b97e96cc3fc902929dc5d4d8d05430f480f27baae729ba57d2",
+  "testHash": "49e169712a521cbb1805f6cc194bd85ffb6140cca6e8b1048623b32fecb6cb8f",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-13T12:54:34.706Z"
+}
