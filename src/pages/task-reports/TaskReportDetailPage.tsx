@@ -12,7 +12,7 @@ import {
   taskReportReviewToasts,
   type TaskReportReviewResult,
 } from '@/features/review-task-report'
-import { BackLink, Toast } from '@/shared/ui'
+import { AttachmentList, BackLink, Toast } from '@/shared/ui'
 
 // Figma yot 1:7503 `report management`.
 export function TaskReportDetailPage() {
@@ -76,8 +76,11 @@ export function TaskReportDetailPage() {
           <TaskReportContentCard
             title={report.title}
             content={report.content}
-            attachments={report.attachments ?? []}
           />
+
+          <AttachmentCard>
+            <AttachmentList fileNames={report.attachments ?? []} />
+          </AttachmentCard>
         </Body>
 
         <TaskReportReviewActions
@@ -126,12 +129,20 @@ const DetailBackLink = styled(BackLink)`
   align-self: flex-start;
 `
 
-// 뒤로가기(y75 h36) → 요약행(y164) → 카드(y236, 요약행 아래 32) → 버튼(y876, 카드 아래 68).
+// 뒤로가기(y75 h36) → 요약행(y164) → 내용 카드(y236) → 첨부 카드(y440) → 버튼(y664, 첨부 카드 아래 68).
+// 요약행·카드 사이는 모두 32 다.
 const Body = styled.div`
   display: flex;
   flex-direction: column;
   gap: 32px;
   margin: 53px 0 68px;
+`
+
+// Figma `add file`(145:15466)은 h156 이다. AttachmentList 최소 높이(140)에 하단 16 을 더해 맞춘다.
+const AttachmentCard = styled.div`
+  padding-bottom: 16px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
 `
 
 const StatePage = styled.main`
