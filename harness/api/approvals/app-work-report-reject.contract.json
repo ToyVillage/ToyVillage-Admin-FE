@@ -142,7 +142,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }
@@ -198,7 +198,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }
@@ -254,7 +254,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }
@@ -310,7 +310,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }
@@ -366,7 +366,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }
@@ -422,7 +422,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }

@@ -158,7 +158,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": [],
               "description": "첨부 파일 목록. 비어 있을 수 있다.",
               "constraints": [],
               "fields": [
@@ -267,7 +267,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }
@@ -323,7 +323,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }
@@ -379,7 +379,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": null,
+              "example": "에러 설명",
               "description": "에러 설명",
               "constraints": []
             }
