@@ -77,9 +77,10 @@ const Card = styled.section`
   }
 `
 
+// Figma 는 gray/60 이지만 개발자 결정(2026-09-13)으로 검정을 쓴다. 업무 상세·업무보고 상세 공통.
 const Title = styled.h2`
   margin: 0;
-  color: ${({ theme }) => theme.colors.textGuide};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
