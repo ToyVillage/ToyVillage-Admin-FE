@@ -9,6 +9,7 @@ const reviewStorageKey = 'toyvillage:task-reports:reviews'
 const mutationDelayStorageKey = 'toyvillage:task-reports:mutation-delay'
 const mutationLogStorageKey = 'toyvillage:task-reports:mutation-log'
 const rejectReasonStorageKey = 'toyvillage:task-reports:reject-reasons'
+const failStorageKey = 'toyvillage:task-reports:fail'
 const allMockReportIds = [
   'r1',
   'r2',
@@ -22,8 +23,6 @@ const allMockReportIds = [
   'r10',
   'r11',
   'r12',
-  'r13',
-  'r14',
 ]
 
 type StorageSeed = Record<string, string>
@@ -63,25 +62,22 @@ test('S1: 목록 진입 기본 상태', async ({ page }) => {
 test('S2: 컬럼 표시 확인', async ({ page }) => {
   await page.goto('/task-reports')
 
-  for (const header of [
-    '담당자',
-    '제목',
-    '상태',
-    '우선순위',
-    '완료기한',
-    '공개범위',
-  ]) {
+  for (const header of ['담당자', '상태', '우선순위', '완료기한']) {
     await expect(page.getByText(header, { exact: true }).first()).toBeVisible()
   }
+  await expect(page.getByText('제목', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('공개범위', { exact: true })).toHaveCount(0)
 })
 
 test('S3: 탭 라벨에 건수 표시', async ({ page }) => {
   await page.goto('/task-reports')
 
-  for (const label of ['심사대기 7', '완료 3', '반려 2', '재제출 2']) {
-    await expect(page.getByRole('button', { name: label })).toBeVisible()
+  for (const label of ['심사대기 7', '완료 3', '반려 2']) {
+    await expect(
+      page.getByRole('button', { name: label, exact: true }),
+    ).toBeVisible()
   }
-  await expect(page.getByRole('button', { name: /팀이름/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /재제출/ })).toHaveCount(0)
 })
 
 test('S4: 완료 탭 필터', async ({ page }) => {
@@ -91,17 +87,19 @@ test('S4: 완료 탭 필터', async ({ page }) => {
 
   await expect(tab).toHaveAttribute('aria-pressed', 'true')
   await expect(rows(page)).toHaveCount(3)
-  await expect(rows(page).first()).toContainText('자료실 파일 정리 보고')
+  await expect(rows(page).first()).toContainText('2027-01-08')
+  await expect(rows(page).filter({ hasText: '심사대기' })).toHaveCount(0)
 })
 
-test('S5: 재제출 탭 필터', async ({ page }) => {
+test('S25: 표 상태 칸은 심사 상태 배지', async ({ page }) => {
   await page.goto('/task-reports')
-  const tab = page.getByRole('button', { name: '재제출 2', exact: true })
-  await tab.click()
 
-  await expect(tab).toHaveAttribute('aria-pressed', 'true')
+  await expect(rows(page)).toHaveCount(3)
+  await expect(rows(page).filter({ hasText: '심사대기' })).toHaveCount(3)
+
+  await page.getByRole('button', { name: '반려 2', exact: true }).click()
   await expect(rows(page)).toHaveCount(2)
-  await expect(rows(page).first()).toContainText('전시물 교체 보고')
+  await expect(rows(page).filter({ hasText: '반려' })).toHaveCount(2)
 })
 
 test('S6: 페이지네이션 이동', async ({ page }) => {
@@ -109,18 +107,18 @@ test('S6: 페이지네이션 이동', async ({ page }) => {
   await page.getByRole('button', { name: '2 페이지' }).click()
 
   await expect(rows(page)).toHaveCount(3)
-  await expect(rows(page).first()).toContainText('여름 프로그램 준비 보고')
+  await expect(rows(page).first()).toContainText('2026-12-05')
 })
 
 test('S7: 탭 전환 시 첫 페이지로 복귀', async ({ page }) => {
   await page.goto('/task-reports')
   await page.getByRole('button', { name: '2 페이지' }).click()
-  await expect(rows(page).first()).toContainText('여름 프로그램 준비 보고')
+  await expect(rows(page).first()).toContainText('2026-12-05')
 
   await page.getByRole('button', { name: '완료 3', exact: true }).click()
 
   await expect(rows(page)).toHaveCount(3)
-  await expect(rows(page).first()).toContainText('자료실 파일 정리 보고')
+  await expect(rows(page).first()).toContainText('2027-01-08')
 })
 
 test('S8: 행 클릭 → 상세 이동', async ({ page }) => {
@@ -130,6 +128,48 @@ test('S8: 행 클릭 → 상세 이동', async ({ page }) => {
   await expect(page).toHaveURL(/\/task-reports\/r1$/)
 })
 
+test('S26: 행 케밥 메뉴 열기', async ({ page }) => {
+  await page.goto('/task-reports')
+  await rowMenuTrigger(page).click()
+
+  await expect(page.getByRole('menuitem', { name: '승인하기' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: '반려하기' })).toBeVisible()
+  await expect(page).toHaveURL(/\/task-reports$/)
+})
+
+test('S27: 목록에서 승인', async ({ page }) => {
+  await page.goto('/task-reports')
+  await rowMenuTrigger(page).click()
+  await page.getByRole('menuitem', { name: '승인하기' }).click()
+
+  await expect(page.getByText('승인에 성공했습니다')).toBeVisible()
+  await expect(page).toHaveURL(/\/task-reports$/)
+  await expect(
+    page.getByRole('button', { name: '심사대기 6', exact: true }),
+  ).toBeVisible()
+  await expect(rows(page).filter({ hasText: '2026-07-03' })).toHaveCount(0)
+
+  await page.getByRole('button', { name: '완료 4', exact: true }).click()
+  await expect(rows(page).filter({ hasText: '2026-07-03' })).toHaveCount(1)
+})
+
+test('S28: 목록에서 반려', async ({ page }) => {
+  await page.goto('/task-reports')
+  await rowMenuTrigger(page).click()
+  await page.getByRole('menuitem', { name: '반려하기' }).click()
+  await page.getByRole('textbox', { name: '반려 사유' }).fill('점검 항목 누락')
+  await rejectDialog(page).getByRole('button', { name: '확인' }).click()
+
+  await expect(rejectDialog(page)).toBeHidden()
+  await expect(page.getByText('반려에 성공했습니다')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '심사대기 6', exact: true }),
+  ).toBeVisible()
+
+  await page.getByRole('button', { name: '반려 3', exact: true }).click()
+  await expect(rows(page).filter({ hasText: '2026-07-03' })).toHaveCount(1)
+})
+
 test('S9: 상세 표시 내용', async ({ page }) => {
   await page.goto('/task-reports/r1')
 
@@ -137,13 +177,21 @@ test('S9: 상세 표시 내용', async ({ page }) => {
   await expect(page.getByText('상태:')).toBeVisible()
   await expect(page.getByText('담당자: 이승현')).toBeVisible()
   await expect(page.getByText('완료 기한: 2026-07-03')).toBeVisible()
-  await expect(page.getByText('공개 범위: 전체 공개')).toBeVisible()
+  await expect(page.getByText(/공개 범위/)).toHaveCount(0)
 
-  await expect(page.getByRole('heading', { name: '제목' })).toBeVisible()
-  await expect(page.getByText('업무 제목', { exact: true })).toBeVisible()
-  await expect(page.getByRole('heading', { name: /상세 업무 내용/ })).toBeVisible()
-  await expect(page.getByText('상세 업무 내용이 입력되어있음')).toBeVisible()
-  await expect(page.getByRole('group', { name: '첨부자료' })).toBeVisible()
+  // 제목·상세 업무 내용·첨부자료가 한 카드 안에 있다.
+  const contentCard = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: '제목' }) })
+    .filter({ has: page.getByRole('group', { name: '첨부자료' }) })
+  await expect(contentCard).toHaveCount(1)
+  await expect(
+    contentCard.getByRole('heading', { name: /상세 업무 내용/ }),
+  ).toBeVisible()
+  await expect(contentCard.getByText('업무 제목', { exact: true })).toBeVisible()
+  await expect(
+    contentCard.getByText('상세 업무 내용이 입력되어있음'),
+  ).toBeVisible()
 
   await expect(page.getByRole('button', { name: '반려하기' })).toBeVisible()
   await expect(page.getByRole('button', { name: '승인하기' })).toBeVisible()
@@ -160,11 +208,12 @@ test('S10: 첨부자료는 조회 전용', async ({ page }) => {
   await expect(page.getByRole('button', { name: '파일 업로드' })).toHaveCount(0)
 })
 
-test('S11: 승인 처리', async ({ page }) => {
+test('S11: 상세에서 승인', async ({ page }) => {
   await page.goto('/task-reports/r1')
   await page.getByRole('button', { name: '승인하기' }).click()
 
   await expect(page).toHaveURL(/\/task-reports$/)
+  await expect(page.getByText('승인에 성공했습니다')).toBeVisible()
   await expect(
     page.getByRole('button', { name: '심사대기 6', exact: true }),
   ).toBeVisible()
@@ -173,13 +222,14 @@ test('S11: 승인 처리', async ({ page }) => {
   await expect(rows(page).filter({ hasText: '2026-07-03' })).toHaveCount(1)
 })
 
-test('S12: 반려 처리 (반려 사유 모달 경유)', async ({ page }) => {
+test('S12: 상세에서 반려', async ({ page }) => {
   await page.goto('/task-reports/r1')
   await page.getByRole('button', { name: '반려하기' }).click()
   await page.getByRole('textbox', { name: '반려 사유' }).fill('점검 항목 누락')
   await rejectDialog(page).getByRole('button', { name: '확인' }).click()
 
   await expect(page).toHaveURL(/\/task-reports$/)
+  await expect(page.getByText('반려에 성공했습니다')).toBeVisible()
   await expect(
     page.getByRole('button', { name: '심사대기 6', exact: true }),
   ).toBeVisible()
@@ -225,7 +275,7 @@ test('S15: 없는 보고 진입', async ({ page }) => {
   ).toBeVisible()
 })
 
-test('S16: 업무 상세에서 그 업무의 업무보고 상세로 진입', async ({ page }) => {
+test('S16: 업무 상세의 보고 줄은 연동 전까지 진입 보류', async ({ page }) => {
   // 업무 상세의 담당자별 보고 현황은 상세 조회 응답(`reports`)에서 온다.
   await mockTaskApi(page)
   await page.goto('/tasks/1')
@@ -310,6 +360,21 @@ test('S21: 모달 이탈 시 반려되지 않음', async ({ page }) => {
   expect(await mutationCount(page)).toBe(0)
 })
 
+test('S29: 목록 반려 모달 이탈 시 반려되지 않음', async ({ page }) => {
+  await page.goto('/task-reports')
+  const trigger = rowMenuTrigger(page)
+  await trigger.click()
+  await page.getByRole('menuitem', { name: '반려하기' }).click()
+  await expect(rejectDialog(page)).toBeVisible()
+
+  await page.keyboard.press('Escape')
+
+  await expect(rejectDialog(page)).toBeHidden()
+  await expect(page).toHaveURL(/\/task-reports$/)
+  expect(await mutationCount(page)).toBe(0)
+  await expect(trigger).toBeFocused()
+})
+
 test('S22: 입력한 반려 사유 저장', async ({ page }) => {
   await page.goto('/task-reports/r1')
   await page.getByRole('button', { name: '반려하기' }).click()
@@ -361,8 +426,72 @@ test('S24: 모달 처리 중 초점 유지', async ({ page }) => {
   await expect(page).toHaveURL(/\/task-reports$/)
 })
 
+test('S30: 목록 승인 실패', async ({ page }) => {
+  await page.goto('/task-reports')
+  await injectReviewFailure(page, 'approve')
+
+  await rowMenuTrigger(page).click()
+  await page.getByRole('menuitem', { name: '승인하기' }).click()
+
+  await expect(page.getByText('승인에 실패했습니다')).toBeVisible()
+  await expect(page).toHaveURL(/\/task-reports$/)
+  await expect(
+    page.getByRole('button', { name: '심사대기 7', exact: true }),
+  ).toBeVisible()
+  await expect(rows(page).filter({ hasText: '2026-07-03' })).toHaveCount(1)
+})
+
+test('S31: 목록 반려 실패', async ({ page }) => {
+  await page.goto('/task-reports')
+  await injectReviewFailure(page, 'reject')
+
+  await rowMenuTrigger(page).click()
+  await page.getByRole('menuitem', { name: '반려하기' }).click()
+  await page.getByRole('textbox', { name: '반려 사유' }).fill('점검 항목 누락')
+  await rejectDialog(page).getByRole('button', { name: '확인' }).click()
+
+  await expect(rejectDialog(page)).toBeHidden()
+  await expect(page.getByText('반려에 실패했습니다')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '심사대기 7', exact: true }),
+  ).toBeVisible()
+  await expect(rows(page).filter({ hasText: '2026-07-03' })).toHaveCount(1)
+})
+
+test('S32: 상세 승인 실패', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+  await injectReviewFailure(page, 'approve')
+
+  await page.getByRole('button', { name: '승인하기' }).click()
+
+  await expect(page.getByText('승인에 실패했습니다')).toBeVisible()
+  await expect(page).toHaveURL(/\/task-reports\/r1$/)
+  await expect(page.getByRole('button', { name: '승인하기' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: '반려하기' })).toBeEnabled()
+})
+
+test('S33: 상세 반려 실패', async ({ page }) => {
+  await page.goto('/task-reports/r1')
+  await injectReviewFailure(page, 'reject')
+
+  await page.getByRole('button', { name: '반려하기' }).click()
+  await page.getByRole('textbox', { name: '반려 사유' }).fill('점검 항목 누락')
+  await rejectDialog(page).getByRole('button', { name: '확인' }).click()
+
+  await expect(rejectDialog(page)).toBeHidden()
+  await expect(page.getByText('반려에 실패했습니다')).toBeVisible()
+  await expect(page).toHaveURL(/\/task-reports\/r1$/)
+  await expect(page.getByRole('button', { name: '승인하기' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: '반려하기' })).toBeEnabled()
+})
+
 function rejectDialog(page: Page) {
   return page.getByRole('dialog', { name: '반려 사유를 작성해주세요' })
+}
+
+// 1페이지 첫 행(r1 · 이승현 · 2026-07-03)의 `⋮` 버튼.
+function rowMenuTrigger(page: Page) {
+  return rows(page).first().getByRole('button', { name: /메뉴 열기/ })
 }
 
 async function storedRejectReasons(page: Page) {
@@ -388,6 +517,13 @@ async function delayReportMutation(page: Page, delay = 700) {
   await page.evaluate(
     ({ key, value }) => localStorage.setItem(key, String(value)),
     { key: mutationDelayStorageKey, value: delay },
+  )
+}
+
+async function injectReviewFailure(page: Page, action: 'approve' | 'reject') {
+  await page.evaluate(
+    ({ key, value }) => localStorage.setItem(key, value),
+    { key: failStorageKey, value: action },
   )
 }
 
