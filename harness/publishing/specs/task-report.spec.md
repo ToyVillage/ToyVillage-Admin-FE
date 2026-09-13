@@ -22,7 +22,8 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 ## 상태와 근거
 
-- Status: Approved (yunho09, S1–S4·S6–S33, 2026-09-13 yot 기준 재승인 · ③~⑤ 완료 · e2e freeze). ⑦ 육안 확인 대기.
+- Status: Approved (yunho09, 2026-09-13 상세 디자인 2차 수정·배지 `완료` 반영 — S4·S9 재승인 · ③~⑤ 완료 · e2e freeze 32/32). ⑦ 육안 확인 대기.
+  직전: Approved (yunho09, S1–S4·S6–S33, 2026-09-13 yot 기준 재승인 · ③~⑤ 완료 · e2e freeze).
   이전: Approved (yunho09, S1–S24, 2026-09-11 재승인 · e2e freeze) — 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`) 기준.
 - Last refreshed: 2026-09-13
 - 기준 파일은 `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`), 페이지 `0:1` "토이빌리지" › 섹션 `웹 (operator)` ›
@@ -45,13 +46,13 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 이 환경에는 `design-input-contract.md` §1 의 `get_figma_data` 가 없다. §5 fallback 으로,
 `get_metadata`(구조·좌표·크기)와 `get_screenshot`(시각)으로 실측해 이 spec 에 수동 기재했다.
-`get_design_context` 는 호출하지 않았다.
+`get_design_context` 는 상세 수정본의 내용 카드(1525:15013/15014/15015)·첨부 카드(145:15466)에만 호출해 padding·gap·폰트·색을 확인했다.
 
 - **yot 실측 확인**: 목록 골격(`1:3510`), 표 컬럼 폭·행 높이(`141:9720`), 케밥 메뉴 항목·크기(`337:12775`),
-  반려 사유 모달 규격(`347:12834`), 상세 골격(`1:7503`), 상세 카드 내부 섹션 좌표(`145:15468`),
+  반려 사유 모달 규격(`347:12834`), 상세 골격(`1:7503`, 2026-09-13 수정본 재추출), 상세 카드 내부 섹션 좌표(`145:15468`),
   토스트 위치·크기(`311:12781`).
 - **미검증**: 배지·pill 색(스크린샷 관찰 — 기존 `task-detail` 의 심사 상태 배지와 같은 컴포넌트 `status / 업무 보고`),
-  `완료` 탭 행의 상태 배지 문구(Figma 에 완료 행이 없다 — 아래 TODO-4), 접근성·반응형 절 전체(Figma 근거 프레임 없음).
+  접근성·반응형 절 전체(Figma 근거 프레임 없음). `완료` 탭 행의 배지 문구는 Figma 근거 없이 개발자 결정(TODO-4)으로 `완료`.
 
 ### 구 디자인 대비 변경 요약
 
@@ -62,7 +63,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 | 표 `상태` | 업무(task) 상태 pill | **심사 상태 배지**(`status / 업무 보고`) |
 | 행 동작 | 행 클릭 → 상세 | 행 클릭 → 상세 **+ 케밥 `승인하기`/`반려하기`** |
 | 상세 요약행 | 우선순위·상태(업무)·담당자·완료 기한·공개 범위 | 우선순위·**상태(심사)**·담당자·완료 기한 (공개 범위는 개발자 결정으로 제외) |
-| 상세 본문 | 제목 카드 / 내용 카드 / 첨부 카드 분리 | **카드 하나**(제목 칸 · 상세 업무 내용 칸 · 첨부자료) |
+| 상세 본문 | 제목 카드 / 내용 카드 / 첨부 카드 분리 | **내용 카드**(큰 제목 · 본문, 칸 라벨·값 상자 없음) + **첨부자료 카드** (2026-09-13 2차 수정본) |
 | 결과 표시 | 범위 제외(다음 슬라이스) | **성공 토스트(목록) · 실패 토스트(목록·상세)** |
 
 ## 목적
@@ -110,20 +111,21 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 ## 화면 구조 — 상세 (Figma 1:7503)
 
 본문 폭 1320, 좌측 x300. 페이지 배경 `background`.
+**2026-09-13 디자인 2차 수정본 기준**(개발자 요청). 1차: 내용 카드가 입력칸 모양(라벨 + 회색 값 상자)에서 글 읽기 모양으로 바뀌었다.
+2차: 첨부자료가 내용 카드에서 빠져 **별도 카드**가 됐다.
 
 0. 뒤로가기 링크 @300,75 (h36): chevron + `뒤로가기`(24 SemiBold, `textGuide`). 기존 `BackLink` 규격. `/task-reports` 로 이동.
 1. 요약행 @300,164 (h40, 항목 간격 20): `우선순위:` + 우선순위 배지 42x40 / `상태:` + 심사 상태 pill 80x40 /
    `담당자: {이름}` / `완료 기한: {YYYY-MM-DD}`. 라벨 20 Medium, 값 22 Medium, `text`.
-   **Figma 의 `공개 범위: 전체 공개` 는 그리지 않는다(개발자 결정 2026-09-13 — 업무 모델·API 어디에도 없다).**
-2. 내용 카드 @300,236 (w1320 h572, `surface`, radius20) — 세 칸이 한 카드 안에 세로로 붙는다:
-   - 제목 칸(h140): 라벨 `제목`(x40 y40, 20 Medium) + 읽기 전용 값 상자(x40 y74, 1240x66, 배경 `background`, 값은 좌측 24 여백).
-   - 상세 업무 내용 칸(h276): 라벨 `상세 업무 내용 *`(별표 `danger`) + 읽기 전용 값 상자(1240x160 이상, 배경 `background`, 여백 24/20).
-     본문은 좌측 정렬·줄바꿈 보존으로 표시한다(Figma 의 가운데 정렬 문구는 입력칸 placeholder 잔재로 본다 — TODO-5).
-   - 첨부자료 칸(h156): 라벨 `첨부자료`(24 Medium, `textGuide`) + 파일 chip 172x56(확장자 아이콘 + 파일명 + 다운로드).
-     삭제(X) 아이콘은 `hidden`, 업로드 드롭존 없음 → **조회 전용**. 기존 `AttachmentList` 를 카드 안에 그대로 넣는다
-     (자체 배경이 카드와 같은 `surface` 라 겹쳐 보이지 않는다). 첨부가 없으면 기존처럼 `첨부된 자료가 없습니다.` 를 보인다.
-   두 입력칸 모양은 업무 폼(`task / 업무 폼`)의 `title section` · `body text section` · `add file` 인스턴스와 같은 계열이다.
-3. 하단 우측 버튼 @y876 (카드 아래 68): `반려하기`(123x61, 투명 배경 + `danger` 테두리·글자) · `승인하기`(123x61, `text` 배경 + `surface` 글자).
+   `공개 범위` 는 그리지 않는다(개발자 결정 2026-09-13 — 수정본 Figma 에서도 빠졌다).
+2. 내용 카드 @300,236 (`내용 카드` 946:26534, w1320 h172, `surface`, radius20): padding 40, 세로 간격 24.
+   - 보고 제목: 40 Medium, `textStrong`, line-height normal. 칸 라벨(`제목`)은 없다.
+   - 상세 내용: 18 Medium, `textStrong`, line-height normal, 좌측 정렬. 칸 라벨(`상세 업무 내용 *`)·값 상자는 없다.
+     여러 줄 본문은 줄바꿈을 보존하고 긴 단어는 폭 안에서 끊는다.
+3. 첨부자료 카드 @300,440 (`add file`, w1320 h156, `surface`, radius20 — 내용 카드 아래 32): 라벨 `첨부자료`(`text` — Figma 는 gray/60 이지만 개발자 결정 2026-09-13 으로 검정) +
+   파일 chip 172x56(확장자 아이콘 + 파일명 + 다운로드). 삭제(X) 아이콘은 `hidden`, 업로드 드롭존 없음 → **조회 전용**.
+   기존 `AttachmentList` 를 내용 카드 아래 형제로 둔다. 첨부가 없어도 카드를 두고 `첨부된 자료가 없습니다.` 를 보인다(기존 동작 유지).
+4. 하단 우측 버튼 @y664 (첨부 카드 아래 68): `반려하기`(123x61, 투명 배경 + `danger` 테두리·글자) · `승인하기`(123x61, `text` 배경 + `surface` 글자).
 
 ## 화면 구조 — 반려 사유 모달 (Figma 347:12834 · 1:7635)
 
@@ -220,7 +222,8 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 - `entities/task-report/ui/TaskReportTable.tsx` — `shared/ui/DataTable`. 컬럼 4개 + 케밥 칸. 케밥 칸 내용은 페이지가
   render prop 으로 넘긴다(업무관리 `TaskTable` 의 `actions` 칸과 같은 방식).
 - `entities/task-report/ui/TaskReportMetaRow.tsx` — props `priority, reviewStatus, assigneeName, dueDate` (`taskStatus`·`visibility` 제거)
-- `entities/task-report/ui/TaskReportContentCard.tsx` (**신규**) — 내용 카드(제목 칸·상세 업무 내용 칸·첨부자료 칸). props `title, content, attachments`.
+- `entities/task-report/ui/TaskReportContentCard.tsx` (**신규**) — 내용 카드(큰 제목·본문). props `title, content`.
+  제목은 카드의 heading 이다(칸 라벨 heading `제목`·`상세 업무 내용` 은 없다). 첨부자료 카드는 페이지가 그 아래에 둔다.
 - `features/review-task-report/`
   - `model/useReviewTaskReport.ts` (**신규**) — 승인/반려 mutation · 처리 중 상태 · 성공 시 목록 무효화. 목록과 상세가 공유한다.
   - `ui/TaskReportReviewActions.tsx` — 상세 `반려하기`/`승인하기` 버튼. 성공 시 토스트 키를 들고 목록으로 이동, 실패 시 토스트.
@@ -237,10 +240,13 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 ## 미결 사항
 
-- [ ] **게이트 ② 재승인** — 시나리오 초안 `harness/artifacts/publishing/task-report.scenario-draft.md`.
-- [ ] **TODO-4 `완료` 탭 배지 문구** — 탭은 `완료` 인데 공유 배지 컴포넌트(`status / 업무 보고`)의 승인 변형은 `승인`(`task-detail` 152:11510)이다.
-      Figma 목록에 완료 행이 없어 기본안은 배지 문구 `승인`(컴포넌트 그대로), 탭 라벨 `완료` 유지.
-- [ ] **TODO-5 상세 본문 정렬** — Figma 상세 업무 내용 문구가 가운데 정렬로 그려져 있다. 기본안은 좌측 정렬(업무 상세·폼과 동일).
+- [x] **게이트 ② 재승인(S4·S9 수정)** — 2026-09-13 yunho09 승인 · e2e 재변환·freeze·통과(32/32). 상세 2차 수정본에서 첨부자료가 별도 카드가 돼 S9 를 다시 고쳤고,
+      TODO-4 결정(배지 `완료`)을 S4 에 넣었다. 초안 `harness/artifacts/publishing/task-report.scenario-draft.md`.
+      (1차 수정본 S9 는 2026-09-13 승인·e2e 통과했지만 2차 수정본으로 다시 바뀐다.)
+- [x] **TODO-4 `완료` 탭 배지 문구** — **개발자 결정 2026-09-13: 승인 변형 배지 문구를 `완료` 로 한다.**
+      공유 배지(`TaskReportReviewBadge`)를 쓰는 곳 전부(업무보고 목록·상세, `task-detail` 담당자별 보고 줄)에 적용하고,
+      `task-detail` 진행도 요약 문구(`전체 N · 승인 N · …`)는 그대로 둔다. `task-detail` S5 재승인이 필요하다.
+- [x] **TODO-5 상세 본문 정렬** — 2026-09-13 수정본에서 본문이 좌측 정렬로 그려져 해결.
 - [ ] **TODO-6 완료·반려 탭의 케밥** — Figma 는 심사대기 행에만 케밥을 그렸다. 기본안은 모든 탭에 동일 표시.
 
 ## 비고 / 제약 (게이트 결정 사항)

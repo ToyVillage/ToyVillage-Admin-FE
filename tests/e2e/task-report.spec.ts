@@ -88,7 +88,9 @@ test('S4: 완료 탭 필터', async ({ page }) => {
   await expect(tab).toHaveAttribute('aria-pressed', 'true')
   await expect(rows(page)).toHaveCount(3)
   await expect(rows(page).first()).toContainText('2027-01-08')
+  await expect(rows(page).filter({ hasText: '완료' })).toHaveCount(3)
   await expect(rows(page).filter({ hasText: '심사대기' })).toHaveCount(0)
+  await expect(rows(page).filter({ hasText: '승인' })).toHaveCount(0)
 })
 
 test('S25: 표 상태 칸은 심사 상태 배지', async ({ page }) => {
@@ -179,19 +181,33 @@ test('S9: 상세 표시 내용', async ({ page }) => {
   await expect(page.getByText('완료 기한: 2026-07-03')).toBeVisible()
   await expect(page.getByText(/공개 범위/)).toHaveCount(0)
 
-  // 제목·상세 업무 내용·첨부자료가 한 카드 안에 있다.
-  const contentCard = page
-    .locator('section')
-    .filter({ has: page.getByRole('heading', { name: '제목' }) })
-    .filter({ has: page.getByRole('group', { name: '첨부자료' }) })
+  // 내용 카드에는 보고 제목(heading)과 상세 내용만 있고, 첨부자료는 그 아래 별도 카드다.
+  const contentCard = page.locator('section').filter({
+    has: page.getByRole('heading', { name: '업무 제목', exact: true }),
+  })
   await expect(contentCard).toHaveCount(1)
-  await expect(
-    contentCard.getByRole('heading', { name: /상세 업무 내용/ }),
-  ).toBeVisible()
-  await expect(contentCard.getByText('업무 제목', { exact: true })).toBeVisible()
   await expect(
     contentCard.getByText('상세 업무 내용이 입력되어있음'),
   ).toBeVisible()
+  await expect(
+    contentCard.getByRole('group', { name: '첨부자료' }),
+  ).toHaveCount(0)
+
+  const attachmentCard = page.getByRole('group', { name: '첨부자료' })
+  await expect(attachmentCard).toBeVisible()
+  const contentBox = await contentCard.boundingBox()
+  const attachmentBox = await attachmentCard.boundingBox()
+  expect(attachmentBox!.y).toBeGreaterThanOrEqual(
+    contentBox!.y + contentBox!.height,
+  )
+
+  // `제목` · `상세 업무 내용` 칸 라벨은 없다.
+  await expect(
+    page.getByRole('heading', { name: '제목', exact: true }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: /상세 업무 내용/ }),
+  ).toHaveCount(0)
 
   await expect(page.getByRole('button', { name: '반려하기' })).toBeVisible()
   await expect(page.getByRole('button', { name: '승인하기' })).toBeVisible()
@@ -323,9 +339,7 @@ test('S19: 반려하기 → 반려 사유 모달 표시', async ({ page }) => {
   await expect(
     dialog.getByRole('heading', { name: '반려 사유를 작성해주세요' }),
   ).toBeVisible()
-  await expect(
-    dialog.getByPlaceholder('반려 사유 작성'),
-  ).toBeVisible()
+  await expect(dialog.getByPlaceholder('반려 사유 작성')).toBeVisible()
   await expect(dialog.getByRole('button', { name: '확인' })).toBeVisible()
 
   // 모달만 열릴 뿐 화면은 상세에 머무르고 반려 요청은 아직 없다.
@@ -491,7 +505,9 @@ function rejectDialog(page: Page) {
 
 // 1페이지 첫 행(r1 · 이승현 · 2026-07-03)의 `⋮` 버튼.
 function rowMenuTrigger(page: Page) {
-  return rows(page).first().getByRole('button', { name: /메뉴 열기/ })
+  return rows(page)
+    .first()
+    .getByRole('button', { name: /메뉴 열기/ })
 }
 
 async function storedRejectReasons(page: Page) {
@@ -521,10 +537,10 @@ async function delayReportMutation(page: Page, delay = 700) {
 }
 
 async function injectReviewFailure(page: Page, action: 'approve' | 'reject') {
-  await page.evaluate(
-    ({ key, value }) => localStorage.setItem(key, value),
-    { key: failStorageKey, value: action },
-  )
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: failStorageKey,
+    value: action,
+  })
 }
 
 async function mutationCount(page: Page) {
