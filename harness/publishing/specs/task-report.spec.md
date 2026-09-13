@@ -75,9 +75,9 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 - 포함: 업무보고 목록(탭 필터·표·페이지네이션·빈 상태), **목록 행 케밥의 승인/반려**, 업무보고 상세 조회
   (요약행·제목·상세 내용·첨부자료 다운로드), 상세의 승인/반려, 반려 사유 모달(목록·상세 공용),
-  **승인·반려 성공/실패 토스트(2026-09-13 개발자 결정으로 범위 편입)**, 업무 상세에서 업무보고로의 진입(현재 보류 — 아래),
+  **승인·반려 성공/실패 토스트(2026-09-13 개발자 결정으로 범위 편입)**, 업무 상세에서 업무보고로의 진입,
   사이드바 `업무 보고 바로가기`
-- 제외: 실제 API 연동(`/api` 스킬 담당 — 이 슬라이스는 mock 경계), 보고 작성·수정·삭제(직원 앱),
+- 제외: 실제 API 연동 계약(`/api` 스킬 담당 — `app-work-report-*` spec, 2026-09-13 연동), 보고 작성·수정·삭제(직원 앱),
   재제출 상태·재제출 요청 처리(yot 에서 탭이 사라졌다), 공개 범위 표시, 검색·정렬·다중 선택,
   사이드바 자체 동작 계약(`sidebar.spec.md` 담당)
 
@@ -86,9 +86,8 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 - `/task-reports` → 업무보고 목록.
 - `/task-reports/:id` → 업무보고 상세(심사).
 - `/tasks/:id`(업무 상세)의 담당자별 업무보고 줄 → `/task-reports/:reportId`(`task-detail` S6).
-  **현재 진입 보류(2026-09-12, 커밋 979228c).** 업무 상세는 실 API(`TASK_QUERY`)의 숫자 `workReportId` 를 주는데
-  업무보고 상세는 아직 mock(`r1` 형식 id)을 읽어 항상 `찾을 수 없습니다` 였다. 그래서 줄은 보이되 누를 수 없게 막았다.
-  업무보고 API 연동(`/api`) 때 되살린다. 이 퍼블리싱 슬라이스는 보류 상태를 그대로 둔다.
+  `workReportId` 가 있는 줄만 누를 수 있다. 2026-09-12 커밋 979228c 로 보류했다가 업무보고 API 연동
+  (`app-work-report-query-detail`, 2026-09-13)으로 되살렸다.
 - 사이드바 `업무 보고 바로가기` → `/task-reports` 로 이동하고 사이드바가 닫힌다.
 - 좌상단 메뉴 아이콘·사이드바는 `AppLayout`(App.tsx)이 전역 렌더하므로 두 페이지는 본문만 담당한다.
 
@@ -152,9 +151,9 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 - `/task-reports` 진입 → 업무보고 목록을 조회한다. 로딩 중 `업무보고를 불러오는 중입니다.`, 실패하면 오류 안내.
 - 기본 활성 탭은 `심사대기` 이고, 그 심사 상태의 보고만 표시한다.
-- 탭 라벨은 `{상태명} {건수}` 형태로, 건수는 조회 결과에서 파생한다. 탭은 `심사대기` `완료` `반려` 셋이다.
+- 탭 라벨은 `{상태명} {건수}` 형태로, 건수는 조회 응답의 상태별 건수를 쓴다. 탭은 `심사대기` `완료` `반려` 셋이다.
 - 탭 클릭 → 해당 심사 상태로 필터하고 1페이지로 되돌린다.
-- 한 페이지에 3건. 결과가 3건을 넘으면 페이지네이션을 보인다.
+- 한 페이지에 10건(2026-09-13 개발자 결정 — Figma 표 높이 기준 3건을 대체). 결과가 한 페이지를 넘으면 페이지네이션을 보인다.
 - 표의 `상태` 칸은 그 보고의 **심사 상태** 배지다.
 - 행 클릭/Enter → `/task-reports/:id` 로 이동한다.
 - 행의 `⋮` 클릭 → 그 행의 메뉴(`승인하기` / `반려하기`)를 연다. 이 클릭은 행 이동을 일으키지 않는다.
@@ -167,7 +166,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
   - `확인` → 사유와 함께 반려 처리. 성공하면 모달을 닫고 `반려에 성공했습니다` 토스트, 그 보고는 `반려` 탭으로 옮겨간다.
   - 실패하면 모달을 닫고 `반려에 실패했습니다` 토스트(Figma `347:12882` 는 모달 없이 토스트만 보인다). 보고는 원래 탭에 남는다.
   - Esc·오버레이 클릭 → 모달을 닫고 반려하지 않는다. 초점은 그 행의 `⋮` 로 돌아간다.
-- 처리 결과로 현재 페이지가 비면 마지막 페이지로 당긴다(기존 `Math.min(page, pageCount)` 규칙).
+- 처리 결과로 현재 페이지가 총 페이지 수를 넘으면 마지막 페이지로 당긴다.
 - 승인·반려 요청은 한 번에 하나만 처리한다. 처리 중에는 어느 행의 케밥 메뉴도 열리지 않고 모달 `확인` 은 비활성이다
   (규칙은 아래 모달 절과 같다 — 2026-09-13 코드 리뷰 반영: 다른 행의 결과가 열린 모달을 닫거나 두 번째 요청이 조용히 버려지는 것을 막는다).
 - 표시할 행이 없으면 `등록된 업무보고가 없습니다.` 를 보이고 페이지네이션을 감춘다.
@@ -196,17 +195,16 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 - 반려 처리 중에는 `확인` 을 비활성화해 중복 제출을 막고, 초점은 사유 입력란으로 되돌려 모달 안에 남긴다
   (입력란은 `disabled` 대신 `readonly` — 개발자 결정 2026-08-23).
 
-## 데이터와 API 경계 (mock)
+## 데이터와 API 경계
 
-- 서버 상태는 TanStack Query 로만 다룬다. Query Key: `['task-reports']`, `['task-reports', id]`.
-  승인·반려 성공 시 `['task-reports']` prefix 를 무효화한다.
-- 실제 API 는 연결하지 않는다. `src/entities/task-report/model/mock.ts` 가 교체 경계다(localStorage).
-- mock 데이터는 Figma 1페이지 행(이승현·김수인·이지아 / 심사대기 / 상·하·중 / 2026-07-03·07-01·07-28)을 재현하고,
-  페이지네이션(1·2·3)이 보이도록 `심사대기` 7건, `완료` 3건, `반려` 2건을 둔다. `재제출` 데이터는 없앤다.
-- 반려 사유는 `toyvillage:task-reports:reject-reasons`(id → 사유)에 보관한다. 실제 API 로 교체할 때 요청 body 로 옮긴다.
-- 테스트 제어점(실제 API 로 교체할 때 함께 제거):
-  - 처리 지연 `toyvillage:task-reports:mutation-delay`, 요청 로그 `toyvillage:task-reports:mutation-log` (기존)
-  - **실패 주입 `toyvillage:task-reports:fail`** — 값 `approve` | `reject` 를 넣으면 해당 요청이 한 번 실패한다
+- 서버 상태는 TanStack Query 로만 다룬다. Query Key: `['task-reports', 'list', { page, size, status }]`, `['task-reports', id]`.
+  승인·반려 성공 시 `['task-reports', 'list']` prefix 와 `['tasks']` 를 무효화한다.
+- 2026-09-13 업무보고 API 연동으로 localStorage mock(`model/mock.ts`)과 테스트 제어 키(`reject-reasons`,
+  `mutation-delay`, `mutation-log`, `fail`)를 제거했다. 요청·응답 계약은 `harness/api/approvals/app-work-report-*` 가 기준이다.
+- 반려 사유는 따로 저장하지 않고 반려 요청 body(`rejectionReason`, 1000자 이하)로만 보낸다.
+- e2e 는 `tests/e2e/support/task-report-api.ts` 의 page.route mock 을 쓴다. 데이터는 Figma 1페이지 행(이승현 / 심사대기 / 상 /
+  2026-07-03)으로 시작하고, 한 페이지 10건에서 페이지네이션이 보이도록 `심사대기` 12건, `완료` 3건, `반려` 2건을 둔다.
+  지연·실패는 mock 옵션으로 만든다.
     (기존 `toyvillage:resources:fail` 과 같은 규약).
 
 ## 컴포넌트 구조/props
