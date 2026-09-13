@@ -9,10 +9,7 @@ import {
   type DataTableRow,
 } from '@/shared/ui'
 import { TaskReportReviewBadge } from './TaskReportReviewBadge'
-import type {
-  TaskReportListItem,
-  TaskReportReviewStatus,
-} from '../model/types'
+import type { TaskReportListItem, TaskReportReviewStatus } from '../model/types'
 
 interface TaskReportTableProps {
   reports: TaskReportListItem[]
@@ -108,15 +105,13 @@ export function TaskReportTable({
 
   return (
     <DataTable
-      rows={reports.map(
-        (report): TaskReportTableRow => ({
-          id: report.id,
-          assigneeName: report.assigneeName,
-          reviewStatus: report.reviewStatus,
-          priority: report.priority,
-          dueDate: report.dueDate,
-        }),
-      )}
+      rows={reports.map((report): TaskReportTableRow => ({
+        id: report.id,
+        assigneeName: report.assigneeName,
+        reviewStatus: report.reviewStatus,
+        priority: report.priority,
+        dueDate: report.dueDate,
+      }))}
       columns={columns}
       onRowClick={onRowClick}
       rowTestId="task-report-row"
