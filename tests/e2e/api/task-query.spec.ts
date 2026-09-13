@@ -303,7 +303,8 @@ test('S15: 담당자별 보고 현황을 표시하고 제출 전 줄은 누를 �
   const rows = page.getByTestId('task-report-row')
   await expect(rows).toHaveCount(4)
   await expect(rows.nth(0)).toContainText('이승현')
-  await expect(rows.nth(0)).toContainText('승인')
+  // 승인된 보고의 배지 문구는 `완료` 다(2026-09-13 배지 문구 변경).
+  await expect(rows.nth(0)).toContainText('완료')
   await expect(rows.nth(1)).toContainText('반려')
   await expect(rows.nth(2)).toContainText('심사대기')
   // 서버 `MISSING`(미제출)도 화면에서는 `심사대기` 다.
@@ -311,9 +312,14 @@ test('S15: 담당자별 보고 현황을 표시하고 제출 전 줄은 누를 �
   await expect(rows.nth(3)).toContainText('심사대기')
   await expect(rows.nth(3)).not.toContainText('미제출')
 
-  // 진입은 업무보고 API 연동까지 막아 뒀다. 여기 id 는 `workReportId`(숫자)인데
-  // `/task-reports/:id` 는 아직 mock(`r1` 형식)을 읽어 항상 `찾을 수 없습니다` 였다.
-  await expect(reportButtons(page)).toHaveCount(0)
+  // 제출된 3줄만 버튼이다. 누르면 `workReportId` 로 업무보고 상세에 들어간다.
+  // 이동한 화면의 업무보고 조회는 이 시나리오 범위가 아니라 요청만 끊는다(실제 서버 요청 없음).
+  await page.route(/^https:\/\/[^/]+\/work-report\/detail\/31(?:\?.*)?$/, (route) =>
+    route.abort(),
+  )
+  await expect(reportButtons(page)).toHaveCount(3)
+  await reportButtons(page).first().click()
+  await expect(page).toHaveURL(/\/task-reports\/31$/)
 })
 
 test('S16: 진행도는 서버 집계를 쓰고 미제출을 심사대기에 합산한다', async ({

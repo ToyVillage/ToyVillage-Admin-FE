@@ -11,7 +11,7 @@ export interface TaskReportSummaryItem {
 
 interface TaskReportSummaryCardProps {
   items: TaskReportSummaryItem[]
-  /** 없으면 모든 줄이 정적으로 그려진다. 열 수 있는 보고 상세가 아직 없을 때 쓴다. */
+  /** 제출된 줄을 눌렀을 때 호출된다. 없으면 모든 줄이 정적으로 그려진다. */
   onSelect?: (reportId: string) => void
 }
 

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mockTaskApi } from './support/task-api'
+import { mockWorkReportApi } from './support/task-report-api'
 
 // 승인된 시나리오(task-detail.approved.json, S1~S19)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
@@ -78,13 +79,16 @@ test('S5: 업무보고 목록', async ({ page }) => {
 })
 
 test('S6: 업무보고 상세 진입', async ({ page }) => {
+  // 이동한 업무보고 상세의 조회도 mock 으로 받는다(실제 서버 요청 없음).
+  await mockWorkReportApi(page)
   await page.goto('/tasks/1')
 
-  // 진입은 업무보고 API 연동까지 막아 뒀다. 여기 id 는 실 API 의 `workReportId`(숫자)인데
-  // `/task-reports/:id` 는 아직 mock(`r1` 형식)을 읽어 항상 `찾을 수 없습니다` 로 떨어졌다.
-  // 연동하면 이 테스트를 시나리오 원안(제출된 4건만 버튼 → 이동)으로 되돌린다.
-  await expect(reportItems(page)).toHaveCount(0)
+  // 제출된 4건만 버튼이다. 미제출(`workReportId: null`) 2줄은 누를 수 없다.
   await expect(reportRows(page)).toHaveCount(6)
+  await expect(reportItems(page)).toHaveCount(4)
+
+  await reportItems(page).first().click()
+  await expect(page).toHaveURL(/\/task-reports\/31$/)
 })
 
 test('S7: 진행도 요약', async ({ page }) => {
@@ -206,6 +210,8 @@ test('S18: 완료기한 위험색 미적용', async ({ page }) => {
 })
 
 test('S19: 키보드 조작', async ({ page }) => {
+  // 보고 줄에서 이동한 업무보고 상세의 조회도 mock 으로 받는다(실제 서버 요청 없음).
+  await mockWorkReportApi(page)
   await page.goto('/tasks/1')
 
   const trigger = menuTrigger(page)
@@ -218,8 +224,11 @@ test('S19: 키보드 조작', async ({ page }) => {
   await page.keyboard.press('Escape')
   await expect(trigger).toBeFocused()
 
-  // 업무보고 줄은 진입을 막아 둔 동안 탭 순서에서도 빠진다(S6 참고).
-  await expect(reportItems(page)).toHaveCount(0)
+  const firstReport = reportItems(page).first()
+  await firstReport.focus()
+  await expect(firstReport).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/task-reports\/31$/)
 })
 
 function infoRow(page: Page) {
