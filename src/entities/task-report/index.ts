@@ -6,7 +6,6 @@ export type {
 export { taskReportReviewStatuses } from './model/types'
 export {
   getMockTaskReport,
-  getMockTaskReportsByTaskId,
   getMockTaskReports,
   mockTaskReports,
   reviewMockTaskReport,

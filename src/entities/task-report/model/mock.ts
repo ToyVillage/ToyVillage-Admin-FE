@@ -21,11 +21,8 @@ const figmaContent = '상세 업무 내용이 입력되어있음'
 const figmaAttachments = ['당일 지침.pdf', '휴관안내.png', '휴관안내.jpg']
 
 // 슬라이스용 mock. 추후 TanStack Query + Axios로 대체.
-// 1~3번은 Figma 3118:4294 의 `심사대기` 1페이지 행이다.
-// taskId 는 업무 상세(`task-detail`)의 담당자별 업무보고 목록을 만든다.
-// 업무 1 에는 r9·r10(승인) · r11(반려) · r5(심사대기) 4건이 붙어 Figma 진행도(승인 2 · 반려 1 · 심사대기 1)를 재현한다.
-// 업무 2 에는 r2(심사대기) · r13(재제출)이 붙어 `재제출` 이 진행도에서 심사대기로 합산되는 것을 보인다.
-// `심사대기` 를 7건 두어 Figma 페이지네이션(1·2·3)이 재현되게 한다.
+// 1~3번은 Figma yot 1:3510 의 `심사대기` 1페이지 행이다.
+// `심사대기` 를 7건 두어 Figma 페이지네이션(1·2·3)이 재현되게 한다. 나머지는 `완료` 3건, `반려` 2건.
 export const mockTaskReports: TaskReport[] = [
   {
     id: 'r1',
@@ -35,10 +32,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '업무 제목',
     content: figmaContent,
     reviewStatus: 'PENDING',
-    taskStatus: 'COMPLETED',
     priority: 'HIGH',
     dueDate: '2026-07-03',
-    visibility: '전체 공개',
     attachments: figmaAttachments,
   },
   {
@@ -49,10 +44,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '업무 제목',
     content: figmaContent,
     reviewStatus: 'PENDING',
-    taskStatus: 'COMPLETED',
     priority: 'LOW',
     dueDate: '2026-07-01',
-    visibility: '특정 파트',
   },
   {
     id: 'r3',
@@ -62,10 +55,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '업무 제목',
     content: figmaContent,
     reviewStatus: 'PENDING',
-    taskStatus: 'COMPLETED',
     priority: 'MEDIUM',
     dueDate: '2026-07-28',
-    visibility: '전체 공개',
   },
   {
     id: 'r4',
@@ -75,10 +66,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '여름 프로그램 준비 보고',
     content: '여름 프로그램 물품과 일정을 정리했습니다.',
     reviewStatus: 'PENDING',
-    taskStatus: 'COMPLETED',
     priority: 'MEDIUM',
     dueDate: '2026-12-05',
-    visibility: '전체 공개',
     attachments: ['여름 프로그램 일정.pdf'],
   },
   {
@@ -89,10 +78,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '사육장 점검 보고',
     content: '사육장 점검 결과를 정리했습니다.',
     reviewStatus: 'PENDING',
-    taskStatus: 'COMPLETED',
     priority: 'HIGH',
     dueDate: '2026-12-11',
-    visibility: '특정 파트',
   },
   {
     id: 'r6',
@@ -102,10 +89,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '단체예약 응대 정리 보고',
     content: '이번 달 단체예약 응대 내역을 정리했습니다.',
     reviewStatus: 'PENDING',
-    taskStatus: 'COMPLETED',
     priority: 'LOW',
     dueDate: '2026-12-18',
-    visibility: '특정 직원',
   },
   {
     id: 'r7',
@@ -115,10 +100,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '휴관 안내문 게시 보고',
     content: '휴관 안내문을 게시했습니다.',
     reviewStatus: 'PENDING',
-    taskStatus: 'COMPLETED',
     priority: 'MEDIUM',
     dueDate: '2026-12-24',
-    visibility: '전체 공개',
   },
   {
     id: 'r8',
@@ -128,10 +111,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '자료실 파일 정리 보고',
     content: '자료실의 오래된 파일을 정리했습니다.',
     reviewStatus: 'APPROVED',
-    taskStatus: 'COMPLETED',
     priority: 'LOW',
     dueDate: '2027-01-08',
-    visibility: '특정 파트',
   },
   {
     id: 'r9',
@@ -141,10 +122,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '연간 운영 계획 초안 보고',
     content: '내년 운영 계획 초안을 작성했습니다.',
     reviewStatus: 'APPROVED',
-    taskStatus: 'COMPLETED',
     priority: 'HIGH',
     dueDate: '2027-01-20',
-    visibility: '전체 공개',
   },
   {
     id: 'r10',
@@ -154,10 +133,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '체험 프로그램 개선 보고',
     content: '체험 프로그램 운영 개선안을 정리했습니다.',
     reviewStatus: 'APPROVED',
-    taskStatus: 'COMPLETED',
     priority: 'MEDIUM',
     dueDate: '2027-02-02',
-    visibility: '전체 공개',
   },
   {
     id: 'r11',
@@ -167,10 +144,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '안전 점검 보고',
     content: '안전 점검 항목 일부가 누락되었습니다.',
     reviewStatus: 'REJECTED',
-    taskStatus: 'EXPIRED',
     priority: 'HIGH',
     dueDate: '2027-02-15',
-    visibility: '특정 파트',
   },
   {
     id: 'r12',
@@ -179,35 +154,8 @@ export const mockTaskReports: TaskReport[] = [
     title: '민원 응대 결과 보고',
     content: '민원 응대 결과 근거 자료가 빠졌습니다.',
     reviewStatus: 'REJECTED',
-    taskStatus: 'EXPIRED',
     priority: 'LOW',
     dueDate: '2027-02-27',
-    visibility: '전체 공개',
-  },
-  {
-    id: 'r13',
-    taskId: '2',
-    assigneeId: 'emp-2',
-    assigneeName: '김수인',
-    title: '전시물 교체 보고',
-    content: '반려 사유를 반영해 다시 제출합니다.',
-    reviewStatus: 'RESUBMITTED',
-    taskStatus: 'IN_PROGRESS',
-    priority: 'MEDIUM',
-    dueDate: '2027-03-10',
-    visibility: '특정 직원',
-  },
-  {
-    id: 'r14',
-    assigneeId: 'emp-3',
-    assigneeName: '이지아',
-    title: '주차장 운영 보고',
-    content: '누락된 점검 항목을 채워 다시 제출합니다.',
-    reviewStatus: 'RESUBMITTED',
-    taskStatus: 'IN_PROGRESS',
-    priority: 'HIGH',
-    dueDate: '2027-03-22',
-    visibility: '전체 공개',
   },
 ]
 
@@ -225,14 +173,6 @@ export async function getMockTaskReport(
 ): Promise<TaskReport | null> {
   const reports = await getMockTaskReports()
   return reports.find((report) => report.id === id) ?? null
-}
-
-// 업무 상세의 담당자별 업무보고 목록. 제출 순서(mock 정의 순서)를 그대로 쓴다.
-export async function getMockTaskReportsByTaskId(
-  taskId: string,
-): Promise<TaskReport[]> {
-  const reports = await getMockTaskReports()
-  return reports.filter((report) => report.taskId === taskId)
 }
 
 export async function reviewMockTaskReport({

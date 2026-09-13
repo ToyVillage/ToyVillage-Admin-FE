@@ -55,7 +55,7 @@ export function TaskDetailPage() {
     [task],
   )
 
-  // 진행도도 같은 규칙이다. `재제출` 합산과 마찬가지로 미제출을 심사대기에 더한다.
+  // 진행도도 같은 규칙이다. 미제출을 심사대기에 더한다.
   const progress = useMemo<TaskReportProgressCounts | undefined>(
     () =>
       task && {
