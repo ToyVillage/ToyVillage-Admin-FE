@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  getMockTaskReport,
+  getTaskReport,
   TaskReportContentCard,
   TaskReportMetaRow,
 } from '@/entities/task-report'
@@ -33,7 +33,8 @@ export function TaskReportDetailPage() {
     isError,
   } = useQuery({
     queryKey: ['task-reports', id],
-    queryFn: () => getMockTaskReport(id),
+    // 정수가 아닌 id 는 API 함수가 요청 전에 거부해 아래 `찾을 수 없습니다` 로 떨어진다.
+    queryFn: () => getTaskReport({ id: Number(id) }),
     enabled: Boolean(id),
   })
 
@@ -45,7 +46,7 @@ export function TaskReportDetailPage() {
     )
   }
 
-  if (isError || !report) {
+  if (isError) {
     return (
       <StatePage>
         <StateCard role="alert">
@@ -79,7 +80,7 @@ export function TaskReportDetailPage() {
           />
 
           <AttachmentCard>
-            <AttachmentList fileNames={report.attachments ?? []} />
+            <AttachmentList fileNames={report.attachments} />
           </AttachmentCard>
         </Body>
 

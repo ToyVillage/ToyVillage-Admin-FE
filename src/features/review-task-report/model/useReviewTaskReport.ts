@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { reviewMockTaskReport } from '@/entities/task-report'
+import { approveTaskReport, rejectTaskReport } from '@/entities/task-report'
 import type { ToastVariant } from '@/shared/ui'
 
 export type TaskReportReviewAction = 'approve' | 'reject'
@@ -39,19 +39,19 @@ export function useReviewTaskReport() {
   const reviewingRef = useRef(false)
 
   const mutation = useMutation({
-    mutationFn: ({ id, action, rejectReason }: ReviewInput) =>
-      reviewMockTaskReport({
-        id,
-        reviewStatus: action === 'approve' ? 'APPROVED' : 'REJECTED',
-        rejectReason,
-      }),
+    mutationFn: ({ id, action, rejectReason = '' }: ReviewInput) =>
+      action === 'approve'
+        ? approveTaskReport({ id: Number(id) })
+        : rejectTaskReport({
+            id: Number(id),
+            input: { rejectionReason: rejectReason },
+          }),
     // 캐시 갱신은 여기서 한다. 호출한 화면이 먼저 사라져도 실행되고, 끝날 때까지 `pending` 이 유지된다.
-    onSuccess: (_report, { id }) =>
+    onSuccess: (_response, { id }) =>
       Promise.all([
         // 목록은 화면에 없어도 바로 다시 받아 둔다. 상세에서 돌아왔을 때 옛 건수가 보이지 않게 한다.
         queryClient.invalidateQueries({
-          queryKey: ['task-reports'],
-          exact: true,
+          queryKey: ['task-reports', 'list'],
           refetchType: 'all',
         }),
         // 처리한 보고의 상세는 곧 떠날 화면이라 다시 받지 않고, 다음 진입 때 새로 받게 표시만 한다.
@@ -60,6 +60,8 @@ export function useReviewTaskReport() {
           exact: true,
           refetchType: 'none',
         }),
+        // 전원이 승인되면 업무지시가 `COMPLETED` 로 바뀌고, 업무 상세의 보고 현황·진행도도 바뀐다.
+        queryClient.invalidateQueries({ queryKey: ['tasks'] }),
       ]),
     onSettled: () => {
       reviewingRef.current = false

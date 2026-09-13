@@ -3,11 +3,10 @@ import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  getMockTaskReports,
+  getTaskReports,
   taskReportReviewStatusLabels,
   taskReportReviewStatuses,
   TaskReportTable,
-  type TaskReportListItem,
   type TaskReportReviewStatus,
 } from '@/entities/task-report'
 import {
@@ -20,8 +19,8 @@ import {
 import { RowActionMenu } from '@/features/row-actions'
 import { CategoryTabs, Toast } from '@/shared/ui'
 
-// Figma 표 높이(372 = 헤더 72 + 행 100 × 3) 기준.
-const TABLE_PAGE_SIZE = 3
+// 한 페이지 10행(2026-09-13 개발자 결정). Figma 표 높이(행 100 × 3) 기준 3행을 대체한다.
+const TABLE_PAGE_SIZE = 10
 
 interface ReviewTab {
   label: string
@@ -54,52 +53,36 @@ export function TaskReportListPage() {
   const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
   const { review, pending } = useReviewTaskReport()
 
-  const {
-    data: queryReports,
-    isPending,
-    isError,
-  } = useQuery({ queryKey: ['task-reports'], queryFn: getMockTaskReports })
-  const allReports = useMemo(() => queryReports ?? [], [queryReports])
+  const { data, isPending, isError, isPlaceholderData } = useQuery({
+    queryKey: [
+      'task-reports',
+      'list',
+      { page, size: TABLE_PAGE_SIZE, status: activeStatus },
+    ],
+    queryFn: () =>
+      getTaskReports({ page, size: TABLE_PAGE_SIZE, status: activeStatus }),
+    // 페이지·탭을 바꾸는 동안 표와 탭이 로딩 화면으로 사라지지 않게 직전 결과를 둔다.
+    placeholderData: (previousData) => previousData,
+  })
 
-  // 탭 라벨의 건수는 조회 결과에서 파생한다(spec: `{상태명} {건수}`).
+  // 탭 라벨 `{상태명} {건수}` 의 건수는 서버 집계를 그대로 쓴다. status 필터와 무관하다.
   const tabs = useMemo<ReviewTab[]>(
     () =>
       taskReportReviewStatuses.map((reviewStatus) => ({
         reviewStatus,
         label: taskReportReviewStatusLabels[reviewStatus],
-        count: allReports.filter(
-          (report) => report.reviewStatus === reviewStatus,
-        ).length,
+        count: data?.counts[reviewStatus] ?? 0,
       })),
-    [allReports],
+    [data],
   )
 
-  const items = useMemo<TaskReportListItem[]>(
-    () =>
-      allReports
-        .filter((report) => report.reviewStatus === activeStatus)
-        .map((report) => ({
-          id: report.id,
-          assigneeName: report.assigneeName,
-          reviewStatus: report.reviewStatus,
-          priority: report.priority,
-          dueDate: report.dueDate,
-        })),
-    [activeStatus, allReports],
-  )
+  const reports = data?.items ?? []
+  // 페이지 수는 서버가 준 총 페이지 수를 그대로 쓴다.
+  const pageCount = Math.max(1, data?.totalPageSize ?? 1)
 
-  // 처리로 행이 다른 탭으로 옮겨가 현재 페이지가 비면 마지막 페이지로 당긴다.
-  const pageCount = Math.max(1, Math.ceil(items.length / TABLE_PAGE_SIZE))
-  const currentPage = Math.min(page, pageCount)
-
-  const reports = useMemo(
-    () =>
-      items.slice(
-        (currentPage - 1) * TABLE_PAGE_SIZE,
-        currentPage * TABLE_PAGE_SIZE,
-      ),
-    [items, currentPage],
-  )
+  // 처리로 행이 다른 탭으로 옮겨가 마지막 페이지가 사라지면 범위 밖 페이지에 고착되지 않게 당긴다.
+  // 렌더 중 상태 보정이다(effect 불필요).
+  if (data && page > pageCount) setPage(pageCount)
 
   const tabLabels = tabs.map(({ label, count }) => `${label} ${count}`)
   const activeLabel =
@@ -187,15 +170,18 @@ export function TaskReportListPage() {
         <TaskReportTable
           reports={reports}
           onRowClick={(id) => navigate(`/task-reports/${id}`)}
-          pagination={{ page: currentPage, pageCount, onChange: setPage }}
+          pagination={{ page, pageCount, onChange: setPage }}
           emptyLabel="등록된 업무보고가 없습니다."
           renderRowAction={(report) => (
             <RowActionMenu
               triggerLabel={`${report.assigneeName} 업무보고 메뉴 열기`}
               // 승인·반려는 한 번에 하나씩 처리한다. 처리 중에는 다른 행의 메뉴도 열지 않는다.
-              open={!pending && openMenuId === report.id}
+              // 탭·페이지를 바꾸는 동안 남아 있는 직전 행은 다른 상태의 보고라 메뉴를 열지 않는다.
+              open={!pending && !isPlaceholderData && openMenuId === report.id}
               onOpenChange={(open) =>
-                setOpenMenuId(open && !pending ? report.id : null)
+                setOpenMenuId(
+                  open && !pending && !isPlaceholderData ? report.id : null,
+                )
               }
               onTriggerRef={(node) => {
                 if (node) menuTriggersRef.current.set(report.id, node)

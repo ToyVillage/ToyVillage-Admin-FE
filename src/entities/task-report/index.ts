@@ -3,15 +3,33 @@ export type {
   TaskReportListItem,
   TaskReportReviewStatus,
 } from './model/types'
-export { taskReportReviewStatuses } from './model/types'
 export {
-  getMockTaskReport,
-  getMockTaskReports,
-  mockTaskReports,
-  reviewMockTaskReport,
-  taskReportRejectReasonStorageKey,
-  taskReportReviewStorageKey,
-} from './model/mock'
+  taskReportRejectionReasonMaxLength,
+  taskReportReviewStatuses,
+} from './model/types'
+export {
+  approveTaskReport,
+  getTaskReport,
+  getTaskReports,
+  rejectTaskReport,
+  type TaskReportListPage,
+} from './api/taskReportApi'
+export type {
+  TaskReportApproveErrorResponse,
+  TaskReportApproveRequest,
+  TaskReportApproveResponse,
+  TaskReportQueryAllErrorResponse,
+  TaskReportQueryAllRequest,
+  TaskReportQueryAllResponse,
+  TaskReportQueryAllResponseItem,
+  TaskReportQueryErrorResponse,
+  TaskReportQueryFileResponse,
+  TaskReportQueryRequest,
+  TaskReportQueryResponse,
+  TaskReportRejectErrorResponse,
+  TaskReportRejectRequest,
+  TaskReportRejectResponse,
+} from './api/types'
 export { taskReportReviewStatusLabels } from './model/labels'
 export { TaskProgressCard } from './ui/TaskProgressCard'
 export type { TaskReportProgressCounts } from './ui/TaskProgressCard'

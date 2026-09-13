@@ -8,20 +8,21 @@ export const taskReportReviewStatuses = [
 ] as const
 export type TaskReportReviewStatus = (typeof taskReportReviewStatuses)[number]
 
+/** 반려 사유 최대 글자 수(APP_WORK_REPORT_REJECT `1000자 이하`). */
+export const taskReportRejectionReasonMaxLength = 1000
+
 export interface TaskReport {
   id: string
-  /** 이 보고가 속한 업무. 없으면 업무 목록 밖의 보고다. */
-  taskId?: string
-  assigneeId: string
-  /** 담당자 이름. 업무보고 API 연동 시 응답 필드로 대체된다. */
+  /** 담당자 이름 */
   assigneeName: string
+  /** 업무지시 제목 */
   title: string
   content: string
   reviewStatus: TaskReportReviewStatus
   priority: TaskPriority
   /** YYYY-MM-DD */
   dueDate: string
-  attachments?: string[]
+  attachments: string[]
 }
 
 export type TaskReportListItem = Pick<
