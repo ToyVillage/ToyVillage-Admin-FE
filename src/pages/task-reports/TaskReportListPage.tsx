@@ -54,11 +54,9 @@ export function TaskReportListPage() {
         .map((report) => ({
           id: report.id,
           assigneeName: report.assigneeName,
-          title: report.title,
-          taskStatus: report.taskStatus,
+          reviewStatus: report.reviewStatus,
           priority: report.priority,
           dueDate: report.dueDate,
-          visibility: report.visibility,
         })),
     [activeStatus, allReports],
   )

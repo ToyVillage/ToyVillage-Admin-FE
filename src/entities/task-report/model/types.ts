@@ -19,7 +19,7 @@ export interface TaskReport {
   title: string
   content: string
   reviewStatus: TaskReportReviewStatus
-  /** 표의 `상태` 컬럼과 상세 메타의 `상태:` 는 원 업무 상태다(spec 결정 사항). */
+  /** 상세 메타의 `상태:` 는 원 업무 상태다(spec 결정 사항). */
   taskStatus: TaskStatus
   priority: TaskPriority
   /** YYYY-MM-DD */
@@ -31,8 +31,5 @@ export interface TaskReport {
 
 export type TaskReportListItem = Pick<
   TaskReport,
-  'id' | 'title' | 'priority' | 'dueDate' | 'visibility'
-> & {
-  assigneeName: string
-  taskStatus: TaskStatus
-}
+  'id' | 'assigneeName' | 'reviewStatus' | 'priority' | 'dueDate'
+>
