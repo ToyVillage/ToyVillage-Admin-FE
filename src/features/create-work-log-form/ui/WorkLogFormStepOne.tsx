@@ -94,6 +94,13 @@ export function WorkLogFormStepOne({
             </Field>
           )
         })}
+
+        {errors.emptyQuestions && (
+          <ErrorRow role="alert">
+            <ErrorIcon src={warningIcon} alt="" aria-hidden="true" />
+            {errors.emptyQuestions}
+          </ErrorRow>
+        )}
       </Cards>
 
       <AddQuestionButton type="button" onClick={handleQuestionAdd}>
@@ -151,6 +158,8 @@ const Required = styled.span`
 const TitleInput = styled.input`
   padding: 0;
   border: 0;
+  /* 포커스 때 아래 선만 색이 바뀌도록 자리를 미리 잡아 둔다. */
+  border-bottom: 2px solid transparent;
   background: transparent;
   color: ${({ theme }) => theme.colors.textStrong};
   font: inherit;
@@ -162,9 +171,9 @@ const TitleInput = styled.input`
     color: ${({ theme }) => theme.colors.textGuide};
   }
 
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.accent};
-    outline-offset: 4px;
+  &:focus {
+    outline: 0;
+    border-bottom-color: ${({ theme }) => theme.colors.accent};
   }
 `
 
