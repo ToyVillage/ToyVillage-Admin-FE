@@ -5,6 +5,7 @@ import type {
   WorkLogForm,
   WorkLogFormDetail,
   WorkLogFormDraft,
+  WorkLogFormDraftQuestion,
   WorkLogFormEditorType,
   WorkLogFormQuestion,
   WorkLogSheetColumn,
@@ -264,29 +265,45 @@ const editorTypeByFormType: Record<
   TEXT: 'TEXT',
 }
 
-// 양식별 구역 설정. 서버 연동 전까지는 상세 시트의 구역을 그대로 쓴다.
+// 양식별 구역 설정. 아직 저장한 적 없는 시드 양식이 쓰는 기본값이다.
 const formZoneLabels = ['A1', 'A2', 'A3']
+
+// 생성·수정으로 저장된 양식 구성. 서버 연동 전까지 이 모듈이 들고 있는다.
+// (`/api` 스킬이 실제 API 로 바꾼다.)
+const savedFormDrafts = new Map<
+  string,
+  { questions: WorkLogFormDraftQuestion[]; zones: string[] }
+>()
 
 export async function getMockWorkLogFormDraft(
   id: string,
 ): Promise<WorkLogFormDraft | null> {
-  const detail = await getMockWorkLogFormDetail(id)
-  if (!detail) return null
+  const deletedIds = readDeletedIds(deletedWorkLogFormStorageKey)
+  if (deletedIds.has(id)) return null
+
+  const form = mockWorkLogForms.find((item) => item.id === id)
+  if (!form) return null
+
+  const saved = savedFormDrafts.get(id)
+  const questions = saved
+    ? saved.questions
+    : formQuestions.map((question) => ({
+        id: question.id,
+        label: question.label,
+        type: editorTypeByFormType[question.type],
+        options: (question.options ?? []).map((value) => ({
+          id: `${question.id}-${value}`,
+          value,
+          isEtc: false,
+        })),
+      }))
+  const zoneLabels = saved ? saved.zones : formZoneLabels
 
   return {
-    name: detail.name,
-    questions: detail.questions.map((question) => ({
-      id: question.id,
-      label: question.label,
-      type: editorTypeByFormType[question.type],
-      options: (question.options ?? []).map((value) => ({
-        id: `${question.id}-${value}`,
-        value,
-        isEtc: false,
-      })),
-    })),
-    zones: formZoneLabels.map((label) => ({
-      id: `${detail.id}-${label}`,
+    name: form.name,
+    questions: cloneQuestions(questions),
+    zones: zoneLabels.map((label) => ({
+      id: `${form.id}-${label}`,
       label,
       persisted: true,
     })),
@@ -303,6 +320,7 @@ export async function createMockWorkLogForm(
     date: toIsoDate(todayWorkLogDate()),
   }
   mockWorkLogForms.unshift(created)
+  savedFormDrafts.set(created.id, snapshotDraft(draft))
   return created
 }
 
@@ -311,5 +329,25 @@ export async function updateMockWorkLogForm(
   draft: WorkLogFormDraft,
 ): Promise<void> {
   const form = mockWorkLogForms.find((item) => item.id === id)
-  if (form) form.name = draft.name.trim()
+  if (!form) return
+
+  form.name = draft.name.trim()
+  savedFormDrafts.set(id, snapshotDraft(draft))
+}
+
+function snapshotDraft(draft: WorkLogFormDraft) {
+  return {
+    questions: cloneQuestions(draft.questions),
+    zones: draft.zones.map((zone) => zone.label),
+  }
+}
+
+// 저장본과 편집 중인 값이 같은 객체를 가리키지 않게 떼어 둔다.
+function cloneQuestions(
+  questions: WorkLogFormDraftQuestion[],
+): WorkLogFormDraftQuestion[] {
+  return questions.map((question) => ({
+    ...question,
+    options: question.options.map((option) => ({ ...option })),
+  }))
 }
