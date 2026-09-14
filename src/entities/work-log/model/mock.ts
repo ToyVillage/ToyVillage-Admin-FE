@@ -4,6 +4,8 @@ import type {
   WorkLogDetail,
   WorkLogForm,
   WorkLogFormDetail,
+  WorkLogFormDraft,
+  WorkLogFormEditorType,
   WorkLogFormQuestion,
   WorkLogSheetColumn,
   WorkLogSheetRow,
@@ -247,4 +249,67 @@ function shiftDays(
     month: shifted.getMonth() + 1,
     day: shifted.getDate(),
   }
+}
+
+// --- 양식 생성·수정 mock (Figma 353:13063) ---------------------------------
+
+// 상세 mock 의 질문 유형(CHOICE/CHECKBOX/TEXT)은 편집기 유형과 이름이 같다.
+// 편집기에는 `FILE` 이 더 있지만 상세 mock 에는 아직 파일 업로드 질문이 없다.
+const editorTypeByFormType: Record<
+  WorkLogFormQuestion['type'],
+  WorkLogFormEditorType
+> = {
+  CHOICE: 'CHOICE',
+  CHECKBOX: 'CHECKBOX',
+  TEXT: 'TEXT',
+}
+
+// 양식별 구역 설정. 서버 연동 전까지는 상세 시트의 구역을 그대로 쓴다.
+const formZoneLabels = ['A1', 'A2', 'A3']
+
+export async function getMockWorkLogFormDraft(
+  id: string,
+): Promise<WorkLogFormDraft | null> {
+  const detail = await getMockWorkLogFormDetail(id)
+  if (!detail) return null
+
+  return {
+    name: detail.name,
+    questions: detail.questions.map((question) => ({
+      id: question.id,
+      label: question.label,
+      type: editorTypeByFormType[question.type],
+      options: (question.options ?? []).map((value) => ({
+        id: `${question.id}-${value}`,
+        value,
+        isEtc: false,
+      })),
+    })),
+    zones: formZoneLabels.map((label) => ({
+      id: `${detail.id}-${label}`,
+      label,
+      persisted: true,
+    })),
+  }
+}
+
+export async function createMockWorkLogForm(
+  draft: WorkLogFormDraft,
+): Promise<WorkLogForm> {
+  const created: WorkLogForm = {
+    id: `created-${crypto.randomUUID()}`,
+    name: draft.name.trim(),
+    authorName: '관리자',
+    date: toIsoDate(todayWorkLogDate()),
+  }
+  mockWorkLogForms.unshift(created)
+  return created
+}
+
+export async function updateMockWorkLogForm(
+  id: string,
+  draft: WorkLogFormDraft,
+): Promise<void> {
+  const form = mockWorkLogForms.find((item) => item.id === id)
+  if (form) form.name = draft.name.trim()
 }
