@@ -181,6 +181,11 @@
 - When: 브라우저 뒤로가기
 - Then: `정말 나가시겠습니까?` 모달이 뜨고, `확인` 하면 목록으로 나간다
 
+### S35: 1단계 없이 2단계 URL 로 들어오면 1단계로 되돌린다
+- Given: 새로고침이나 링크로 `/work-logs/forms/create/zones` 에 바로 진입
+- When: 화면이 열림
+- Then: 1단계로 되돌아간다(1단계 값 없이는 저장할 수 없다)
+
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
      불필요한 시나리오는 여기서 삭제(가지치기). 승인되지 않은 시나리오는 Playwright로 변환되지 않는다.
