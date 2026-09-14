@@ -55,6 +55,7 @@ export function EditWorkLogFormPage() {
       submitLabel="저장하기"
       showStepOneSubmit
       pending={isSaving}
+      loading={isPending}
       listPath={listPath}
       isLeaveConfirmNeeded={(next) => isDraftDirty(next, initialDraft)}
       onSubmit={(next) => mutate(next)}

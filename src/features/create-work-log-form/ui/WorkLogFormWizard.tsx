@@ -32,6 +32,8 @@ interface WorkLogFormWizardProps {
   // 수정 화면만 1단계에도 저장 버튼을 둔다(Figma 1:4241).
   showStepOneSubmit: boolean
   pending: boolean
+  // 초안을 아직 불러오는 중인지(수정 화면). 불러오는 동안에는 단계 가드를 걸지 않는다.
+  loading?: boolean
   listPath: string
   // 뒤로가기에서 나가기 확인 모달을 띄울지 판정한다.
   isLeaveConfirmNeeded: (draft: WorkLogFormDraft) => boolean
@@ -50,6 +52,7 @@ export function WorkLogFormWizard({
   submitLabel,
   showStepOneSubmit,
   pending,
+  loading = false,
   listPath,
   isLeaveConfirmNeeded,
   onSubmit,
@@ -101,6 +104,16 @@ export function WorkLogFormWizard({
   useEffect(() => {
     window.scrollTo({ top: 0 })
   }, [step])
+
+  // `/zones` 로 바로 들어오거나 새로고침하면 1단계 값이 없는 채로 2단계가 열린다.
+  // 그 상태로는 저장할 수 없으므로 1단계로 되돌린다.
+  const stepOneReady = !hasDraftErrors(validateDraft(draft))
+  useEffect(() => {
+    if (loading || step !== 2 || stepOneReady) return
+    navigate(basePath, { replace: true })
+    // stepOneReady 는 진입 시점 판정에만 쓴다. 2단계에서는 1단계 값을 고칠 수 없다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, step])
 
   function handleDraftChange(next: WorkLogFormDraft) {
     setDraft(next)
