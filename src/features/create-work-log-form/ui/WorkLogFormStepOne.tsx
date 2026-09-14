@@ -5,9 +5,9 @@ import type {
   WorkLogFormDraftErrors,
   WorkLogFormDraftQuestion,
 } from '@/entities/work-log'
-import plusIcon from '@/shared/ui/assets/plus.svg'
 import warningIcon from '@/shared/ui/assets/warning.svg'
 import { createDraftQuestion } from '../model/draft'
+import addQuestionIcon from './assets/add-question.svg'
 import { WorkLogFormQuestionEditor } from './WorkLogFormQuestionEditor'
 
 interface WorkLogFormStepOneProps {
@@ -104,7 +104,7 @@ export function WorkLogFormStepOne({
       </Cards>
 
       <AddQuestionButton type="button" onClick={handleQuestionAdd}>
-        <PlusIcon src={plusIcon} alt="" aria-hidden="true" />
+        <PlusIcon src={addQuestionIcon} alt="" aria-hidden="true" />
         항목 추가하기
       </AddQuestionButton>
     </Step>
