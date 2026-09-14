@@ -1,54 +1,39 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  reviewMockTaskReport,
-  type TaskReportReviewStatus,
-} from '@/entities/task-report'
+  useReviewTaskReport,
+  type TaskReportReviewAction,
+} from '../model/useReviewTaskReport'
 import { RejectReasonDialog } from './RejectReasonDialog'
 
 interface TaskReportReviewActionsProps {
   reportId: string
-  onCompleted: () => void
+  onSuccess: (action: TaskReportReviewAction) => void
+  onError: (action: TaskReportReviewAction) => void
 }
 
-interface TaskReportReviewInput {
-  reviewStatus: TaskReportReviewStatus
-  rejectReason?: string
-}
-
-// Figma 3350:3965 / 3350:3967. 결과 표시(토스트·모달)는 다음 슬라이스라 여기서는 이동만 한다.
-// 반려는 사유 모달(3350:4018)에서 `확인` 을 누른 뒤에야 요청한다.
+// Figma yot 1:7503 하단 `반려하기`/`승인하기`. 결과 토스트는 페이지가 그린다(성공은 목록, 실패는 상세).
+// 반려는 사유 모달(1:7635)에서 `확인` 을 누른 뒤에야 요청하고, 결과가 나오면 모달을 닫는다.
 export function TaskReportReviewActions({
   reportId,
-  onCompleted,
+  onSuccess,
+  onError,
 }: TaskReportReviewActionsProps) {
-  const queryClient = useQueryClient()
-  const reviewingRef = useRef(false)
+  const { review, pending } = useReviewTaskReport()
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
 
-  const mutation = useMutation({
-    mutationFn: ({ reviewStatus, rejectReason }: TaskReportReviewInput) =>
-      reviewMockTaskReport({ id: reportId, reviewStatus, rejectReason }),
-  })
-
-  function handleReview(input: TaskReportReviewInput) {
-    if (reviewingRef.current || mutation.isPending) return
-
-    reviewingRef.current = true
-    mutation.mutate(input, {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['task-reports'] })
-        queryClient.removeQueries({ queryKey: ['task-reports', reportId] })
-        onCompleted()
+  function handleReview(action: TaskReportReviewAction, rejectReason?: string) {
+    review(
+      { id: reportId, action, rejectReason },
+      {
+        onSuccess: () => onSuccess(action),
+        onError: () => {
+          setRejectDialogOpen(false)
+          onError(action)
+        },
       },
-      onError: () => {
-        reviewingRef.current = false
-      },
-    })
+    )
   }
-
-  const pending = mutation.isPending
 
   return (
     <>
@@ -63,7 +48,7 @@ export function TaskReportReviewActions({
         <ApproveButton
           type="button"
           disabled={pending}
-          onClick={() => handleReview({ reviewStatus: 'APPROVED' })}
+          onClick={() => handleReview('approve')}
         >
           승인하기
         </ApproveButton>
@@ -73,9 +58,7 @@ export function TaskReportReviewActions({
         <RejectReasonDialog
           pending={pending}
           onCancel={() => setRejectDialogOpen(false)}
-          onConfirm={(reason) =>
-            handleReview({ reviewStatus: 'REJECTED', rejectReason: reason })
-          }
+          onConfirm={(reason) => handleReview('reject', reason)}
         />
       ) : null}
     </>

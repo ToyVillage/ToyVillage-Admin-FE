@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type MouseEvent } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
+import { taskReportRejectionReasonMaxLength } from '@/entities/task-report'
 
 interface RejectReasonDialogProps {
   pending: boolean
@@ -113,6 +114,8 @@ export function RejectReasonDialog({
           value={reason}
           placeholder="반려 사유 작성"
           aria-label="반려 사유"
+          // 서버가 1000자를 넘으면 400 이다. 원문 길이를 막아 공백 제거 후 길이도 넘지 않게 한다.
+          maxLength={taskReportRejectionReasonMaxLength}
           readOnly={pending}
           onChange={(event) => setReason(event.target.value)}
         />

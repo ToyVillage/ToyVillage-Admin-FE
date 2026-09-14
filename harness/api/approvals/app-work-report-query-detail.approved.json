@@ -1,0 +1,15 @@
+{
+  "feature": "app-work-report-query-detail",
+  "apiId": "APP_WORK_REPORT_QUERY_DETAIL",
+  "approvedAt": "2026-09-13T23:41:40.476Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "f87d1cd86d606486ba55df65e5b2c2800460c25bacdeba6d93f2401dc8e7f203",
+  "contractHash": "efb7ab13e90417a79c0e11d1874cc8f77239406c0a2612f050f9ecea84a90194",
+  "contractMarkdownHash": "3f55695e34068eb30c1b12292ec4882178d2589b1bb61ce4e76f0f3115eddff1",
+  "planHash": "17a06f15e1f202d6238fb4e6cbfc79b0de412b35f462a85656e3aa19db44c870",
+  "scenarioHash": "486cd12359edc07a797548403a5bab518ff8b0419aaf4e7c2d554d03e9501631",
+  "testHash": "b56141440cac6b31f6445f6cd963e09bec6148122dd68b21d9076e10ad461759",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-13T23:41:41.117Z"
+}

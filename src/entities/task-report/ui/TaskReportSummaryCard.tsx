@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { TaskReportReviewBadge } from './TaskReportReviewBadge'
 import type { TaskReportReviewStatus } from '../model/types'
 
 export interface TaskReportSummaryItem {
@@ -10,17 +11,8 @@ export interface TaskReportSummaryItem {
 
 interface TaskReportSummaryCardProps {
   items: TaskReportSummaryItem[]
-  /** 없으면 모든 줄이 정적으로 그려진다. 열 수 있는 보고 상세가 아직 없을 때 쓴다. */
+  /** 제출된 줄을 눌렀을 때 호출된다. 없으면 모든 줄이 정적으로 그려진다. */
   onSelect?: (reportId: string) => void
-}
-
-// 업무 상세의 심사 상태 배지는 `승인` 을 그대로 쓴다.
-// 업무보고 목록·상세의 탭 라벨(`완료`)과 문구가 달라 여기서만 쓰는 표를 둔다(spec 근거: Figma 152:11510).
-const reviewStatusLabels: Record<TaskReportReviewStatus, string> = {
-  APPROVED: '승인',
-  REJECTED: '반려',
-  PENDING: '심사대기',
-  RESUBMITTED: '재제출',
 }
 
 // Figma `report summary`(yot 152:11510). 담당자별 업무보고 목록.
@@ -34,11 +26,7 @@ export function TaskReportSummaryCard({
       {items.length > 0 ? (
         <List>
           {items.map((item, index) => {
-            const badge = (
-              <Badge $status={item.reviewStatus}>
-                {reviewStatusLabels[item.reviewStatus]}
-              </Badge>
-            )
+            const badge = <Badge status={item.reviewStatus} />
 
             const chevron = (
               <Chevron viewBox="0 0 24 24" aria-hidden="true">
@@ -152,27 +140,9 @@ const Name = styled.span`
   line-height: 1.2;
 `
 
-const Badge = styled.span<{ $status: TaskReportReviewStatus }>`
-  display: inline-flex;
-  min-width: 76px;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
+// 이름과 chevron 사이에서 배지를 오른쪽 끝으로 민다.
+const Badge = styled(TaskReportReviewBadge)`
   margin-left: auto;
-  padding: 8px 12px;
-  border-radius: 80px;
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.2;
-  ${({ theme, $status }) => {
-    if ($status === 'APPROVED') {
-      return `background: ${theme.colors.accentBg}; color: ${theme.colors.accent};`
-    }
-    if ($status === 'REJECTED') {
-      return `background: ${theme.colors.warningBg}; color: ${theme.colors.warning};`
-    }
-    return `background: ${theme.colors.tableHeaderStrong}; color: ${theme.colors.textGuide};`
-  }}
 `
 
 const Chevron = styled.svg`

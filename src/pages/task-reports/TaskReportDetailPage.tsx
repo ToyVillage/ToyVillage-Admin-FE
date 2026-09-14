@@ -1,13 +1,31 @@
+import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getMockTaskReport, TaskReportMetaRow } from '@/entities/task-report'
-import { TaskReportReviewActions } from '@/features/review-task-report'
-import { AttachmentList } from '@/shared/ui'
+import {
+  getTaskReport,
+  TaskReportContentCard,
+  TaskReportMetaRow,
+} from '@/entities/task-report'
+import {
+  TaskReportReviewActions,
+  taskReportReviewToasts,
+  type TaskReportReviewResult,
+} from '@/features/review-task-report'
+import { AttachmentList, BackLink, Toast } from '@/shared/ui'
 
+// Figma yot 1:7503 `report management`.
 export function TaskReportDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  // 상세에 머무는 결과는 실패뿐이다. 성공하면 목록으로 이동해 거기서 토스트를 보인다.
+  // 같은 실패가 연달아 나와도 토스트를 새로 띄우도록 매번 id 를 바꾼다.
+  const [errorToast, setErrorToast] = useState<{
+    result: TaskReportReviewResult
+    id: number
+  } | null>(null)
+  const toastIdRef = useRef(0)
+  const dismissToast = useCallback(() => setErrorToast(null), [])
 
   const {
     data: report,
@@ -15,7 +33,8 @@ export function TaskReportDetailPage() {
     isError,
   } = useQuery({
     queryKey: ['task-reports', id],
-    queryFn: () => getMockTaskReport(id),
+    // 정수가 아닌 id 는 API 함수가 요청 전에 거부해 아래 `찾을 수 없습니다` 로 떨어진다.
+    queryFn: () => getTaskReport({ id: Number(id) }),
     enabled: Boolean(id),
   })
 
@@ -27,7 +46,7 @@ export function TaskReportDetailPage() {
     )
   }
 
-  if (isError || !report) {
+  if (isError) {
     return (
       <StatePage>
         <StateCard role="alert">
@@ -38,43 +57,55 @@ export function TaskReportDetailPage() {
     )
   }
 
+  const toast = errorToast
+    ? taskReportReviewToasts[errorToast.result]
+    : undefined
+
   return (
     <Page>
       <Content>
-        <BackLink to="/task-reports">
-          <BackIcon viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m15 4-8 8 8 8" />
-          </BackIcon>
-          뒤로가기
-        </BackLink>
+        <DetailBackLink to="/task-reports" />
 
-        <TaskReportMetaRow
-          priority={report.priority}
-          taskStatus={report.taskStatus}
-          assigneeName={report.assigneeName}
-          dueDate={report.dueDate}
-          visibility={report.visibility}
-        />
+        <Body>
+          <TaskReportMetaRow
+            priority={report.priority}
+            reviewStatus={report.reviewStatus}
+            assigneeName={report.assigneeName}
+            dueDate={report.dueDate}
+          />
 
-        <TitleCard>
-          <Label>제목</Label>
-          <TitleValue>{report.title}</TitleValue>
-        </TitleCard>
+          <TaskReportContentCard
+            title={report.title}
+            content={report.content}
+          />
 
-        <ContentCard>
-          <Label>
-            상세 업무 내용 <Required aria-hidden="true">*</Required>
-          </Label>
-          <ContentValue>{report.content}</ContentValue>
-        </ContentCard>
-
-        <AttachmentList fileNames={report.attachments ?? []} />
+          <AttachmentCard>
+            <AttachmentList fileNames={report.attachments} />
+          </AttachmentCard>
+        </Body>
 
         <TaskReportReviewActions
           reportId={report.id}
-          onCompleted={() => navigate('/task-reports')}
+          onSuccess={(action) =>
+            navigate('/task-reports', {
+              state: { toast: `${action}-success` },
+            })
+          }
+          onError={(action) => {
+            toastIdRef.current += 1
+            setErrorToast({ result: `${action}-error`, id: toastIdRef.current })
+          }}
         />
       </Content>
+
+      {errorToast && toast && (
+        <Toast
+          key={errorToast.id}
+          variant={toast.variant}
+          message={toast.message}
+          onDismiss={dismissToast}
+        />
+      )}
     </Page>
   )
 }
@@ -90,87 +121,29 @@ const Content = styled.div`
   display: flex;
   width: min(100%, 1320px);
   flex-direction: column;
-  gap: 32px;
   margin: 0 auto;
   padding-top: 75px;
 `
 
-// 뒤로가기(y75) 아래로 메타 요약행이 Figma 기준 y164 에 오도록 gap(32) 에 28 을 더한다.
-const BackLink = styled(Link)`
-  display: inline-flex;
-  align-items: center;
+// 링크 영역이 줄 전체로 늘어나지 않게 글자 폭에 맞춘다.
+const DetailBackLink = styled(BackLink)`
   align-self: flex-start;
-  gap: 16px;
-  margin-bottom: 28px;
-  padding-left: 6px;
-  color: ${({ theme }) => theme.colors.textGuide};
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.2;
-  text-decoration: none;
-
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.textGuide};
-    outline-offset: 3px;
-  }
 `
 
-const BackIcon = styled.svg`
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3;
-`
-
-const TitleCard = styled.section`
+// 뒤로가기(y75 h36) → 요약행(y164) → 내용 카드(y236) → 첨부 카드(y440) → 버튼(y664, 첨부 카드 아래 68).
+// 요약행·카드 사이는 모두 32 다.
+const Body = styled.div`
   display: flex;
-  min-height: 162px;
   flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-  padding: 40px;
+  gap: 32px;
+  margin: 53px 0 68px;
+`
+
+// Figma `add file`(145:15466)은 h156 이다. AttachmentList 최소 높이(140)에 하단 16 을 더해 맞춘다.
+const AttachmentCard = styled.div`
+  padding-bottom: 16px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
-`
-
-const ContentCard = styled.section`
-  display: flex;
-  min-height: 240px;
-  flex-direction: column;
-  gap: 10px;
-  padding: 40px;
-  border-radius: 20px;
-  background: ${({ theme }) => theme.colors.surface};
-`
-
-const Label = styled.h2`
-  margin: 0;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 22px;
-  font-weight: 500;
-`
-
-const Required = styled.span`
-  color: ${({ theme }) => theme.colors.danger};
-`
-
-const TitleValue = styled.p`
-  margin: 0;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 40px;
-  font-weight: 500;
-`
-
-const ContentValue = styled.p`
-  margin: 0;
-  flex: 1;
-  color: ${({ theme }) => theme.colors.textGuide};
-  font-size: 18px;
-  font-weight: 500;
-  white-space: pre-wrap;
 `
 
 const StatePage = styled.main`

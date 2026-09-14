@@ -1,6 +1,6 @@
 {
   "feature": "task-detail",
-  "approvedAt": "2026-09-11T03:34:03.946Z",
+  "approvedAt": "2026-09-13T08:49:02.831Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -23,6 +23,6 @@
     "S18",
     "S19"
   ],
-  "scenarioHash": "a067c6b6013200eb3fc3d688e5e36cc938237b1db37f378c7e7369f9c7bb71d3",
-  "e2eHash": "01b7edd5c7a6e352eecd05139f904c62dc683339869bb62e069ae1fda80c2551"
+  "scenarioHash": "3187bfd286c5b5f0f68941f67dc49906f4a7c7873a6101e9a37e3a6c0da8a793",
+  "e2eHash": "c83948ef39bc69e367de02e5d3a99c09fdea9c48ea9180981bdf718ea189e45d"
 }
