@@ -42,9 +42,10 @@ paths: src/pages/work-logs, src/features/create-work-log-form, src/entities/work
 
 ## 라우트와 진입
 
-- `/work-logs/forms/:id/edit` → 해당 양식의 1단계 `항목 설정`으로 진입한다.
+- `/work-logs/forms/:id/edit` → 1단계 `항목 설정`
+- `/work-logs/forms/:id/edit/zones` → 2단계 `구역 번호 설정`
 - 목록(`/work-logs?tab=forms`)의 케밥 메뉴 `수정`으로 진입한다(목록 쪽은 이미 구현되어 있음).
-- 단계는 라우트를 바꾸지 않고 페이지 내부 상태로 전환한다.
+- 생성과 같이 **단계를 URL 로 구분한다**(생성 spec 참고).
 - 진입 시 스크롤은 항상 맨 위에서 시작한다.
 - 목록에서 삭제된 양식의 id 로 진입하면 → `/work-logs?tab=forms`로 되돌린다
   (상세 spec `work-log-form-detail` 와 같은 규칙).
@@ -93,7 +94,8 @@ paths: src/pages/work-logs, src/features/create-work-log-form, src/entities/work
 
 ### 나가기 확인 (`1:5016`)
 
-- `뒤로가기` 클릭 시 **입력값이 처음 불러온 값에서 바뀌어 있으면** 나가기 확인 모달을 띄운다.
+- **입력값이 처음 불러온 값에서 바뀌어 있으면** 이 화면을 벗어나는 모든 이동에 나가기 확인 모달을 띄운다.
+  `뒤로가기` 링크뿐 아니라 브라우저 뒤로가기·앞으로가기, 새로고침도 포함한다.
   - 제목 `정말 나가시겠습니까?`
   - 설명 `저장하지 않고 돌아갈 시 입력된 정보가 삭제됩니다`
   - 버튼 `취소` / `확인`
@@ -159,6 +161,7 @@ paths: src/pages/work-logs, src/features/create-work-log-form, src/entities/work
 - S14: 저장 실패 → 입력값과 현재 단계가 유지되고 다시 저장할 수 있다.
 - S15: 삭제된 양식의 id 로 진입 → `/work-logs?tab=forms`로 되돌아간다.
 - S16: 키보드만 사용 → 값 수정, 단계 이동, 모달 확인·취소, 저장을 수행할 수 있다.
+- S18: 값을 고친 뒤 브라우저 뒤로가기 → `정말 나가시겠습니까?` 모달이 뜬다.
 
 ## 미결 사항
 
