@@ -19,6 +19,7 @@ export const tokens = {
     textDate: '#747474',
     background: '#F5F5F7', // 페이지 배경
     surface: '#FFFFFF', // 카드/테이블 표면
+    surfaceSunken: '#FAFAFC', // 업무일지 양식 파일 업로드 드롭존 배경
     tableHeader: '#E1E1E1', // 테이블 헤더
     tableHeaderStrong: '#DDDDE3', // 업무 테이블 헤더 / 진행중 pill / 업로드 드롭존
     warning: '#FDB542', // 반려 상태 / 우선순위 중
@@ -27,6 +28,7 @@ export const tokens = {
     success: '#00B48A', // 성공 토스트 아이콘
     border: '#A1A1A1',
     dialogBorder: '#C6C6CE',
+    selectOpenBorder: '#5C5C68', // gray/80 — 열린 셀렉트 트리거 테두리(업무일지 양식 구역 설정)
     divider: '#727272',
     avatar: '#D9D9D9',
     iconMuted: '#858585',

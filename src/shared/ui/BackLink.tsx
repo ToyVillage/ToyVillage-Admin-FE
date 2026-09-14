@@ -9,7 +9,11 @@ interface BackLinkProps {
 }
 
 // Figma 공용 `back` 컴포넌트(1:10470). 상세 화면에서 목록으로 되돌아가는 링크.
-export function BackLink({ to, children = '뒤로가기', className }: BackLinkProps) {
+export function BackLink({
+  to,
+  children = '뒤로가기',
+  className,
+}: BackLinkProps) {
   return (
     <Anchor className={className} to={to}>
       <BackIcon viewBox="0 0 24 24" aria-hidden="true">
