@@ -35,6 +35,8 @@ import {
 } from '@/pages/tasks'
 import { TaskReportDetailPage, TaskReportListPage } from '@/pages/task-reports'
 import {
+  CreateWorkLogFormPage,
+  EditWorkLogFormPage,
   WorkLogDetailPage,
   WorkLogFormDetailPage,
   WorkLogListPage,
@@ -109,9 +111,12 @@ const router = createBrowserRouter([
           { path: '/task-reports', element: <TaskReportListPage /> },
           { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
           { path: '/work-logs', element: <WorkLogListPage /> },
-          // 양식 생성 화면은 아직 없다(양식 생성 spec 담당). 경로만 잡아 두지 않으면
-          // 아래 `/work-logs/forms/:id` 가 `create` 를 id 로 삼아 상세로 가로챈다.
-          { path: '/work-logs/forms/create' },
+          // `create` 가 `:id` 로 잡히지 않도록 구체 경로를 먼저 둔다.
+          { path: '/work-logs/forms/create', element: <CreateWorkLogFormPage /> },
+          {
+            path: '/work-logs/forms/:id/edit',
+            element: <EditWorkLogFormPage />,
+          },
           { path: '/work-logs/forms/:id', element: <WorkLogFormDetailPage /> },
           { path: '/work-logs/:id', element: <WorkLogDetailPage /> },
         ],
