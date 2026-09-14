@@ -10,6 +10,7 @@ import {
 } from '@/features/create-work-log-form'
 
 const listPath = '/work-logs?tab=forms'
+const basePath = '/work-logs/forms/create'
 
 // Figma 1:3710 "worklog form make (항목 입력)" — 양식 생성 2단계 위저드.
 export function CreateWorkLogFormPage() {
@@ -29,6 +30,7 @@ export function CreateWorkLogFormPage() {
   return (
     <WorkLogFormWizard
       initialDraft={initialDraft}
+      basePath={basePath}
       submitLabel="생성하기"
       showStepOneSubmit={false}
       pending={isPending}

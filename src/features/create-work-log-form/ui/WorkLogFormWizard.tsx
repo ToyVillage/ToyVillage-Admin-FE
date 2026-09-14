@@ -1,6 +1,11 @@
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useNavigate } from 'react-router-dom'
+import {
+  useBeforeUnload,
+  useBlocker,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
 import type {
   WorkLogFormDraft,
   WorkLogFormDraftErrors,
@@ -14,16 +19,14 @@ import {
   LeaveConfirmationDialog,
   ValidationDialog,
 } from '@/shared/ui'
-import {
-  appendZones,
-  hasDraftErrors,
-  validateDraft,
-} from '../model/draft'
+import { appendZones, hasDraftErrors, validateDraft } from '../model/draft'
 import { WorkLogFormStepOne } from './WorkLogFormStepOne'
 import { WorkLogZoneEditor } from './WorkLogZoneEditor'
 
 interface WorkLogFormWizardProps {
   initialDraft: WorkLogFormDraft
+  // 1단계 경로. 2단계는 여기에 `/zones` 가 붙는다.
+  basePath: string
   // 2단계 주요 액션 문구. 생성은 `생성하기`, 수정은 `저장하기`.
   submitLabel: string
   // 수정 화면만 1단계에도 저장 버튼을 둔다(Figma 1:4241).
@@ -37,10 +40,13 @@ interface WorkLogFormWizardProps {
 
 const emptyErrors: WorkLogFormDraftErrors = { questions: {} }
 const zoneRequiredMessage = '구역 번호를 설정해주세요'
+const zonesSegment = '/zones'
 
 // Figma 353:13063 "업무일지관리 · 양식" — 생성·수정이 공유하는 2단계 위저드.
+// 단계는 URL 로 구분해 브라우저 앞/뒤로가기가 그대로 통하게 한다.
 export function WorkLogFormWizard({
   initialDraft,
+  basePath,
   submitLabel,
   showStepOneSubmit,
   pending,
@@ -49,19 +55,59 @@ export function WorkLogFormWizard({
   onSubmit,
 }: WorkLogFormWizardProps) {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const contentRef = useRef<HTMLDivElement>(null)
-  const [step, setStep] = useState<1 | 2>(1)
+  const allowNavigationRef = useRef(false)
   const [draft, setDraft] = useState(initialDraft)
   const [errors, setErrors] = useState(emptyErrors)
-  const [leaveOpen, setLeaveOpen] = useState(false)
   const [zoneRequiredOpen, setZoneRequiredOpen] = useState(false)
   const [zoneToRemove, setZoneToRemove] = useState<WorkLogFormZone | null>(null)
   const [clearAllOpen, setClearAllOpen] = useState(false)
 
+  const zonesPath = `${basePath}${zonesSegment}`
+  const step = pathname === zonesPath ? 2 : 1
+  const needsLeaveConfirm = isLeaveConfirmNeeded(draft)
+
+  // 위저드 안에서의 단계 이동은 막지 않는다. 화면 밖으로 나갈 때만 확인한다.
+  const blocker = useBlocker(
+    useCallback(
+      ({ nextLocation }) => {
+        if (allowNavigationRef.current || !needsLeaveConfirm) return false
+        return (
+          nextLocation.pathname !== basePath &&
+          nextLocation.pathname !== zonesPath
+        )
+      },
+      [basePath, needsLeaveConfirm, zonesPath],
+    ),
+  )
+
+  useBeforeUnload(
+    useCallback(
+      (event) => {
+        if (!needsLeaveConfirm || allowNavigationRef.current) return
+        event.preventDefault()
+        event.returnValue = ''
+      },
+      [needsLeaveConfirm],
+    ),
+  )
+
+  // 저장이 실패해 화면에 남았으면 이탈 확인을 다시 켠다.
+  useEffect(() => {
+    if (!pending) allowNavigationRef.current = false
+  }, [pending])
+
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [step])
+
   function handleDraftChange(next: WorkLogFormDraft) {
     setDraft(next)
     // 고치는 즉시 해당 자리의 에러 표시를 해제한다(spec 1단계 검증).
-    if (hasDraftErrors(errors)) setErrors(pruneErrors(errors, validateDraft(next)))
+    if (hasDraftErrors(errors)) {
+      setErrors(pruneErrors(errors, validateDraft(next)))
+    }
   }
 
   function runStepOneValidation(): boolean {
@@ -79,38 +125,21 @@ export function WorkLogFormWizard({
 
   function handleNext() {
     if (!runStepOneValidation()) return
-    setStep(2)
-    window.scrollTo({ top: 0 })
+    navigate(zonesPath)
   }
 
   function handleSubmit() {
     if (!runStepOneValidation()) {
       // 2단계에서 저장하다 1단계 값이 걸리면 에러가 보이는 자리로 되돌린다.
-      setStep(1)
+      if (step === 2) navigate(basePath)
       return
     }
     if (draft.zones.length === 0) {
       setZoneRequiredOpen(true)
       return
     }
+    allowNavigationRef.current = true
     onSubmit(draft)
-  }
-
-  function handleBack(event: { preventDefault: () => void }) {
-    event.preventDefault()
-
-    if (step === 2) {
-      setStep(1)
-      window.scrollTo({ top: 0 })
-      return
-    }
-
-    if (isLeaveConfirmNeeded(draft)) {
-      setLeaveOpen(true)
-      return
-    }
-
-    navigate(listPath)
   }
 
   function removeZone(zone: WorkLogFormZone) {
@@ -126,7 +155,7 @@ export function WorkLogFormWizard({
         <WorkLogFormWizardSteps current={step} />
       </Steps>
       <Content ref={contentRef}>
-        <BackLink to={listPath} onClick={handleBack} />
+        <BackLink to={step === 2 ? basePath : listPath} />
 
         <Body>
           {step === 1 ? (
@@ -171,14 +200,14 @@ export function WorkLogFormWizard({
           message={zoneRequiredMessage}
           onConfirm={() => {
             setZoneRequiredOpen(false)
-            setStep(2)
+            if (step === 1) navigate(zonesPath)
           }}
         />
       )}
-      {leaveOpen && (
+      {blocker.state === 'blocked' && (
         <LeaveConfirmationDialog
-          onCancel={() => setLeaveOpen(false)}
-          onConfirm={() => navigate(listPath)}
+          onCancel={blocker.reset}
+          onConfirm={blocker.proceed}
         />
       )}
       {zoneToRemove && (
@@ -214,7 +243,14 @@ function pruneErrors(
   for (const id of Object.keys(shown.questions)) {
     if (current.questions[id]) questions[id] = current.questions[id]
   }
-  return { name: shown.name && current.name ? current.name : undefined, questions }
+  return {
+    name: shown.name && current.name ? current.name : undefined,
+    emptyQuestions:
+      shown.emptyQuestions && current.emptyQuestions
+        ? current.emptyQuestions
+        : undefined,
+    questions,
+  }
 }
 
 const Page = styled.main`

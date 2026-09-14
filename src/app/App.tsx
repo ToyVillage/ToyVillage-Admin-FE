@@ -112,9 +112,13 @@ const router = createBrowserRouter([
           { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
           { path: '/work-logs', element: <WorkLogListPage /> },
           // `create` 가 `:id` 로 잡히지 않도록 구체 경로를 먼저 둔다.
-          { path: '/work-logs/forms/create', element: <CreateWorkLogFormPage /> },
+          // splat 으로 두어 1단계와 2단계(`/zones`)가 같은 화면을 다시 마운트하지 않게 한다.
           {
-            path: '/work-logs/forms/:id/edit',
+            path: '/work-logs/forms/create/*',
+            element: <CreateWorkLogFormPage />,
+          },
+          {
+            path: '/work-logs/forms/:id/edit/*',
             element: <EditWorkLogFormPage />,
           },
           { path: '/work-logs/forms/:id', element: <WorkLogFormDetailPage /> },

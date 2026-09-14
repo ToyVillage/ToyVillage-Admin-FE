@@ -51,6 +51,7 @@ export function EditWorkLogFormPage() {
       // 값이 도착하면 편집 상태를 그 값으로 다시 세운다.
       key={draft ? id : 'loading'}
       initialDraft={initialDraft}
+      basePath={`/work-logs/forms/${id}/edit`}
       submitLabel="저장하기"
       showStepOneSubmit
       pending={isSaving}
