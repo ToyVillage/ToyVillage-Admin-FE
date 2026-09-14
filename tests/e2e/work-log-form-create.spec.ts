@@ -247,6 +247,15 @@ test('S34: 브라우저 뒤로가기에도 나가기 확인이 뜬다', async ({
   await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
 })
 
+test('S35: 1단계 없이 2단계 URL 로 들어오면 1단계로 되돌린다', async ({
+  page,
+}) => {
+  await page.goto(`${createPath}/zones`)
+
+  await expect(page).toHaveURL(new RegExp(`${createPath}$`))
+  await expect(page.getByLabel('양식명')).toBeVisible()
+})
+
 test('S13: 구역 자동 생성', async ({ page }) => {
   await page.goto(createPath)
   await goToStepTwo(page)
