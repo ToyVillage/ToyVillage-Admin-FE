@@ -97,6 +97,11 @@
 - When: Tab / 방향키 / Enter / Escape 만 사용
 - Then: 값 수정, 단계 이동, 모달 확인·취소, 저장을 모두 수행할 수 있다
 
+### S18: 수정도 브라우저 뒤로가기에서 나가기 확인이 뜬다
+- Given: 목록에서 들어와 양식명을 고친 수정 1단계
+- When: 브라우저 뒤로가기
+- Then: `정말 나가시겠습니까?` 모달이 뜬다
+
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
      불필요한 시나리오는 여기서 삭제(가지치기). 승인되지 않은 시나리오는 Playwright로 변환되지 않는다.
