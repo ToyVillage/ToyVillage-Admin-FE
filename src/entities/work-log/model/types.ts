@@ -122,5 +122,7 @@ export interface WorkLogFormDraft {
 // 검증 결과. 값이 있으면 그 자리에 빨간 테두리와 메시지를 붙인다(Figma 1:3981).
 export interface WorkLogFormDraftErrors {
   name?: string
+  /** 항목이 하나도 없을 때. 카드가 없어 카드별 에러로 못 붙인다. */
+  emptyQuestions?: string
   questions: Record<string, string>
 }

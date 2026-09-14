@@ -39,11 +39,34 @@ export function createZone(label: string, persisted: boolean): WorkLogFormZone {
 }
 
 // 유형이 바뀌면 그 유형에 필요 없는 선택지는 버린다(spec 1단계 조작).
+// 선택지를 갖는 유형은 비어 있는 채로 두지 않고 빈 선택지 하나로 시작한다.
 export function changeQuestionType(
   question: WorkLogFormDraftQuestion,
   type: WorkLogFormEditorType,
 ): WorkLogFormDraftQuestion {
-  return { ...question, type, options: hasOptions(type) ? question.options : [] }
+  if (!hasOptions(type)) return { ...question, type, options: [] }
+
+  const options =
+    question.options.length > 0 ? question.options : [createDraftOption(false)]
+  return { ...question, type, options }
+}
+
+// `기타:` 행은 항상 일반 선택지 아래에 둔다. 새 선택지는 기타 앞에 끼워 넣는다.
+export function addQuestionOption(
+  question: WorkLogFormDraftQuestion,
+  isEtc: boolean,
+): WorkLogFormDraftQuestion {
+  const option = createDraftOption(isEtc)
+  if (isEtc) return { ...question, options: [...question.options, option] }
+
+  const etcIndex = question.options.findIndex((item) => item.isEtc)
+  if (etcIndex === -1) {
+    return { ...question, options: [...question.options, option] }
+  }
+
+  const options = [...question.options]
+  options.splice(etcIndex, 0, option)
+  return { ...question, options }
 }
 
 export function validateDraft(draft: WorkLogFormDraft): WorkLogFormDraftErrors {
@@ -55,12 +78,18 @@ export function validateDraft(draft: WorkLogFormDraft): WorkLogFormDraftErrors {
 
   return {
     name: draft.name.trim() ? undefined : formNameErrorMessage,
+    // 항목이 하나도 없는 양식은 만들 수 없다.
+    emptyQuestions: draft.questions.length === 0 ? questionErrorMessage : undefined,
     questions,
   }
 }
 
 export function hasDraftErrors(errors: WorkLogFormDraftErrors): boolean {
-  return Boolean(errors.name) || Object.keys(errors.questions).length > 0
+  return (
+    Boolean(errors.name) ||
+    Boolean(errors.emptyQuestions) ||
+    Object.keys(errors.questions).length > 0
+  )
 }
 
 export function isQuestionInvalid(question: WorkLogFormDraftQuestion): boolean {
@@ -68,10 +97,9 @@ export function isQuestionInvalid(question: WorkLogFormDraftQuestion): boolean {
   if (question.type === null) return true
   if (!hasOptions(question.type)) return false
 
-  return (
-    question.options.length === 0 ||
-    question.options.some((option) => !option.value.trim())
-  )
+  // `기타:` 행은 값을 입력받지 않으므로(응답자가 적는 자리) 검증 대상이 아니다.
+  const filled = question.options.filter((option) => !option.isEtc)
+  return filled.length === 0 || filled.some((option) => !option.value.trim())
 }
 
 // 자동 생성 — 접두 + 시작~끝 범위. 접두 `없음` 은 숫자만 만든다(Figma 1:5438).
