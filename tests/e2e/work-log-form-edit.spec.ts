@@ -228,6 +228,31 @@ test('S18: 수정도 브라우저 뒤로가기에서 나가기 확인이 뜬다'
   await expect(page.getByText('정말 나가시겠습니까?')).toBeVisible()
 })
 
+test('S19: 저장한 질문 구성이 다시 들어와도 남아 있다', async ({ page }) => {
+  await page.goto(editPath)
+  await expect(page.getByLabel('1번 항목 이름')).toHaveValue('습도')
+
+  await page.getByLabel('1번 항목 이름').fill('온도')
+  await page.getByRole('button', { name: '3번 항목 삭제' }).click()
+  await page.getByRole('button', { name: '다음' }).click()
+  await expect(
+    page.getByRole('heading', { name: '구역 번호 설정' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '저장하기' }).click()
+  await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
+
+  // mock 은 페이지 수명 동안만 값을 들고 있으므로 새로고침 없이 다시 들어간다.
+  await page
+    .getByTestId('work-log-form-row')
+    .first()
+    .getByRole('button', { name: /관리 메뉴$/ })
+    .click()
+  await page.getByRole('menuitem', { name: '수정' }).click()
+
+  await expect(page.getByLabel('1번 항목 이름')).toHaveValue('온도')
+  await expect(page.getByTestId('work-log-form-question')).toHaveCount(2)
+})
+
 async function goToStepTwo(page: Page) {
   await expect(page.getByLabel('1번 항목 이름')).toHaveValue('습도')
   await page.getByRole('button', { name: '다음' }).click()

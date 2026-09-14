@@ -256,6 +256,18 @@ test('S35: 1단계 없이 2단계 URL 로 들어오면 1단계로 되돌린다',
   await expect(page.getByLabel('양식명')).toBeVisible()
 })
 
+test('S36: 자동 생성 범위가 너무 크면 아무것도 만들지 않는다', async ({
+  page,
+}) => {
+  await page.goto(createPath)
+  await goToStepTwo(page)
+
+  // 상한이 없으면 루프가 끝나지 않아 화면이 멈춘다.
+  await autoCreateZones(page, 'A', '1', '99999999999')
+
+  await expect(page.getByText('(0)')).toBeVisible()
+})
+
 test('S13: 구역 자동 생성', async ({ page }) => {
   await page.goto(createPath)
   await goToStepTwo(page)
