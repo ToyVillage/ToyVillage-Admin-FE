@@ -37,6 +37,10 @@ export function EditWorkLogFormPage() {
       void queryClient.invalidateQueries({
         queryKey: ['work-log-forms', 'detail', id],
       })
+      // staleTime 이 60초라 이 키를 두면 저장 직후 다시 들어왔을 때 이전 값이 보인다.
+      void queryClient.invalidateQueries({
+        queryKey: ['work-log-forms', 'draft', id],
+      })
       navigate(listPath)
     },
   })
