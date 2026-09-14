@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { MouseEventHandler, ReactNode } from 'react'
 import styled from '@emotion/styled'
 import { Link } from 'react-router-dom'
 
@@ -6,12 +6,19 @@ interface BackLinkProps {
   to: string
   children?: ReactNode
   className?: string
+  // 이동 전에 확인 모달을 띄우거나 위저드 단계만 되돌릴 때 쓴다(preventDefault).
+  onClick?: MouseEventHandler<HTMLAnchorElement>
 }
 
 // Figma 공용 `back` 컴포넌트(1:10470). 상세 화면에서 목록으로 되돌아가는 링크.
-export function BackLink({ to, children = '뒤로가기', className }: BackLinkProps) {
+export function BackLink({
+  to,
+  children = '뒤로가기',
+  className,
+  onClick,
+}: BackLinkProps) {
   return (
-    <Anchor className={className} to={to}>
+    <Anchor className={className} to={to} onClick={onClick}>
       <BackIcon viewBox="0 0 24 24" aria-hidden="true">
         <path d="m15 4-8 8 8 8" />
       </BackIcon>
