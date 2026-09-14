@@ -62,7 +62,9 @@ test('S26: 파일 업로드 유형의 답변 영역', async ({ page }) => {
   await selectType(page, 1, '파일 업로드')
 
   const card = questionCard(page, 1)
-  await expect(card.getByText('클릭하거나 파일을 끌어다 놓으세요')).toBeVisible()
+  await expect(
+    card.getByText('클릭하거나 파일을 끌어다 놓으세요'),
+  ).toBeVisible()
   await expect(
     card.getByText('JPG · PNG · PDF · 최대 10MB · 최대 5개'),
   ).toBeVisible()
@@ -77,7 +79,16 @@ test('S5: 유형 선택', async ({ page }) => {
     page.getByRole('button', { name: '1번 항목 유형' }),
   ).toContainText('객관식 질문')
   await expect(card.getByRole('button', { name: '옵션 추가' })).toBeVisible()
-  await expect(card.getByRole('button', { name: '기타 추가' })).toBeHidden()
+})
+
+test('S27: 객관식·체크박스는 빈 선택지 하나로 시작한다', async ({ page }) => {
+  await page.goto(createPath)
+
+  await selectType(page, 1, '객관식 질문')
+  await expect(optionInput(page, 1, 1)).toBeVisible()
+
+  await selectType(page, 2, '체크박스')
+  await expect(optionInput(page, 2, 1)).toBeVisible()
 })
 
 test('S6: 선택지 추가', async ({ page }) => {
@@ -85,23 +96,52 @@ test('S6: 선택지 추가', async ({ page }) => {
   await selectType(page, 1, '객관식 질문')
   await questionCard(page, 1).getByRole('button', { name: '옵션 추가' }).click()
 
-  await expect(
-    page.getByRole('textbox', { name: '1번 항목 1번 선택지', exact: true }),
-  ).toBeVisible()
+  await expect(optionInput(page, 1, 2)).toBeVisible()
   await expect(
     questionCard(page, 1).getByRole('button', { name: '기타 추가' }),
   ).toBeVisible()
+})
+
+test('S28: 새로 추가한 선택지에 바로 입력할 수 있다', async ({ page }) => {
+  await page.goto(createPath)
+  await selectType(page, 1, '객관식 질문')
+  await questionCard(page, 1).getByRole('button', { name: '옵션 추가' }).click()
+
+  await expect(optionInput(page, 1, 2)).toBeFocused()
+  await page.keyboard.type('30%')
+  await expect(optionInput(page, 1, 2)).toHaveValue('30%')
 })
 
 test('S7: 기타 추가', async ({ page }) => {
   await page.goto(createPath)
   await selectType(page, 1, '객관식 질문')
   const card = questionCard(page, 1)
-  await card.getByRole('button', { name: '옵션 추가' }).click()
   await card.getByRole('button', { name: '기타 추가' }).click()
 
   await expect(card.getByText('기타:')).toBeVisible()
   await expect(card.getByRole('button', { name: '기타 추가' })).toBeHidden()
+})
+
+test('S29: 기타 행에는 입력란이 없다', async ({ page }) => {
+  await page.goto(createPath)
+  await selectType(page, 1, '객관식 질문')
+  const card = questionCard(page, 1)
+  await card.getByRole('button', { name: '기타 추가' }).click()
+
+  // 선택지 입력은 일반 선택지 1개뿐이다. 기타 행은 응답자가 적을 자리만 보여준다.
+  await expect(card.getByRole('textbox', { name: /선택지$/ })).toHaveCount(1)
+})
+
+test('S30: 기타는 항상 선택지보다 아래에 있다', async ({ page }) => {
+  await page.goto(createPath)
+  await selectType(page, 1, '객관식 질문')
+  const card = questionCard(page, 1)
+  await card.getByRole('button', { name: '기타 추가' }).click()
+  await card.getByRole('button', { name: '옵션 추가' }).click()
+
+  const etcBox = await card.getByText('기타:').boundingBox()
+  const lastOptionBox = await optionInput(page, 1, 2).boundingBox()
+  expect(lastOptionBox!.y).toBeLessThan(etcBox!.y)
 })
 
 test('S8: 선택지 삭제', async ({ page }) => {
@@ -109,19 +149,12 @@ test('S8: 선택지 삭제', async ({ page }) => {
   await selectType(page, 1, '객관식 질문')
   const card = questionCard(page, 1)
   await card.getByRole('button', { name: '옵션 추가' }).click()
-  await card.getByRole('button', { name: '옵션 추가' }).click()
-  await expect(
-    page.getByRole('textbox', { name: '1번 항목 2번 선택지', exact: true }),
-  ).toBeVisible()
+  await expect(optionInput(page, 1, 2)).toBeVisible()
 
   await page.getByRole('button', { name: '1번 항목 1번 선택지 삭제' }).click()
 
-  await expect(
-    page.getByRole('textbox', { name: '1번 항목 2번 선택지', exact: true }),
-  ).toBeHidden()
-  await expect(
-    page.getByRole('textbox', { name: '1번 항목 1번 선택지', exact: true }),
-  ).toBeVisible()
+  await expect(optionInput(page, 1, 2)).toBeHidden()
+  await expect(optionInput(page, 1, 1)).toBeVisible()
 })
 
 test('S9: 양식명 미입력 검증', async ({ page }) => {
@@ -161,6 +194,57 @@ test('S12: 2단계에서 1단계로 복귀', async ({ page }) => {
   await expect(page).toHaveURL(new RegExp(`${createPath}$`))
   await expect(page.getByLabel('양식명')).toHaveValue('조사')
   await expect(page.getByLabel('1번 항목 이름')).toHaveValue('습도')
+})
+
+test('S31: 단계가 URL 로 바뀐다', async ({ page }) => {
+  await page.goto(createPath)
+  await fillStepOne(page)
+  await page.getByRole('button', { name: '다음' }).click()
+
+  await expect(page).toHaveURL(new RegExp(`${createPath}/zones$`))
+
+  // 브라우저 뒤로가기로 1단계에 돌아와도 입력값이 남아 있다.
+  await page.goBack()
+  await expect(page).toHaveURL(new RegExp(`${createPath}$`))
+  await expect(page.getByLabel('양식명')).toHaveValue('조사')
+})
+
+test('S32: 항목이 하나도 없으면 다음으로 넘어가지 않는다', async ({ page }) => {
+  await page.goto(createPath)
+  await page.getByLabel('양식명').fill('조사')
+  await page.getByRole('button', { name: '2번 항목 삭제' }).click()
+  await page.getByRole('button', { name: '1번 항목 삭제' }).click()
+  await expect(page.getByTestId('work-log-form-question')).toHaveCount(0)
+
+  await page.getByRole('button', { name: '다음' }).click()
+
+  await expect(page.getByText('해당 항목을 입력해주세요!')).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`${createPath}$`))
+})
+
+test('S33: 자동 생성 번호는 숫자만 입력된다', async ({ page }) => {
+  await page.goto(createPath)
+  await goToStepTwo(page)
+
+  await page.getByLabel('시작 번호').fill('1a2-b')
+  await page.getByLabel('끝 번호').fill('3c')
+
+  await expect(page.getByLabel('시작 번호')).toHaveValue('12')
+  await expect(page.getByLabel('끝 번호')).toHaveValue('3')
+})
+
+test('S34: 브라우저 뒤로가기에도 나가기 확인이 뜬다', async ({ page }) => {
+  await page.goto('/work-logs?tab=forms')
+  await page.getByRole('link', { name: '양식 생성하기' }).click()
+  await page.getByLabel('양식명').fill('조사')
+
+  await page.goBack()
+
+  await expect(page.getByText('정말 나가시겠습니까?')).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`${createPath}$`))
+
+  await page.getByRole('button', { name: '확인' }).click()
+  await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
 })
 
 test('S13: 구역 자동 생성', async ({ page }) => {
@@ -232,7 +316,7 @@ test('S18: 구역 미설정 검증', async ({ page }) => {
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expect(page.getByText('구역 번호를 설정해주세요')).toBeVisible()
-  await expect(page).toHaveURL(new RegExp(`${createPath}$`))
+  await expect(page).toHaveURL(new RegExp(`${createPath}/zones$`))
 })
 
 test('S19: 생성 성공', async ({ page }) => {
@@ -317,6 +401,13 @@ test('S21: 키보드만으로 1단계를 채우고 2단계로 넘어간다', asy
     page.getByRole('heading', { name: '구역 번호 설정' }),
   ).toBeVisible()
 })
+
+function optionInput(page: Page, questionIndex: number, optionIndex: number) {
+  return page.getByRole('textbox', {
+    name: `${questionIndex}번 항목 ${optionIndex}번 선택지`,
+    exact: true,
+  })
+}
 
 function questionCard(page: Page, index: number) {
   return page.getByTestId('work-log-form-question').nth(index - 1)

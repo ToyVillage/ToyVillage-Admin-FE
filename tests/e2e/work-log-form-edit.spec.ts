@@ -156,7 +156,7 @@ test('S12: 구역을 모두 지우고 저장하면 막힌다', async ({ page }) 
   await page.getByRole('button', { name: '저장하기' }).click()
 
   await expect(page.getByText('구역 번호를 설정해주세요')).toBeVisible()
-  await expect(page).toHaveURL(new RegExp(`${editPath}$`))
+  await expect(page).toHaveURL(new RegExp(`${editPath}/zones$`))
 })
 
 test('S13: 저장 성공', async ({ page }) => {
@@ -208,6 +208,24 @@ test('S14: 저장 중에는 저장 버튼을 다시 누를 수 없다', async ({
 
   // 저장이 끝나면 목록으로 이동한다. 이동 전까지 중복 제출 경로가 열리지 않는다.
   await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
+})
+
+test('S18: 수정도 브라우저 뒤로가기에서 나가기 확인이 뜬다', async ({
+  page,
+}) => {
+  await page.goto('/work-logs?tab=forms')
+  await page
+    .getByTestId('work-log-form-row')
+    .first()
+    .getByRole('button', { name: /관리 메뉴$/ })
+    .click()
+  await page.getByRole('menuitem', { name: '수정' }).click()
+  await expect(page.getByLabel('양식명')).toHaveValue('그냥 양식 제목')
+
+  await page.getByLabel('양식명').fill('조사')
+  await page.goBack()
+
+  await expect(page.getByText('정말 나가시겠습니까?')).toBeVisible()
 })
 
 async function goToStepTwo(page: Page) {
