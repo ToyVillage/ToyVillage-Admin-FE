@@ -72,7 +72,7 @@ export function WorkLogZoneEditor({
               inputMode="numeric"
               placeholder="1"
               aria-label="시작 번호"
-              onChange={(event) => setStart(event.target.value)}
+              onChange={(event) => setStart(onlyDigits(event.target.value))}
             />
             <RangeMark aria-hidden="true">~</RangeMark>
             <NumberInput
@@ -80,7 +80,7 @@ export function WorkLogZoneEditor({
               inputMode="numeric"
               placeholder="24"
               aria-label="끝 번호"
-              onChange={(event) => setEnd(event.target.value)}
+              onChange={(event) => setEnd(onlyDigits(event.target.value))}
             />
             <ActionButton height={66} onClick={handleAutoCreate}>
               생성
@@ -136,6 +136,11 @@ export function WorkLogZoneEditor({
       </Body>
     </Card>
   )
+}
+
+// 자동 생성 범위는 숫자만 받는다. inputMode 만으로는 데스크톱에서 막히지 않는다.
+function onlyDigits(value: string): string {
+  return value.replace(/[^0-9]/g, '')
 }
 
 const Card = styled.section`
