@@ -102,17 +102,24 @@ export function isQuestionInvalid(question: WorkLogFormDraftQuestion): boolean {
   return filled.length === 0 || filled.some((option) => !option.value.trim())
 }
 
+// 한 번에 만들 수 있는 구역 수. 자릿수 제한이 없어 큰 값을 넣으면 화면이 멈추므로 상한을 둔다.
+// Figma 예시는 1~24 이고, 칩 목록이 한눈에 들어오는 범위를 넘지 않게 잡았다.
+export const maxAutoZoneCount = 100
+
 // 자동 생성 — 접두 + 시작~끝 범위. 접두 `없음` 은 숫자만 만든다(Figma 1:5438).
 export function buildAutoZoneLabels(
   prefix: string,
   start: string,
   end: string,
 ): string[] {
+  if (start.trim() === '' || end.trim() === '') return []
+
   const from = Number(start)
   const to = Number(end)
-  if (!Number.isInteger(from) || !Number.isInteger(to)) return []
-  if (start.trim() === '' || end.trim() === '') return []
+  // isInteger 는 2^53 을 넘는 값도 통과시킨다. 그대로 두면 루프가 끝나지 않는다.
+  if (!Number.isSafeInteger(from) || !Number.isSafeInteger(to)) return []
   if (from < 1 || to < from) return []
+  if (to - from + 1 > maxAutoZoneCount) return []
 
   const labels: string[] = []
   for (let number = from; number <= to; number += 1) {

@@ -15,6 +15,7 @@ export {
   isDraftDirty,
   isDraftTouched,
   isQuestionInvalid,
+  maxAutoZoneCount,
   questionErrorMessage,
   validateDraft,
 } from './model/draft'
