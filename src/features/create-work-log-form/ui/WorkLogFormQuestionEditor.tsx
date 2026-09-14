@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import styled from '@emotion/styled'
 import type {
   WorkLogFormDraftQuestion,
@@ -10,11 +11,7 @@ import {
 import { SelectMenu } from '@/shared/ui'
 import closeIcon from '@/shared/ui/assets/close.svg'
 import trashIcon from '@/shared/ui/assets/trash.svg'
-import {
-  changeQuestionType,
-  createDraftOption,
-  hasOptions,
-} from '../model/draft'
+import { addQuestionOption, changeQuestionType, hasOptions } from '../model/draft'
 
 interface WorkLogFormQuestionEditorProps {
   question: WorkLogFormDraftQuestion
@@ -35,6 +32,7 @@ export function WorkLogFormQuestionEditor({
   onChange,
   onRemove,
 }: WorkLogFormQuestionEditorProps) {
+  const [focusOptionId, setFocusOptionId] = useState<string | null>(null)
   const showOptions = hasOptions(question.type)
   const hasEtc = question.options.some((option) => option.isEtc)
   const questionNumber = index + 1
@@ -60,10 +58,15 @@ export function WorkLogFormQuestionEditor({
   }
 
   function handleOptionAdd(isEtc: boolean) {
-    onChange({
-      ...question,
-      options: [...question.options, createDraftOption(isEtc)],
-    })
+    const next = addQuestionOption(question, isEtc)
+    // 새로 만든 선택지는 바로 입력할 수 있게 포커스를 옮긴다. 기타 행은 입력이 없다.
+    if (!isEtc) {
+      const added = next.options.find(
+        (option) => !question.options.some((prev) => prev.id === option.id),
+      )
+      setFocusOptionId(added?.id ?? null)
+    }
+    onChange(next)
   }
 
   return (
@@ -121,24 +124,31 @@ export function WorkLogFormQuestionEditor({
                     alt=""
                     aria-hidden="true"
                   />
-                  {option.isEtc && <EtcLabel>기타:</EtcLabel>}
-                  <OptionInput
-                    $underline={option.isEtc}
-                    value={option.value}
-                    placeholder={option.isEtc ? '' : `옵션${optionIndex + 1}`}
-                    aria-label={
-                      option.isEtc
-                        ? `${questionNumber}번 항목 기타 선택지`
-                        : `${questionNumber}번 항목 ${optionIndex + 1}번 선택지`
-                    }
-                    onChange={(event) =>
-                      handleOptionChange(option.id, event.target.value)
-                    }
-                  />
+                  {option.isEtc ? (
+                    <>
+                      <EtcLabel>기타:</EtcLabel>
+                      {/* 응답자가 적을 자리다. 양식을 만드는 쪽은 입력하지 않는다. */}
+                      <EtcBlank aria-hidden="true" />
+                    </>
+                  ) : (
+                    <OptionInput
+                      autoFocus={option.id === focusOptionId}
+                      value={option.value}
+                      placeholder={`옵션${optionIndex + 1}`}
+                      aria-label={`${questionNumber}번 항목 ${optionIndex + 1}번 선택지`}
+                      onChange={(event) =>
+                        handleOptionChange(option.id, event.target.value)
+                      }
+                    />
+                  )}
                 </OptionBody>
                 <IconButton
                   type="button"
-                  aria-label={`${questionNumber}번 항목 ${optionIndex + 1}번 선택지 삭제`}
+                  aria-label={
+                    option.isEtc
+                      ? `${questionNumber}번 항목 기타 선택지 삭제`
+                      : `${questionNumber}번 항목 ${optionIndex + 1}번 선택지 삭제`
+                  }
                   onClick={() => handleOptionRemove(option.id)}
                 >
                   <CloseIcon src={closeIcon} alt="" aria-hidden="true" />
@@ -292,14 +302,22 @@ const EtcLabel = styled.span`
   white-space: nowrap;
 `
 
-const OptionInput = styled.input<{ $underline: boolean }>`
+// 기타 행의 밑줄 자리(Figma 1:4474). 응답자 입력란이라 여기서는 비워 둔다.
+const EtcBlank = styled.span`
   min-width: 0;
+  height: 40px;
   flex: 1;
-  height: ${({ $underline }) => ($underline ? '40px' : 'auto')};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.textFaint};
+`
+
+const OptionInput = styled.input`
+  min-width: 0;
+  height: 40px;
+  flex: 1;
   padding: 0;
   border: 0;
-  border-bottom: ${({ $underline, theme }) =>
-    $underline ? `1px solid ${theme.colors.textFaint}` : '0'};
+  /* 포커스 때 아래 선만 색이 바뀌도록 자리를 미리 잡아 둔다. */
+  border-bottom: 2px solid transparent;
   background: transparent;
   color: ${({ theme }) => theme.colors.textBody};
   font: inherit;
@@ -310,9 +328,9 @@ const OptionInput = styled.input<{ $underline: boolean }>`
     color: ${({ theme }) => theme.colors.textFaint};
   }
 
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.accent};
-    outline-offset: 2px;
+  &:focus {
+    outline: 0;
+    border-bottom-color: ${({ theme }) => theme.colors.accent};
   }
 `
 
