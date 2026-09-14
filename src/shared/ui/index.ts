@@ -13,6 +13,7 @@ export type {
 } from './DataTable'
 export { SearchBar } from './SearchBar'
 export { LinkButton } from './LinkButton'
+export { ActionButton } from './ActionButton'
 export { DeleteConfirmationDialog } from './DeleteConfirmationDialog'
 export { LeaveConfirmationDialog } from './LeaveConfirmationDialog'
 export { ValidationDialog } from './ValidationDialog'
