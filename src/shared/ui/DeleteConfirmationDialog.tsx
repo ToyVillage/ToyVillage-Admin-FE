@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
 import warningIcon from './assets/warning.svg'
@@ -7,12 +7,15 @@ interface DeleteConfirmationDialogProps {
   pending: boolean
   onCancel: () => void
   onConfirm: () => void
+  /** 본문 문구. 생략하면 기본 문구(영구삭제 안내)를 보인다. */
+  description?: ReactNode
 }
 
 export function DeleteConfirmationDialog({
   pending,
   onCancel,
   onConfirm,
+  description = defaultDescription,
 }: DeleteConfirmationDialogProps) {
   const titleId = useId()
   const descriptionId = useId()
@@ -71,11 +74,7 @@ export function DeleteConfirmationDialog({
         <Copy>
           <WarningIcon src={warningIcon} alt="" aria-hidden="true" />
           <Title id={titleId}>정말 삭제하시겠습니까?</Title>
-          <Description id={descriptionId}>
-            삭제하신 뒤에는 영구삭제되며
-            <br />
-            복구 할 수 없습니다
-          </Description>
+          <Description id={descriptionId}>{description}</Description>
         </Copy>
         <Actions>
           <CancelButton
@@ -100,6 +99,14 @@ export function DeleteConfirmationDialog({
     document.body,
   )
 }
+
+const defaultDescription = (
+  <>
+    삭제하신 뒤에는 영구삭제되며
+    <br />
+    복구 할 수 없습니다
+  </>
+)
 
 const Overlay = styled.div`
   position: fixed;

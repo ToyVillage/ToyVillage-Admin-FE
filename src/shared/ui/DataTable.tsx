@@ -149,7 +149,8 @@ interface DataTableProps {
   sort?: DataTableSort
   selection?: DataTableSelection
   pagination?: DataTablePagination
-  emptyLabel?: string
+  // 문자열 한 줄 또는 여러 줄 블록(ReactNode). 호출부가 줄 구성을 정한다.
+  emptyLabel?: ReactNode
   emptyMinHeight?: number
   appearance?: DataTableAppearance
 }
@@ -542,9 +543,14 @@ const SortOption = styled.button`
     font-weight: 700;
   }
 
-  &:hover,
+  &:hover {
+    background: ${({ theme }) => theme.colors.background};
+  }
+
+  /* 키보드 초점은 색만이 아니라 outline 으로 보인다. 메뉴 밖으로 잘리지 않게 안쪽에 그린다. */
   &:focus-visible {
-    outline: 0;
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: -2px;
     background: ${({ theme }) => theme.colors.background};
   }
 `

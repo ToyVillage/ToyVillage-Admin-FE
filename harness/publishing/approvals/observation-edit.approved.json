@@ -1,0 +1,30 @@
+{
+  "feature": "observation-edit",
+  "approvedAt": "2026-09-15T11:24:38.685Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S17",
+    "S18",
+    "S20",
+    "S21",
+    "S22"
+  ],
+  "scenarioHash": "4ef4cd099537be7f1273c6dfc3f002df99854abbc8140819cf69ed3bd2160538",
+  "e2eHash": "61f97604d3138953270e89dd6c47721c59e45bca5e57de10e0a06ef65c6a39f3"
+}

@@ -42,6 +42,17 @@ import {
   WorkLogFormDetailPage,
   WorkLogListPage,
 } from '@/pages/work-logs'
+import {
+  CreateIndividualPage,
+  CreateSpeciesPage,
+  EditIndividualPage,
+  EditObservationPage,
+  EditSpeciesPage,
+  IndividualDetailPage,
+  ObservationDetailPage,
+  SpeciesDetailPage,
+  SpeciesListPage,
+} from '@/pages/species'
 import { TeamSettingsPage } from '@/pages/settings/teams'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
@@ -127,6 +138,31 @@ const router = createBrowserRouter([
           },
           { path: '/work-logs/forms/:id', element: <WorkLogFormDetailPage /> },
           { path: '/work-logs/:id', element: <WorkLogDetailPage /> },
+          { path: '/species', element: <SpeciesListPage /> },
+          // 정적 경로 `create` 가 `:speciesId` 보다 우선한다(React Router 경로 순위).
+          { path: '/species/create', element: <CreateSpeciesPage /> },
+          { path: '/species/:speciesId', element: <SpeciesDetailPage /> },
+          { path: '/species/:speciesId/edit', element: <EditSpeciesPage /> },
+          {
+            path: '/species/:speciesId/individuals/create',
+            element: <CreateIndividualPage />,
+          },
+          {
+            path: '/species/:speciesId/individuals/:individualId/edit',
+            element: <EditIndividualPage />,
+          },
+          {
+            path: '/species/:speciesId/individuals/:individualId',
+            element: <IndividualDetailPage />,
+          },
+          {
+            path: '/species/:speciesId/individuals/:individualId/observations/:observationId',
+            element: <ObservationDetailPage />,
+          },
+          {
+            path: '/species/:speciesId/individuals/:individualId/observations/:observationId/edit',
+            element: <EditObservationPage />,
+          },
           { path: '/settings/teams', element: <TeamSettingsPage /> },
         ],
       },
