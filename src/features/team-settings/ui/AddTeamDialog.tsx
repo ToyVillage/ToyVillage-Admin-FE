@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
+import { trapTab } from '../lib/trapTab'
 
 interface AddTeamDialogProps {
   onCancel: () => void
@@ -14,9 +15,12 @@ export function AddTeamDialog({ onCancel, onSubmit }: AddTeamDialogProps) {
   const inputId = useId()
   const [name, setName] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     const appRoot = document.getElementById('root')
+    previousFocusRef.current = document.activeElement as HTMLElement | null
     appRoot?.setAttribute('inert', '')
     appRoot?.setAttribute('aria-hidden', 'true')
     inputRef.current?.focus()
@@ -25,7 +29,11 @@ export function AddTeamDialog({ onCancel, onSubmit }: AddTeamDialogProps) {
       if (event.key === 'Escape') {
         event.preventDefault()
         onCancel()
+        return
       }
+
+      if (event.key !== 'Tab') return
+      trapTab(dialogRef.current, event)
     }
 
     document.addEventListener('keydown', handleKeyDown)
@@ -33,6 +41,10 @@ export function AddTeamDialog({ onCancel, onSubmit }: AddTeamDialogProps) {
       document.removeEventListener('keydown', handleKeyDown)
       appRoot?.removeAttribute('inert')
       appRoot?.removeAttribute('aria-hidden')
+
+      if (previousFocusRef.current?.isConnected) {
+        previousFocusRef.current.focus()
+      }
     }
   }, [onCancel])
 
@@ -45,7 +57,12 @@ export function AddTeamDialog({ onCancel, onSubmit }: AddTeamDialogProps) {
 
   return createPortal(
     <Overlay onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
-      <Dialog role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <Dialog
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
         <TitleRow>
           <Title id={titleId}>팀 추가하기</Title>
         </TitleRow>
@@ -142,6 +159,11 @@ const Input = styled.input`
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textDim};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 2px;
   }
 `
 

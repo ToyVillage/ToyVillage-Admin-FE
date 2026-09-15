@@ -1,7 +1,8 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
 import type { TeamMember } from '@/entities/team'
+import { trapTab } from '../lib/trapTab'
 
 interface AddTeamMemberDialogProps {
   teamName: string
@@ -23,17 +24,26 @@ export function AddTeamMemberDialog({
   const searchId = useId()
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [keyword, setKeyword] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     const appRoot = document.getElementById('root')
+    previousFocusRef.current = document.activeElement as HTMLElement | null
     appRoot?.setAttribute('inert', '')
     appRoot?.setAttribute('aria-hidden', 'true')
+    searchRef.current?.focus()
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         event.preventDefault()
         onCancel()
+        return
       }
+
+      if (event.key !== 'Tab') return
+      trapTab(dialogRef.current, event)
     }
 
     document.addEventListener('keydown', handleKeyDown)
@@ -41,6 +51,10 @@ export function AddTeamMemberDialog({
       document.removeEventListener('keydown', handleKeyDown)
       appRoot?.removeAttribute('inert')
       appRoot?.removeAttribute('aria-hidden')
+
+      if (previousFocusRef.current?.isConnected) {
+        previousFocusRef.current.focus()
+      }
     }
   }, [onCancel])
 
@@ -67,7 +81,12 @@ export function AddTeamMemberDialog({
 
   return createPortal(
     <Overlay onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
-      <Dialog role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <Dialog
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
         <Header>
           <Title id={titleId}>팀원 추가</Title>
           <Subtitle>{teamName}에 추가할 직원을 골라 주세요</Subtitle>
@@ -76,6 +95,7 @@ export function AddTeamMemberDialog({
         <VisuallyHidden htmlFor={searchId}>이름으로 검색</VisuallyHidden>
         <Search
           id={searchId}
+          ref={searchRef}
           type="search"
           value={keyword}
           placeholder="이름으로 검색"
@@ -213,6 +233,11 @@ const Search = styled.input`
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textDim};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 2px;
   }
 `
 
