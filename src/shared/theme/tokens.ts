@@ -34,6 +34,7 @@ export const tokens = {
     divider: '#727272',
     avatar: '#D9D9D9',
     iconMuted: '#858585',
+    menuChevron: '#858591', // gray/70 — 사이드바 대분류 펼침 chevron
     danger: '#FF3131',
     filePng: '#13A76B',
     fileJpg: '#E8B64C',

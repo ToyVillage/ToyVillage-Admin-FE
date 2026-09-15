@@ -79,7 +79,7 @@ paths: src/app, src/features/sidebar, src/shared/ui
 - 닫기 버튼 (36,32) 36×36 / 프로필 y=92, avatar 64, gap 12, 이름 26px Medium
 - 메뉴 묶음 x=20, y=222, width 360, 세로 gap 8
 - 대분류·대시보드 항목: padding `12px 36px`, gap 12, 아이콘 32, 라벨 22px SemiBold, radius 12px
-- chevron 24×24, 항목 왼쪽 기준 x=300 y=16
+- chevron 24×24(선 `#858591`), 항목 왼쪽 기준 x=300 y=16 절대 위치
 - 하위메뉴 묶음: padding `4px 0`, gap 4
 - 하위 항목: padding `11px 36px 11px 92px`, radius 12px, 라벨 20px Medium `#5C5C69`
   (선택 상태는 배경 `#E8E9FF` + 텍스트 `#4952FF`)
@@ -112,7 +112,8 @@ paths: src/app, src/features/sidebar, src/shared/ui
 - 스타일은 Emotion을 사용한다. solid color/font family는 theme 의미 토큰을 쓰고,
   px·rgba·spacing·radius 등 구현값은 styled 블록에 직접 작성한다.
 - 라우팅은 React Router의 `Link` 를 사용한다.
-- 신규 토큰: `color.subMenuText`(`#5C5C69`) — 하위 메뉴 텍스트.
+- 신규 토큰: `color.subMenuText`(`#5C5C69`) — 하위 메뉴 텍스트, `color.menuChevron`(`#858591`) — 펼침 chevron.
+- chevron 은 Figma 내보내기 SVG 의 viewBox 가 어긋나 있어 24×24 인라인 SVG 로 직접 그린다.
 - `업무관리 > 업무지시` 를 `/tasks` 로 본다(업무관리 화면의 기존 라우트). 다른 매핑이 필요하면 spec 을 고친다.
 - 패널 높이는 항상 화면 높이(`100dvh`)에 맞춘다. 메뉴가 펼쳐져 길어지면 패널이 화면 밖으로 밀려나지 않고
   메뉴 영역만 세로로 스크롤한다. 닫기 버튼과 프로필은 스크롤과 무관하게 제자리에 남는다.

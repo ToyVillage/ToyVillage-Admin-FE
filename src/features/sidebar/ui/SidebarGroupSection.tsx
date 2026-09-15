@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import styled from '@emotion/styled'
-import chevronDownIcon from './assets/chevron-down.svg'
 import { SidebarIcon } from './SidebarIcon'
 import type { SidebarGroup } from '../model/types'
 
@@ -33,7 +32,9 @@ export function SidebarGroupSection({
       >
         <SidebarIcon name={group.icon} />
         <GroupLabel>{group.label}</GroupLabel>
-        <Chevron src={chevronDownIcon} alt="" $open={open} />
+        <Chevron viewBox="0 0 24 24" aria-hidden="true" $open={open}>
+          <path d="M3.2 7.2 12 16.8 20.8 7.2" />
+        </Chevron>
       </GroupHeader>
 
       {open && (
@@ -89,12 +90,18 @@ const GroupLabel = styled.span`
   line-height: 1.2;
 `
 
-const Chevron = styled.img<{ $open: boolean }>`
+// Figma 는 24×24 chevron 을 항목 기준 (300, 16) 절대 위치에 둔다. 펼치면 위를 향한다.
+const Chevron = styled.svg<{ $open: boolean }>`
   position: absolute;
   top: 16px;
   left: 300px;
   width: 24px;
   height: 24px;
+  fill: none;
+  stroke: ${({ theme }) => theme.colors.menuChevron};
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
   transform: rotate(${({ $open }) => ($open ? '180deg' : '0deg')});
 `
 
