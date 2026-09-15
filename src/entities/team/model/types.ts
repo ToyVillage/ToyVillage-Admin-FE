@@ -20,3 +20,10 @@ export interface TeamTree {
   /** 팀 목록. 미배정 그룹이 마지막 항목으로 포함된다. */
   groups: TeamTreeGroup[]
 }
+
+/** 팀 관리 화면(`/settings/teams`)이 다루는 팀 한 건. */
+export interface Team {
+  id: number
+  name: string
+  members: TeamMember[]
+}

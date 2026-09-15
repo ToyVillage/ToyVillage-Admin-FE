@@ -23,6 +23,13 @@ export const tokens = {
     background: '#F5F5F7', // 페이지 배경
     surface: '#FFFFFF', // 카드/테이블 표면
     surfaceSunken: '#FAFAFC', // 업무일지 양식 파일 업로드 드롭존 배경
+    surfaceRaised: '#FAFAFB', // 팀 관리 rail 의 `팀 추가하기` 버튼 배경
+    inkSurface: '#111114', // 팀 관리 선택된 rail 행 / 검은 pill 버튼 배경
+    textDim: '#A1A1A9', // gray — 선택 행 보조 텍스트 · 모달 placeholder · 비활성 버튼 글자
+    dividerFaint: '#EEEEF1', // gray/5 — 팀 관리 패널·표 구분선
+    avatarMuted: '#ECECEF', // 팀원 추가 모달 아바타 원 배경
+    dangerText: '#E5484D', // `팀 삭제` 버튼 글자
+    dangerBorder: '#F3C0C0', // `팀 삭제` 버튼 테두리
     tableHeader: '#E1E1E1', // 테이블 헤더
     tableHeaderStrong: '#DDDDE3', // 업무 테이블 헤더 / 진행중 pill / 업로드 드롭존
     tableDivider: '#EDEDF0', // gray/10 — 급여 이력 표 행 구분선

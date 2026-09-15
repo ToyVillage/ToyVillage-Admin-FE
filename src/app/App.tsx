@@ -53,6 +53,7 @@ import {
   SpeciesDetailPage,
   SpeciesListPage,
 } from '@/pages/species'
+import { TeamSettingsPage } from '@/pages/settings/teams'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
 
@@ -162,6 +163,7 @@ const router = createBrowserRouter([
             path: '/species/:speciesId/individuals/:individualId/observations/:observationId/edit',
             element: <EditObservationPage />,
           },
+          { path: '/settings/teams', element: <TeamSettingsPage /> },
         ],
       },
     ],
