@@ -1,57 +1,118 @@
-import { test, expect, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
-test('사이드바 열기와 닫기', async ({ page }) => {
-  await page.goto('/notices/list')
+// 승인된 시나리오(sidebar.approved.json)를 변환한 것.
+// AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 
-  await page.getByRole('button', { name: '사이드바 열기' }).click()
+const sidebar = (page: Page) => page.getByRole('dialog', { name: '사이드바' })
+const group = (page: Page, name: string) =>
+  page.getByRole('button', { name, exact: true })
 
-  const sidebar = page.getByRole('dialog', { name: '사이드바' })
-  await expect(sidebar).toBeVisible()
-  await expect(sidebar.getByText('관리자 1')).toBeVisible()
-
-  await page.keyboard.press('Escape')
-  await expect(sidebar).toBeHidden()
-})
-
-test('사이드바 메뉴 클릭 시 이동하고 닫힘', async ({ page }) => {
-  await page.goto('/notices/list')
-
-  await page.getByRole('button', { name: '사이드바 열기' }).click()
-  await page.getByRole('link', { name: '자료실 바로가기' }).click()
-
-  await expect(page).toHaveURL(/\/notices\/resources$/)
-  await expect(page.getByRole('dialog', { name: '사이드바' })).toBeHidden()
-})
-
-const activeColor = 'rgb(73, 82, 255)'
-const activeBackground = 'rgb(232, 233, 255)'
-
-async function openMenu(page: Page, path: string, name: string) {
+async function openSidebar(page: Page, path: string) {
   await page.goto(path)
   await page.getByRole('button', { name: '사이드바 열기' }).click()
-
-  const menu = page.getByRole('link', { name })
-  await expect(menu).toBeVisible()
-  return menu
+  await expect(sidebar(page)).toBeVisible()
 }
 
-test('현재 라우트의 메뉴를 활성 색으로 표시', async ({ page }) => {
-  const menu = await openMenu(page, '/task-reports', '업무 보고 바로가기')
+test('S1: 사이드바 열기와 닫기', async ({ page }) => {
+  await openSidebar(page, '/notices/list')
+  await expect(sidebar(page).getByText('관리자 1')).toBeVisible()
 
-  await expect(menu).toHaveCSS('color', activeColor)
-  await expect(menu).toHaveCSS('background-color', activeBackground)
+  await page.keyboard.press('Escape')
+  await expect(sidebar(page)).toBeHidden()
 })
 
-test('상세 화면에서도 같은 메뉴가 활성', async ({ page }) => {
-  const menu = await openMenu(page, '/task-reports/r1', '업무 보고 바로가기')
+test('S2: 대분류를 펼쳐 하위 메뉴로 이동', async ({ page }) => {
+  // `/` 는 어느 대분류에도 속하지 않아 모두 접힌 상태로 열린다.
+  await openSidebar(page, '/')
 
-  await expect(menu).toHaveCSS('color', activeColor)
-  await expect(menu).toHaveCSS('background-color', activeBackground)
+  await group(page, '공지사항').click()
+  await page.getByRole('link', { name: '자료실', exact: true }).click()
+
+  await expect(page).toHaveURL(/\/notices\/resources$/)
+  await expect(sidebar(page)).toBeHidden()
 })
 
-test('상세 화면에서 다른 메뉴는 비활성', async ({ page }) => {
-  const menu = await openMenu(page, '/task-reports/r1', '업무 관리 바로가기')
+test('S3: 한 번에 하나의 대분류만 펼쳐진다', async ({ page }) => {
+  await openSidebar(page, '/')
 
-  await expect(menu).not.toHaveCSS('color', activeColor)
-  await expect(menu).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await group(page, '공지사항').click()
+  await expect(page.getByRole('link', { name: '단체예약' })).toBeVisible()
+
+  await group(page, '재고관리').click()
+  await expect(page.getByText('사육용품')).toBeVisible()
+  await expect(page.getByRole('link', { name: '단체예약' })).toBeHidden()
+})
+
+test('S4: 같은 대분류를 다시 누르면 접힌다', async ({ page }) => {
+  await openSidebar(page, '/notices/list')
+
+  await group(page, '개체관리').click()
+  await expect(group(page, '개체관리')).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByText('개체 카드')).toBeVisible()
+
+  await group(page, '개체관리').click()
+  await expect(group(page, '개체관리')).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  )
+  await expect(page.getByText('개체 카드')).toBeHidden()
+})
+
+test('S5: 대분류 헤더는 화면을 이동시키지 않는다', async ({ page }) => {
+  await openSidebar(page, '/notices/list')
+
+  await group(page, '업무관리').click()
+
+  await expect(page).toHaveURL(/\/notices\/list$/)
+  await expect(sidebar(page)).toBeVisible()
+})
+
+test('S6: 현재 경로의 대분류가 자동으로 펼쳐진다', async ({ page }) => {
+  await openSidebar(page, '/feeds')
+
+  await expect(group(page, '개체관리')).toHaveAttribute('aria-expanded', 'true')
+  await expect(
+    page.getByRole('link', { name: '먹이 급여 관리' }),
+  ).toBeVisible()
+})
+
+test('S7: 대시보드는 바로 이동하고 현재 경로일 때 활성이다', async ({
+  page,
+}) => {
+  await openSidebar(page, '/')
+  const dashboard = page.getByRole('link', { name: '대시보드' })
+  await expect(dashboard).toHaveCSS('color', 'rgb(73, 82, 255)')
+  await expect(dashboard).toHaveCSS('background-color', 'rgb(232, 233, 255)')
+
+  await openSidebar(page, '/tasks')
+  await page.getByRole('link', { name: '대시보드' }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(sidebar(page)).toBeHidden()
+})
+
+test('S8: 먹이 급여 관리로 이동', async ({ page }) => {
+  await openSidebar(page, '/notices/list')
+
+  await group(page, '개체관리').click()
+  await page.getByRole('link', { name: '먹이 급여 관리' }).click()
+
+  await expect(page).toHaveURL(/\/feeds$/)
+  await expect(sidebar(page)).toBeHidden()
+})
+
+test('S9: 화면이 없는 하위 항목은 비활성이다', async ({ page }) => {
+  await openSidebar(page, '/notices/list')
+
+  await group(page, '설정').click()
+
+  const teamSettings = page.getByText('팀 설정', { exact: true })
+  await expect(teamSettings).toHaveAttribute('aria-disabled', 'true')
+  await expect(page.getByRole('link', { name: '팀 설정' })).toHaveCount(0)
+})
+
+test('S10: 상세 경로에서도 같은 대분류가 펼쳐진다', async ({ page }) => {
+  await openSidebar(page, '/tasks/t-1')
+
+  await expect(group(page, '업무관리')).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByRole('link', { name: '업무지시' })).toBeVisible()
 })
