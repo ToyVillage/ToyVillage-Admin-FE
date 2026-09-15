@@ -54,4 +54,10 @@ export const mockSidebarItems: SidebarNavItem[] = [
     to: '/work-logs',
     icon: 'workLog',
   },
+  {
+    id: 'species',
+    label: '개체관리 바로가기',
+    to: '/species',
+    icon: 'paw',
+  },
 ]

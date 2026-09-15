@@ -1,6 +1,7 @@
 export type SidebarIconName =
   | 'calendar'
   | 'megaphone'
+  | 'paw'
   | 'people'
   | 'storage'
   | 'task'

@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import calendarIcon from './assets/calendar.svg'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
 import megaphoneIcon from './assets/megaphone.svg'
+import pawIcon from './assets/paw.svg'
 import peopleIcon from './assets/people.svg'
 import storageIcon from './assets/storage.svg'
 import taskIcon from './assets/task.svg'
@@ -17,6 +18,7 @@ import type { SidebarIconName, SidebarNavItem } from '../model/types'
 const sidebarIcons: Record<SidebarIconName, string> = {
   calendar: calendarIcon,
   megaphone: megaphoneIcon,
+  paw: pawIcon,
   people: peopleIcon,
   storage: storageIcon,
   task: taskIcon,
