@@ -1,0 +1,1 @@
+export { TeamSettingsPage } from './TeamSettingsPage'

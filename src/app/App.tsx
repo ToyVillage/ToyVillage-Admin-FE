@@ -42,6 +42,7 @@ import {
   WorkLogFormDetailPage,
   WorkLogListPage,
 } from '@/pages/work-logs'
+import { TeamSettingsPage } from '@/pages/settings/teams'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
 
@@ -126,6 +127,7 @@ const router = createBrowserRouter([
           },
           { path: '/work-logs/forms/:id', element: <WorkLogFormDetailPage /> },
           { path: '/work-logs/:id', element: <WorkLogDetailPage /> },
+          { path: '/settings/teams', element: <TeamSettingsPage /> },
         ],
       },
     ],
