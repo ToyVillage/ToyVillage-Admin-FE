@@ -15,6 +15,8 @@ export const tokens = {
     textBody: '#484854', // gray/90 — 업무일지 시트 셀 값·양식 질문 텍스트
     textFaint: '#AFAFBA', // gray/40 — 검색 placeholder·"검색결과가 없습니다"
     optionMuted: '#9999A5', // gray/50 — 셀렉트 드롭다운 비선택 항목
+    choiceMuted: '#70707D', // 개체관리 pill 미선택 글자 (분류군·법정지정분류·성별)
+    textValue: '#5C5C68', // 개체관리 종 상세 프로필 카드 정보 값
     textMuted: '#7C7C7C', // 비활성 탭
     textDate: '#747474',
     background: '#F5F5F7', // 페이지 배경
@@ -23,6 +25,7 @@ export const tokens = {
     tableHeaderStrong: '#DDDDE3', // 업무 테이블 헤더 / 진행중 pill / 업로드 드롭존
     warning: '#FDB542', // 반려 상태 / 우선순위 중
     warningBg: '#FFE8C3', // 반려 상태 배경 / 우선순위 중 배경
+    warningText: '#8A5A00', // 법정지정분류 뱃지 글자 (warningBg 위)
     dangerBg: '#FFCECE', // 우선순위 상 배경 / 삭제 모달 아이콘 배경
     success: '#00B48A', // 성공 토스트 아이콘
     border: '#A1A1A1',
