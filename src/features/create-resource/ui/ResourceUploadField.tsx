@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type Ref } from 'react'
 import styled from '@emotion/styled'
 import { uploadFile } from '@/entities/file'
-import filePdfIcon from './assets/file-pdf.svg'
-import filePngIcon from './assets/file-png.svg'
-import fileJpgIcon from './assets/file-jpg.svg'
-import fileEtcIcon from './assets/file-etc.svg'
+import filePdfIcon from '@/shared/ui/assets/file-pdf.svg'
+import filePngIcon from '@/shared/ui/assets/file-png.svg'
+import fileJpgIcon from '@/shared/ui/assets/file-jpg.svg'
+import fileEtcIcon from '@/shared/ui/assets/file-etc.svg'
 import downloadIcon from './assets/download.svg'
 
 const maxFileSize = 50 * 1024 * 1024
