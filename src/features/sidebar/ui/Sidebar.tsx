@@ -25,8 +25,11 @@ export function Sidebar() {
   const [prevRouteKey, setPrevRouteKey] = useState<string | null>(routeKey)
   if (prevRouteKey !== routeKey) {
     setPrevRouteKey(routeKey)
-    setOpenGroupId(routeKey ? findGroupIdForRoute(routeKey) : null)
+    setOpenGroupId(routeKey ? findActiveMenu(routeKey).groupId : null)
   }
+
+  // 현재 라우트와 일치하는 하위 항목만 선택 상태로 표시한다(Figma `상태=선택`).
+  const activeItemId = findActiveMenu(pathname).itemId
 
   useEffect(() => {
     if (!isOpen) return
@@ -79,6 +82,7 @@ export function Sidebar() {
               key={group.id}
               group={group}
               open={openGroupId === group.id}
+              activeItemId={activeItemId}
               onToggle={() =>
                 setOpenGroupId((current) =>
                   current === group.id ? null : group.id,
@@ -94,16 +98,26 @@ export function Sidebar() {
 }
 
 // 상세/생성 같은 하위 경로도 같은 메뉴의 범위로 본다.
-function findGroupIdForRoute(pathname: string): string | null {
+// 여러 항목이 걸리면 더 긴(구체적인) 경로를 고른다.
+function findActiveMenu(pathname: string): {
+  groupId: string | null
+  itemId: string | null
+} {
+  let best: { groupId: string; itemId: string; length: number } | null = null
+
   for (const group of mockSidebarGroups) {
-    const matched = group.items.some(
-      (item) =>
-        item.to != null &&
-        (pathname === item.to || pathname.startsWith(`${item.to}/`)),
-    )
-    if (matched) return group.id
+    for (const item of group.items) {
+      if (!item.to) continue
+      const matched =
+        pathname === item.to || pathname.startsWith(`${item.to}/`)
+      if (!matched) continue
+      if (!best || item.to.length > best.length) {
+        best = { groupId: group.id, itemId: item.id, length: item.to.length }
+      }
+    }
   }
-  return null
+
+  return { groupId: best?.groupId ?? null, itemId: best?.itemId ?? null }
 }
 
 const Layer = styled.div`

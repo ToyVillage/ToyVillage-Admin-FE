@@ -7,6 +7,8 @@ import type { SidebarGroup } from '../model/types'
 interface SidebarGroupSectionProps {
   group: SidebarGroup
   open: boolean
+  // 현재 라우트와 일치하는 하위 항목 id. 없으면 null.
+  activeItemId: string | null
   onToggle: () => void
   onNavigate: () => void
 }
@@ -15,6 +17,7 @@ interface SidebarGroupSectionProps {
 export function SidebarGroupSection({
   group,
   open,
+  activeItemId,
   onToggle,
   onNavigate,
 }: SidebarGroupSectionProps) {
@@ -37,7 +40,12 @@ export function SidebarGroupSection({
         <SubList id={listId}>
           {group.items.map((item) =>
             item.to ? (
-              <SubLink key={item.id} to={item.to} onClick={onNavigate}>
+              <SubLink
+                key={item.id}
+                to={item.to}
+                onClick={onNavigate}
+                $active={item.id === activeItemId}
+              >
                 {item.label}
               </SubLink>
             ) : (
@@ -99,15 +107,21 @@ const subItemLayout = `
   display: flex;
   align-items: center;
   padding: 11px 36px 11px 92px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 20px;
   font-weight: 500;
   line-height: 1.2;
 `
 
-const SubLink = styled(Link)`
+// Figma `sidebar / 하위메뉴 항목`(1702:15280)의 `상태=선택` 은 blue 밴드 + blue 텍스트다.
+const SubLink = styled(Link, {
+  shouldForwardProp: (prop) => prop !== '$active',
+})<{ $active: boolean }>`
   ${subItemLayout}
-  color: ${({ theme }) => theme.colors.subMenuText};
+  background: ${({ theme, $active }) =>
+    $active ? theme.colors.accentBg : 'transparent'};
+  color: ${({ theme, $active }) =>
+    $active ? theme.colors.accent : theme.colors.subMenuText};
   text-decoration: none;
 `
 

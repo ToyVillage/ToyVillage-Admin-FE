@@ -71,7 +71,7 @@ paths: src/app, src/features/sidebar, src/shared/ui
 | 개체관리 | paw | 개체 카드 → 화면 미구현 · 먹이 급여 관리 → `/feeds` |
 | 시설관리 | 계단 | 점검 · 보수요청 / 공통 · 3층 / 4층 / 5층 / 6층 → 모두 화면 미구현 |
 | 재고관리 | 상자 | 식음료 / 동물 먹이 / 사육용품 / 비품 / 소모품 / 기타 → 모두 화면 미구현 |
-| 설정 | 없음(Figma 아이콘 자리가 비어 있음) | 팀 설정 / 직원 계정 관리 / 권한 관리 → 모두 화면 미구현 |
+| 설정 | `mdi:cog` | 팀 설정 / 직원 계정 관리 / 권한 관리 → 모두 화면 미구현 |
 
 ## 치수 (Figma)
 
@@ -81,7 +81,8 @@ paths: src/app, src/features/sidebar, src/shared/ui
 - 대분류·대시보드 항목: padding `12px 36px`, gap 12, 아이콘 32, 라벨 22px SemiBold, radius 12px
 - chevron 24×24, 항목 왼쪽 기준 x=300 y=16
 - 하위메뉴 묶음: padding `4px 0`, gap 4
-- 하위 항목: padding `11px 36px 11px 92px`, radius 8px, 라벨 20px Medium `#5C5C69`
+- 하위 항목: padding `11px 36px 11px 92px`, radius 12px, 라벨 20px Medium `#5C5C69`
+  (선택 상태는 배경 `#E8E9FF` + 텍스트 `#4952FF`)
 
 ## 데이터
 
@@ -94,8 +95,8 @@ paths: src/app, src/features/sidebar, src/shared/ui
 - `SidebarToggleButton` — 메뉴 아이콘 버튼. 클릭 시 사이드바를 연다.
 - `Sidebar` — 패널. 프로필, 대시보드 항목, 대분류 목록, 닫기 버튼, dim 영역, 펼침 상태를 담당한다.
 - `SidebarItem { item, active, onClick }` — 대시보드 단일 메뉴 한 줄.
-- `SidebarGroupSection { group, open, onToggle, onNavigate }` — 대분류 헤더 + 하위 목록.
-- `SidebarIcon { name }` — 아이콘 mask. `name`이 null이면 같은 크기의 빈 자리를 남긴다(`설정`).
+- `SidebarGroupSection { group, open, activeItemId, onToggle, onNavigate }` — 대분류 헤더 + 하위 목록.
+- `SidebarIcon { name }` — 아이콘 mask.
 - dim 영역은 별도 공개 컴포넌트가 아니라 `Sidebar` 내부 요소로 두고, 클릭 시 사이드바를 닫는다.
 
 ## 접근성
@@ -113,9 +114,14 @@ paths: src/app, src/features/sidebar, src/shared/ui
 - 라우팅은 React Router의 `Link` 를 사용한다.
 - 신규 토큰: `color.subMenuText`(`#5C5C69`) — 하위 메뉴 텍스트.
 - `업무관리 > 업무지시` 를 `/tasks` 로 본다(업무관리 화면의 기존 라우트). 다른 매핑이 필요하면 spec 을 고친다.
-- 메뉴가 펼쳐지면 패널이 뷰포트보다 길어질 수 있으므로 오버레이 레이어가 세로 스크롤한다.
+- 패널 높이는 항상 화면 높이(`100dvh`)에 맞춘다. 메뉴가 펼쳐져 길어지면 패널이 화면 밖으로 밀려나지 않고
+  메뉴 영역만 세로로 스크롤한다. 닫기 버튼과 프로필은 스크롤과 무관하게 제자리에 남는다.
 
 ## 개정 이력
+
+- 2026-09-15: 활성 표시를 대분류가 아닌 **하위 항목**으로 옮기고(`1702:15280` 신규 컴포넌트셋),
+  `설정` 대분류에 `mdi:cog` 아이콘을 넣었다. 하위 항목 radius 를 8px → 12px 로 바꿨다.
+  패널이 화면 밖으로 나가지 않도록 높이를 `100dvh` 로 고정하고 메뉴 영역만 스크롤하게 했다.
 
 - 2026-09-15: 기준 Figma 파일을 `P7Jhnu8qV5m9q2QJNzkwAN` 로 옮기고(구 `fkbMQaiPeIufKzjXXoWAPS` 폐기),
   메뉴 체계를 아코디언(단일 `대시보드` + 대분류 6개)으로 재편했다.

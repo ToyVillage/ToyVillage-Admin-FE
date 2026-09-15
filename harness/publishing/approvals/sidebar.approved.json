@@ -1,6 +1,6 @@
 {
   "feature": "sidebar",
-  "approvedAt": "2026-09-15T01:15:25.375Z",
+  "approvedAt": "2026-09-15T03:00:05.322Z",
   "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
@@ -12,8 +12,9 @@
     "S7",
     "S8",
     "S9",
-    "S10"
+    "S10",
+    "S11"
   ],
-  "scenarioHash": "12838e08a73feeec3779ebd9d52d49b83b360c475f1278c2791ea4e5150a6c63",
-  "e2eHash": "adf7637a6021fe592091727f8eb717addc0e0f086d5fed916e0ccaec14af5252"
+  "scenarioHash": "c8092d6efb5bbb5ccc3a32e2650ca55db21b4ae7b0b197519b9c577cc1d3451b",
+  "e2eHash": "c4539a2b8279fa51082b0bf9f2884140f935522f66e1cd0683608907abdc25a6"
 }
