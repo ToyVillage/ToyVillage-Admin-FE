@@ -49,7 +49,7 @@ export const mockSidebarGroups: SidebarGroup[] = [
     label: '개체관리',
     icon: 'animal',
     items: [
-      { id: 'animal-cards', label: '개체 카드' },
+      { id: 'animal-cards', label: '개체 카드', to: '/species' },
       { id: 'feeds', label: '먹이 급여 관리', to: '/feeds' },
     ],
   },
