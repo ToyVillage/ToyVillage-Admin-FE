@@ -123,7 +123,6 @@ function findActiveMenu(pathname: string): {
 const Layer = styled.div`
   position: fixed;
   z-index: 20;
-  overflow-y: auto;
   inset: 0;
 `
 
@@ -138,12 +137,13 @@ const Overlay = styled.button`
   cursor: pointer;
 `
 
+// 패널은 항상 화면 높이에 맞춘다. 메뉴가 길어지면 패널이 밖으로 나가지 않고 Nav 만 스크롤한다.
 const Panel = styled.aside`
   position: relative;
   width: 400px;
   max-width: 100vw;
-  min-height: 100vh;
-  padding-bottom: 32px;
+  height: 100dvh;
+  overflow: hidden;
   background: ${({ theme }) => theme.colors.surface};
   border-radius: 0 20px 20px 0;
   box-shadow: 4px 0px 10px 0px rgba(0, 0, 0, 0.1);
@@ -201,12 +201,17 @@ const UserName = styled.span`
 `
 
 // Figma 는 메뉴 묶음을 패널 기준 절대 위치(20, 222)에 둔다.
-// 아코디언이 펼쳐지면 아래로 늘어나므로 Layer 가 스크롤한다.
+// 아코디언이 펼쳐져 패널 높이를 넘으면 이 영역만 세로로 스크롤한다.
 const Nav = styled.nav`
+  position: absolute;
+  top: 222px;
+  bottom: 0;
+  left: 20px;
   display: flex;
   width: 360px;
   flex-direction: column;
+  overflow-y: auto;
   gap: 8px;
-  margin-left: 20px;
-  padding-top: 222px;
+  padding-bottom: 32px;
+  overscroll-behavior: contain;
 `

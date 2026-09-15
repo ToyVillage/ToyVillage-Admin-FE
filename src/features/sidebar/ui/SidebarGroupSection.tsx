@@ -64,6 +64,8 @@ export function SidebarGroupSection({
 const Section = styled.div`
   display: flex;
   flex-direction: column;
+  /* Nav 가 스크롤 컨테이너라 항목이 눌려 찌그러지지 않게 한다. */
+  flex-shrink: 0;
 `
 
 const GroupHeader = styled.button`

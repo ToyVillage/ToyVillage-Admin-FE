@@ -24,6 +24,7 @@ const NavItem = styled(Link, {
 })<{ $active: boolean }>`
   display: flex;
   min-height: 56px;
+  flex-shrink: 0;
   align-items: center;
   gap: 12px;
   padding: 12px 36px;
