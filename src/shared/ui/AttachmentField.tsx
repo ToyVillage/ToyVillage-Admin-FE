@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styled from '@emotion/styled'
+import { AttachmentChip } from './AttachmentChip'
+import { FileDropZone } from './FileDropZone'
 import { RemoveIconButton } from './RemoveIconButton'
+import { downloadFile } from './fileAttachment'
 
 const maxFileSize = 50 * 1024 * 1024
 
@@ -27,8 +30,10 @@ interface AttachmentFieldProps {
   /**
    * `task` 는 업무 폼의 `add file` 카드(yot 145:12267)다 — 첨부가 없어도 `첨부자료` 라벨이
    * 보이고, 라벨이 20px 이며 드롭존 배경이 gray/10 이다. 공지·자료 화면은 `default` 다.
+   * `observation` 은 관찰 수정의 `첨부` 카드(yot 1284:15032)다 — 라벨 `첨부` 32px,
+   * 카드 padding 28/32, 칩은 `AttachmentChip`, 카드↔드롭존 16px, 안내 18px 이다.
    */
-  variant?: 'default' | 'task'
+  variant?: 'default' | 'task' | 'observation'
   initialFileNames?: string[]
   /**
    * 이름과 저장소 키를 함께 가진 기존 첨부. 수정 화면에서 쓴다.
@@ -54,7 +59,6 @@ export function AttachmentField({
   onFileItemsChange,
   onAddResult,
 }: AttachmentFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<AttachedFile[]>(() =>
     initialFiles
       ? initialFiles.map(({ fileName, fileKey }, index) => ({
@@ -67,7 +71,6 @@ export function AttachmentField({
           name,
         })),
   )
-  const [isDragging, setIsDragging] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
@@ -85,8 +88,11 @@ export function AttachmentField({
     onFilesChange,
   ])
 
-  function addFiles(fileList: FileList | File[]) {
-    const incomingFiles = Array.from(fileList)
+  const isObservation = variant === 'observation'
+  // `task`·`observation` 은 첨부가 없어도 라벨을 보인다.
+  const showsTitle = files.length > 0 || variant !== 'default'
+
+  function addFiles(incomingFiles: File[]) {
     const oversizedFile = incomingFiles.find((file) => file.size > maxFileSize)
     const attachableFiles = incomingFiles.filter(
       (file) => file.size <= maxFileSize,
@@ -127,29 +133,6 @@ export function AttachmentField({
     })
   }
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    if (event.target.files) addFiles(event.target.files)
-    event.target.value = ''
-  }
-
-  function handleDrop(event: React.DragEvent<HTMLButtonElement>) {
-    event.preventDefault()
-    setIsDragging(false)
-    addFiles(event.dataTransfer.files)
-  }
-
-  function handleDownload(attachedFile: AttachedFile) {
-    const source =
-      attachedFile.file ??
-      new Blob([`${attachedFile.name}\n`], { type: 'text/plain' })
-    const url = URL.createObjectURL(source)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = attachedFile.name
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
   function handleRemove(id: string) {
     setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id))
   }
@@ -157,11 +140,24 @@ export function AttachmentField({
   return (
     <AttachmentSection role="group" aria-label="첨부파일" data-variant={variant}>
       <AttachmentCard data-testid="notice-attachment-card">
-        {(files.length > 0 || variant === 'task') && (
+        {showsTitle && (
           <>
-            <AttachmentTitle>첨부자료</AttachmentTitle>
+            <AttachmentTitle>{isObservation ? '첨부' : '첨부자료'}</AttachmentTitle>
             <FileList>
               {files.map((attachedFile) => {
+                if (isObservation) {
+                  return (
+                    <AttachmentChip
+                      key={attachedFile.id}
+                      fileName={attachedFile.name}
+                      onDownload={() =>
+                        downloadFile(attachedFile.name, attachedFile.file)
+                      }
+                      onRemove={() => handleRemove(attachedFile.id)}
+                    />
+                  )
+                }
+
                 const kind = fileKind(attachedFile.name)
 
                 return (
@@ -171,7 +167,9 @@ export function AttachmentField({
                     <IconButton
                       type="button"
                       aria-label={`${attachedFile.name} 다운로드`}
-                      onClick={() => handleDownload(attachedFile)}
+                      onClick={() =>
+                        downloadFile(attachedFile.name, attachedFile.file)
+                      }
                     >
                       <DownloadIcon viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14" />
@@ -190,38 +188,15 @@ export function AttachmentField({
         )}
       </AttachmentCard>
 
-      <FileInput
-        ref={inputRef}
-        id="notice-attachments"
-        type="file"
-        aria-label="첨부파일 선택"
-        tabIndex={-1}
-        multiple
-        onChange={handleFileChange}
-      />
       <DropZone
-        type="button"
-        aria-label="파일 업로드"
-        data-dragging={isDragging}
-        onClick={() => inputRef.current?.click()}
-        onDragEnter={(event) => {
-          event.preventDefault()
-          setIsDragging(true)
-        }}
-        onDragOver={(event) => event.preventDefault()}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-      >
-        <UploadIcon viewBox="0 0 48 48" aria-hidden="true">
-          <path d="M15 34H12a8 8 0 0 1-1.2-15.9A13 13 0 0 1 36 21a6.5 6.5 0 0 1-.5 13H33" />
-          <path d="m18 26 6-6 6 6M24 20v18" />
-        </UploadIcon>
-        <DropZoneText>
-          파일을 끌어서 놓거나 클릭하여 업로드
-          <br />
-          (최대 50MB)
-        </DropZoneText>
-      </DropZone>
+        ariaLabel="파일 업로드"
+        inputLabel="첨부파일 선택"
+        inputId="notice-attachments"
+        multiple
+        appearance={variant === 'default' ? 'default' : 'strong'}
+        textSize={isObservation ? 18 : 16}
+        onFiles={addFiles}
+      />
       {errorMessage && <ErrorMessage role="alert">{errorMessage}</ErrorMessage>}
     </AttachmentSection>
   )
@@ -242,7 +217,8 @@ function fileKind(fileName: string) {
 const AttachmentSection = styled.section`
   margin-top: 32px;
 
-  &[data-variant='task'] {
+  &[data-variant='task'],
+  &[data-variant='observation'] {
     margin-top: 0;
   }
 `
@@ -253,8 +229,17 @@ const AttachmentCard = styled.div`
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
 
+  [data-variant='observation'] & {
+    min-height: 0;
+    padding: 28px 32px;
+  }
+
   @media (max-width: 980px) {
     padding: 24px;
+
+    [data-variant='observation'] & {
+      padding: 24px;
+    }
   }
 `
 
@@ -269,6 +254,12 @@ const AttachmentTitle = styled.h2`
     font-size: 20px;
     line-height: 1.3;
   }
+
+  [data-variant='observation'] & {
+    color: ${({ theme }) => theme.colors.textStrong};
+    font-size: 32px;
+    line-height: 1.2;
+  }
 `
 
 const FileList = styled.div`
@@ -279,6 +270,10 @@ const FileList = styled.div`
 
   [data-variant='task'] & {
     margin-top: 10px;
+  }
+
+  [data-variant='observation'] & {
+    margin-top: 12px;
   }
 
   &:empty {
@@ -364,67 +359,13 @@ const DownloadIcon = styled.svg`
   stroke-width: 2;
 `
 
-const FileInput = styled.input`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
-`
-
-const DropZone = styled.button`
-  display: flex;
-  width: 100%;
-  min-height: 240px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+// 공용 드롭존의 카드와의 간격. 업무·공지는 32px, 관찰 수정은 Figma 16px 이다.
+const DropZone = styled(FileDropZone)`
   margin-top: 32px;
-  border: 2px dashed ${({ theme }) => theme.colors.textGuide};
-  border-radius: 20px;
-  background: ${({ theme }) => theme.colors.tableHeader};
-  color: ${({ theme }) => theme.colors.textGuide};
-  cursor: pointer;
-  font: inherit;
 
-  /* yot 업무 폼의 드롭존은 gray/10(#DDDDE3)이다. 다른 화면은 기존 값을 유지한다. */
-  [data-variant='task'] & {
-    background: ${({ theme }) => theme.colors.tableHeaderStrong};
+  [data-variant='observation'] & {
+    margin-top: 16px;
   }
-
-  &[data-dragging='true'] {
-    border-color: ${({ theme }) => theme.colors.primary};
-    background: ${({ theme }) => theme.colors.primaryBg};
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.textGuide};
-    outline-offset: 3px;
-  }
-
-  @media (max-width: 980px) {
-    min-height: 180px;
-  }
-`
-
-const UploadIcon = styled.svg`
-  width: 48px;
-  height: 48px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3;
-`
-
-const DropZoneText = styled.span`
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.4;
-  text-align: center;
 `
 
 const ErrorMessage = styled.p`
