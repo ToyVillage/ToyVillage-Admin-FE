@@ -70,7 +70,7 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
 ## 컴포넌트 구조/props
 
 - `FeedDetailPage` — `/feeds/:id` 화면.
-- `FeedRecordCard { feed }` (entities/feed/ui) — 사진·개체명·분류 뱃지·필드 6종·비활성 버튼을 그린다.
+- `FeedRecordCard { feed }` (entities/feed/ui) — 사진·개체명·분류 뱃지·필드 5종(2열 3행)·비활성 버튼을 그린다.
 - `AnimalSpeciesBadge { species }` (entities/feed/ui) — Figma `individual / 성별 뱃지`(`161:11782`) 규격의 pill.
   분류 라벨을 blue 배경(`colors.accentBg`) + blue 텍스트(`colors.accent`)로 표시한다.
 - `SectionHeader { title, count }` (shared/ui) — Figma `section header`(`127:9419`)의 `plain` variant.
