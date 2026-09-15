@@ -1,35 +1,35 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { Link, useLocation } from 'react-router-dom'
-import calendarIcon from './assets/calendar.svg'
+import { useLocation } from 'react-router-dom'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
-import megaphoneIcon from './assets/megaphone.svg'
-import peopleIcon from './assets/people.svg'
-import storageIcon from './assets/storage.svg'
-import taskIcon from './assets/task.svg'
-import taskReportIcon from './assets/task-report.svg'
-import teamIcon from './assets/team.svg'
-import workLogIcon from './assets/work-log.svg'
-import { mockSidebarItems, mockSidebarUser } from '../model/mock'
+import {
+  mockSidebarDashboardItem,
+  mockSidebarGroups,
+  mockSidebarUser,
+} from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
-import type { SidebarIconName, SidebarNavItem } from '../model/types'
-
-const sidebarIcons: Record<SidebarIconName, string> = {
-  calendar: calendarIcon,
-  megaphone: megaphoneIcon,
-  people: peopleIcon,
-  storage: storageIcon,
-  task: taskIcon,
-  taskReport: taskReportIcon,
-  team: teamIcon,
-  workLog: workLogIcon,
-}
+import { SidebarGroupSection } from './SidebarGroupSection'
+import { SidebarItem } from './SidebarItem'
 
 export function Sidebar() {
   const { pathname } = useLocation()
   const isOpen = useSidebarStore((state) => state.isOpen)
   const close = useSidebarStore((state) => state.close)
   const panelRef = useRef<HTMLDivElement>(null)
+  // 아코디언은 한 번에 하나만 펼친다(Figma variant `열린메뉴=*`).
+  const [openGroupId, setOpenGroupId] = useState<string | null>(null)
+
+  // 사이드바를 열 때(또는 열린 채 경로가 바뀔 때) 현재 라우트의 대분류를 펼쳐 둔다.
+  // 렌더 중 상태 보정이라 effect 가 필요 없다.
+  const routeKey = isOpen ? pathname : null
+  const [prevRouteKey, setPrevRouteKey] = useState<string | null>(routeKey)
+  if (prevRouteKey !== routeKey) {
+    setPrevRouteKey(routeKey)
+    setOpenGroupId(routeKey ? findActiveMenu(routeKey).groupId : null)
+  }
+
+  // 현재 라우트와 일치하는 하위 항목만 선택 상태로 표시한다(Figma `상태=선택`).
+  const activeItemId = findActiveMenu(pathname).itemId
 
   useEffect(() => {
     if (!isOpen) return
@@ -72,12 +72,23 @@ export function Sidebar() {
         </Profile>
 
         <Nav aria-label="주요 메뉴">
-          {mockSidebarItems.map((item) => (
-            <SidebarItem
-              key={item.id}
-              item={item}
-              active={item.to ? isActiveRoute(pathname, item.to) : false}
-              onClick={close}
+          <SidebarItem
+            item={mockSidebarDashboardItem}
+            active={pathname === mockSidebarDashboardItem.to}
+            onClick={close}
+          />
+          {mockSidebarGroups.map((group) => (
+            <SidebarGroupSection
+              key={group.id}
+              group={group}
+              open={openGroupId === group.id}
+              activeItemId={activeItemId}
+              onToggle={() =>
+                setOpenGroupId((current) =>
+                  current === group.id ? null : group.id,
+                )
+              }
+              onNavigate={close}
             />
           ))}
         </Nav>
@@ -86,43 +97,33 @@ export function Sidebar() {
   )
 }
 
-function SidebarItem({
-  item,
-  active,
-  onClick,
-}: {
-  item: SidebarNavItem
-  active: boolean
-  onClick: () => void
-}) {
-  const content = (
-    <>
-      <ItemIcon $icon={sidebarIcons[item.icon]} aria-hidden="true" />
-      <ItemLabel>{item.label}</ItemLabel>
-    </>
-  )
+// 상세/생성 같은 하위 경로도 같은 메뉴의 범위로 본다.
+// 여러 항목이 걸리면 더 긴(구체적인) 경로를 고른다.
+function findActiveMenu(pathname: string): {
+  groupId: string | null
+  itemId: string | null
+} {
+  let best: { groupId: string; itemId: string; length: number } | null = null
 
-  // 화면이 없는 메뉴는 링크 대신 비활성 항목으로 노출한다.
-  if (!item.to) {
-    return <DisabledItem aria-disabled="true">{content}</DisabledItem>
+  for (const group of mockSidebarGroups) {
+    for (const item of group.items) {
+      if (!item.to) continue
+      const matched =
+        pathname === item.to || pathname.startsWith(`${item.to}/`)
+      if (!matched) continue
+      if (!best || item.to.length > best.length) {
+        best = { groupId: group.id, itemId: item.id, length: item.to.length }
+      }
+    }
   }
 
-  return (
-    <NavItem to={item.to} onClick={onClick} $active={active}>
-      {content}
-    </NavItem>
-  )
-}
-
-// 상세/생성 같은 하위 경로도 같은 메뉴의 활성 범위로 본다.
-function isActiveRoute(pathname: string, route: string) {
-  return pathname === route || pathname.startsWith(`${route}/`)
+  return { groupId: best?.groupId ?? null, itemId: best?.itemId ?? null }
 }
 
 const Layer = styled.div`
   position: fixed;
-  inset: 0;
   z-index: 20;
+  inset: 0;
 `
 
 const Overlay = styled.button`
@@ -136,11 +137,13 @@ const Overlay = styled.button`
   cursor: pointer;
 `
 
+// 패널은 항상 화면 높이에 맞춘다. 메뉴가 길어지면 패널이 밖으로 나가지 않고 Nav 만 스크롤한다.
 const Panel = styled.aside`
   position: relative;
   width: 400px;
   max-width: 100vw;
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: ${({ theme }) => theme.colors.surface};
   border-radius: 0 20px 20px 0;
   box-shadow: 4px 0px 10px 0px rgba(0, 0, 0, 0.1);
@@ -154,7 +157,7 @@ const Panel = styled.aside`
 const CloseButton = styled.button`
   position: absolute;
   top: 32px;
-  left: 44px;
+  left: 36px;
   display: inline-flex;
   width: 36px;
   height: 36px;
@@ -179,77 +182,37 @@ const Profile = styled.div`
   width: 100%;
   align-items: center;
   gap: 12px;
-  padding: 0 44px;
+  padding: 0 36px;
 `
 
 const Avatar = styled.div`
   width: 64px;
   height: 64px;
   flex: 0 0 64px;
-  border-radius: 53px;
+  border-radius: 1000px;
   background: ${({ theme }) => theme.colors.avatar};
 `
 
 const UserName = styled.span`
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.textStrong};
   font-size: 26px;
   font-weight: 500;
   line-height: 1.2;
 `
 
-// 활성 항목은 48px 배경 밴드로 표시한다. 항목 높이 48px + gap 8px 로
-// 아이콘/라벨의 세로 위치는 밴드 없이 32px 항목이던 때와 동일하게 유지된다.
+// Figma 는 메뉴 묶음을 패널 기준 절대 위치(20, 222)에 둔다.
+// 아코디언이 펼쳐져 패널 높이를 넘으면 이 영역만 세로로 스크롤한다.
 const Nav = styled.nav`
   position: absolute;
-  top: calc(222px - 8px);
-  left: 0;
+  top: 222px;
+  bottom: 0;
+  left: 20px;
   display: flex;
-  width: 100%;
+  /* 패널 폭 400 에서는 360 이고, 폭이 좁아지면 좌우 20px 여백을 지키며 함께 줄어든다. */
+  width: calc(100% - 40px);
   flex-direction: column;
+  overflow-y: auto;
   gap: 8px;
-`
-
-const NavItem = styled(Link, {
-  shouldForwardProp: (prop) => prop !== '$active',
-})<{ $active: boolean }>`
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 44px;
-  background: ${({ theme, $active }) =>
-    $active ? theme.colors.accentBg : 'transparent'};
-  color: ${({ theme, $active }) =>
-    $active ? theme.colors.accent : theme.colors.text};
-  text-decoration: none;
-`
-
-const DisabledItem = styled.div`
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 44px;
-  color: ${({ theme }) => theme.colors.text};
-  opacity: 0.4;
-  cursor: default;
-`
-
-// 단색 아이콘이라 mask 로 깔아 활성 색상을 텍스트와 함께 따라가게 한다.
-const ItemIcon = styled.span<{ $icon: string }>`
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-  background: currentColor;
-  /* Vite 가 인라인한 svg data URI 는 안에 작은따옴표를 쓰므로 큰따옴표로 감싼다. */
-  mask-image: url("${({ $icon }) => $icon}");
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: 32px 32px;
-`
-
-const ItemLabel = styled.span`
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.2;
+  padding-bottom: 32px;
+  overscroll-behavior: contain;
 `

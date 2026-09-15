@@ -112,7 +112,8 @@ test('S10: 수정 중 사이드바 이동 → 이탈 확인', async ({ page }) =
   await page.goto('/notices/list/1')
   await page.getByLabel('제목').fill('저장 전 제목')
   await page.getByRole('button', { name: '사이드바 열기' }).click()
-  await page.getByRole('link', { name: '자료실 바로가기' }).click()
+  // `/notices/list/*` 는 `공지사항` 대분류라 사이드바를 열면 이미 펼쳐져 있다.
+  await page.getByRole('link', { name: '자료실', exact: true }).click()
 
   await expect(
     page.getByRole('alertdialog', { name: '정말 나가시겠습니까?' }),
