@@ -178,7 +178,8 @@ test('S12: 페이지네이션', async ({ page }) => {
 test('S13: 사이드바에서 진입', async ({ page }) => {
   await page.goto('/notices/list')
   await page.getByRole('button', { name: '사이드바 열기' }).click()
-  await page.getByRole('link', { name: '업무일지관리 바로가기' }).click()
+  await page.getByRole('button', { name: '업무관리', exact: true }).click()
+  await page.getByRole('link', { name: '업무일지관리', exact: true }).click()
 
   await expect(page).toHaveURL(/\/work-logs$/)
   await expect(
