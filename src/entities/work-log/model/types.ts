@@ -1,3 +1,5 @@
+import type { CalendarDate } from '@/shared/lib'
+
 // 작성된 업무일지 한 건. 목록 표의 `작성자`/`양식`/`날짜` 열에 대응한다.
 export interface WorkLog {
   id: string
@@ -16,14 +18,8 @@ export interface WorkLogForm {
   date: string
 }
 
-// 조회날짜 필터. 년/월/일 셀렉트 3개가 함께 움직인다.
-export interface WorkLogDate {
-  year: number
-  /** 1-12 */
-  month: number
-  /** 1-31 */
-  day: number
-}
+// 조회날짜 필터. 년/월/일 셀렉트 3개가 함께 움직인다(공용 CalendarDate 와 같은 모양).
+export type WorkLogDate = CalendarDate
 
 // 일지 시트의 열 = 양식의 질문 하나. 유형에 따라 셀 표기가 달라진다(Figma 541:14081).
 export const workLogQuestionTypes = [

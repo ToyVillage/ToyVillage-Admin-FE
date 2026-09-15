@@ -1,23 +1,29 @@
 import styled from '@emotion/styled'
 import {
-  clampWorkLogDate,
+  calendarYearSpan,
+  clampCalendarDate,
   daysInMonth,
-  todayWorkLogDate,
-  workLogYearSpan,
-  type WorkLogDate,
-} from '@/entities/work-log'
-import { SelectMenu, type SelectMenuOption } from '@/shared/ui'
+  todayCalendarDate,
+  type CalendarDate,
+} from '../lib/calendarDate'
+import { SelectMenu, type SelectMenuOption } from './SelectMenu'
 
-interface WorkLogDateFilterProps {
-  value: WorkLogDate
-  onChange: (value: WorkLogDate) => void
+interface DateFilterProps {
+  value: CalendarDate
+  onChange: (value: CalendarDate) => void
+  label?: string
 }
 
-// Figma `1:3422`(Frame 460). `조회날짜` 라벨 + 년/월/일 셀렉트 3개.
-export function WorkLogDateFilter({ value, onChange }: WorkLogDateFilterProps) {
-  const currentYear = todayWorkLogDate().year
+// Figma `Frame 460`/`Frame 459`. `조회날짜` 라벨 + 년/월/일 셀렉트 3개.
+// 업무일지관리 목록과 먹이 급여 관리 목록이 같은 규격을 쓴다.
+export function DateFilter({
+  value,
+  onChange,
+  label = '조회날짜',
+}: DateFilterProps) {
+  const currentYear = todayCalendarDate().year
   const yearOptions = buildOptions(
-    Array.from({ length: workLogYearSpan }, (_, index) => currentYear - index),
+    Array.from({ length: calendarYearSpan }, (_, index) => currentYear - index),
     (year) => `${year}년`,
   )
   const monthOptions = buildOptions(
@@ -34,12 +40,12 @@ export function WorkLogDateFilter({ value, onChange }: WorkLogDateFilterProps) {
 
   return (
     <Filter>
-      <Label>조회날짜</Label>
+      <Label>{label}</Label>
       <SelectMenu
         value={String(value.year)}
         options={yearOptions}
         onChange={(year) =>
-          onChange(clampWorkLogDate({ ...value, year: Number(year) }))
+          onChange(clampCalendarDate({ ...value, year: Number(year) }))
         }
         ariaLabel="조회 연도"
         width={186}
@@ -48,7 +54,7 @@ export function WorkLogDateFilter({ value, onChange }: WorkLogDateFilterProps) {
         value={String(value.month)}
         options={monthOptions}
         onChange={(month) =>
-          onChange(clampWorkLogDate({ ...value, month: Number(month) }))
+          onChange(clampCalendarDate({ ...value, month: Number(month) }))
         }
         ariaLabel="조회 월"
         width={154}
