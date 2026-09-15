@@ -401,9 +401,10 @@ interface Individual {
   사진(`photo.url`, alt `{국명} 사진`) + 제목·부제 + 정보 6항목. 우상단 케밥은 `action: ReactNode` 로 받는다(메뉴 상태는 페이지 소유).
 - `LegalDesignationBadge { label }` — **신규**(`src/entities/species/ui`). 법정지정분류 표시 뱃지.
   폼의 추가·제거 chip(`LegalDesignationField`, `species-form` 소유)과 다르다.
-- `SectionHeader { title, meta?, action? }` — **신규 공용**(`src/shared/ui`, 게이트 ② 채택).
+- `SectionHeader { title, count?, unit?, action? }` — 공용(`src/shared/ui`). develop 의 `feed-detail` 이 먼저 만든
+  `{ title, count }` 에 `unit`·`action` 을 더했다(2026-09-15 develop 병합 시 개발자 결정).
   Figma `section header`(`127:9419`). 종 상세(개체)와 개체 상세(관찰)에 같은 인스턴스가 있어 2곳 이상이다.
-  `title` 은 `h2`, `meta` 는 `3마리` 같은 보조 텍스트, `action` 은 우측 버튼 슬롯이다.
+  `title` 은 `h2`, 건수는 제목과 형제 텍스트(`count` + `unit`, 여기서는 `unit="마리"`), `action` 은 우측 버튼 슬롯이다.
 - `LinkButton { to, children }`(`src/shared/ui`) — 기존 재사용. `개체 등록하기`.
 - `IndividualTable { individuals, onRowClick, search, sort, pagination, emptyLabel, renderRowAction }` — **신규**
   (`src/entities/individual/ui`). `DataTable` 조합(`WorkLogTable` / `TaskTable` 패턴).
@@ -512,7 +513,7 @@ interface Individual {
 - mock 함수·localStorage 키·query key 는 소유 spec(종 `species-list` · 개체 `species-detail` · 관찰 `individual-detail`) 이름을 쓰고, 지연 주입 키는 두지 않는다 (2026-09-15 Figma·저장소 근거 판단: `entities/resource/model/mock.ts` 패턴, 저장소 mock 에 지연 주입 선례가 없고 지연은 `/api` 단계 route mock `mutationDelayMs` 에서 검증).
 - 사진 데이터는 `photo: { fileName: string; fileKey: string; url: string }` 이다. 종 1 `카피바라_2026.jpg`, 개체 1 `동식이_2026.jpg` 이고 나머지도 항목마다 다른 파일명을 둔다(이미지 바이트는 공용 에셋 1장 가능) (2026-09-15 Figma·저장소 근거 판단: 저장소 첨부 규약 `{ fileName, fileKey }` + 표시용 `url`, Figma 종 수정 chip `동식이_2026.jpg` 는 복사 오류).
 - 신규 토큰 `color.choiceMuted`(`#70707D`)·`color.textValue`(`#5C5C68`)·`color.warningText`(`#8A5A00`)를 추가하고, 드롭존 점선 테두리는 기존 `colors.textGuide` 를 유지한다 (2026-09-15 Figma·저장소 근거 판단: map-tokens 신규 3색, 업무 폼 드롭존은 ⑦ 육안 확인까지 끝난 구현).
-- 신규 공용 `SectionHeader { title, meta?, action? }` 와 `DataTable.emptyLabel: ReactNode` 를 채택한다 (2026-09-15 Figma·저장소 근거 판단: design-rules §1 같은 INSTANCE 2곳 이상(종 상세·개체 상세 `section header`)).
+- 신규 공용 `SectionHeader`(develop 병합 후 `{ title, count?, unit?, action? }`) 와 `DataTable.emptyLabel: ReactNode` 를 채택한다 (2026-09-15 Figma·저장소 근거 판단: design-rules §1 같은 INSTANCE 2곳 이상(종 상세·개체 상세 `section header`)).
 - 기존 shared 시각 차이(`DataTable` 헤더 글자색·검색 아이콘 크기, `Toast` 그림자, 모달 제목 굵기·dim 0.4/0.5, `RemoveIconButton` 크기·색, `KebabMenu` 그림자 blur)는 기존 구현을 유지하고 ⑦ 육안 확인에서 판단한다 (2026-09-15 Figma·저장소 근거 판단: 전 화면 공용 구현이라 개체관리 화면 기준으로 바꾸지 않는다).
 - Figma `Inter` 표기는 무시하고 `font.body` 로 둔다. 표 헤더 weight 는 Medium 으로 통일한다 (2026-09-15 Figma·저장소 근거 판단: 저장소 theme 단일 글꼴, `DataTable` 헤더 단일 굵기).
 - 직원 권한별 케밥 숨김은 범위 밖이다 (2026-09-15 Figma·저장소 근거 판단: 웹은 관리자 로그인 전용(Notion `웹 관리자 로그인`), 직원은 앱을 쓴다).

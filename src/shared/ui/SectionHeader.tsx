@@ -3,20 +3,30 @@ import styled from '@emotion/styled'
 
 interface SectionHeaderProps {
   title: string
-  /** 제목 옆 보조 텍스트(예: `3마리`, `11건`). heading 이름에 함께 들어간다. */
-  meta?: string
-  /** 우측 버튼 슬롯. 생략하면 Figma `plain` 변형이다. */
+  // 제목 옆에 `N건` 으로 붙는 건수. 생략하면 제목만 표시한다.
+  count?: number
+  // 건수 뒤에 붙는 단위. 생략하면 `건` 이다(개체 수는 `마리`).
+  unit?: string
+  // 우측 버튼. 넘기면 `with button` variant(127:9297)가 된다.
   action?: ReactNode
 }
 
-// Figma `section header`(127:9419) — `with button`(127:9297) · `plain`(127:9302) 변형.
-export function SectionHeader({ title, meta, action }: SectionHeaderProps) {
+// Figma 공용 `section header`(127:9419)의 `plain` variant — 제목 + 건수.
+export function SectionHeader({
+  title,
+  count,
+  unit = '건',
+  action,
+}: SectionHeaderProps) {
   return (
     <Header>
-      <Heading>
-        <Title>{title}</Title>
-        {meta && <Meta>{meta}</Meta>}
-      </Heading>
+      <Title>{title}</Title>
+      {count != null && (
+        <Count>
+          {count}
+          {unit}
+        </Count>
+      )}
       {action && <Action>{action}</Action>}
     </Header>
   )
@@ -30,26 +40,22 @@ const Header = styled.div`
   gap: 12px;
 `
 
-const Heading = styled.h2`
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 12px;
+const Title = styled.h2`
   margin: 0;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 28px;
   font-weight: 500;
   line-height: 1.2;
 `
 
-const Title = styled.span`
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 28px;
-`
-
-const Meta = styled.span`
+const Count = styled.span`
   color: ${({ theme }) => theme.colors.textGuide};
   font-size: 20px;
+  font-weight: 500;
+  line-height: 1.2;
 `
 
+// Figma 의 `spacer` 자리 — 버튼을 행 오른쪽 끝으로 민다.
 const Action = styled.div`
   display: flex;
   margin-left: auto;

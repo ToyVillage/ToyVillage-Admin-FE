@@ -37,7 +37,7 @@ export function FeedDetailPage() {
         {feed && <FeedRecordCard feed={feed} />}
 
         <HistorySection>
-          <SectionHeader title="급여 이력" meta={`${history.length}건`} />
+          <SectionHeader title="급여 이력" count={history.length} />
           <FeedHistoryTable
             records={history}
             emptyLabel={isPending ? ' ' : '급여 이력이 없습니다.'}

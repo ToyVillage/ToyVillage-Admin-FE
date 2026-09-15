@@ -242,10 +242,7 @@ export function IndividualDetailPage() {
         </ProfileSection>
 
         <ObservationSection>
-          <SectionHeader
-            title="관찰 및 특이사항"
-            meta={`${observations.length}건`}
-          />
+          <SectionHeader title="관찰 및 특이사항" count={observations.length} />
           <ObservationTable
             rows={pageRows}
             page={currentPage}

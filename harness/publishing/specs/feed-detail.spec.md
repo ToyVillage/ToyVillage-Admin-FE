@@ -73,9 +73,8 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
 - `FeedRecordCard { feed }` (entities/feed/ui) — 사진·개체명·분류 뱃지·필드 5종(2열 3행)·비활성 버튼을 그린다.
 - `AnimalSpeciesBadge { species }` (entities/feed/ui) — Figma `individual / 성별 뱃지`(`161:11782`) 규격의 pill.
   분류 라벨을 blue 배경(`colors.accentBg`) + blue 텍스트(`colors.accent`)로 표시한다.
-- `SectionHeader { title, meta?, action? }` (shared/ui) — Figma `section header`(`127:9419`)의 `plain` variant.
-  `meta` 에 `N건` 을 넘겨 제목과 나란히 둔다. 개체관리(#82)가 같은 컴포넌트를 `meta`·`action` 으로 만들어
-  develop 병합 시 그 시그니처로 합쳤다(2026-09-15).
+- `SectionHeader { title, count }` (shared/ui) — Figma `section header`(`127:9419`)의 `plain` variant.
+  제목과 `N건` 을 나란히 둔다. → 새 shared 컴포넌트이므로 중간 게이트 승인 대상이다.
 - `FeedHistoryTable { records, emptyLabel }` (entities/feed/ui) — `shared/ui` 의 `DataTable` 을 래핑한다.
 - `뒤로가기` 는 기존 `shared/ui` 의 `BackLink` 를 재사용한다.
 

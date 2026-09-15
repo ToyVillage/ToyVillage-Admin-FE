@@ -377,8 +377,9 @@ interface Observation {
   - `FEMALE` `♀ 암컷` — 배경 `colors.dangerBg`, 글자 `colors.danger`(Figma 설명은 `분홍` 이지만 값은 red 계열 토큰)
   - `UNKNOWN` `? 미상` — 배경 `colors.background`, 글자 `colors.textGuide`
   - pill: padding 6/16px, radius 100px, 20px, 기호↔라벨 gap 6, 높이 36.
-- `SectionHeader { title, meta?, action? }` — **신규 공용**(`shared/ui`, 게이트 ② 채택). Figma `section header`(`127:9419`).
-  이 화면은 plain 변형(`title="관찰 및 특이사항"`, `meta="11건"`), 종 상세는 with button 변형(`개체` / `3마리` / `+ 개체 등록하기`).
+- `SectionHeader { title, count?, unit?, action? }` — 공용(`shared/ui`). Figma `section header`(`127:9419`).
+  develop 의 `feed-detail` 이 먼저 만든 `{ title, count }` 에 `unit`·`action` 을 더했다(2026-09-15 develop 병합 시 개발자 결정).
+  이 화면은 plain 변형(`title="관찰 및 특이사항"`, `count={11}`), 종 상세는 with button 변형(`개체` / `3마리` / `+ 개체 등록하기`).
   props 이름은 species-detail spec 과 같다.
   같은 INSTANCE 가 두 화면 이상이라 공용으로 둔다(design-rules §1). 도메인 문구는 호출부가 넘긴다.
 - `ObservationTable { rows, page, pageCount, onPageChange, onRowClick, renderAttachments, renderRowAction, emptyLabel }` — **신규**(`entities/observation/ui`).

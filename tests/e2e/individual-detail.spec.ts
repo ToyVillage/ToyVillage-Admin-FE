@@ -525,11 +525,12 @@ function headerCells(page: Page) {
     .locator(':scope > div')
 }
 
+// 섹션 헤더: 제목(h2) 옆에 `N건` 이 형제 텍스트로 붙는다.
 function sectionHeading(page: Page, count: number) {
-  return page.getByRole('heading', {
-    level: 2,
-    name: new RegExp(`^관찰 및 특이사항\\s*${count}건$`),
-  })
+  return page
+    .getByRole('heading', { level: 2, name: '관찰 및 특이사항', exact: true })
+    .locator('xpath=..')
+    .filter({ has: page.getByText(`${count}건`, { exact: true }) })
 }
 
 function cardMenuTrigger(page: Page) {

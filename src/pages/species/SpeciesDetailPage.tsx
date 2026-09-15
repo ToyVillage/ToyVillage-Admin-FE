@@ -248,7 +248,8 @@ export function SpeciesDetailPage() {
         <IndividualsSection>
           <SectionHeader
             title="개체"
-            meta={`${individuals.length}마리`}
+            count={individuals.length}
+            unit="마리"
             action={
               <LinkButton to={`/species/${speciesId}/individuals/create`}>
                 개체 등록하기

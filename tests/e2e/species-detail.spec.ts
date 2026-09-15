@@ -36,7 +36,7 @@ test('S1: 종 상세 진입 기본 상태', async ({ page }) => {
   ]) {
     await expect(detailLabel(page, label)).toBeVisible()
   }
-  await expect(page.getByRole('heading', { name: '개체 3마리' })).toBeVisible()
+  await expect(individualSection(page, 3)).toBeVisible()
   await expect(nameCells(page)).toHaveText(['두리', '미미', '동식이'])
 })
 
@@ -97,7 +97,7 @@ test('S8: 개체명 검색', async ({ page }) => {
   await searchBox(page).fill('미미')
 
   await expect(nameCells(page)).toHaveText(['미미'])
-  await expect(page.getByRole('heading', { name: '개체 3마리' })).toBeVisible()
+  await expect(individualSection(page, 3)).toBeVisible()
 })
 
 test('S9: 페이지네이션 이동', async ({ page }) => {
@@ -205,7 +205,7 @@ test('S17: 개체 삭제 확인 → 성공 토스트', async ({ page }) => {
   await deleteDialog(page).getByRole('button', { name: '확인' }).click()
 
   await expect(individualRow(page, '동식이')).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: '개체 2마리' })).toBeVisible()
+  await expect(individualSection(page, 2)).toBeVisible()
   const toast = page
     .getByRole('status')
     .filter({ hasText: '데이터 삭제에 성공했습니다' })
@@ -216,7 +216,7 @@ test('S17: 개체 삭제 확인 → 성공 토스트', async ({ page }) => {
 test('S18: 개체 0마리 빈 상태', async ({ page }) => {
   await page.goto('/species/13')
 
-  await expect(page.getByRole('heading', { name: '개체 0마리' })).toBeVisible()
+  await expect(individualSection(page, 0)).toBeVisible()
   await expect(rows(page)).toHaveCount(0)
   await expect(page.getByText('등록된 개체가 없습니다')).toBeVisible()
   await expect(
@@ -302,7 +302,9 @@ test('S23: 케밥 메뉴 닫기', async ({ page }) => {
   ]) {
     await trigger.click()
     await expect(page.getByRole('menu')).toHaveCount(1)
-    await page.getByRole('heading', { name: '개체 3마리' }).click()
+    await page
+      .getByRole('heading', { level: 2, name: '개체', exact: true })
+      .click()
     await expect(page.getByRole('menu')).toHaveCount(0)
 
     await trigger.click()
@@ -361,7 +363,7 @@ test('S26: 개체 삭제 실패', async ({ page }) => {
     '데이터 삭제에 실패했습니다',
   )
   await expect(individualRow(page, '동식이')).toBeVisible()
-  await expect(page.getByRole('heading', { name: '개체 3마리' })).toBeVisible()
+  await expect(individualSection(page, 3)).toBeVisible()
 })
 
 test('S27: 마지막 개체 삭제 → 빈 상태', async ({ page }) => {
@@ -376,7 +378,7 @@ test('S27: 마지막 개체 삭제 → 빈 상태', async ({ page }) => {
   await expect(
     page.getByText('오른쪽 위 [개체 등록하기]로 첫 개체를 추가해주세요'),
   ).toBeVisible()
-  await expect(page.getByRole('heading', { name: '개체 0마리' })).toBeVisible()
+  await expect(individualSection(page, 0)).toBeVisible()
   await expect(paginationButtons(page)).toHaveCount(0)
 })
 
@@ -530,6 +532,14 @@ function rows(page: Page) {
   return page.getByTestId('individual-row')
 }
 
+// 섹션 헤더: 제목 `개체`(h2) 옆에 `N마리` 가 형제 텍스트로 붙는다.
+function individualSection(page: Page, count: number) {
+  return page
+    .getByRole('heading', { level: 2, name: '개체', exact: true })
+    .locator('xpath=..')
+    .filter({ has: page.getByText(`${count}마리`, { exact: true }) })
+}
+
 function individualRow(page: Page, name: string) {
   return rows(page).filter({ has: page.getByText(name, { exact: true }) })
 }
@@ -611,7 +621,7 @@ async function expectDetailUnchanged(page: Page) {
     page.getByRole('heading', { level: 1, name: '카피바라' }),
   ).toBeVisible()
   await expect(nameCells(page)).toHaveText(['두리', '미미', '동식이'])
-  await expect(page.getByRole('heading', { name: '개체 3마리' })).toBeVisible()
+  await expect(individualSection(page, 3)).toBeVisible()
 }
 
 async function expectFocusOutline(locator: Locator) {
