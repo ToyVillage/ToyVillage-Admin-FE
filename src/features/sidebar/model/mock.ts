@@ -81,8 +81,7 @@ export const mockSidebarGroups: SidebarGroup[] = [
   {
     id: 'settings',
     label: '설정',
-    // Figma `대분류 / 설정` 의 아이콘 자리는 비어 있다.
-    icon: null,
+    icon: 'settings',
     items: [
       { id: 'team-settings', label: '팀 설정' },
       { id: 'staff-accounts', label: '직원 계정 관리' },

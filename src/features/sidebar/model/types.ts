@@ -1,10 +1,10 @@
-// 대분류 아이콘. `설정` 은 Figma 에서 아이콘 자리가 비어 있어 null 을 쓴다.
 export type SidebarIconName =
   | 'animal'
   | 'dashboard'
   | 'facility'
   | 'inventory'
   | 'megaphone'
+  | 'settings'
   | 'task'
 
 export interface SidebarUser {
@@ -23,7 +23,7 @@ export interface SidebarSubItem {
 export interface SidebarGroup {
   id: string
   label: string
-  icon: SidebarIconName | null
+  icon: SidebarIconName
   items: SidebarSubItem[]
 }
 
