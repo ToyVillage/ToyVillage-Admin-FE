@@ -147,8 +147,14 @@ test('S10: 말일 보정', async ({ page }) => {
   await page.getByRole('button', { name: '조회 월' }).click()
   await page.getByRole('option', { name: '02월' }).click()
 
+  // 실행 연도가 윤년이면 29일이다.
+  const lastDayOfFebruary = new Date(
+    new Date().getFullYear(),
+    2,
+    0,
+  ).getDate()
   await expect(page.getByRole('button', { name: '조회 일' })).toContainText(
-    '28일',
+    `${lastDayOfFebruary}일`,
   )
 })
 
