@@ -41,6 +41,10 @@ export interface DataTableAppearance {
   headerBackground?: ThemeColorKey
   /** 헤더 텍스트 크기(px) */
   headerFontSize?: number
+  /** 헤더 텍스트 굵기 */
+  headerFontWeight?: number
+  /** 헤더 텍스트 색 토큰 */
+  headerColor?: ThemeColorKey
   /** 본문 행 최소 높이(px) */
   rowHeight?: number
   /** 행 구분선 색 토큰 */
@@ -59,6 +63,8 @@ const defaultAppearance = {
   headerHeight: 52,
   headerBackground: 'tableHeader',
   headerFontSize: 20,
+  headerFontWeight: 500,
+  headerColor: 'text',
   rowHeight: 92,
   dividerColor: 'divider',
   dividerInset: 40,
@@ -252,6 +258,8 @@ export function DataTable({
               $paddingX={column.paddingX}
               $align={resolveAlign(column.align, look.align)}
               $fontSize={look.headerFontSize}
+              $fontWeight={look.headerFontWeight}
+              $color={look.headerColor}
             >
               {column.header}
             </HeadCell>
@@ -578,6 +586,8 @@ const HeadCell = styled.div<{
   $paddingX?: number
   $align: 'left' | 'center'
   $fontSize: number
+  $fontWeight: number
+  $color: ThemeColorKey
 }>`
   display: flex;
   ${({ $width }) => cellWidth($width)}
@@ -585,8 +595,8 @@ const HeadCell = styled.div<{
   justify-content: ${({ $align }) =>
     $align === 'center' ? 'center' : 'flex-start'};
   padding: 12px ${({ $paddingX }) => $paddingX ?? 40}px;
-  color: ${({ theme }) => theme.colors.text};
-  font-weight: 500;
+  color: ${({ theme, $color }) => theme.colors[$color]};
+  font-weight: ${({ $fontWeight }) => $fontWeight};
   font-size: ${({ $fontSize }) => $fontSize}px;
 `
 
