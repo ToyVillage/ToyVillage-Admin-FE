@@ -1,0 +1,25 @@
+{
+  "feature": "team-settings",
+  "approvedAt": "2026-09-15T14:02:33.217Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16"
+  ],
+  "scenarioHash": "8012b7af1feabcc28dea7ce296a386b52502e9f0436a3a9e5f927e0486b4c126",
+  "e2eHash": "6af3b1a4a8850ea6956bf008c53922b8c25686529bbe8462d3c94a5ba4378d6e"
+}
