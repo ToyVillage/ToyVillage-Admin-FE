@@ -5,7 +5,13 @@ import chevronDown from './assets/chevron-down.svg'
 export interface SelectMenuOption {
   value: string
   label: string
+  // 24x24 선행 아이콘. 업무일지 양식의 질문 유형 목록(Figma 1:3803 등)에서 쓴다.
+  icon?: string
 }
+
+// `surface` = 흰 박스 + 24px (조회날짜 필터, Figma Frame 459)
+// `field`   = gray/10 박스 + 22px (업무일지 양식의 질문 유형·구역 접두, Figma 1:4447 / 1:5448)
+type SelectMenuVariant = 'surface' | 'field'
 
 interface SelectMenuProps {
   value: string
@@ -16,6 +22,16 @@ interface SelectMenuProps {
   width: number
   // 열린 목록의 최대 높이. 넘치면 세로 스크롤된다(Figma 256).
   maxListHeight?: number
+  variant?: SelectMenuVariant
+  // 트리거 높이. Figma 기준 surface 70 / 질문 유형 64 / 구역 접두 66.
+  height?: number
+  optionAlign?: 'start' | 'center'
+  // 트리거 라벨 뒤에 빨간 `*` 를 붙인다(Figma `객관식 질문 *`).
+  requiredMark?: boolean
+  // 열렸을 때 트리거에 테두리를 준다(Figma 1:5448).
+  openBorder?: boolean
+  // `value` 와 맞는 항목이 없을 때 트리거에 보일 문구(Figma 질문 유형의 `선택`).
+  placeholder?: string
 }
 
 // Figma `Frame 459`(닫힘) + `Frame 427`(열림) 규격의 범용 셀렉트.
@@ -27,6 +43,12 @@ export function SelectMenu({
   ariaLabel,
   width,
   maxListHeight = 256,
+  variant = 'surface',
+  height = 70,
+  optionAlign = 'start',
+  requiredMark = false,
+  openBorder = false,
+  placeholder,
 }: SelectMenuProps) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -56,16 +78,35 @@ export function SelectMenu({
       <Trigger
         type="button"
         $open={open}
+        $variant={variant}
+        $height={height}
+        $openBorder={openBorder}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
         onClick={() => setOpen((prev) => !prev)}
       >
-        <TriggerLabel>{selected?.label ?? value}</TriggerLabel>
+        <TriggerContent>
+          {selected?.icon && (
+            <OptionIcon src={selected.icon} alt="" aria-hidden="true" />
+          )}
+          <TriggerLabel $variant={variant}>
+            {selected?.label ?? placeholder ?? value}
+            {requiredMark && selected && (
+              <Required aria-hidden="true"> *</Required>
+            )}
+          </TriggerLabel>
+        </TriggerContent>
         <Chevron src={chevronDown} alt="" aria-hidden="true" $open={open} />
       </Trigger>
       {open && (
-        <List role="listbox" aria-label={ariaLabel} $maxHeight={maxListHeight}>
+        <List
+          role="listbox"
+          aria-label={ariaLabel}
+          $maxHeight={maxListHeight}
+          $variant={variant}
+          $top={height}
+        >
           {options.map((option, index) => (
             <Fragment key={option.value}>
               {index > 0 && <Divider aria-hidden="true" />}
@@ -74,11 +115,16 @@ export function SelectMenu({
                 role="option"
                 aria-selected={option.value === value}
                 $selected={option.value === value}
+                $variant={variant}
+                $align={optionAlign}
                 onClick={() => {
                   onChange(option.value)
                   setOpen(false)
                 }}
               >
+                {option.icon && (
+                  <OptionIcon src={option.icon} alt="" aria-hidden="true" />
+                )}
                 {option.label}
               </Option>
             </Fragment>
@@ -95,17 +141,27 @@ const Wrap = styled.div<{ $width: number }>`
   flex: 0 0 ${({ $width }) => $width}px;
 `
 
-const Trigger = styled.button<{ $open: boolean }>`
+const Trigger = styled.button<{
+  $open: boolean
+  $variant: SelectMenuVariant
+  $height: number
+  $openBorder: boolean
+}>`
   display: flex;
   width: 100%;
-  height: 70px;
+  height: ${({ $height }) => $height}px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px;
-  border: 0;
-  border-radius: ${({ $open }) => ($open ? '12px 12px 0 0' : '12px')};
-  background: ${({ theme }) => theme.colors.surface};
+  padding: ${({ $variant }) => ($variant === 'field' ? '12px 20px' : '20px')};
+  border: ${({ $open, $openBorder, theme }) =>
+    $open && $openBorder ? `1px solid ${theme.colors.selectOpenBorder}` : '0'};
+  border-radius: ${({ $open, $variant }) => {
+    const radius = $variant === 'field' ? 8 : 12
+    return $open ? `${radius}px ${radius}px 0 0` : `${radius}px`
+  }};
+  background: ${({ theme, $variant }) =>
+    $variant === 'field' ? theme.colors.background : theme.colors.surface};
   color: ${({ theme }) => theme.colors.textStrong};
   cursor: pointer;
   font: inherit;
@@ -116,11 +172,22 @@ const Trigger = styled.button<{ $open: boolean }>`
   }
 `
 
-const TriggerLabel = styled.span`
-  font-size: 24px;
+const TriggerContent = styled.span`
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+`
+
+const TriggerLabel = styled.span<{ $variant: SelectMenuVariant }>`
+  font-size: ${({ $variant }) => ($variant === 'field' ? 22 : 24)}px;
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
+`
+
+const Required = styled.span`
+  color: ${({ theme }) => theme.colors.danger};
 `
 
 const Chevron = styled.img<{ $open: boolean }>`
@@ -130,18 +197,26 @@ const Chevron = styled.img<{ $open: boolean }>`
   transform: rotate(${({ $open }) => ($open ? '0deg' : '180deg')});
 `
 
-const List = styled.div<{ $maxHeight: number }>`
+const List = styled.div<{
+  $maxHeight: number
+  $variant: SelectMenuVariant
+  $top: number
+}>`
   position: absolute;
   z-index: 2;
-  top: 70px;
+  top: ${({ $top }) => $top}px;
   left: 0;
   display: flex;
   width: 100%;
   max-height: ${({ $maxHeight }) => $maxHeight}px;
   flex-direction: column;
   padding: 20px 0;
-  border-radius: 0 0 12px 12px;
-  background: ${({ theme }) => theme.colors.surface};
+  border-radius: ${({ $variant }) =>
+    $variant === 'field' ? '0 0 8px 8px' : '0 0 12px 12px'};
+  background: ${({ theme, $variant }) =>
+    $variant === 'field' ? theme.colors.background : theme.colors.surface};
+  box-shadow: ${({ $variant }) =>
+    $variant === 'field' ? '0 0 8px 1px rgba(100, 100, 100, 0.25)' : 'none'};
   overflow-y: auto;
   scrollbar-color: ${({ theme }) => theme.colors.textFaint} transparent;
   scrollbar-width: thin;
@@ -153,24 +228,42 @@ const Divider = styled.span`
   background: ${({ theme }) => theme.colors.tableHeaderStrong};
 `
 
-const Option = styled.button<{ $selected: boolean }>`
+const Option = styled.button<{
+  $selected: boolean
+  $variant: SelectMenuVariant
+  $align: 'start' | 'center'
+}>`
   display: flex;
   min-height: 72px;
   align-items: center;
+  justify-content: ${({ $align }) =>
+    $align === 'center' ? 'center' : 'flex-start'};
+  gap: 12px;
   padding: 0 20px;
   border: 0;
   background: transparent;
-  color: ${({ theme, $selected }) =>
-    $selected ? theme.colors.textStrong : theme.colors.optionMuted};
+  color: ${({ theme, $selected, $variant }) => {
+    if ($variant === 'field') {
+      return $selected ? theme.colors.accent : theme.colors.text
+    }
+    return $selected ? theme.colors.textStrong : theme.colors.optionMuted
+  }};
   cursor: pointer;
   font: inherit;
-  font-size: 24px;
+  font-size: ${({ $variant }) => ($variant === 'field' ? 22 : 24)}px;
   font-weight: 500;
   text-align: left;
 
   &:hover,
   &:focus-visible {
     outline: 0;
-    background: ${({ theme }) => theme.colors.background};
+    background: ${({ theme, $variant }) =>
+      $variant === 'field' ? theme.colors.surface : theme.colors.background};
   }
+`
+
+const OptionIcon = styled.img`
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
 `

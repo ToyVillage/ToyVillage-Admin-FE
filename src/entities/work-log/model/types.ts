@@ -1,3 +1,5 @@
+import type { CalendarDate } from '@/shared/lib'
+
 // 작성된 업무일지 한 건. 목록 표의 `작성자`/`양식`/`날짜` 열에 대응한다.
 export interface WorkLog {
   id: string
@@ -16,14 +18,8 @@ export interface WorkLogForm {
   date: string
 }
 
-// 조회날짜 필터. 년/월/일 셀렉트 3개가 함께 움직인다.
-export interface WorkLogDate {
-  year: number
-  /** 1-12 */
-  month: number
-  /** 1-31 */
-  day: number
-}
+// 조회날짜 필터. 년/월/일 셀렉트 3개가 함께 움직인다(공용 CalendarDate 와 같은 모양).
+export type WorkLogDate = CalendarDate
 
 // 일지 시트의 열 = 양식의 질문 하나. 유형에 따라 셀 표기가 달라진다(Figma 541:14081).
 export const workLogQuestionTypes = [
@@ -76,4 +72,53 @@ export interface WorkLogFormDetail {
   id: string
   name: string
   questions: WorkLogFormQuestion[]
+}
+
+// --- 양식 생성·수정 (Figma 353:13063) --------------------------------------
+
+// 유형 드롭다운(Figma 1:3797)의 4개 항목. 순서도 Figma 와 같다.
+// 2026-09-14 디자인 개정에서 `단답형`·`장문형` 이 `주관식` 하나로 합쳐졌다.
+// 양식 상세(`workLogFormQuestionTypes`)의 CHOICE/CHECKBOX/TEXT 와 같은 체계에 `FILE` 이 더해진 꼴이다.
+export const workLogFormEditorTypes = [
+  'TEXT',
+  'CHOICE',
+  'CHECKBOX',
+  'FILE',
+] as const
+export type WorkLogFormEditorType = (typeof workLogFormEditorTypes)[number]
+
+// 선택지 한 줄. `기타:` 행은 라벨이 고정이고 값만 입력받는다(Figma 1:4467).
+export interface WorkLogFormDraftOption {
+  id: string
+  value: string
+  isEtc: boolean
+}
+
+// 편집 중인 질문 항목. 유형 미선택은 `null`(트리거에 `선택`이 보이는 상태).
+export interface WorkLogFormDraftQuestion {
+  id: string
+  label: string
+  type: WorkLogFormEditorType | null
+  options: WorkLogFormDraftOption[]
+}
+
+// 설정된 구역 칩 하나. `persisted` 는 이미 저장되어 있던 구역인지(수정 화면의 삭제 확인 기준).
+export interface WorkLogFormZone {
+  id: string
+  label: string
+  persisted: boolean
+}
+
+export interface WorkLogFormDraft {
+  name: string
+  questions: WorkLogFormDraftQuestion[]
+  zones: WorkLogFormZone[]
+}
+
+// 검증 결과. 값이 있으면 그 자리에 빨간 테두리와 메시지를 붙인다(Figma 1:3981).
+export interface WorkLogFormDraftErrors {
+  name?: string
+  /** 항목이 하나도 없을 때. 카드가 없어 카드별 에러로 못 붙인다. */
+  emptyQuestions?: string
+  questions: Record<string, string>
 }

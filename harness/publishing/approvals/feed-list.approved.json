@@ -1,0 +1,20 @@
+{
+  "feature": "feed-list",
+  "approvedAt": "2026-09-14T16:01:15.765Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11"
+  ],
+  "scenarioHash": "0c05172169964f813f09f2887eb75ccab600f57aa4f0f651ccb38ff71addfd6b",
+  "e2eHash": "3e3c3923194aebb40d2ba9b249ee4d189ba49ff9b8c7fc051cf129bb2cbee877"
+}

@@ -1,17 +1,39 @@
 ---
 feature: sidebar
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 1541:1408
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:2720
+  relatedNodeIds:
+    - 1:12061
+    - 1:12062
+    - 1692:14930
+    - 1692:14978
+    - 1692:15026
+    - 1692:15074
+    - 1692:15122
+    - 1694:14943
 requires_functional_test: true
 paths: src/app, src/features/sidebar, src/shared/ui
 ---
 
 # 사이드바 행동명세
 
+## 상태와 근거
+
+- Status: Active
+- Last refreshed: 2026-09-15
+- 기준: Figma `P7Jhnu8qV5m9q2QJNzkwAN` 의 컴포넌트셋 `sidebar`(`1:12061`).
+  화면에 놓인 인스턴스는 `1:2720`(`열린메뉴=없음`)이다.
+- variant 는 펼쳐진 대분류를 나타낸다: `열린메뉴=없음 / 공지사항 / 업무관리 / 개체관리 / 시설관리 / 재고관리 / 설정`.
+  즉 **한 번에 하나의 대분류만 펼쳐진다.**
+- 2026-09-15 작업 도중 `1:2720` 이 아코디언 구조로 재설계됐다. 이전에 승인했던
+  "대시보드 + 점선 바로가기 4개 + 최상위 7개" 구성은 폐기한다.
+- 추출 캐시: `harness/artifacts/publishing/sidebar.figma.txt`
+
 ## 목적
 
-토이빌리지 앱의 전역 사이드바 내비게이션. 화면 좌측 메뉴 아이콘을 통해 열고 닫을 수 있으며, 공지사항 관련 하위 화면으로 이동하는 공통 진입점을 제공한다.
+토이빌리지 앱의 전역 사이드바 내비게이션. 화면 좌측 메뉴 아이콘으로 열고 닫으며,
+대분류 아코디언을 펼쳐 하위 화면으로 이동한다.
 
 ## 동작 (source of truth)
 
@@ -19,39 +41,66 @@ paths: src/app, src/features/sidebar, src/shared/ui
 - 열린 상태에서 닫기 버튼 또는 dim 영역 클릭 → 사이드바가 닫힌다.
 - `Esc` 키 입력 → 사이드바가 닫힌다.
 - 사이드바가 열린 동안 본문 스크롤은 잠긴다.
-- 메뉴 항목 클릭 → 해당 라우트로 이동하고 사이드바가 닫힌다.
-- 현재 라우트와 일치하는 메뉴 항목은 활성 상태로 표시한다. 상세/생성 같은 하위 경로(`/task-reports/:id` 등)도 같은 메뉴의 활성 범위로 본다.
-- 활성 항목은 blue 텍스트/아이콘과 blue 배경 밴드로 표시한다(Figma `2217:1378`).
+- `대시보드` 는 아코디언이 아니라 바로 이동하는 단일 메뉴다. 클릭 → `/` 로 이동하고 사이드바가 닫힌다.
+  현재 경로가 정확히 `/` 일 때만 활성(blue 텍스트/아이콘 + blue 배경 밴드, radius 12px)으로 표시한다.
+- 대분류 헤더 클릭 → 그 대분류가 펼쳐지고, 이미 펼쳐져 있었다면 접힌다.
+  다른 대분류를 펼치면 앞서 펼쳐져 있던 대분류는 접힌다(한 번에 하나).
+- **대분류 헤더는 이동하지 않는다.** 화면 이동은 하위 항목만 한다.
+- 대분류 헤더 우측의 chevron 은 접힘일 때 아래, 펼침일 때 위를 향한다.
+- 하위 항목 클릭 → 해당 라우트로 이동하고 사이드바가 닫힌다.
+- 사이드바를 열 때 현재 경로가 속한 대분류를 자동으로 펼친다.
+  상세/생성 같은 하위 경로(`/tasks/:id` 등)도 같은 항목의 범위로 본다.
+- 화면이 없는 하위 항목은 링크가 아닌 `aria-disabled` 항목으로 렌더링하고, 화면이 생기면 `to`만 채운다.
+- 대분류 헤더에는 활성 표시를 하지 않는다. 현재 경로와 일치하는 **하위 항목**이 활성
+  (blue 텍스트 + blue 배경 밴드, radius 12px)으로 표시된다
+  (Figma `sidebar / 하위메뉴 항목`(`1702:15280`)의 `상태=선택`).
+  여러 항목이 접두사로 걸리면 더 구체적인(긴) 경로의 항목을 고른다.
+- 활성 표시는 화면당 하나다. 경로가 `/` 면 `대시보드` 가, 그 외에는 일치하는 하위 항목이 활성이다.
 - 데스크톱/모바일 모두 동일한 메뉴 목록을 사용한다. 화면 폭이 좁을 때는 오버레이 형태로 본문 위에 표시한다.
 
 ## 메뉴
 
-Figma 사이드바(`1541:1412`) 순서를 그대로 따른다.
+### 단일 메뉴
 
-- 공지사항 바로가기 → `/notices/list`
-- 휴관일 관리 바로가기 → `/notices/guide`
-- 자료실 바로가기 → `/notices/resources`
-- 단체예약 바로가기 → `/notices/reservations`
-- 팀 설정 바로가기 → 화면 미구현. 비활성 항목으로 표시한다.
-- 업무 관리 바로가기 → `/tasks`
-- 업무 보고 바로가기 → `/task-reports`
-- 업무일지관리 바로가기 → `/work-logs`
-- 개체관리 바로가기 → `/species`. 종 상세·등록·수정과 개체·관찰 화면(`/species/**`)도 이 메뉴의 활성 범위다. 아이콘은 yot 새 사이드바 `1:2719` 의 발바닥 아이콘이다(에셋은 퍼블리싱 ③에서 받는다).
-  근거: 새 사이드바 `1:2719` 에서 `개체관리` 가 업무 계열 뒤에 있어 현재 목록 끝에 붙인다(2026-09-15 개발자 결정, issue #82 `species-list` spec).
+| 라벨 | 아이콘(Figma) | 이동 |
+|------|---------------|------|
+| 대시보드 | `boxicons:blocks-filled` | `/` |
 
-화면이 없는 항목은 링크가 아닌 `aria-disabled` 항목으로 렌더링하고, 화면이 생기면 `to`만 채운다.
+### 대분류 아코디언 (순서 고정)
+
+| 대분류 | 아이콘 | 하위 항목 → 이동 |
+|--------|--------|------------------|
+| 공지사항 | `majesticons:megaphone` | 공지사항 → `/notices/list` · 휴관일 관리 → `/notices/guide` · 자료실 → `/notices/resources` · 단체예약 → `/notices/reservations` |
+| 업무관리 | 클립보드 | 업무지시 → `/tasks` · 업무보고 → `/task-reports` · 업무일지관리 → `/work-logs` |
+| 개체관리 | paw | 개체 카드 → `/species` · 먹이 급여 관리 → `/feeds` |
+| 시설관리 | 계단 | 점검 · 보수요청 / 공통 · 3층 / 4층 / 5층 / 6층 → 모두 화면 미구현 |
+| 재고관리 | 상자 | 식음료 / 동물 먹이 / 사육용품 / 비품 / 소모품 / 기타 → 모두 화면 미구현 |
+| 설정 | `mdi:cog` | 팀 설정 / 직원 계정 관리 / 권한 관리 → 모두 화면 미구현 |
+
+## 치수 (Figma)
+
+- 패널 400 × 1080, radius `0 20px 20px 0`, shadow `4px 0 10px rgba(0,0,0,0.1)`
+- 닫기 버튼 (36,32) 36×36 / 프로필 y=92, avatar 64, gap 12, 이름 26px Medium
+- 메뉴 묶음 x=20, y=222, width 360, 세로 gap 8
+- 대분류·대시보드 항목: padding `12px 36px`, gap 12, 아이콘 32, 라벨 22px SemiBold, radius 12px
+- chevron 24×24(선 `#858591`), 항목 왼쪽 기준 x=300 y=16 절대 위치
+- 하위메뉴 묶음: padding `4px 0`, gap 4
+- 하위 항목: padding `11px 36px 11px 92px`, radius 12px, 라벨 20px Medium `#5C5C69`
+  (선택 상태는 배경 `#E8E9FF` + 텍스트 `#4952FF`)
 
 ## 데이터
 
 - 서버 데이터: 없음.
-- 클라이언트 상태: 사이드바 열림/닫힘 상태. 전역 UI 상태가 필요하면 Zustand를 사용한다.
+- 클라이언트 상태: 사이드바 열림/닫힘은 Zustand(`useSidebarStore`), 펼쳐진 대분류는 `Sidebar` 지역 상태.
 
-## 컴포넌트 구조/props (Figma flat → 여기서 명세)
+## 컴포넌트 구조/props
 
-- `SidebarNavItem` — 컴포넌트가 아니라 메뉴 데이터 타입이다. `id`, `label`, `icon`과 **선택적** `to`를 가지며, `to`가 없으면 화면 미구현 항목이다.
+- `SidebarGroup` / `SidebarSubItem` / `SidebarDashboardItem` — 컴포넌트가 아니라 메뉴 데이터 타입.
 - `SidebarToggleButton` — 메뉴 아이콘 버튼. 클릭 시 사이드바를 연다.
-- `Sidebar` — 열린 상태의 내비게이션 패널. 메뉴 목록, 닫기 버튼, dim 영역, 활성 메뉴 표시를 담당한다.
-- `SidebarItem` — `item: SidebarNavItem`, `active: boolean`, `onClick: () => void`을 받아 항목 하나를 렌더링한다. `item.to`가 있으면 링크로, 없으면 `aria-disabled` 항목으로 그린다. 즉 `active`와 `onClick`은 데이터가 아니라 렌더링 인자다.
+- `Sidebar` — 패널. 프로필, 대시보드 항목, 대분류 목록, 닫기 버튼, dim 영역, 펼침 상태를 담당한다.
+- `SidebarItem { item, active, onClick }` — 대시보드 단일 메뉴 한 줄.
+- `SidebarGroupSection { group, open, activeItemId, onToggle, onNavigate }` — 대분류 헤더 + 하위 목록.
+- `SidebarIcon { name }` — 아이콘 mask.
 - dim 영역은 별도 공개 컴포넌트가 아니라 `Sidebar` 내부 요소로 두고, 클릭 시 사이드바를 닫는다.
 
 ## 접근성
@@ -59,11 +108,31 @@ Figma 사이드바(`1541:1412`) 순서를 그대로 따른다.
 - 메뉴 아이콘은 버튼 요소로 구현하고 `aria-label="사이드바 열기"`를 제공한다.
 - 사이드바 닫기 버튼은 `aria-label="사이드바 닫기"`를 제공한다.
 - 사이드바 패널은 `aria-modal` 또는 동등한 modal/dialog 접근성 처리를 적용한다.
+- 대분류 헤더는 `button` 으로 만들고 `aria-expanded` 와 `aria-controls` 를 제공한다.
 - 키보드 포커스는 열린 사이드바 내부에서 이동 가능해야 하며, 닫힌 뒤에는 메뉴 아이콘으로 돌아간다.
 
 ## 비고 / 제약
 
-- 스타일은 Emotion을 사용한다. solid color/font family는 theme 의미 토큰을 쓰고, px·rgba·spacing·radius 등 구현값은 styled 블록에 직접 작성한다.
-- 라우팅은 React Router의 `Link` 또는 `NavLink`를 사용한다.
-- 현재 `NoticeListPage` 안에 임시로 있는 햄버거 아이콘은 사이드바 구현 시 공통 토글 컴포넌트로 대체한다.
-- Figma 사이드바 프레임 nodeId가 확정되면 frontmatter의 `figma.nodeId`를 갱신한다.
+- 스타일은 Emotion을 사용한다. solid color/font family는 theme 의미 토큰을 쓰고,
+  px·rgba·spacing·radius 등 구현값은 styled 블록에 직접 작성한다.
+- 라우팅은 React Router의 `Link` 를 사용한다.
+- 신규 토큰: `color.subMenuText`(`#5C5C69`) — 하위 메뉴 텍스트, `color.menuChevron`(`#858591`) — 펼침 chevron.
+- chevron 은 Figma 내보내기 SVG 의 viewBox 가 어긋나 있어 24×24 인라인 SVG 로 직접 그린다.
+- `업무관리 > 업무지시` 를 `/tasks` 로 본다(업무관리 화면의 기존 라우트). 다른 매핑이 필요하면 spec 을 고친다.
+- `개체관리 > 개체 카드` 를 `/species`(종 목록)로 본다. 종 상세·등록·수정과 개체·관찰 화면(`/species/**`)도
+  이 항목의 활성 범위다(2026-09-15 개발자 결정, issue #82).
+- 패널 높이는 항상 화면 높이(`100dvh`)에 맞춘다. 메뉴가 펼쳐져 길어지면 패널이 화면 밖으로 밀려나지 않고
+  메뉴 영역만 세로로 스크롤한다. 닫기 버튼과 프로필은 스크롤과 무관하게 제자리에 남는다.
+
+## 개정 이력
+
+- 2026-09-15: develop 병합 시 개체관리(#82)의 평면 메뉴 `개체관리 바로가기` 를 폐기하고
+  `개체관리 > 개체 카드` 에 `/species` 를 연결했다(개발자 결정).
+
+- 2026-09-15: 활성 표시를 대분류가 아닌 **하위 항목**으로 옮기고(`1702:15280` 신규 컴포넌트셋),
+  `설정` 대분류에 `mdi:cog` 아이콘을 넣었다. 하위 항목 radius 를 8px → 12px 로 바꿨다.
+  패널이 화면 밖으로 나가지 않도록 높이를 `100dvh` 로 고정하고 메뉴 영역만 스크롤하게 했다.
+
+- 2026-09-15: 기준 Figma 파일을 `P7Jhnu8qV5m9q2QJNzkwAN` 로 옮기고(구 `fkbMQaiPeIufKzjXXoWAPS` 폐기),
+  메뉴 체계를 아코디언(단일 `대시보드` + 대분류 6개)으로 재편했다.
+  `먹이 급여 관리` 는 `개체관리` 하위로 들어간다.

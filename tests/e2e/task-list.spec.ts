@@ -288,7 +288,8 @@ test('S22: 키보드 조작', async ({ page }) => {
 test('S23: 사이드바 업무관리 메뉴 이동', async ({ page }) => {
   await page.goto('/notices/list')
   await page.getByRole('button', { name: '사이드바 열기' }).click()
-  await page.getByRole('link', { name: '업무 관리 바로가기' }).click()
+  await page.getByRole('button', { name: '업무관리', exact: true }).click()
+  await page.getByRole('link', { name: '업무지시', exact: true }).click()
 
   await expect(page).toHaveURL(/\/tasks$/)
   await expect(page.getByRole('heading', { name: '업무관리' })).toBeVisible()

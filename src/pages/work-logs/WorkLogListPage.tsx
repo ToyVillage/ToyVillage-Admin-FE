@@ -15,11 +15,11 @@ import {
 } from '@/entities/work-log'
 import {
   CategoryTabs,
+  DateFilter,
   DeleteConfirmationDialog,
   LinkButton,
   Toast,
 } from '@/shared/ui'
-import { WorkLogDateFilter } from './ui/WorkLogDateFilter'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 4
@@ -129,7 +129,7 @@ export function WorkLogListPage() {
           <LinkButton to="/work-logs/forms/create">양식 생성하기</LinkButton>
         </Header>
 
-        <WorkLogDateFilter value={date} onChange={setDate} />
+        <DateFilter value={date} onChange={setDate} />
 
         <CategoryTabs
           categories={tabs}

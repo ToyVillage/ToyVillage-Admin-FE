@@ -156,10 +156,10 @@
 - When: 키보드만으로 탭 전환·검색 입력·정렬 메뉴 선택·페이지 이동·행 진입(`Enter`)·케밥 메뉴 열기/항목 선택을 시도한다
 - Then: 모든 조작이 가능하고 포커스 표시가 outline 으로 보인다
 
-### S29: 사이드바 `개체관리 바로가기`
+### S29: 사이드바 `개체관리 > 개체 카드`
 - Given: `/tasks` 화면에서 사이드바를 연 상태
-- When: `개체관리 바로가기` 를 클릭한 뒤, `/species/1` 로 이동해 사이드바를 다시 연다
-- Then: 첫 클릭 후 `/species` 로 이동하고 사이드바가 닫히며, 종 상세(`/species/1`)에서도 `개체관리 바로가기` 메뉴가 활성으로 표시된다
+- When: `개체관리` 대분류를 펼쳐 `개체 카드` 를 클릭한 뒤, `/species/1` 로 이동해 사이드바를 다시 연다
+- Then: 첫 클릭 후 `/species` 로 이동하고 사이드바가 닫히며, 종 상세(`/species/1`)에서도 `개체 카드` 하위 항목이 선택 상태로 표시된다
 
 ### S30: 정렬 전환
 - Given: `/species` 화면, `전체` 탭 2페이지를 보는 중(기본 최신순)
@@ -179,7 +179,8 @@
 - S15 의 초점 복귀는 `KebabMenu` 보강, S17 은 `DeleteConfirmationDialog.description`, S24 는 `DataTable.emptyLabel: ReactNode` 를 전제로 한다(모두 게이트 ② 채택).
 - S24·S25·S27 은 localStorage mock 키(`toyvillage:species:deleted` / `toyvillage:species:fail`)를 쓴다(이 spec 이 종 mock 소유).
 - S26 은 `species-form` 이 `navigate('/species', { state: { toast: 'create-success' } })` 로 넘긴 state 를 전제로 한다.
-- S29 는 `sidebar.spec.md` 메뉴 절의 `개체관리 바로가기` 추가를 전제로 한다.
+- S29 는 `sidebar.spec.md` 메뉴 절의 `개체관리 > 개체 카드` → `/species` 연결을 전제로 한다.
+  develop 병합(2026-09-15)으로 사이드바가 아코디언이 되어 평면 메뉴 `개체관리 바로가기` 를 이 하위 항목으로 옮겼다(개발자 결정).
 
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
      불필요한 시나리오는 여기서 삭제(가지치기). 승인되지 않은 시나리오는 Playwright로 변환되지 않는다. -->

@@ -347,7 +347,8 @@ test('S24: 수정 중 사이드바 이동 이탈 확인', async ({ page }) => {
   await expect(sexRadio(page, '암컷')).toBeChecked()
 
   await page.getByRole('button', { name: '사이드바 열기' }).click()
-  await page.getByRole('link', { name: '개체관리 바로가기' }).click()
+  // `/species/**` 라 `개체관리` 대분류가 이미 펼쳐져 있다.
+  await page.getByRole('link', { name: '개체 카드', exact: true }).click()
 
   const dialog = page.getByRole('alertdialog', {
     name: '정말 나가시겠습니까?',

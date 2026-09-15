@@ -439,19 +439,20 @@ test('S28: 키보드 조작', async ({ page }) => {
   await expect(page).toHaveURL(/\/species\/12$/)
 })
 
-test('S29: 사이드바 `개체관리 바로가기`', async ({ page }) => {
+test('S29: 사이드바 `개체관리 > 개체 카드`', async ({ page }) => {
   await mockTaskApi(page)
   await page.goto('/tasks')
   await page.getByRole('button', { name: '사이드바 열기' }).click()
   await expect(page.getByRole('dialog', { name: '사이드바' })).toBeVisible()
 
-  await page.getByRole('link', { name: '개체관리 바로가기' }).click()
+  await page.getByRole('button', { name: '개체관리', exact: true }).click()
+  await page.getByRole('link', { name: '개체 카드', exact: true }).click()
   await expect(page).toHaveURL(/\/species$/)
   await expect(page.getByRole('dialog', { name: '사이드바' })).toBeHidden()
 
   await page.goto('/species/1')
   await page.getByRole('button', { name: '사이드바 열기' }).click()
-  const menu = page.getByRole('link', { name: '개체관리 바로가기' })
+  const menu = page.getByRole('link', { name: '개체 카드', exact: true })
   await expect(menu).toHaveCSS('color', 'rgb(73, 82, 255)')
   await expect(menu).toHaveCSS('background-color', 'rgb(232, 233, 255)')
 })

@@ -291,7 +291,8 @@ test('S18: 변경 후 사이드바·브라우저 뒤로가기 이탈 보호', as
 
   // 사이드바 이동 시도
   await page.getByRole('button', { name: '사이드바 열기' }).click()
-  await page.getByRole('link', { name: '개체관리 바로가기' }).click()
+  // `/species/**` 라 `개체관리` 대분류가 이미 펼쳐져 있다.
+  await page.getByRole('link', { name: '개체 카드', exact: true }).click()
 
   await expect(leaveDialog(page)).toBeVisible()
   await leaveDialog(page).getByRole('button', { name: '취소' }).click()

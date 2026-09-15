@@ -1,18 +1,74 @@
-# Approved Scenarios — sidebar
+<!-- AI가 행동명세로부터 생성하는 시나리오 초안. 개발자가 게이트에서 승인/가지치기한다. 승인 후 동결. -->
 
-출처: harness/specs/sidebar.spec.md
-상태: approved & frozen (sidebar.approved.json 의 scenarioHash 대상)
+# Scenario Draft — sidebar
 
-## S1: 사이드바 열기와 닫기
+출처: `harness/publishing/specs/sidebar.spec.md` (행동명세가 source of truth)
+상태: draft (아코디언 재설계 반영, 재승인 전)
 
-- Given: `/notices/list` 화면
-- When: "사이드바 열기" 버튼 클릭
-- Then: 사이드바 dialog가 표시되고 관리자 정보가 보인다
-- When: `Esc` 키 입력
-- Then: 사이드바가 닫힌다
+## 핵심 시나리오
 
-## S2: 메뉴 클릭 이동
+### S1: 사이드바 열기와 닫기
+- Given: `/notices/list` 화면이다.
+- When: `사이드바 열기` 버튼을 클릭한다.
+- Then: 사이드바 dialog 가 표시되고 관리자 정보가 보인다.
+- When: `Esc` 키를 입력한다.
+- Then: 사이드바가 닫힌다.
 
-- Given: 사이드바가 열린 상태
-- When: "자료실 바로가기" 메뉴 클릭
-- Then: `/notices/resources` 로 이동하고 사이드바가 닫힌다
+### S2: 대분류를 펼쳐 하위 메뉴로 이동
+- Given: 사이드바가 열려 있고 `공지사항` 대분류가 접혀 있다.
+- When: `공지사항` 대분류 헤더를 클릭한 뒤 하위 `자료실` 을 클릭한다.
+- Then: `/notices/resources` 로 이동하고 사이드바가 닫힌다.
+
+### S3: 한 번에 하나의 대분류만 펼쳐진다
+- Given: 사이드바가 열려 있다.
+- When: `공지사항` 을 펼친 뒤 `재고관리` 를 펼친다.
+- Then: `재고관리` 하위 항목이 보이고 `공지사항` 하위 항목은 사라진다.
+
+### S4: 같은 대분류를 다시 누르면 접힌다
+- Given: `개체관리` 가 펼쳐져 있다.
+- When: `개체관리` 헤더를 다시 클릭한다.
+- Then: 하위 항목이 사라지고 `aria-expanded` 가 `false` 가 된다.
+
+### S5: 대분류 헤더는 화면을 이동시키지 않는다
+- Given: `/notices/list` 에서 사이드바가 열려 있다.
+- When: `업무관리` 헤더를 클릭한다.
+- Then: URL 이 `/notices/list` 그대로이고 사이드바도 열린 채다.
+
+### S6: 현재 경로의 대분류가 자동으로 펼쳐진다
+- Given: `/feeds` 화면이다.
+- When: 사이드바를 연다.
+- Then: `개체관리` 가 펼쳐져 있고 `먹이 급여 관리` 하위 항목이 보인다.
+
+### S7: 대시보드는 바로 이동하고 현재 경로일 때 활성이다
+- Given: `/` 화면에서 사이드바가 열려 있다.
+- When: `대시보드` 항목을 본다.
+- Then: blue 텍스트와 blue 배경 밴드로 활성 표시된다.
+- When: `/tasks` 에서 사이드바를 열고 `대시보드` 를 클릭한다.
+- Then: `/` 로 이동하고 사이드바가 닫힌다.
+
+### S8: 먹이 급여 관리로 이동
+- Given: 사이드바가 열려 있다.
+- When: `개체관리` 를 펼치고 `먹이 급여 관리` 를 클릭한다.
+- Then: `/feeds` 로 이동하고 사이드바가 닫힌다.
+
+### S11: 현재 경로의 하위 항목이 선택 상태로 표시된다
+- Given: `/feeds` 화면이다.
+- When: 사이드바를 연다.
+- Then: `개체관리` 가 펼쳐져 있고 `먹이 급여 관리` 가 blue 텍스트와 blue 배경 밴드로 표시된다.
+  같은 그룹의 다른 하위 항목에는 밴드가 없다.
+
+## 엣지 케이스
+
+### S9: 화면이 없는 하위 항목은 비활성이다
+- Given: 사이드바에서 `설정` 을 펼쳤다.
+- When: `팀 설정` 을 본다.
+- Then: 링크가 아니라 `aria-disabled="true"` 항목이다.
+
+### S10: 상세 경로에서도 같은 대분류가 펼쳐진다
+- Given: `/tasks/t-1` 같은 하위 경로 화면이다.
+- When: 사이드바를 연다.
+- Then: `업무관리` 가 펼쳐져 있다.
+
+---
+<!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
+     불필요한 시나리오는 여기서 삭제(가지치기). 승인되지 않은 시나리오는 Playwright로 변환되지 않는다. -->
