@@ -90,11 +90,12 @@ const GroupLabel = styled.span`
   line-height: 1.2;
 `
 
-// Figma 는 24×24 chevron 을 항목 기준 (300, 16) 절대 위치에 둔다. 펼치면 위를 향한다.
+// Figma 는 24×24 chevron 을 360 폭 항목 기준 (300, 16) 에 둔다 — 오른쪽에서 36px 지점이다.
+// 폭이 좁아져도 항목 안에 남도록 오른쪽 기준으로 붙인다.
 const Chevron = styled.svg<{ $open: boolean }>`
   position: absolute;
   top: 16px;
-  left: 300px;
+  right: 36px;
   width: 24px;
   height: 24px;
   fill: none;

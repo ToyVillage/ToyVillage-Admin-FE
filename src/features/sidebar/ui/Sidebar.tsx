@@ -208,7 +208,8 @@ const Nav = styled.nav`
   bottom: 0;
   left: 20px;
   display: flex;
-  width: 360px;
+  /* 패널 폭 400 에서는 360 이고, 폭이 좁아지면 좌우 20px 여백을 지키며 함께 줄어든다. */
+  width: calc(100% - 40px);
   flex-direction: column;
   overflow-y: auto;
   gap: 8px;
