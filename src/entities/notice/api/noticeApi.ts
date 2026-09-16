@@ -142,6 +142,10 @@ export async function getNotice({ id }: NoticeQueryRequest): Promise<Notice> {
     content: data.content,
     date: data.createdAt ?? '',
     attachments: data.files?.map(({ fileName }) => fileName),
+    attachmentFiles: data.files?.map(({ fileName, fileKey }) => ({
+      fileName,
+      fileKey,
+    })),
   }
 }
 
