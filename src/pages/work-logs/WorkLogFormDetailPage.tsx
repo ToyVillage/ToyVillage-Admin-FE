@@ -2,7 +2,9 @@ import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
 import {
-  getMockWorkLogFormDetail,
+  getWorkLogFormDetail,
+  isWorkLogNotFoundError,
+  workLogFormQueryKeys,
   WorkLogFormQuestionCard,
 } from '@/entities/work-log'
 import { BackLink } from '@/shared/ui'
@@ -12,13 +14,37 @@ const listPath = '/work-logs?tab=forms'
 export function WorkLogFormDetailPage() {
   const { id = '' } = useParams()
 
-  const { data: form, isPending } = useQuery({
-    queryKey: ['work-log-forms', 'detail', id],
-    queryFn: () => getMockWorkLogFormDetail(id),
+  const workLogTemplateId = Number(id)
+  const {
+    data: form,
+    isPending,
+    error,
+  } = useQuery({
+    queryKey: workLogFormQueryKeys.detail(id),
+    queryFn: () => getWorkLogFormDetail({ workLogTemplateId }),
+    enabled: Number.isSafeInteger(workLogTemplateId) && workLogTemplateId > 0,
+    retry: false,
   })
 
-  // 목록에서 삭제된 양식으로 진입하면 양식 관리 탭으로 되돌린다(spec).
-  if (!isPending && !form) return <Navigate to={listPath} replace />
+  // 삭제된 양식(404)이나 잘못된 id 로 진입하면 양식 관리 탭으로 되돌린다(spec).
+  if (!Number.isSafeInteger(workLogTemplateId) || workLogTemplateId <= 0) {
+    return <Navigate to={listPath} replace />
+  }
+
+  // 404(지워진 양식)만 목록으로 되돌린다. 500·네트워크 실패까지 되돌리면
+  // 조회 실패가 '삭제됨'으로 오인된다.
+  if (!isPending && !form) {
+    if (isWorkLogNotFoundError(error)) {
+      return <Navigate to={listPath} replace />
+    }
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          양식을 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
+  }
 
   return (
     <Page>
@@ -39,6 +65,25 @@ export function WorkLogFormDetailPage() {
     </Page>
   )
 }
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  width: min(100%, 560px);
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
 
 const Page = styled.main`
   padding: 32px;

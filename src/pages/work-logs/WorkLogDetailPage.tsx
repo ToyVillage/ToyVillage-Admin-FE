@@ -1,19 +1,48 @@
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
-import { getMockWorkLogDetail, WorkLogSheet } from '@/entities/work-log'
+import {
+  getWorkLogDetail,
+  isWorkLogNotFoundError,
+  workLogQueryKeys,
+  WorkLogSheet,
+} from '@/entities/work-log'
 import { BackLink } from '@/shared/ui'
 
 export function WorkLogDetailPage() {
   const { id = '' } = useParams()
 
-  const { data: detail, isPending } = useQuery({
-    queryKey: ['work-logs', 'detail', id],
-    queryFn: () => getMockWorkLogDetail(id),
+  const workLogId = Number(id)
+  const {
+    data: detail,
+    isPending,
+    error,
+  } = useQuery({
+    queryKey: workLogQueryKeys.detail(id),
+    queryFn: () => getWorkLogDetail({ workLogId }),
+    enabled: Number.isSafeInteger(workLogId) && workLogId > 0,
+    retry: false,
   })
 
-  // 목록에서 삭제된 일지로 진입하면 목록으로 되돌린다(spec).
-  if (!isPending && !detail) return <Navigate to="/work-logs" replace />
+  // 삭제된 일지나 잘못된 id 로 진입하면 목록으로 되돌린다(spec).
+  if (!Number.isSafeInteger(workLogId) || workLogId <= 0) {
+    return <Navigate to="/work-logs" replace />
+  }
+
+  // 404(지워진 일지)만 목록으로 되돌린다. 500·네트워크 실패까지 되돌리면
+  // 조회 실패가 '삭제됨'으로 오인된다.
+  if (!isPending && !detail) {
+    if (isWorkLogNotFoundError(error)) {
+      return <Navigate to="/work-logs" replace />
+    }
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          업무일지를 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
+  }
 
   return (
     <Page>
@@ -44,6 +73,25 @@ function formatTitle(isoDate: string) {
   const [, month, day] = isoDate.split('-')
   return `${Number(month)}월 ${Number(day)}일 업무일지`
 }
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  width: min(100%, 560px);
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
 
 const Page = styled.main`
   padding: 32px;

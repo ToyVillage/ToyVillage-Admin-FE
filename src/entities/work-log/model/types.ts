@@ -55,14 +55,12 @@ export interface WorkLogDetail {
   rows: WorkLogSheetRow[]
 }
 
-// 양식 상세에 나오는 질문 유형(Figma 547:14084). 시트 열 유형과 체계가 다르다 — spec 비고 참고.
-export const workLogFormQuestionTypes = ['CHOICE', 'CHECKBOX', 'TEXT'] as const
-export type WorkLogFormQuestionType = (typeof workLogFormQuestionTypes)[number]
-
 export interface WorkLogFormQuestion {
   id: string
   label: string
-  type: WorkLogFormQuestionType
+  /** 양식 상세·편집기가 같은 유형 체계를 쓴다(`workLogFormEditorTypes`). */
+  type: WorkLogFormEditorType
+  /** 필수 질문 여부. 업무일지 질문은 모두 필수라 항상 true 다. */
   required: boolean
   /** CHOICE·CHECKBOX 의 선택지. TEXT 에는 없다. */
   options?: string[]

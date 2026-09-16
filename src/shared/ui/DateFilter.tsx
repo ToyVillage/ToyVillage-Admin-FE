@@ -49,6 +49,7 @@ export function DateFilter({
         }
         ariaLabel="조회 연도"
         width={186}
+        openBorder
       />
       <SelectMenu
         value={String(value.month)}
@@ -58,6 +59,7 @@ export function DateFilter({
         }
         ariaLabel="조회 월"
         width={154}
+        openBorder
       />
       <SelectMenu
         value={String(value.day)}
@@ -65,6 +67,7 @@ export function DateFilter({
         onChange={(day) => onChange({ ...value, day: Number(day) })}
         ariaLabel="조회 일"
         width={156}
+        openBorder
       />
     </Filter>
   )

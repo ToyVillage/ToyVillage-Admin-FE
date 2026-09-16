@@ -37,7 +37,6 @@ import { TaskReportDetailPage, TaskReportListPage } from '@/pages/task-reports'
 import { FeedDetailPage, FeedListPage } from '@/pages/feeds'
 import {
   CreateWorkLogFormPage,
-  EditWorkLogFormPage,
   WorkLogDetailPage,
   WorkLogFormDetailPage,
   WorkLogListPage,
@@ -131,10 +130,6 @@ const router = createBrowserRouter([
           {
             path: '/work-logs/forms/create/*',
             element: <CreateWorkLogFormPage />,
-          },
-          {
-            path: '/work-logs/forms/:id/edit/*',
-            element: <EditWorkLogFormPage />,
           },
           { path: '/work-logs/forms/:id', element: <WorkLogFormDetailPage /> },
           { path: '/work-logs/:id', element: <WorkLogDetailPage /> },
