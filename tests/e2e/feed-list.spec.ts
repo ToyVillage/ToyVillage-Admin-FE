@@ -36,7 +36,9 @@ test('S1: 목록 진입 기본 표시', async ({ page }) => {
   await expect(page.getByText('대상 개체')).toBeVisible()
   await expect(page.getByText('먹이 종류 · 급여량')).toBeVisible()
   await expect(page.getByText('급여자')).toBeVisible()
-  await expect(page.getByText('급여일시')).toBeVisible()
+  // 급여일시는 날짜·시간 두 열로 나뉜다.
+  await expect(page.getByText('급여날짜')).toBeVisible()
+  await expect(page.getByText('급여시간')).toBeVisible()
   await expect(rows(page)).toHaveCount(4)
 })
 

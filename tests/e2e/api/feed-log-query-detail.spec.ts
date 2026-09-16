@@ -36,7 +36,9 @@ test('S3: 급여일시·급여자·급여량은 관리자 상세 값으로 그�
   await page.goto('/feeds/1')
 
   const today = todayIsoDate().replaceAll('-', '.')
-  await expect(page.getByText(`${today} 09:30`).first()).toBeVisible()
+  // 상세 카드는 급여날짜·급여시간을 따로 보여 준다.
+  await expect(page.getByText(today).first()).toBeVisible()
+  await expect(page.getByText('09:30').first()).toBeVisible()
   await expect(page.getByText('김수인').first()).toBeVisible()
   // 급여량은 실수다(단위 없음). 소수점은 필요한 만큼만 남긴다.
   await expect(page.getByText('1.2kg').first()).toBeVisible()

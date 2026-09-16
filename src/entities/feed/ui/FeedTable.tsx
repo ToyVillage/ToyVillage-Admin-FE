@@ -7,7 +7,7 @@ import {
 } from '@/shared/ui'
 import {
   formatAnimalLabel,
-  formatFedAt,
+  formatFedDate,
   formatFeedLabel,
 } from '../model/format'
 import type { FeedRecord } from '../model/types'
@@ -20,12 +20,19 @@ interface FeedTableProps {
 }
 
 // Figma `748:14291` 의 열 구성. 케밥 열은 디자인에서 가려져 있어 만들지 않고,
-// 남는 폭은 마지막 `급여일시` 열이 채운다.
+// 남는 폭은 마지막 `급여시간` 열이 채운다.
+// 급여일시는 날짜와 시간을 따로 보여 준다.
 const columns: DataTableColumn[] = [
-  { key: 'animal', header: '대상 개체', width: 240, variant: 'title' },
-  { key: 'feed', header: '먹이 종류 · 급여량', width: 480, variant: 'title' },
-  { key: 'feeder', header: '급여자', width: 280, render: mutedCell('feeder') },
-  { key: 'fedAt', header: '급여일시', render: mutedCell('fedAt') },
+  { key: 'animal', header: '대상 개체', width: 220, variant: 'title' },
+  { key: 'feed', header: '먹이 종류 · 급여량', width: 440, variant: 'title' },
+  { key: 'feeder', header: '급여자', width: 240, render: mutedCell('feeder') },
+  {
+    key: 'fedDate',
+    header: '급여날짜',
+    width: 240,
+    render: mutedCell('fedDate'),
+  },
+  { key: 'fedTime', header: '급여시간', render: mutedCell('fedTime') },
 ]
 
 const appearance = {
@@ -48,7 +55,8 @@ export function FeedTable({
           animal: formatAnimalLabel(feed.animalType, feed.animalName),
           feed: formatFeedLabel(feed.feedType, feed.feedAmount),
           feeder: feed.feederName,
-          fedAt: formatFedAt(feed.fedDate, feed.fedTime),
+          fedDate: formatFedDate(feed.fedDate),
+          fedTime: feed.fedTime,
         }),
       )}
       columns={columns}
@@ -62,7 +70,7 @@ export function FeedTable({
   )
 }
 
-// Figma 의 `급여자`·`급여일시` 는 gray/60(#848491) 22px 다.
+// Figma 의 `급여자`·`급여날짜`·`급여시간` 은 gray/60(#848491) 22px 다.
 function mutedCell(key: string) {
   return function render(row: DataTableRow) {
     return <MutedCell>{row[key]}</MutedCell>

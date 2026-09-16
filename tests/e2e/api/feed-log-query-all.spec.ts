@@ -63,7 +63,8 @@ test('S2: 분류 탭을 누르면 animalTaxonomic 으로 다시 조회한다', a
   await page.getByRole('button', { name: '전체' }).click()
   await expect(rows(page)).toHaveCount(4)
 
-  expect(taxonomics).toEqual([null, 'REPTILES', 'BIRDS', null])
+  // 요청은 화면 갱신보다 늦게 기록될 수 있어 개수가 찰 때까지 기다린다.
+  await expect.poll(() => taxonomics).toEqual([null, 'REPTILES', 'BIRDS', null])
 })
 
 test('S3: 총 페이지 수는 서버 응답(totalPageSize)을 따른다', async ({
@@ -83,7 +84,7 @@ test('S3: 총 페이지 수는 서버 응답(totalPageSize)을 따른다', async
   await page.getByRole('button', { name: '2 페이지' }).click()
   await expect(rows(page)).toHaveCount(2)
 
-  expect(pages).toEqual(['0', '1'])
+  await expect.poll(() => pages).toEqual(['0', '1'])
 })
 
 test('S4: 조회날짜를 바꾸면 그 날짜로 다시 조회한다', async ({ page }) => {
@@ -102,7 +103,7 @@ test('S4: 조회날짜를 바꾸면 그 날짜로 다시 조회한다', async ({
   await page.getByRole('option', { name: `${lastYear}년` }).click()
   await expect(rows(page)).toHaveCount(0)
 
-  expect(dates).toHaveLength(2)
+  await expect.poll(() => dates).toHaveLength(2)
   expect(dates[1]?.startsWith(lastYear)).toBe(true)
 })
 

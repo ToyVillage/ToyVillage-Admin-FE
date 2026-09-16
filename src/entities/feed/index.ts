@@ -8,6 +8,7 @@ export { animalSpeciesList, animalTaxonomicBySpecies } from './model/types'
 export {
   formatAnimalLabel,
   formatFedAt,
+  formatFedDate,
   formatFeedAmount,
   formatFeedLabel,
 } from './model/format'

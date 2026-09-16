@@ -1,6 +1,11 @@
 import { formatIsoDate } from '@/shared/lib'
 
-/** `2026-09-03` + `09:30` → `2026.09.03 09:30` */
+/** `2026-09-03` → `2026.09.03` — 표·상세 카드의 `급여날짜` */
+export function formatFedDate(fedDate: string): string {
+  return formatIsoDate(fedDate)
+}
+
+/** `2026-09-03` + `09:30` → `2026.09.03 09:30` — 급여 이력 표의 `급여일시` */
 export function formatFedAt(fedDate: string, fedTime: string): string {
   return `${formatIsoDate(fedDate)} ${fedTime}`
 }

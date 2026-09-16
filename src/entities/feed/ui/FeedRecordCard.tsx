@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import { formatFedAt } from '../model/format'
+import { formatFedDate } from '../model/format'
 import type { FeedRecordDetail } from '../model/types'
 import { AnimalSpeciesBadge } from './AnimalSpeciesBadge'
 
@@ -24,11 +24,14 @@ export function FeedRecordCard({ feed }: FeedRecordCardProps) {
         </Titles>
         <Fields>
           <Row>
-            <Field label="급여일시" value={formatFedAt(feed.fedDate, feed.fedTime)} />
-            <Field label="급여자" value={feed.feederName} />
+            <Field label="급여날짜" value={formatFedDate(feed.fedDate)} />
+            <Field label="급여시간" value={feed.fedTime} />
           </Row>
           <Row>
+            <Field label="급여자" value={feed.feederName} />
             <Field label="먹이 종류" value={feed.feedType} />
+          </Row>
+          <Row>
             <Field label="급여량" value={feed.feedAmount} />
           </Row>
           <Row>
