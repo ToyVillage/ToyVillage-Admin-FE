@@ -51,7 +51,7 @@ test('S2: 같은 개체가 여러 번 급여돼도 개체 조회는 개체당 �
   expect(api.requests.animal).toBe(2)
 })
 
-test('S3: 목록 응답 형식이 명세와 다르면 행을 그리지 않는다', async ({
+test('S3: 목록 응답 형식이 명세와 다르면 빈 목록이 아니라 오류를 알린다', async ({
   page,
 }) => {
   await mockFeedApi(page)
@@ -65,9 +65,29 @@ test('S3: 목록 응답 형식이 명세와 다르면 행을 그리지 않는다
 
   await page.goto('/feeds')
 
+  await expect(page.getByRole('alert')).toContainText(
+    '급여 내역을 불러오지 못했습니다.',
+  )
   await expect(rows(page)).toHaveCount(0)
-  await expect(page.getByRole('status')).toContainText(
-    '해당 날짜에 급여 내역이 없습니다.',
+  await expect(
+    page.getByText('해당 날짜에 급여 내역이 없습니다.'),
+  ).toBeHidden()
+})
+
+test('S3-1: 목록 조회가 실패하면 오류를 알린다', async ({ page }) => {
+  await mockFeedApi(page)
+  await page.route(listPattern, async (route) => {
+    await route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: '서버 오류' }),
+    })
+  })
+
+  await page.goto('/feeds')
+
+  await expect(page.getByRole('alert')).toContainText(
+    '급여 내역을 불러오지 못했습니다.',
   )
 })
 
