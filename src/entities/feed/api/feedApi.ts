@@ -7,58 +7,66 @@ import type {
 } from '../model/types'
 import type {
   FeedLogAdminDetailResponse,
+  FeedLogHistoryResponse,
   FeedLogListResponse,
   FeedQueryAllRequest,
   FeedQueryRequest,
 } from './types'
+import { animalTaxonomics } from './types'
 
-// 프론트는 admin 3개(`/feed-log/admin`, `/feed-log/admin/{feedLogId}`,
-// `/feed-log/admin/history/{animalManageId}`)만 쓴다.
-// 목록(`FeedLogResponse`)은 `feedId`·`animalKind`·`animalName` 만 주고
-// 표의 `먹이 종류 · 급여량`·`급여자`·`급여일시` 는 상세에만 있어 행마다 상세를 더 부른다.
+export interface FeedListPage {
+  items: FeedRecord[]
+  /** 총 페이지 수 */
+  totalPageSize: number
+}
+
+// 목록은 날짜로 조회하고 분류 탭은 `animalTaxonomic` 으로 서버가 거른다.
+// 표의 네 열이 모두 목록 응답에 있어 행별 추가 조회가 없다.
 export async function getFeeds({
   date,
-}: FeedQueryAllRequest): Promise<FeedRecord[]> {
+  animalTaxonomic = null,
+  page,
+  size,
+}: FeedQueryAllRequest): Promise<FeedListPage> {
   assertIsoDate(date)
+  assertPaging(page, size)
 
   const { data } = await api.get<unknown>('/feed-log/admin', {
-    params: { date },
+    params: {
+      date,
+      animalTaxonomic: animalTaxonomic ?? undefined,
+      page,
+      size,
+    },
   })
 
   if (!isFeedLogListResponse(data)) {
     throw new Error('급여 목록 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  const details = await Promise.all(
-    data.feedLogs.map((item) => getAdminFeedLog(item.feedId)),
-  )
-
-  return details.map((detail, index) =>
-    toFeedRecord(data.feedLogs[index].feedId, detail),
-  )
-}
-
-// 상세 화면은 급여 기록 + 그 개체의 급여 이력이다.
-export async function getFeedDetail({
-  feedLogId,
-}: FeedQueryRequest): Promise<FeedRecordDetail> {
-  assertFeedLogId(feedLogId)
-
-  const admin = await getAdminFeedLog(feedLogId)
-  const history = await getFeedHistory(admin.animalId)
-
   return {
-    ...toFeedRecord(feedLogId, admin),
-    animalManageId: admin.animalId,
-    // 특이사항(`significant`)은 admin 상세 응답에 없다.
-    note: '',
-    history,
+    items: data.feedLogs.map((item) => {
+      const { fedDate, fedTime } = splitFeedDateTime(item.feedDateTime)
+
+      return {
+        id: String(item.feedLogId),
+        animalType: item.animalKind,
+        animalName: item.animalName,
+        feedType: item.feedType,
+        feedAmount: formatFeedAmount(item.feedAmount),
+        feederName: item.name,
+        fedDate,
+        fedTime,
+      }
+    }),
+    totalPageSize: data.totalPageSize,
   }
 }
 
-async function getAdminFeedLog(
-  feedLogId: number,
-): Promise<FeedLogAdminDetailResponse> {
+// 상세는 급여 기록 한 건과 그 개체의 급여 이력이다.
+export async function getFeedDetail({
+  feedLogId,
+}: FeedQueryRequest): Promise<FeedRecordDetail> {
   assertFeedLogId(feedLogId)
 
   const { data } = await api.get<unknown>(`/feed-log/admin/${feedLogId}`)
@@ -67,10 +75,26 @@ async function getAdminFeedLog(
     throw new Error('급여 상세 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  return data
+  const history = await getFeedHistory(data.animalId)
+  const { fedDate, fedTime } = splitFeedDateTime(data.feedDateTime)
+
+  return {
+    id: String(feedLogId),
+    animalManageId: data.animalId,
+    animalType: data.animalKind,
+    animalName: data.animalName,
+    feedType: data.feedType,
+    feedAmount: formatFeedAmount(data.feedAmount),
+    feederName: data.name,
+    fedDate,
+    fedTime,
+    note: data.significant,
+    // `animalImageUrl` 은 `fileName`·`fileKey` 뿐이라 표시할 URL 이 없다.
+    animalPhotoUrl: undefined,
+    history,
+  }
 }
 
-// 급여 이력 표도 목록과 같은 3개 필드만 받아 행마다 상세를 더 부른다.
 async function getFeedHistory(
   animalManageId: number,
 ): Promise<FeedHistoryRecord[]> {
@@ -78,53 +102,30 @@ async function getFeedHistory(
     `/feed-log/admin/history/${animalManageId}`,
   )
 
-  if (!isFeedLogListResponse(data)) {
+  if (!isFeedLogHistoryResponse(data)) {
     throw new Error('급여 이력 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  const records = await Promise.all(
-    data.feedLogs.map(async ({ feedId }) => {
-      const detail = await getAdminFeedLog(feedId)
-      const { fedDate, fedTime } = splitFeedDateTime(detail.feedDateTime)
+  return data.feedLogs
+    .map((item) => {
+      const { fedDate, fedTime } = splitFeedDateTime(item.feedDateTime)
 
       return {
         record: {
-          id: String(feedId),
+          id: String(item.feedLogId),
           fedDate,
           fedTime,
-          feederName: detail.name,
-          feedType: detail.feedType,
-          feedAmount: formatFeedAmount(detail.feedAmount),
-          // 특이사항(`significant`)은 admin 상세 응답에 없다.
-          note: '',
+          feederName: item.name,
+          feedType: item.feedType,
+          feedAmount: formatFeedAmount(item.feedAmount),
+          note: item.significant,
         },
-        feedDateTime: detail.feedDateTime,
+        feedDateTime: item.feedDateTime,
       }
-    }),
-  )
-
-  // 최신 급여가 위로 온다(서버 정렬 명세 없음).
-  return records
+    })
+    // 최신 급여가 위로 온다(서버 정렬 명세 없음).
     .sort((left, right) => right.feedDateTime.localeCompare(left.feedDateTime))
     .map((item) => item.record)
-}
-
-function toFeedRecord(
-  feedId: number,
-  detail: FeedLogAdminDetailResponse,
-): FeedRecord {
-  const { fedDate, fedTime } = splitFeedDateTime(detail.feedDateTime)
-
-  return {
-    id: String(feedId),
-    animalType: detail.animalKind,
-    animalName: detail.animalName,
-    feedType: detail.feedType,
-    feedAmount: formatFeedAmount(detail.feedAmount),
-    feederName: detail.name,
-    fedDate,
-    fedTime,
-  }
 }
 
 /** `2026-09-16T09:30:00` → `2026-09-16` + `09:30` */
@@ -139,6 +140,16 @@ function splitFeedDateTime(feedDateTime: string): {
 function assertIsoDate(date: string): void {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     throw new Error('급여 조회 날짜 형식이 올바르지 않습니다.')
+  }
+}
+
+function assertPaging(page: number, size: number): void {
+  if (!Number.isSafeInteger(page) || page < 0) {
+    throw new Error('페이지 번호가 올바르지 않습니다.')
+  }
+
+  if (!Number.isSafeInteger(size) || size <= 0) {
+    throw new Error('페이지 크기가 올바르지 않습니다.')
   }
 }
 
@@ -160,11 +171,16 @@ function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
 
       const feedLog = item as Record<string, unknown>
       return (
-        Number.isInteger(feedLog.feedId) &&
+        Number.isInteger(feedLog.feedLogId) &&
+        typeof feedLog.name === 'string' &&
         typeof feedLog.animalKind === 'string' &&
-        typeof feedLog.animalName === 'string'
+        typeof feedLog.animalName === 'string' &&
+        typeof feedLog.feedType === 'string' &&
+        typeof feedLog.feedAmount === 'number' &&
+        typeof feedLog.feedDateTime === 'string'
       )
-    })
+    }) &&
+    Number.isInteger(response.totalPageSize)
   )
 }
 
@@ -181,7 +197,35 @@ function isFeedLogAdminDetailResponse(
     typeof detail.animalKind === 'string' &&
     typeof detail.animalName === 'string' &&
     typeof detail.feedType === 'string' &&
-    Number.isInteger(detail.feedAmount) &&
-    typeof detail.feedDateTime === 'string'
+    typeof detail.feedAmount === 'number' &&
+    typeof detail.feedDateTime === 'string' &&
+    typeof detail.significant === 'string'
   )
 }
+
+function isFeedLogHistoryResponse(
+  value: unknown,
+): value is FeedLogHistoryResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  const response = value as Record<string, unknown>
+
+  return (
+    Array.isArray(response.feedLogs) &&
+    response.feedLogs.every((item) => {
+      if (typeof item !== 'object' || item === null) return false
+
+      const feedLog = item as Record<string, unknown>
+      return (
+        Number.isInteger(feedLog.feedLogId) &&
+        typeof feedLog.name === 'string' &&
+        typeof feedLog.feedType === 'string' &&
+        typeof feedLog.feedAmount === 'number' &&
+        typeof feedLog.feedDateTime === 'string' &&
+        typeof feedLog.significant === 'string'
+      )
+    })
+  )
+}
+
+export { animalTaxonomics }

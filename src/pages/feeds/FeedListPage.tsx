@@ -4,9 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   animalSpeciesList,
+  animalTaxonomicBySpecies,
   feedQueryKeys,
   FeedTable,
   getFeeds,
+  type AnimalSpecies,
 } from '@/entities/feed'
 import { CategoryTabs, DateFilter } from '@/shared/ui'
 import { todayCalendarDate, toIsoDate, type CalendarDate } from '@/shared/lib'
@@ -24,24 +26,30 @@ export function FeedListPage() {
   const [page, setPage] = useState(1)
 
   const isoDate = toIsoDate(date)
+  // 탭 목록은 프론트 상수다. `전체` 는 분류를 보내지 않는다.
+  const species: AnimalSpecies | null =
+    tab === allTabLabel ? null : (tab as AnimalSpecies)
 
-  // 조회날짜가 바뀔 때마다 다시 조회한다.
+  // 서버 페이지네이션이다. 명세상 page 는 0부터 시작하고 화면은 1부터 센다.
   const feedsQuery = useQuery({
-    queryKey: feedQueryKeys.list(isoDate),
-    queryFn: () => getFeeds({ date: isoDate }),
+    queryKey: feedQueryKeys.list(isoDate, species, page),
+    queryFn: () =>
+      getFeeds({
+        date: isoDate,
+        animalTaxonomic: species && animalTaxonomicBySpecies[species],
+        page: page - 1,
+        size: TABLE_PAGE_SIZE,
+      }),
     // 급여 내역은 다른 직원이 계속 추가하므로 전역 staleTime(60초) 캐시를 쓰지 않는다.
     staleTime: 0,
   })
 
-  const feeds = useMemo(() => feedsQuery.data ?? [], [feedsQuery.data])
+  const feeds = useMemo(() => feedsQuery.data?.items ?? [], [feedsQuery.data])
 
-  const pageCount = Math.max(1, Math.ceil(feeds.length / TABLE_PAGE_SIZE))
+  const totalPageSize = feedsQuery.data?.totalPageSize
+  const pageCount = Math.max(1, totalPageSize ?? page)
   const currentPage = Math.min(page, pageCount)
   const pagination = { page: currentPage, pageCount, onChange: setPage }
-  const pageFeeds = feeds.slice(
-    (currentPage - 1) * TABLE_PAGE_SIZE,
-    currentPage * TABLE_PAGE_SIZE,
-  )
 
   // 조회날짜·분류가 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
   const dateAndTab = `${isoDate}:${tab}`
@@ -50,6 +58,9 @@ export function FeedListPage() {
     setPrevDateAndTab(dateAndTab)
     setPage(1)
   }
+
+  // 마지막 페이지가 비면 직전 페이지를 다시 조회한다.
+  if (totalPageSize !== undefined && page > pageCount) setPage(pageCount)
 
   // 로딩 중에는 같은 자리에 빈 표를 두어 레이아웃이 튀지 않게 한다.
   const emptyLabel = feedsQuery.isPending
@@ -77,17 +88,11 @@ export function FeedListPage() {
 
         <DateFilter value={date} onChange={setDate} />
 
-        {/* admin 급여 API 에 분류(`animalTaxonomic`)가 없어 전체 외에는 고를 수 없다. */}
-        <CategoryTabs
-          categories={tabs}
-          active={tab}
-          onSelect={setTab}
-          disabled={[...animalSpeciesList]}
-        />
+        <CategoryTabs categories={tabs} active={tab} onSelect={setTab} />
 
         <TableArea>
           <FeedTable
-            feeds={pageFeeds}
+            feeds={feeds}
             onRowClick={(id) => navigate(`/feeds/${id}`)}
             pagination={pagination}
             emptyLabel={emptyLabel}

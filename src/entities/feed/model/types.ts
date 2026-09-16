@@ -2,12 +2,20 @@
 export const animalSpeciesList = ['포유류', '파충류', '조류', '어류'] as const
 export type AnimalSpecies = (typeof animalSpeciesList)[number]
 
+// 탭 라벨 → 목록 조회의 `animalTaxonomic` query 값.
+export const animalTaxonomicBySpecies = {
+  포유류: 'MAMMALS',
+  파충류: 'REPTILES',
+  조류: 'BIRDS',
+  어류: 'FISH',
+} as const satisfies Record<AnimalSpecies, string>
+
 // 급여 기록 한 건. 목록 표의 `대상 개체`/`먹이 종류 · 급여량`/`급여자`/`급여일시` 열에 대응한다.
 export interface FeedRecord {
   id: string
   /**
-   * 개체 분류. admin 급여 API 3개에는 `animalTaxonomic` 이 없어 채울 수 없다.
-   * 서버가 분류를 내려주기 전까지 비어 있다.
+   * 개체 분류. 목록·상세 응답에는 없고 조회 시 고른 분류 탭에서 온다.
+   * `전체` 탭이나 상세 단독 진입이면 비어 있다.
    */
   species?: AnimalSpecies
   /** 종. `표범` */
