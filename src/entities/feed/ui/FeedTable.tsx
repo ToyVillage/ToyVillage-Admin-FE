@@ -5,11 +5,7 @@ import {
   type DataTablePagination,
   type DataTableRow,
 } from '@/shared/ui'
-import {
-  formatAnimalLabel,
-  formatFedDate,
-  formatFeedLabel,
-} from '../model/format'
+import { formatFedDate, formatFeedLabel } from '../model/format'
 import type { FeedRecord } from '../model/types'
 
 interface FeedTableProps {
@@ -21,15 +17,16 @@ interface FeedTableProps {
 
 // Figma `748:14291` 의 열 구성. 케밥 열은 디자인에서 가려져 있어 만들지 않고,
 // 남는 폭은 마지막 `급여시간` 열이 채운다.
-// 급여일시는 날짜와 시간을 따로 보여 준다.
+// 대상 개체와 급여일시는 각각 두 열로 나눠 보여 준다(한 칸에 붙이면 줄바꿈으로 깨진다).
 const columns: DataTableColumn[] = [
-  { key: 'animal', header: '대상 개체', width: 220, variant: 'title' },
-  { key: 'feed', header: '먹이 종류 · 급여량', width: 440, variant: 'title' },
-  { key: 'feeder', header: '급여자', width: 240, render: mutedCell('feeder') },
+  { key: 'animalKind', header: '종', width: 200, variant: 'title' },
+  { key: 'animalName', header: '개체명', width: 180, variant: 'title' },
+  { key: 'feed', header: '먹이 종류 · 급여량', width: 320, variant: 'title' },
+  { key: 'feeder', header: '급여자', width: 180, render: mutedCell('feeder') },
   {
     key: 'fedDate',
     header: '급여날짜',
-    width: 240,
+    width: 220,
     render: mutedCell('fedDate'),
   },
   { key: 'fedTime', header: '급여시간', render: mutedCell('fedTime') },
@@ -52,7 +49,8 @@ export function FeedTable({
       rows={feeds.map(
         (feed): DataTableRow => ({
           id: feed.id,
-          animal: formatAnimalLabel(feed.animalType, feed.animalName),
+          animalKind: feed.animalType,
+          animalName: feed.animalName,
           feed: formatFeedLabel(feed.feedType, feed.feedAmount),
           feeder: feed.feederName,
           fedDate: formatFedDate(feed.fedDate),

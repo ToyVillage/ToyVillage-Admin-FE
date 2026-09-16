@@ -33,7 +33,9 @@ test('S1: 목록 진입 기본 표시', async ({ page }) => {
     'aria-pressed',
     'true',
   )
-  await expect(page.getByText('대상 개체')).toBeVisible()
+  // 대상 개체는 종·개체명 두 열로 나뉜다.
+  await expect(page.getByText('종', { exact: true })).toBeVisible()
+  await expect(page.getByText('개체명')).toBeVisible()
   await expect(page.getByText('먹이 종류 · 급여량')).toBeVisible()
   await expect(page.getByText('급여자')).toBeVisible()
   // 급여일시는 날짜·시간 두 열로 나뉜다.

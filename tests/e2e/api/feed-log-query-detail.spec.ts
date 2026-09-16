@@ -66,7 +66,8 @@ test('S5: 급여 이력은 최신 급여가 위에 온다', async ({ page }) => 
   await expect(historyRows(page)).toHaveCount(3)
 
   const today = todayIsoDate().replaceAll('-', '.')
-  await expect(historyRows(page).first()).toContainText(`${today} 09:30`)
+  await expect(historyRows(page).first()).toContainText(today)
+  await expect(historyRows(page).first()).toContainText('09:30')
 })
 
 test('S6: 숫자가 아닌 id 로 진입하면 조회하지 않고 목록으로 되돌린다', async ({

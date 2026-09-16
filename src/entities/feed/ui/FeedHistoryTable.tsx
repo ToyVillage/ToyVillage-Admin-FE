@@ -4,7 +4,7 @@ import {
   type DataTableColumn,
   type DataTableRow,
 } from '@/shared/ui'
-import { formatFedAt, formatFeedLabel } from '../model/format'
+import { formatFedDate, formatFeedLabel } from '../model/format'
 import type { FeedHistoryRecord } from '../model/types'
 
 interface FeedHistoryTableProps {
@@ -14,8 +14,19 @@ interface FeedHistoryTableProps {
 
 // Figma `1400:15136` (feed history table). 페이지네이션 없이 이력 전체를 보여준다.
 const columns: DataTableColumn[] = [
-  { key: 'fedAt', header: '급여일시', width: 240, render: mutedCell('fedAt') },
-  { key: 'feeder', header: '급여자', width: 190, render: mutedCell('feeder') },
+  {
+    key: 'fedDate',
+    header: '급여날짜',
+    width: 180,
+    render: mutedCell('fedDate'),
+  },
+  {
+    key: 'fedTime',
+    header: '급여시간',
+    width: 120,
+    render: mutedCell('fedTime'),
+  },
+  { key: 'feeder', header: '급여자', width: 170, render: mutedCell('feeder') },
   {
     key: 'feed',
     header: '먹이 종류 · 급여량',
@@ -45,7 +56,8 @@ export function FeedHistoryTable({
       rows={records.map(
         (record): DataTableRow => ({
           id: record.id,
-          fedAt: formatFedAt(record.fedDate, record.fedTime),
+          fedDate: formatFedDate(record.fedDate),
+          fedTime: record.fedTime,
           feeder: record.feederName,
           feed: formatFeedLabel(record.feedType, record.feedAmount),
           note: record.note,
@@ -59,7 +71,7 @@ export function FeedHistoryTable({
   )
 }
 
-// Figma 의 `급여일시`·`급여자` 는 gray/60(#848491) 20px 다.
+// Figma 의 `급여날짜`·`급여시간`·`급여자` 는 gray/60(#848491) 20px 다.
 function mutedCell(key: string) {
   return function render(row: DataTableRow) {
     return <MutedCell>{row[key]}</MutedCell>
