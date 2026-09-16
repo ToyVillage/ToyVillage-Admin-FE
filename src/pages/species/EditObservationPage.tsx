@@ -2,12 +2,9 @@ import { useCallback } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getMockIndividual, individualQueryKeys } from '@/entities/individual'
-import {
-  getMockObservation,
-  observationQueryKeys,
-} from '@/entities/observation'
-import { getMockSpecies, speciesQueryKeys } from '@/entities/species'
+import { getIndividual, individualQueryKeys } from '@/entities/individual'
+import { getObservation, observationQueryKeys } from '@/entities/observation'
+import { getSpecies, speciesQueryKeys } from '@/entities/species'
 import { ObservationForm } from '@/features/observation-form'
 import { BackLink, LeaveConfirmationDialog } from '@/shared/ui'
 import { PageStatus } from './ui/PageStatus'
@@ -22,18 +19,22 @@ export function EditObservationPage() {
 
   const observationQuery = useQuery({
     queryKey: observationQueryKeys.detail(observationId),
-    queryFn: () => getMockObservation(observationId),
+    queryFn: () =>
+      getObservation({
+        animalManageId: Number(individualId),
+        animalObservationId: Number(observationId),
+      }),
     enabled: Boolean(observationId),
   })
   // 경로 체인 검증과 부제(`{종 국명} · {개체명}`)에 쓴다.
   const individualQuery = useQuery({
     queryKey: individualQueryKeys.detail(individualId),
-    queryFn: () => getMockIndividual(individualId),
+    queryFn: () => getIndividual({ animalManageId: Number(individualId) }),
     enabled: Boolean(individualId),
   })
   const speciesQuery = useQuery({
     queryKey: speciesQueryKeys.detail(speciesId),
-    queryFn: () => getMockSpecies(speciesId),
+    queryFn: () => getSpecies({ animalKindId: Number(speciesId) }),
     enabled: Boolean(speciesId),
   })
 
