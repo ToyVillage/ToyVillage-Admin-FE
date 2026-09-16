@@ -52,7 +52,22 @@ export function SelectMenu({
 }: SelectMenuProps) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+  const selectedRef = useRef<HTMLButtonElement>(null)
   const selected = options.find((option) => option.value === value)
+
+  // 목록을 펼치면 선택된 항목이 가운데 오도록 스크롤한다.
+  // 페이지가 함께 움직이지 않도록 scrollIntoView 대신 목록의 scrollTop 을 직접 둔다.
+  useEffect(() => {
+    if (!open) return
+
+    const list = listRef.current
+    const option = selectedRef.current
+    if (!list || !option) return
+
+    list.scrollTop =
+      option.offsetTop - (list.clientHeight - option.clientHeight) / 2
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -101,6 +116,7 @@ export function SelectMenu({
       </Trigger>
       {open && (
         <List
+          ref={listRef}
           role="listbox"
           aria-label={ariaLabel}
           $maxHeight={maxListHeight}
@@ -112,6 +128,7 @@ export function SelectMenu({
             <Fragment key={option.value}>
               {index > 0 && <Divider aria-hidden="true" />}
               <Option
+                ref={option.value === value ? selectedRef : undefined}
                 type="button"
                 role="option"
                 aria-selected={option.value === value}

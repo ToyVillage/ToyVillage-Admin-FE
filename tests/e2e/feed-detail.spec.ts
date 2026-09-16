@@ -39,6 +39,25 @@ test('S2: 목록에서 상세로, 뒤로가기로 목록으로', async ({ page }
   await expect(page).toHaveURL(/\/feeds$/)
 })
 
+// 상세에 다녀와도 목록의 조회 조건(조회날짜·분류·페이지)이 그대로여야 한다.
+test('S2-1: 뒤로가기하면 목록의 조회 조건이 유지된다', async ({ page }) => {
+  await page.goto('/feeds')
+
+  await page.getByRole('button', { name: '파충류' }).click()
+  await expect(page.getByTestId('feed-row')).toHaveCount(1)
+
+  await page.getByTestId('feed-row').first().click()
+  await expect(page).toHaveURL(/\/feeds\/5$/)
+
+  await page.getByRole('link', { name: '뒤로가기' }).click()
+
+  await expect(page.getByRole('button', { name: '파충류' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(page.getByTestId('feed-row')).toHaveCount(1)
+})
+
 test('S3: 급여 이력 건수와 행 수가 일치한다', async ({ page }) => {
   await page.goto('/feeds/1')
 

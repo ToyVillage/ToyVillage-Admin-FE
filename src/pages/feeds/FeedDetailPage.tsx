@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useParams } from 'react-router-dom'
 import {
   feedQueryKeys,
   FeedHistoryTable,
@@ -14,6 +14,11 @@ const listPath = '/feeds'
 
 export function FeedDetailPage() {
   const { id = '' } = useParams()
+  const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건(날짜·분류·페이지)으로 돌아간다.
+  const listSearch = (location.state as { listSearch?: string } | null)
+    ?.listSearch
+  const backPath = `${listPath}${listSearch ?? ''}`
 
   // 상세 진입 시 페이지 상단으로 스크롤한다.
   useEffect(() => {
@@ -40,7 +45,7 @@ export function FeedDetailPage() {
   return (
     <Page>
       <Content>
-        <BackLink to={listPath} />
+        <BackLink to={backPath} />
 
         {feed && <FeedRecordCard feed={feed} />}
 

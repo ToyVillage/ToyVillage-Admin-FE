@@ -135,6 +135,10 @@ test('S9: 분류 탭을 바꿔도 조회날짜는 유지된다', async ({ page }
 
   await page.getByRole('button', { name: '조회 월' }).click()
   await page.getByRole('option', { name: '01월' }).click()
+  // 조회 조건은 URL 로 반영되므로 선택이 트리거에 반영되기를 기다린 뒤 읽는다.
+  await expect(page.getByRole('button', { name: '조회 월' })).toContainText(
+    '01월',
+  )
   const monthLabel = await page
     .getByRole('button', { name: '조회 월' })
     .textContent()
@@ -167,6 +171,26 @@ test('S10: 말일 보정', async ({ page }) => {
   await expect(page.getByRole('button', { name: '조회 일' })).toContainText(
     `${lastDayOfFebruary}일`,
   )
+})
+
+// 조회 연도는 5개뿐이라 스크롤이 없다. 31개인 `조회 일` 로 확인한다.
+// 오늘이 월초여도 결과가 같도록 뒤쪽 날짜를 골라 두고 다시 펼친다.
+test('S12: 조회날짜 목록을 펼치면 선택된 항목이 보이게 스크롤된다', async ({
+  page,
+}) => {
+  await page.goto('/feeds')
+
+  await page.getByRole('button', { name: '조회 일' }).click()
+  await page.getByRole('option', { name: '28일' }).click()
+  await expect(page.getByRole('button', { name: '조회 일' })).toContainText(
+    '28일',
+  )
+
+  await page.getByRole('button', { name: '조회 일' }).click()
+  const list = page.getByRole('listbox', { name: '조회 일' })
+
+  await expect(list.getByRole('option', { selected: true })).toBeInViewport()
+  expect(await list.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
 })
 
 test('S11: 분류 탭에 해당 개체가 없는 빈 상태', async ({ page }) => {

@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   animalSpeciesList,
   animalTaxonomicBySpecies,
@@ -21,11 +21,14 @@ const tabs = [allTabLabel, ...animalSpeciesList]
 
 export function FeedListPage() {
   const navigate = useNavigate()
-  const [date, setDate] = useState<CalendarDate>(todayCalendarDate)
-  const [tab, setTab] = useState<string>(allTabLabel)
-  const [page, setPage] = useState(1)
+  const location = useLocation()
+  // 조회 조건은 URL 이 소유한다. 상세에 다녀오거나 새로고침해도 그대로 남는다.
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const isoDate = toIsoDate(date)
+  const isoDate = readIsoDate(searchParams)
+  const date = toCalendarDate(isoDate)
+  const tab = readTab(searchParams)
+  const page = readPage(searchParams)
   // 탭 목록은 프론트 상수다. `전체` 는 분류를 보내지 않는다.
   const species: AnimalSpecies | null =
     tab === allTabLabel ? null : (tab as AnimalSpecies)
@@ -51,16 +54,29 @@ export function FeedListPage() {
   const currentPage = Math.min(page, pageCount)
   const pagination = { page: currentPage, pageCount, onChange: setPage }
 
-  // 조회날짜·분류가 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
-  const dateAndTab = `${isoDate}:${tab}`
-  const [prevDateAndTab, setPrevDateAndTab] = useState(dateAndTab)
-  if (prevDateAndTab !== dateAndTab) {
-    setPrevDateAndTab(dateAndTab)
-    setPage(1)
-  }
-
   // 마지막 페이지가 비면 직전 페이지를 다시 조회한다.
   if (totalPageSize !== undefined && page > pageCount) setPage(pageCount)
+
+  // 조회날짜·분류가 바뀌면 첫 페이지로 되돌린다.
+  function setDate(next: CalendarDate) {
+    updateParams({ date: toIsoDate(next), tab, page: 1 })
+  }
+
+  function setTab(next: string) {
+    updateParams({ date: isoDate, tab: next, page: 1 })
+  }
+
+  function setPage(next: number) {
+    updateParams({ date: isoDate, tab, page: next })
+  }
+
+  function updateParams(next: { date: string; tab: string; page: number }) {
+    const params = new URLSearchParams()
+    params.set('date', next.date)
+    if (next.tab !== allTabLabel) params.set('tab', next.tab)
+    if (next.page > 1) params.set('page', String(next.page))
+    setSearchParams(params, { replace: true })
+  }
 
   // 로딩 중에는 같은 자리에 빈 표를 두어 레이아웃이 튀지 않게 한다.
   const emptyLabel = feedsQuery.isPending
@@ -93,7 +109,12 @@ export function FeedListPage() {
         <TableArea>
           <FeedTable
             feeds={feeds}
-            onRowClick={(id) => navigate(`/feeds/${id}`)}
+            // 상세의 뒤로가기가 이 조회 조건으로 돌아오도록 현재 쿼리를 넘긴다.
+            onRowClick={(id) =>
+              navigate(`/feeds/${id}`, {
+                state: { listSearch: location.search },
+              })
+            }
             pagination={pagination}
             emptyLabel={emptyLabel}
           />
@@ -101,6 +122,29 @@ export function FeedListPage() {
       </Content>
     </Page>
   )
+}
+
+function readIsoDate(params: URLSearchParams): string {
+  const value = params.get('date')
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? value
+    : toIsoDate(todayCalendarDate())
+}
+
+function toCalendarDate(isoDate: string): CalendarDate {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  return { year, month, day }
+}
+
+// 알 수 없는 값은 기본 탭으로 본다.
+function readTab(params: URLSearchParams): string {
+  const value = params.get('tab')
+  return value && tabs.includes(value) ? value : allTabLabel
+}
+
+function readPage(params: URLSearchParams): number {
+  const value = Number(params.get('page'))
+  return Number.isSafeInteger(value) && value > 0 ? value : 1
 }
 
 const StatePage = styled.main`
