@@ -2,7 +2,11 @@ import { useCallback, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { ToastVariant } from '@/shared/ui'
 
-export type PageToastKey = 'create-success' | 'delete-success' | 'delete-error'
+export type PageToastKey =
+  | 'create-success'
+  | 'delete-success'
+  | 'delete-error'
+  | 'download-error'
 
 interface PageToastLocationState {
   toast?: PageToastKey
@@ -21,6 +25,7 @@ const toastByKey: Record<
     message: '데이터 삭제에 성공했습니다',
   },
   'delete-error': { variant: 'error', message: '데이터 삭제에 실패했습니다' },
+  'download-error': { variant: 'error', message: '파일 다운로드에 실패했습니다' },
 }
 
 /**
