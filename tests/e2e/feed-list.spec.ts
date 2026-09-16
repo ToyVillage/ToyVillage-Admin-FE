@@ -1,8 +1,19 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test as base, type Page } from '@playwright/test'
+import { mockFeedApi, type FeedApiHandle } from './support/feed-api'
 
 // 승인된 시나리오(feed-list.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않고 mock 만 사용한다.
+// 먹이 급여 API 연동 이후 mock 데이터 대신 `support/feed-api` 의 page.route mock 을 쓴다.
+// 실제 서버는 호출하지 않는다.
+
+const test = base.extend<{ feedApi: FeedApiHandle }>({
+  feedApi: [
+    async ({ page }, runTest) => {
+      await runTest(await mockFeedApi(page))
+    },
+    { auto: true },
+  ],
+})
 
 const rows = (page: Page) => page.getByTestId('feed-row')
 
@@ -41,7 +52,7 @@ test('S2: 조회날짜 드롭다운 선택', async ({ page }) => {
   await expect(page.getByRole('button', { name: '조회 연도' })).toContainText(
     `${lastYear}년`,
   )
-  // 다른 날짜에는 mock 급여 내역이 없어 1페이지 빈 상태로 리셋된다.
+  // 다른 날짜에는 급여 내역이 없어 1페이지 빈 상태로 리셋된다.
   await expect(rows(page)).toHaveCount(0)
   await expect(page.getByRole('button', { name: '2 페이지' })).toBeHidden()
 })
@@ -80,7 +91,7 @@ test('S5: 행 클릭 → 상세 이동', async ({ page }) => {
   await page.goto('/feeds')
   await rows(page).first().click()
 
-  await expect(page).toHaveURL(/\/feeds\/feed-1$/)
+  await expect(page).toHaveURL(/\/feeds\/1$/)
 })
 
 test('S6: 페이지네이션', async ({ page }) => {
