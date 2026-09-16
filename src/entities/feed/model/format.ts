@@ -17,3 +17,8 @@ export function formatAnimalLabel(
 export function formatFeedLabel(feedType: string, feedAmount: string): string {
   return `${feedType} ${feedAmount}`
 }
+
+/** 급여량은 명세상 정수다(단위 필드 없음). 화면 표기 단위는 kg 로 둔다. */
+export function formatFeedAmount(feedAmount: number): string {
+  return `${feedAmount}kg`
+}

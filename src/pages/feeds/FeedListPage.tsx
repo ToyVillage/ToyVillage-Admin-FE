@@ -4,9 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   animalSpeciesList,
+  feedQueryKeys,
   FeedTable,
-  getMockFeeds,
-  type AnimalSpecies,
+  getFeeds,
 } from '@/entities/feed'
 import { CategoryTabs, DateFilter } from '@/shared/ui'
 import { todayCalendarDate, toIsoDate, type CalendarDate } from '@/shared/lib'
@@ -24,12 +24,13 @@ export function FeedListPage() {
   const [page, setPage] = useState(1)
 
   const isoDate = toIsoDate(date)
-  const species: AnimalSpecies | null =
-    tab === allTabLabel ? null : (tab as AnimalSpecies)
 
+  // 조회날짜가 바뀔 때마다 다시 조회한다.
   const feedsQuery = useQuery({
-    queryKey: ['feeds', 'list', { date: isoDate, species }],
-    queryFn: () => getMockFeeds(isoDate, species),
+    queryKey: feedQueryKeys.list(isoDate),
+    queryFn: () => getFeeds({ date: isoDate }),
+    // 급여 내역은 다른 직원이 계속 추가하므로 전역 staleTime(60초) 캐시를 쓰지 않는다.
+    staleTime: 0,
   })
 
   const feeds = useMemo(() => feedsQuery.data ?? [], [feedsQuery.data])
@@ -55,6 +56,17 @@ export function FeedListPage() {
     ? ' '
     : '해당 날짜에 급여 내역이 없습니다.'
 
+  // 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
+  if (feedsQuery.isError) {
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          급여 내역을 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
+  }
+
   return (
     <Page>
       <Content>
@@ -65,7 +77,13 @@ export function FeedListPage() {
 
         <DateFilter value={date} onChange={setDate} />
 
-        <CategoryTabs categories={tabs} active={tab} onSelect={setTab} />
+        {/* admin 급여 API 에 분류(`animalTaxonomic`)가 없어 전체 외에는 고를 수 없다. */}
+        <CategoryTabs
+          categories={tabs}
+          active={tab}
+          onSelect={setTab}
+          disabled={[...animalSpeciesList]}
+        />
 
         <TableArea>
           <FeedTable
@@ -79,6 +97,25 @@ export function FeedListPage() {
     </Page>
   )
 }
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  width: min(100%, 560px);
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
 
 const Page = styled.main`
   padding: 32px;

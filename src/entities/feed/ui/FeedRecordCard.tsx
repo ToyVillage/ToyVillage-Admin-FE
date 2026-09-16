@@ -19,7 +19,8 @@ export function FeedRecordCard({ feed }: FeedRecordCardProps) {
       <Info>
         <Titles>
           <AnimalName>{feed.animalName}</AnimalName>
-          <AnimalSpeciesBadge species={feed.species} />
+          {/* 급여 API 가 분류를 주지 않으면 배지를 그리지 않는다. */}
+          {feed.species && <AnimalSpeciesBadge species={feed.species} />}
         </Titles>
         <Fields>
           <Row>

@@ -8,9 +8,12 @@ export { animalSpeciesList } from './model/types'
 export {
   formatAnimalLabel,
   formatFedAt,
+  formatFeedAmount,
   formatFeedLabel,
 } from './model/format'
-export { getMockFeedDetail, getMockFeeds, mockFeeds } from './model/mock'
+export { feedQueryKeys } from './model/queryKeys'
+export { getFeedDetail, getFeeds } from './api/feedApi'
+export type { FeedQueryAllRequest, FeedQueryRequest } from './api/types'
 export { AnimalSpeciesBadge } from './ui/AnimalSpeciesBadge'
 export { FeedHistoryTable } from './ui/FeedHistoryTable'
 export { FeedRecordCard } from './ui/FeedRecordCard'
