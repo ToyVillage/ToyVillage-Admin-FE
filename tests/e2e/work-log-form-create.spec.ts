@@ -1,18 +1,21 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test as base, type Page } from '@playwright/test'
 
 // 승인된 시나리오(work-log-form-create.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 퍼블리싱 슬라이스이므로 실제 API를 호출하지 않고 localStorage mock 만 사용한다.
 
 const createPath = '/work-logs/forms/create'
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.clear()
-    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. mock 상태만 비우고
-    // 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
-    localStorage.setItem('accessToken', 'test-access-token')
-  })
+import { mockWorkLogApi, type WorkLogApiHandle } from './support/work-log-api'
+
+// 업무일지 API 연동 이후 localStorage mock 대신 `support/work-log-api` 의
+// page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
+const test = base.extend<{ workLogApi: WorkLogApiHandle }>({
+  workLogApi: [
+    async ({ page }, runTest) => {
+      await runTest(await mockWorkLogApi(page))
+    },
+    { auto: true },
+  ],
 })
 
 test('S1: 생성 화면 진입 기본 표시', async ({ page }) => {
