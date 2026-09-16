@@ -3,9 +3,10 @@ import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
 import {
+  feedQueryKeys,
   FeedHistoryTable,
   FeedRecordCard,
-  getMockFeedDetail,
+  getFeedDetail,
 } from '@/entities/feed'
 import { BackLink, SectionHeader } from '@/shared/ui'
 
@@ -19,12 +20,19 @@ export function FeedDetailPage() {
     window.scrollTo(0, 0)
   }, [])
 
+  const feedLogId = Number(id)
   const { data: feed, isPending } = useQuery({
-    queryKey: ['feeds', 'detail', id],
-    queryFn: () => getMockFeedDetail(id),
+    queryKey: feedQueryKeys.detail(id),
+    queryFn: () => getFeedDetail({ feedLogId }),
+    enabled: Number.isSafeInteger(feedLogId) && feedLogId > 0,
+    retry: false,
   })
 
-  // 목록에서 사라진 기록으로 진입하면 목록으로 되돌린다.
+  // 없는 기록이나 잘못된 id 로 진입하면 목록으로 되돌린다.
+  if (!Number.isSafeInteger(feedLogId) || feedLogId <= 0) {
+    return <Navigate to={listPath} replace />
+  }
+
   if (!isPending && !feed) return <Navigate to={listPath} replace />
 
   const history = feed?.history ?? []
