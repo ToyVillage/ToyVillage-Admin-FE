@@ -116,12 +116,15 @@ test('S7: 파일 업로드 셀은 비워 둔다', async ({ page }) => {
   await expect(fileCell).toHaveText('')
 })
 
-test('S8: 아직 채워지지 않은 일지', async ({ page }) => {
+// 명세상 답변이 없는 구역은 answers 가 빈 배열이다. 그런 구역도 행으로는 그려진다.
+test('S8: 일부 구역만 채워진 일지', async ({ page }) => {
   await page.goto('/work-logs/100')
 
   await expect(rows(page)).toHaveCount(6)
-  await expect(rows(page).first()).toHaveText('A1')
+  // 답변이 있는 첫 구역에서 질문 열이 만들어지고, 빈 구역은 값 없이 행만 남는다.
+  await expect(rows(page).first()).toContainText('A1')
   await expect(page.getByText('청소방법이 뭔가요?')).toBeVisible()
+  await expect(rows(page).nth(1)).toHaveText('A2')
 })
 
 test('S9: 장문형 셀은 한 줄로 말줄임한다', async ({ page }) => {

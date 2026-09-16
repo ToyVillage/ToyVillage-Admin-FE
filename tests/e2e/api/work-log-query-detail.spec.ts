@@ -7,17 +7,18 @@ import { mockWorkLogApi } from '../support/work-log-api'
 
 const sheetRows = (page: Page) => page.getByTestId('work-log-sheet-row')
 
-test('S1: 상세는 일지와 그 양식을 함께 조회한다', async ({ page }) => {
+// 서버가 질문 순서를 정해 내려주므로 상세는 일지 한 번만 부른다(백엔드 확인, 2026-09-16).
+test('S1: 상세는 일지만 한 번 조회한다', async ({ page }) => {
   const api = await mockWorkLogApi(page)
 
   await page.goto('/work-logs/1')
   await expect(sheetRows(page)).toHaveCount(3)
 
   expect(api.requests.detail).toBe(1)
-  expect(api.requests.templateDetail).toBe(1)
+  expect(api.requests.templateDetail).toBe(0)
 })
 
-test('S2: 답변이 없는 일지도 양식 질문으로 열을 그린다', async ({ page }) => {
+test('S2: 답변이 빈 구역도 행으로 그린다', async ({ page }) => {
   await mockWorkLogApi(page)
 
   await page.goto('/work-logs/100')

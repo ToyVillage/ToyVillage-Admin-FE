@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import type { WorkLogFormDraft } from '@/entities/work-log'
 import {
   createWorkLogForm,
+  isDuplicateFormNameError,
   workLogFormQueryKeys,
 } from '@/entities/work-log'
 import {
@@ -11,6 +12,7 @@ import {
   isDraftTouched,
   WorkLogFormWizard,
 } from '@/features/create-work-log-form'
+import { ErrorDialog } from '@/shared/ui'
 
 const listPath = '/work-logs?tab=forms'
 const basePath = '/work-logs/forms/create'
@@ -21,7 +23,7 @@ export function CreateWorkLogFormPage() {
   const queryClient = useQueryClient()
   const initialDraft = useMemo(() => createEmptyDraft(), [])
 
-  const { mutate, isPending } = useMutation({
+  const { mutate, isPending, isError, error, reset } = useMutation({
     mutationFn: (draft: WorkLogFormDraft) => createWorkLogForm(draft),
     onSuccess: () => {
       // 목록만 무효화한다. 상세까지 넓히면 지워진 id 를 다시 불러 404 가 난다.
@@ -34,15 +36,28 @@ export function CreateWorkLogFormPage() {
   })
 
   return (
-    <WorkLogFormWizard
-      initialDraft={initialDraft}
-      basePath={basePath}
-      submitLabel="생성하기"
-      showStepOneSubmit={false}
-      pending={isPending}
-      listPath={listPath}
-      isLeaveConfirmNeeded={isDraftTouched}
-      onSubmit={(draft) => mutate(draft)}
-    />
+    <>
+      <WorkLogFormWizard
+        initialDraft={initialDraft}
+        basePath={basePath}
+        submitLabel="생성하기"
+        showStepOneSubmit={false}
+        pending={isPending}
+        listPath={listPath}
+        isLeaveConfirmNeeded={isDraftTouched}
+        onSubmit={(draft) => mutate(draft)}
+      />
+
+      {isError && (
+        <ErrorDialog
+          title={
+            isDuplicateFormNameError(error)
+              ? '이미 존재하는 양식명입니다'
+              : '생성에 실패했습니다'
+          }
+          onConfirm={reset}
+        />
+      )}
+    </>
   )
 }

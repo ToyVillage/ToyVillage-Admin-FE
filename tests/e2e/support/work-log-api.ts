@@ -147,18 +147,35 @@ export const sheetTemplate: MockTemplate = {
   ],
 }
 
-/** 답변이 하나도 없는 일지(구역 6개). `/work-logs/100` 으로 진입한다. */
-export const emptyWorkLog: MockWorkLog = {
+/**
+ * 첫 구역만 채워지고 나머지 구역은 답변이 빈 일지(구역 6개).
+ * 명세상 `답변이 하나도 없는 구역은 answers 가 빈 배열`이다. `/work-logs/100` 으로 진입한다.
+ */
+export const partialWorkLog: MockWorkLog = {
   workLogId: 100,
   templateId: 100,
   writer: '이서준',
   writeAt: todayIsoDate(),
-  answers: { A1: [], A2: [], A3: [], A4: [], A5: [], A6: [] },
+  answers: {
+    A1: [
+      { questionId: 210, optionIds: [421] },
+      { questionId: 211, answerText: '물청소' },
+      { questionId: 212, optionIds: [425] },
+      { questionId: 213, optionIds: [427] },
+      { questionId: 214, answerText: '1kg' },
+      { questionId: 215 },
+    ],
+    A2: [],
+    A3: [],
+    A4: [],
+    A5: [],
+    A6: [],
+  },
 }
 
-export const emptyTemplate: MockTemplate = {
+export const partialTemplate: MockTemplate = {
   templateId: 100,
-  templateTitle: '빈 일지 양식',
+  templateTitle: '일부만 채운 일지 양식',
   createdAt: todayIsoDate(),
   sections: section(['A1', 'A2', 'A3', 'A4', 'A5', 'A6']),
   questions: sheetTemplate.questions,
@@ -219,8 +236,8 @@ export async function mockWorkLogApi(
   options: WorkLogApiOptions = {},
 ): Promise<WorkLogApiHandle> {
   const {
-    workLogs = [...mockWorkLogs, emptyWorkLog].map((item) => ({ ...item })),
-    templates = [...mockTemplates, sheetTemplate, emptyTemplate].map(
+    workLogs = [...mockWorkLogs, partialWorkLog].map((item) => ({ ...item })),
+    templates = [...mockTemplates, sheetTemplate, partialTemplate].map(
       (item) => ({ ...item }),
     ),
   } = options
