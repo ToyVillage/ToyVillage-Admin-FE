@@ -41,7 +41,8 @@ test('S3: 케밥 클릭은 행 이동을 일으키지 않는다', async ({ page 
 
   await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
   const menu = page.getByRole('menu')
-  await expect(menu.getByRole('menuitem')).toHaveCount(2)
+  // 양식은 수정 기능이 없어 케밥에 삭제 하나만 있다.
+  await expect(menu.getByRole('menuitem')).toHaveCount(1)
 })
 
 test('S4: 뒤로가기 → 양식 관리 탭으로 복귀', async ({ page }) => {

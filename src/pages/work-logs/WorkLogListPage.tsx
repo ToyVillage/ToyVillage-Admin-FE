@@ -152,7 +152,6 @@ export function WorkLogListPage() {
             <WorkLogFormTable
               forms={slicePage(forms)}
               onRowClick={(id) => navigate(`/work-logs/forms/${id}`)}
-              onEdit={(id) => navigate(`/work-logs/forms/${id}/edit`)}
               onDelete={handleRequestDelete}
               openKebabId={openKebabId}
               onOpenKebabChange={setOpenKebabId}

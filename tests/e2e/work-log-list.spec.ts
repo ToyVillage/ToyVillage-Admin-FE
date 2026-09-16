@@ -143,15 +143,15 @@ test('S9: 삭제 취소', async ({ page }) => {
   await expect(page.getByRole('button', { name: '3 페이지' })).toBeVisible()
 })
 
-test('S10: 양식 관리 케밥 · 수정 이동', async ({ page }) => {
+// 업무일지 양식은 수정 기능이 없다(명세: 삭제 후 새로 생성). 케밥에는 삭제만 있다.
+test('S10: 양식 관리 케밥에는 수정이 없다', async ({ page }) => {
   await page.goto('/work-logs?tab=forms')
 
   await kebab(formRows(page).first()).click()
-  const menu = page.getByRole('menu')
-  await expect(menu.getByRole('menuitem')).toHaveCount(2)
-  await menu.getByRole('menuitem', { name: '수정' }).click()
 
-  await expect(page).toHaveURL(/\/work-logs\/forms\/wlf-1\/edit$/)
+  const menu = page.getByRole('menu')
+  await expect(menu.getByRole('menuitem', { name: '삭제' })).toBeVisible()
+  await expect(menu.getByRole('menuitem', { name: '수정' })).toHaveCount(0)
 })
 
 test('S11: 양식 생성하기 이동', async ({ page }) => {
