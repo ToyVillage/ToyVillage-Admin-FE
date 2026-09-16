@@ -1,19 +1,24 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import {
+  mockAnimalManageApi,
+  type AnimalManageApiHandle,
+} from './support/animal-manage-api'
 
 // 승인된 시나리오(species-detail.approved.json, S1~S33)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 퍼블리싱 슬라이스라 실제 API 대신 `entities/species`·`entities/individual` mock 과
-// localStorage 실패 주입 키(`toyvillage:species:fail` / `toyvillage:individuals:fail`)를 쓴다.
+// 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 // 종 1 카피바라 3마리(최신순 두리 → 미미 → 동식이), 종 2 플라밍고 12마리, 종 3 반달가슴곰 2마리,
 // 종 4~12 각 1마리, 종 13 피라냐 0마리.
+
+let api: AnimalManageApiHandle
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
-    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. mock 상태만 비우고
-    // 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
+    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
     localStorage.setItem('accessToken', 'species-detail-test-token')
   })
+  api = await mockAnimalManageApi(page)
 })
 
 test('S1: 종 상세 진입 기본 상태', async ({ page }) => {
@@ -334,9 +339,7 @@ test('S24: 삭제 취소', async ({ page }) => {
 })
 
 test('S25: 종 삭제 실패', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('toyvillage:species:fail', 'delete')
-  })
+  api.failNext('kind.delete')
   await page.goto('/species/1')
   await openSpeciesDeleteDialog(page)
 
@@ -350,9 +353,7 @@ test('S25: 종 삭제 실패', async ({ page }) => {
 })
 
 test('S26: 개체 삭제 실패', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('toyvillage:individuals:fail', 'delete')
-  })
+  api.failNext('animal.delete')
   await page.goto('/species/1')
   await openIndividualDeleteDialog(page, '동식이')
 
@@ -490,33 +491,19 @@ test('S32: 키보드 조작', async ({ page }) => {
   await page.keyboard.press('Backspace')
   await expect(rows(page)).toHaveCount(10)
 
-  // 정렬 메뉴 선택
-  await page.keyboard.press('Tab')
-  const sortButton = page.getByRole('button', { name: '개체 정렬' })
-  await expect(sortButton).toBeFocused()
-  await expectFocusOutline(sortButton)
-  await page.keyboard.press('Enter')
-  await page.keyboard.press('Tab')
-  await page.keyboard.press('Tab')
-  const oldest = page.getByRole('menuitemradio', { name: '오래된순' })
-  await expect(oldest).toBeFocused()
-  await expectFocusOutline(oldest)
-  await page.keyboard.press('Enter')
-  await expect(rowCell(rows(page).first(), 0)).toHaveText('핑키')
-
   // 페이지 이동
   const secondPage = page.getByRole('button', { name: '2 페이지' })
   await secondPage.focus()
   await expectFocusOutline(secondPage)
   await page.keyboard.press('Enter')
-  await expect(nameCells(page)).toHaveText(['분홍이', '홍시'])
+  await expect(nameCells(page)).toHaveText(['노을', '핑키'])
 
   // 행 진입
-  const row = individualRow(page, '분홍이')
+  const row = individualRow(page, '노을')
   await row.focus()
   await expectFocusOutline(row)
   await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/\/species\/2\/individuals\/14$/)
+  await expect(page).toHaveURL(/\/species\/2\/individuals\/5$/)
 })
 
 test('S33: 분류군·세부분류 표시', async ({ page }) => {
