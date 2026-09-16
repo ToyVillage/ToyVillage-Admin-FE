@@ -12,6 +12,7 @@ import { observationQueryKeys } from '@/entities/observation'
 import {
   deleteSpecies,
   getSpecies,
+  isNotFoundError,
   SpeciesProfileCard,
   speciesQueryKeys,
 } from '@/entities/species'
@@ -172,6 +173,15 @@ export function SpeciesDetailPage() {
 
   if (speciesQuery.isPending || individualsQuery.isPending) {
     return <PageStatus state="loading" message="종 정보를 불러오는 중입니다." />
+  }
+
+  if (speciesQuery.isError && !isNotFoundError(speciesQuery.error)) {
+    return (
+      <PageStatus
+        state="error"
+        message="종 정보를 불러오지 못했습니다. 다시 시도해 주세요."
+      />
+    )
   }
 
   const species = speciesQuery.data
