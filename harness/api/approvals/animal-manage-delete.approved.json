@@ -1,0 +1,14 @@
+{
+  "feature": "animal-manage-delete",
+  "apiId": "ANIMAL_MANAGE_DELETE",
+  "approvedAt": "2026-09-16T15:20:14.037Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "b52c83efb6c10f325f168a39783e18b1c8deac5e6a965cb5dcd7219b5fd8347a",
+  "contractHash": "a13e6f5a80991cc13475c4803616097bcfc8123b1fd5b0ebc259884112146876",
+  "contractMarkdownHash": "fa88494a7aaa0324dc73012f060c3184f122faf08101a3a0933861bb8735d35e",
+  "planHash": "37cf281abe4d97b4718ac6795c6cf47f5a206a6c0d54f2612eca494807e6377c",
+  "scenarioHash": "dae0fb2858bebe0db87db8cefc632b59e705c3f22e642bb7db561b84e1d32149",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}

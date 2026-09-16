@@ -1,0 +1,14 @@
+{
+  "feature": "animal-manage-update",
+  "apiId": "ANIMAL_MANAGE_UPDATE",
+  "approvedAt": "2026-09-16T15:20:13.622Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "599b75a25fd21b305d4c1f4064e7c69d64e21251fa323cc4b6dca046e087992a",
+  "contractHash": "c8851733a43853e08fc6d23462ff7a536588229e866e2f1897b646c498792830",
+  "contractMarkdownHash": "4b6183547332588dab42ebb9823889a6f66de4d7f50713a18a59ca18c7dfccb8",
+  "planHash": "dfc6610d0b3d4ba11d71f61ac661df6113362f4c14782f100e39c34440d91c0a",
+  "scenarioHash": "c0500381333e4298029443e20d62d9d823e81b19cbf2913791a96cba92944e6c",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}

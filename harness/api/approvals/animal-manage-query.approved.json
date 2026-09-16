@@ -1,0 +1,14 @@
+{
+  "feature": "animal-manage-query",
+  "apiId": "ANIMAL_MANAGE_QUERY",
+  "approvedAt": "2026-09-16T15:20:12.914Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "e52c3fceea6f85d65445605d1f7106d83252863f3289f6a9624748884ce68960",
+  "contractHash": "7b1460ea0f1dcab6deed9b3288b7e7c92e27bfe849edae40552e5cf2678bc7d8",
+  "contractMarkdownHash": "5ee8ce113522fdec00666efbc0edceab6438fdf345defd0368b9014e6e7ab7d9",
+  "planHash": "08c338d25a1db19109a5fe2c951547f2a9189cb0195b1b88e3c26f0fdee4f53f",
+  "scenarioHash": "b6763bb6cfc0189ee63e6135b3f91088e80e86a6730fcd3b2ae1d75a1618aae1",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}

@@ -1,0 +1,487 @@
+{
+  "apiId": "ANIMAL_MANAGE_QUERY",
+  "name": "개체 상세조회",
+  "description": "개체 ID로 동물 개체의 상세 정보를 조회하는 기능",
+  "method": "GET",
+  "path": "/animal-manage/{animalManageId}",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "USER",
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "location": "header",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "JWT 액세스 토큰. 관리자(ADMIN) · 직원(USER) 액세스 토큰 모두 허용",
+      "constraints": [
+        "Bearer 스킴"
+      ],
+      "name": "Authorization",
+      "type": "string"
+    }
+  ],
+  "pathParameters": [
+    {
+      "location": "path",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": 12,
+      "description": "조회할 개체의 id",
+      "constraints": [
+        "LONG"
+      ],
+      "name": "animalManageId",
+      "type": "integer"
+    }
+  ],
+  "queryParameters": [],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "개체 기본 정보 + 해당 종 정보 + 법정지정분류 이름 목록",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "개체 상세",
+          "fields": [
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 12,
+              "description": "개체 id",
+              "constraints": [],
+              "name": "animalManageId",
+              "type": "integer"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "무궁이",
+              "description": "개체명",
+              "constraints": [],
+              "name": "animalName",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "WOMAN",
+              "description": "개체 성별. 허용값은 ANIMAL_MANAGE_CREATE 명세의 ENUM 정의 준용.",
+              "constraints": [],
+              "name": "animalGender",
+              "type": "enum",
+              "allowedValues": [
+                "MAN",
+                "WOMAN",
+                "UNKNOWN"
+              ]
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 2021,
+              "description": "출생 연도",
+              "constraints": [],
+              "name": "birthYear",
+              "type": "integer"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "온순한 성격",
+              "description": "기타 정보",
+              "constraints": [],
+              "name": "otherInfo",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": null,
+              "description": "개체 사진",
+              "constraints": [],
+              "name": "animalImage",
+              "type": "object",
+              "fields": [
+                {
+                  "location": "body",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "mugung.png",
+                  "description": "원본 파일명",
+                  "constraints": [],
+                  "name": "fileName",
+                  "type": "string"
+                },
+                {
+                  "location": "body",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "animal/mugung.png",
+                  "description": "저장소 파일 키. FILE_CREATE 명세의 파일 조회 base URL 방식과 연동.",
+                  "constraints": [],
+                  "name": "fileKey",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "종 id",
+              "constraints": [],
+              "name": "animalKindId",
+              "type": "integer"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "카피바라",
+              "description": "종 이름",
+              "constraints": [],
+              "name": "kindName",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "Hydrochoerus hydrochaeris",
+              "description": "학명",
+              "constraints": [],
+              "name": "scientificName",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "MAMMALS",
+              "description": "분류군. 명세에 허용값 선언 없음(예시 MAMMALS).",
+              "constraints": [],
+              "name": "animalTaxonomic",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "설치목 · 천축서과",
+              "description": "상세 분류",
+              "constraints": [],
+              "name": "detailKind",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": [
+                "지정관리 야생동물"
+              ],
+              "description": "법정지정분류 이름 목록",
+              "constraints": [],
+              "name": "legalStatuses",
+              "type": "array<string>"
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 401,
+        "description": "만료된 토큰입니다.",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "만료된 토큰입니다.",
+              "description": "오류 메시지",
+              "constraints": [],
+              "name": "message",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 401,
+              "description": "HTTP status code",
+              "constraints": [],
+              "name": "status",
+              "type": "integer"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-09-16T12:00:00",
+              "description": "에러 발생 시각",
+              "constraints": [],
+              "name": "timestamp",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "만료된 토큰입니다.",
+              "description": "에러 설명",
+              "constraints": [],
+              "name": "description",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "status": 403,
+        "description": "접근할 수 있는 권한이 없습니다.",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "접근할 수 있는 권한이 없습니다.",
+              "description": "오류 메시지",
+              "constraints": [],
+              "name": "message",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 403,
+              "description": "HTTP status code",
+              "constraints": [],
+              "name": "status",
+              "type": "integer"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-09-16T12:00:00",
+              "description": "에러 발생 시각",
+              "constraints": [],
+              "name": "timestamp",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "접근할 수 있는 권한이 없습니다.",
+              "description": "에러 설명",
+              "constraints": [],
+              "name": "description",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "status": 404,
+        "description": "ANIMAL_MANAGE_NOT_FOUND",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "존재하지 않는 개체입니다.",
+              "description": "오류 메시지",
+              "constraints": [],
+              "name": "message",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 404,
+              "description": "HTTP status code",
+              "constraints": [],
+              "name": "status",
+              "type": "integer"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-09-16T12:00:00",
+              "description": "에러 발생 시각",
+              "constraints": [],
+              "name": "timestamp",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "ANIMAL_MANAGE_NOT_FOUND",
+              "description": "에러 설명",
+              "constraints": [],
+              "name": "description",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "내부 서버 오류가 발생했습니다.",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": [],
+              "name": "message",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status code",
+              "constraints": [],
+              "name": "status",
+              "type": "integer"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-09-16T12:00:00",
+              "description": "에러 발생 시각",
+              "constraints": [],
+              "name": "timestamp",
+              "type": "string"
+            },
+            {
+              "location": "body",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "에러 설명",
+              "constraints": [],
+              "name": "description",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "https://app.notion.com/p/3dd7a4d6147480feb564ce3b172329f5",
+    "notionDataSource": "collection://4817a4d6-1474-820e-ace3-072e3d0100a7",
+    "resolvedNotionPage": "https://app.notion.com/p/43c7a4d6147482188dee018e670d2f8f",
+    "requestedNotionPage": "https://app.notion.com/p/43c7a4d6147482188dee018e670d2f8f",
+    "checkedAt": "2026-09-16T23:45:00+09:00",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "ANIMAL_MANAGE_QUERY",
+      "method": "GET",
+      "path": "/animal-manage/{animalManageId}",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "USER",
+          "ADMIN"
+        ]
+      }
+    },
+    "detailValues": {
+      "apiId": "ANIMAL_MANAGE_QUERY",
+      "method": "GET",
+      "path": "/animal-manage/{animalManageId}",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "USER",
+          "ADMIN"
+        ]
+      }
+    }
+  }
+}
