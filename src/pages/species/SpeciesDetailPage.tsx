@@ -196,6 +196,18 @@ export function SpeciesDetailPage() {
     )
   }
 
+  // 개체 목록 404 는 종이 없어진 것이다.
+  if (individualsQuery.isError && isNotFoundError(individualsQuery.error)) {
+    return (
+      <PageStatus
+        state="not-found"
+        message="종을 찾을 수 없습니다."
+        linkTo="/species"
+        linkLabel="목록으로 돌아가기"
+      />
+    )
+  }
+
   if (individualsQuery.isError) {
     return (
       <PageStatus
