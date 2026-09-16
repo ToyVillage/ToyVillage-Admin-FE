@@ -60,10 +60,7 @@ export interface WorkLogFormQuestion {
   label: string
   /** 양식 상세·편집기가 같은 유형 체계를 쓴다(`workLogFormEditorTypes`). */
   type: WorkLogFormEditorType
-  /**
-   * 필수 질문 여부. 명세에 해당 필드가 없어 항상 false 다.
-   * 서버가 내려주면 그때 채운다.
-   */
+  /** 필수 질문 여부. 업무일지 질문은 모두 필수라 항상 true 다. */
   required: boolean
   /** CHOICE·CHECKBOX 의 선택지. TEXT 에는 없다. */
   options?: string[]

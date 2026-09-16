@@ -99,14 +99,16 @@ test('S8: 읽기 전용 — 조작되지 않는다', async ({ page }) => {
   await expect(main.getByRole('link')).toHaveCount(1)
 })
 
-// 명세의 양식 상세 응답에 질문별 필수 여부가 없어 질문 카드에는 필수 표시가 없다.
-// 양식명 라벨의 * 하나만 남는다.
 test('S9: 필수 표시', async ({ page }) => {
   await page.goto('/work-logs/forms/1')
 
+  // 양식명 1개 + 질문 3개 = 4개의 필수 표시(업무일지 질문은 모두 필수다).
   await expect(
     page.getByRole('main').getByText('*', { exact: true }),
-  ).toHaveCount(1)
+  ).toHaveCount(4)
+  await expect(page.getByText(/객관식 질문\s*\*/)).toBeVisible()
+  await expect(page.getByText(/체크박스\s*\*/)).toBeVisible()
+  await expect(page.getByText(/주관식\s*\*/)).toBeVisible()
 })
 
 test('S10: 없는 양식으로 진입', async ({ page }) => {

@@ -222,8 +222,8 @@ export async function getWorkLogFormDetail({
       id: String(question.questionId),
       label: question.question,
       type: formTypeByServerType[question.questionType] ?? 'TEXT',
-      // 명세에 필수 여부가 없다.
-      required: false,
+      // 업무일지 질문은 모두 필수다(명세에 필드가 없어 고정값으로 둔다).
+      required: true,
       options: question.options.map((option) => option.content),
     })),
   }
