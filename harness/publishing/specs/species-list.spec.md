@@ -52,7 +52,7 @@ paths: src/pages/species, src/entities/species, src/features/sidebar
 
 ## 범위
 
-- 포함: 종 목록 조회, 분류군 탭 필터, 검색, 정렬(최신순/오래된순), 페이지네이션, 행 클릭 이동, 등록 진입, 행 케밥 메뉴(수정·삭제),
+- 포함: 종 목록 조회, 분류군 탭 필터, 검색, 페이지네이션, 행 클릭 이동, 등록 진입, 행 케밥 메뉴(수정·삭제),
   삭제 확인 모달, 빈 상태, 생성·삭제 결과 토스트 표시, 사이드바 `개체관리 > 개체 카드` 연결(`sidebar.spec.md` 메뉴 절 갱신 — (2026-09-15 개발자 결정))
 - 제외: 실제 API 연동(`/api` 스킬 담당 — Notion API 명세 DB 에 개체·종 API 가 아직 없다, 2026-09-15 확인),
   종 등록·수정 폼(`species-form`), 종 상세·개체 목록(`species-detail`), 개체·관찰 화면, 행 다중 선택,
@@ -92,9 +92,8 @@ paths: src/pages/species, src/entities/species, src/features/sidebar
 - 표의 열은 `분류군` / `국명` / `학명` / `마리수` 와 헤더 텍스트가 없는 케밥 열이다.
 - 분류군 셀은 `포유류` / `파충류` / `조류` / `어류` 중 하나를 표시한다.
 - 마리수 셀은 그 종에 등록된 개체 수를 숫자만 표시한다(단위 없음). 개체가 없으면 `0` 이다.
-- 목록은 **기본 최신순**(최근 등록 먼저 = id 큰 순)이다. 검색바 우측 정렬 버튼(`bx:slider` → `DataTable.sort` `filter.svg`) 클릭 →
-  `최신순` / `오래된순`(id 작은 순) 메뉴가 열리고, 고르면 그 순서로 바뀌며 목록이 1페이지로 리셋된다
-  (2026-09-15 Figma·저장소 근거 판단: `NoticeListPage`·`NoticeReservationsPage` 의 같은 아이콘 정렬 메뉴 선례).
+- 목록은 서버가 준 순서(최신순 = id 큰 순)로 표시한다. 정렬 버튼은 두지 않는다
+  (API 연동 2026-09-16 개발자 결정: 정렬 제거).
 - `포유류` 탭 클릭 → 분류군이 포유류인 종만 남고 목록이 1페이지로 리셋된다.
 - `파충류` / `조류` / `어류` 탭 클릭 → 각 분류군의 종만 남고 목록이 1페이지로 리셋된다.
 - `전체` 탭 클릭 → 모든 분류군의 종이 다시 보인다.
@@ -111,7 +110,6 @@ paths: src/pages/species, src/entities/species, src/features/sidebar
   포함된 종만 남긴다. 입력할 때마다 즉시 반영하고 목록을 1페이지로 리셋한다.
 - 검색은 현재 탭과 함께 적용된다(탭 AND 검색). 탭을 바꿔도 검색어는 유지된다.
 - 검색어를 지우면 → 현재 탭의 전체 종이 다시 보인다.
-- 검색·탭·정렬은 함께 적용된다. 정렬을 바꿔도 탭·검색어는 유지된다.
 
 ### 빈 상태
 
@@ -223,7 +221,7 @@ paths: src/pages/species, src/entities/species, src/features/sidebar
 | 표 헤더 글자색 | `#36363F` `textStrong` | `DataTable` `HeadCell` 은 `colors.text` 고정 | 기존 구현 유지, ⑦ 육안 확인에서 판단 |
 | 검색 아이콘 | `material-symbols:search` 26px | `DataTable` 은 `search.svg` 20px | 기존 구현 유지, ⑦ 육안 확인에서 판단 |
 | placeholder 굵기 | Medium | `DataTable` 입력은 굵기 미지정 | 기존 구현 유지, ⑦ 육안 확인에서 판단 |
-| 슬라이더 아이콘 | `bx:slider` 26px, 동작 없음 | `DataTable` 은 `sort` 를 줄 때만 `filter.svg` 22×20 + 정렬 메뉴 | `DataTable.sort`(최신순/오래된순) 적용 |
+| 슬라이더 아이콘 | `bx:slider` 26px, 동작 없음 | `DataTable` 은 `sort` 를 줄 때만 `filter.svg` 22×20 + 정렬 메뉴 | 정렬 없음(API 연동 때 제거) |
 | 케밥 메뉴 위치 | 케밥 하단 +8px, 행 우측 끝 정렬 | `KebabMenu` 는 positioned 조상 우상단(`top: 0; right: 0`) | `KebabMenu` 배치 옵션 추가(게이트 ② 채택) |
 | 케밥 메뉴 그림자 | drop-shadow 0 8 12 / 0.14 | `KebabMenu` box-shadow 0 8 24 / 0.14 | 기존 구현 유지, ⑦ 육안 확인에서 판단 |
 | `Escape` 초점 복귀 | (접근성 요구) | `KebabMenu` 는 초점을 되돌리지 않고 트리거 ref 도 노출하지 않는다 | `KebabMenu` 보강(게이트 ② 채택) |
