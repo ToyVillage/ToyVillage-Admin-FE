@@ -321,6 +321,7 @@ export function TaskForm({
         onFileNamesChange={setAttachmentNames}
         onFileItemsChange={setAttachmentItems}
         onAddResult={handleAttachmentResult}
+        storedFiles
       />
 
       {mutation.isError && (

@@ -1,5 +1,6 @@
 export type {
   TaskReport,
+  TaskReportAttachmentFile,
   TaskReportListItem,
   TaskReportReviewStatus,
 } from './model/types'

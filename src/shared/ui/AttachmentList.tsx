@@ -1,32 +1,44 @@
 import styled from '@emotion/styled'
+import { downloadStoredFile, type StoredFile } from './fileAttachment'
 
 interface AttachmentListProps {
-  fileNames: string[]
+  files: StoredFile[]
   label?: string
+  /** 파일 서버에서 받지 못했을 때 호출한다. 알림은 화면이 띄운다. */
+  onDownloadError: (file: StoredFile) => void
 }
 
 // 조회 전용 첨부 목록(Figma 3350:3988: 삭제 아이콘 hidden, 업로드 드롭존 없음).
 // 편집이 필요한 화면은 AttachmentField 를 쓴다.
 export function AttachmentList({
-  fileNames,
+  files,
   label = '첨부자료',
+  onDownloadError,
 }: AttachmentListProps) {
+  function handleDownload(file: StoredFile) {
+    downloadStoredFile(file).catch((error: unknown) => {
+      // 화면에는 토스트만 뜬다. 설정 누락(VITE_FILE_BASE_URL) 같은 원인은 콘솔에 남긴다.
+      console.error(error)
+      onDownloadError(file)
+    })
+  }
+
   return (
     <Card role="group" aria-label={label}>
       <Title>{label}</Title>
-      {fileNames.length > 0 ? (
+      {files.length > 0 ? (
         <FileList>
-          {fileNames.map((fileName) => {
-            const kind = fileKind(fileName)
+          {files.map((file) => {
+            const kind = fileKind(file.fileName)
 
             return (
-              <FileChip key={fileName}>
+              <FileChip key={file.fileKey}>
                 <FileBadge data-kind={kind}>{kind.toUpperCase()}</FileBadge>
-                <FileName>{fileName}</FileName>
+                <FileName>{file.fileName}</FileName>
                 <DownloadButton
                   type="button"
-                  aria-label={`${fileName} 다운로드`}
-                  onClick={() => downloadFile(fileName)}
+                  aria-label={`${file.fileName} 다운로드`}
+                  onClick={() => handleDownload(file)}
                 >
                   <DownloadIcon viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14" />
@@ -41,18 +53,6 @@ export function AttachmentList({
       )}
     </Card>
   )
-}
-
-// mock 경계: 실제 파일 소스가 없어 파일명을 담은 임시 Blob 을 내려받는다.
-function downloadFile(fileName: string) {
-  const url = URL.createObjectURL(
-    new Blob([`${fileName}\n`], { type: 'text/plain' }),
-  )
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  link.click()
-  URL.revokeObjectURL(url)
 }
 
 function fileKind(fileName: string) {

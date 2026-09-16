@@ -22,7 +22,13 @@ export interface TaskReport {
   priority: TaskPriority
   /** YYYY-MM-DD */
   dueDate: string
-  attachments: string[]
+  /** 첨부 파일명과 저장소 키. 다운로드는 키로 파일 서버에서 받는다. */
+  attachmentFiles: TaskReportAttachmentFile[]
+}
+
+export interface TaskReportAttachmentFile {
+  fileName: string
+  fileKey: string
 }
 
 export type TaskReportListItem = Pick<

@@ -89,7 +89,10 @@ export async function getTaskReport({
     reviewStatus: data.status,
     priority: data.priority,
     dueDate: data.finishDate,
-    attachments: data.files.map(({ fileName }) => fileName),
+    attachmentFiles: data.files.map(({ fileName, fileKey }) => ({
+      fileName,
+      fileKey,
+    })),
   }
 }
 
@@ -202,15 +205,17 @@ function isTaskReportQueryResponse(
     typeof report.name === 'string' &&
     typeof report.content === 'string' &&
     Array.isArray(report.files) &&
-    report.files.every(hasFileName) &&
+    report.files.every(isTaskReportFile) &&
     isTaskReportReviewStatus(report.status)
   )
 }
 
-function hasFileName(value: unknown): boolean {
+// 다운로드가 fileKey 로 파일 서버에서 받으므로 키도 확인한다.
+function isTaskReportFile(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return false
 
-  return typeof (value as Record<string, unknown>).fileName === 'string'
+  const file = value as Record<string, unknown>
+  return typeof file.fileName === 'string' && typeof file.fileKey === 'string'
 }
 
 function isTaskReportMessageResponse(
