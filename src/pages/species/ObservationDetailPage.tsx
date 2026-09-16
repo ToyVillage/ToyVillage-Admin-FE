@@ -9,6 +9,7 @@ import {
   getObservation,
   observationQueryKeys,
 } from '@/entities/observation'
+import { isNotFoundError } from '@/entities/species'
 import {
   AttachmentChip,
   BackLink,
@@ -92,6 +93,19 @@ export function ObservationDetailPage() {
   if (observationQuery.isPending || individualQuery.isPending) {
     return (
       <PageStatus state="loading" message="관찰 기록을 불러오는 중입니다." />
+    )
+  }
+
+  if (
+    [observationQuery, individualQuery].some(
+      (query) => query.isError && !isNotFoundError(query.error),
+    )
+  ) {
+    return (
+      <PageStatus
+        state="error"
+        message="관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요."
+      />
     )
   }
 

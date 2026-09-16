@@ -4,7 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getIndividual, individualQueryKeys } from '@/entities/individual'
 import { getObservation, observationQueryKeys } from '@/entities/observation'
-import { getSpecies, speciesQueryKeys } from '@/entities/species'
+import {
+  getSpecies,
+  isNotFoundError,
+  speciesQueryKeys,
+} from '@/entities/species'
 import { ObservationForm } from '@/features/observation-form'
 import { BackLink, LeaveConfirmationDialog } from '@/shared/ui'
 import { PageStatus } from './ui/PageStatus'
@@ -54,6 +58,19 @@ export function EditObservationPage() {
   ) {
     return (
       <PageStatus state="loading" message="관찰 기록을 불러오는 중입니다." />
+    )
+  }
+
+  if (
+    [observationQuery, individualQuery, speciesQuery].some(
+      (query) => query.isError && !isNotFoundError(query.error),
+    )
+  ) {
+    return (
+      <PageStatus
+        state="error"
+        message="관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요."
+      />
     )
   }
 
