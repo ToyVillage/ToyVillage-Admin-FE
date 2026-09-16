@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithRef } from 'react'
 import styled from '@emotion/styled'
 
-type RemoveIconButtonProps = ComponentPropsWithoutRef<'button'>
+type RemoveIconButtonProps = ComponentPropsWithRef<'button'>
 
 export function RemoveIconButton(props: RemoveIconButtonProps) {
   return (

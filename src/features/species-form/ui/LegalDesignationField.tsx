@@ -1,63 +1,136 @@
 import { useId, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { FormFieldCard, RemoveIconButton, useFocusFrame } from '@/shared/ui'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  createLegalStatus,
+  deleteLegalStatus,
+  legalStatusQueryKeys,
+  speciesQueryKeys,
+  type LegalStatus,
+} from '@/entities/species'
+import {
+  DeleteConfirmationDialog,
+  FormFieldCard,
+  RemoveIconButton,
+  useFocusFrame,
+} from '@/shared/ui'
 import { LegalDesignationAddDialog } from './LegalDesignationAddDialog'
 
 interface LegalDesignationFieldProps {
   /** 기본 선택지. 항상 이 순서로 먼저 보이고 제거 버튼이 없다. */
   presets: readonly string[]
+  /** 서버 공용 목록. 조회 중이거나 실패하면 undefined. */
+  statuses: LegalStatus[] | undefined
+  loadFailed: boolean
   /** 선택된 이름, 화면 순서 */
   value: string[]
   onChange: (value: string[]) => void
 }
 
 // Figma `field / 법정지정분류`(127:9354) — 다중 선택 pill + 직접 추가.
-// 표시 목록(기본 선택지 + 직접 추가 항목)은 이 필드가 갖고 선택값만 밖으로 올린다.
-// 수정 진입 시 저장값 중 기본 선택지에 없는 이름으로 직접 추가 목록을 채운다.
+// 표시 목록 = 기본 선택지 → 서버 공용 목록(✕ 로 서버에서 삭제) → 저장값 중 목록에 없는 이름.
+// 목록에 없는 저장값(공용 목록에서 삭제된 분류)은 선택된 채 보이고 저장할 때 다시 만든다.
 export function LegalDesignationField({
   presets,
+  statuses,
+  loadFailed,
   value,
   onChange,
 }: LegalDesignationFieldProps) {
   const labelId = useId()
   const hintId = useId()
+  const queryClient = useQueryClient()
   const addButtonRef = useRef<HTMLButtonElement>(null)
-  const [customNames, setCustomNames] = useState(() =>
-    value.filter((name) => !presets.includes(name)),
-  )
+  const removeButtonsRef = useRef(new Map<string, HTMLButtonElement>())
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<LegalStatus | null>(null)
+  const [deleteFailed, setDeleteFailed] = useState(false)
   const focusFrame = useFocusFrame()
 
-  const names = [...presets, ...customNames]
+  const addMutation = useMutation({
+    mutationFn: async (name: string) => {
+      await createLegalStatus({ kind: name })
+      await queryClient.invalidateQueries({
+        queryKey: legalStatusQueryKeys.all,
+      })
+    },
+  })
+  const deleteMutation = useMutation({
+    mutationFn: async (status: LegalStatus) => {
+      await deleteLegalStatus({ animalLegalStatusId: status.id })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: legalStatusQueryKeys.all }),
+        // 이 분류를 가진 종의 상세 응답 id 가 null 로 바뀐다.
+        queryClient.invalidateQueries({
+          queryKey: speciesQueryKeys.all,
+          refetchType: 'none',
+        }),
+      ])
+    },
+  })
+
+  const serverStatuses = (statuses ?? []).filter(
+    (status) => !presets.includes(status.name),
+  )
+  const knownNames = [...presets, ...serverStatuses.map(({ name }) => name)]
+  const orphanNames = value.filter((name) => !knownNames.includes(name))
+  const names = [...knownNames, ...orphanNames]
   const selectedNames = new Set(value)
 
-  function emitSelection(nextSelectedNames: Set<string>, nextNames: string[]) {
-    onChange(nextNames.filter((name) => nextSelectedNames.has(name)))
+  function statusByName(name: string) {
+    return serverStatuses.find((status) => status.name === name)
   }
 
   function handleToggle(name: string) {
     const nextSelectedNames = new Set(selectedNames)
     if (nextSelectedNames.has(name)) nextSelectedNames.delete(name)
     else nextSelectedNames.add(name)
-    emitSelection(nextSelectedNames, names)
+    onChange(names.filter((item) => nextSelectedNames.has(item)))
   }
 
-  function handleRemove(name: string) {
-    setCustomNames(customNames.filter((customName) => customName !== name))
-    onChange(value.filter((selectedName) => selectedName !== name))
-  }
-
-  // 직접 추가한 이름은 목록 끝에 붙고 바로 선택된다.
+  // 새 분류는 공용 목록을 다시 받은 뒤 선택값 끝에 붙는다.
   function handleAdd(name: string) {
-    setCustomNames([...customNames, name])
-    emitSelection(new Set([...value, name]), [...names, name])
-    closeAddDialog()
+    if (addMutation.isPending) return
+
+    addMutation.mutate(name, {
+      onSuccess: () => {
+        onChange([...value.filter((item) => item !== name), name])
+        closeAddDialog()
+      },
+    })
   }
 
   // 모달 cleanup 이 inert 를 푼 뒤에 호출 버튼으로 포커스를 돌린다.
   function closeAddDialog() {
+    addMutation.reset()
     setIsAddDialogOpen(false)
     focusFrame(() => addButtonRef.current)
+  }
+
+  function handleConfirmDelete() {
+    if (!deleteTarget || deleteMutation.isPending) return
+
+    const target = deleteTarget
+    deleteMutation.mutate(target, {
+      onSuccess: () => {
+        setDeleteTarget(null)
+        setDeleteFailed(false)
+        onChange(value.filter((name) => name !== target.name))
+        focusFrame(() => addButtonRef.current)
+      },
+      onError: () => {
+        setDeleteTarget(null)
+        setDeleteFailed(true)
+        focusFrame(() => removeButtonsRef.current.get(target.name))
+      },
+    })
+  }
+
+  function handleCancelDelete() {
+    if (!deleteTarget) return
+    const target = deleteTarget
+    setDeleteTarget(null)
+    focusFrame(() => removeButtonsRef.current.get(target.name))
   }
 
   return (
@@ -69,14 +142,14 @@ export function LegalDesignationField({
     >
       <Pills role="group" aria-labelledby={labelId} aria-describedby={hintId}>
         {names.map((name) => {
-          const isCustom = !presets.includes(name)
+          const status = statusByName(name)
           const isSelected = selectedNames.has(name)
 
           return (
             <Pill
               key={name}
               data-selected={isSelected}
-              data-removable={isCustom}
+              data-removable={Boolean(status)}
             >
               <ToggleButton
                 type="button"
@@ -85,11 +158,18 @@ export function LegalDesignationField({
               >
                 {name}
               </ToggleButton>
-              {isCustom && (
+              {status && (
                 <RemoveIconButton
+                  ref={(node: HTMLButtonElement | null) => {
+                    if (node) removeButtonsRef.current.set(name, node)
+                    else removeButtonsRef.current.delete(name)
+                  }}
                   type="button"
                   aria-label={`${name} 삭제`}
-                  onClick={() => handleRemove(name)}
+                  onClick={() => {
+                    setDeleteFailed(false)
+                    setDeleteTarget(status)
+                  }}
                 />
               )}
             </Pill>
@@ -99,6 +179,7 @@ export function LegalDesignationField({
           ref={addButtonRef}
           type="button"
           aria-haspopup="dialog"
+          disabled={!statuses}
           onClick={() => setIsAddDialogOpen(true)}
         >
           <PlusIcon viewBox="0 0 24 24" aria-hidden="true">
@@ -107,16 +188,40 @@ export function LegalDesignationField({
           법정분류 추가
         </AddButton>
       </Pills>
+      {loadFailed && (
+        <StatusRow role="alert">
+          법정지정분류를 불러오지 못했습니다. 다시 시도해 주세요.
+        </StatusRow>
+      )}
+      {deleteFailed && (
+        <StatusRow role="alert">삭제하지 못했습니다. 다시 시도해 주세요.</StatusRow>
+      )}
       {isAddDialogOpen && (
         <LegalDesignationAddDialog
           existingNames={names}
+          pending={addMutation.isPending}
+          failed={addMutation.isError}
           onCancel={closeAddDialog}
           onAdd={handleAdd}
+        />
+      )}
+      {deleteTarget && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
         />
       )}
     </FormFieldCard>
   )
 }
+
+const StatusRow = styled.p`
+  margin: 16px 0 0;
+  color: ${({ theme }) => theme.colors.danger};
+  font-size: 20px;
+  font-weight: 500;
+`
 
 // Figma 는 한 줄 overflow-clip 이지만 직접 추가로 항목이 늘어나 줄바꿈한다.
 const Pills = styled.div`
@@ -186,6 +291,11 @@ const AddButton = styled.button`
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.accent};
