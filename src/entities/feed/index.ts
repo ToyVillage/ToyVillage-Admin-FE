@@ -12,21 +12,8 @@ export {
   formatFeedLabel,
 } from './model/format'
 export { feedQueryKeys } from './model/queryKeys'
-export {
-  createFeedLog,
-  getFeedDetail,
-  getFeeds,
-  updateFeedLog,
-} from './api/feedApi'
-export type {
-  AnimalTaxonomic,
-  FeedLogCreateRequest,
-  FeedLogMessageResponse,
-  FeedLogRequest,
-  FeedLogUpdateRequest,
-  FeedQueryAllRequest,
-  FeedQueryRequest,
-} from './api/types'
+export { getFeedDetail, getFeeds } from './api/feedApi'
+export type { FeedQueryAllRequest, FeedQueryRequest } from './api/types'
 export { AnimalSpeciesBadge } from './ui/AnimalSpeciesBadge'
 export { FeedHistoryTable } from './ui/FeedHistoryTable'
 export { FeedRecordCard } from './ui/FeedRecordCard'

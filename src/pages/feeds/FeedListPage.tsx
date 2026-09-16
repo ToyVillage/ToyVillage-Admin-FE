@@ -7,7 +7,6 @@ import {
   feedQueryKeys,
   FeedTable,
   getFeeds,
-  type AnimalSpecies,
 } from '@/entities/feed'
 import { CategoryTabs, DateFilter } from '@/shared/ui'
 import { todayCalendarDate, toIsoDate, type CalendarDate } from '@/shared/lib'
@@ -25,16 +24,12 @@ export function FeedListPage() {
   const [page, setPage] = useState(1)
 
   const isoDate = toIsoDate(date)
-  const species: AnimalSpecies | null =
-    tab === allTabLabel ? null : (tab as AnimalSpecies)
 
-  // 조회날짜·분류 탭이 바뀔 때마다 그 조건으로 다시 조회한다.
-  // 서버에 분류 필터가 없어 요청은 날짜만 싣고, 분류는 받은 뒤 거른다.
+  // 조회날짜가 바뀔 때마다 다시 조회한다.
   const feedsQuery = useQuery({
-    queryKey: feedQueryKeys.list(isoDate, species),
-    queryFn: () => getFeeds({ date: isoDate, species }),
-    // 전역 staleTime(60초)을 쓰면 이미 본 탭으로 돌아올 때 캐시만 보고 요청하지 않는다.
-    // 급여 내역은 다른 직원이 계속 추가하므로 탭을 누를 때마다 다시 조회한다.
+    queryKey: feedQueryKeys.list(isoDate),
+    queryFn: () => getFeeds({ date: isoDate }),
+    // 급여 내역은 다른 직원이 계속 추가하므로 전역 staleTime(60초) 캐시를 쓰지 않는다.
     staleTime: 0,
   })
 
@@ -82,7 +77,13 @@ export function FeedListPage() {
 
         <DateFilter value={date} onChange={setDate} />
 
-        <CategoryTabs categories={tabs} active={tab} onSelect={setTab} />
+        {/* admin 급여 API 에 분류(`animalTaxonomic`)가 없어 전체 외에는 고를 수 없다. */}
+        <CategoryTabs
+          categories={tabs}
+          active={tab}
+          onSelect={setTab}
+          disabled={[...animalSpeciesList]}
+        />
 
         <TableArea>
           <FeedTable
