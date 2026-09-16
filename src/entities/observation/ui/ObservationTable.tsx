@@ -7,19 +7,19 @@ import {
   type DataTableRow,
 } from '@/shared/ui'
 import { formatObservationDate } from '../model/date'
-import type { Observation } from '../model/types'
+import type { ObservationListItem } from '../model/types'
 
 interface ObservationTableProps {
   /** 현재 페이지 행. 페이지 자르기는 호출부가 한다. */
-  rows: Observation[]
+  rows: ObservationListItem[]
   page: number
   pageCount: number
   onPageChange: (page: number) => void
   onRowClick: (observationId: string) => void
   /** 첨부 칸. 팝오버 열림 상태를 페이지가 소유하므로 렌더를 위임받는다. */
-  renderAttachments: (observation: Observation) => ReactNode
+  renderAttachments: (observation: ObservationListItem) => ReactNode
   /** 행 케밥. 메뉴 열림·이동·삭제는 페이지가 소유한다. */
-  renderRowAction: (observation: Observation) => ReactNode
+  renderRowAction: (observation: ObservationListItem) => ReactNode
   emptyLabel: ReactNode
 }
 
@@ -52,7 +52,7 @@ export function ObservationTable({
   )
 
   function renderWithObservation(
-    render: (observation: Observation) => ReactNode,
+    render: (observation: ObservationListItem) => ReactNode,
   ) {
     return function renderCell(row: DataTableRow) {
       const observation = observationById.get(row.id)
