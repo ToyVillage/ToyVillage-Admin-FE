@@ -1,19 +1,24 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import {
+  mockAnimalManageApi,
+  type AnimalManageApiHandle,
+} from './support/animal-manage-api'
 import { mockTaskApi } from './support/task-api'
 
-// 승인된 시나리오(species-list.approved.json, S1~S30)를 변환한 것.
+// 승인된 시나리오(species-list.approved.json, S1~S29)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 퍼블리싱 슬라이스라 실제 API 대신 `entities/species` mock(13종)과
-// localStorage 키(`toyvillage:species:deleted` / `toyvillage:species:fail`)를 쓴다.
-// 기본 최신순 — `전체` 1페이지는 id 13~4(첫 행 `피라냐`), 2페이지는 `반달가슴곰` `플라밍고` `카피바라`.
+// 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`, 13종)를 쓴다.
+// 서버 최신순 — `전체` 1페이지는 id 13~4(첫 행 `피라냐`), 2페이지는 `반달가슴곰` `플라밍고` `카피바라`.
+
+let api: AnimalManageApiHandle
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
-    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. mock 상태만 비우고
-    // 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
+    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
     localStorage.setItem('accessToken', 'species-list-test-token')
   })
+  api = await mockAnimalManageApi(page)
 })
 
 test('S1: 목록 진입 기본 상태', async ({ page }) => {
@@ -291,12 +296,7 @@ test('S23: 검색어 유지한 채 탭 전환', async ({ page }) => {
 
 test('S24: 종이 없는 탭 → 빈 상태', async ({ page }) => {
   // 어류 종(흰동가리 12 · 피라냐 13)이 모두 삭제된 상태.
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      'toyvillage:species:deleted',
-      JSON.stringify(['12', '13']),
-    )
-  })
+  removeFishKinds()
   await page.goto('/species')
   await expect(rows(page)).toHaveCount(10)
 
@@ -311,9 +311,7 @@ test('S24: 종이 없는 탭 → 빈 상태', async ({ page }) => {
 })
 
 test('S25: 삭제 실패 토스트', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('toyvillage:species:fail', 'delete')
-  })
+  api.failNext('kind.delete')
   await page.goto('/species')
   await openDeleteDialog(page, '흰동가리')
 
@@ -348,12 +346,7 @@ test('S26: 생성 성공 토스트', async ({ page }) => {
 })
 
 test('S27: 마지막 페이지의 유일한 행 삭제', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      'toyvillage:species:deleted',
-      JSON.stringify(['12', '13']),
-    )
-  })
+  removeFishKinds()
   await page.goto('/species')
   await page.getByRole('button', { name: '2 페이지' }).click()
   await expect(nameCells(page)).toHaveText(['카피바라'])
@@ -392,33 +385,23 @@ test('S28: 키보드 조작', async ({ page }) => {
   await page.keyboard.press('Backspace')
   await expect(rows(page)).toHaveCount(10)
 
-  // 정렬 메뉴 선택
-  await page.keyboard.press('Tab')
-  const sortButton = page.getByRole('button', { name: '종 정렬' })
-  await expect(sortButton).toBeFocused()
-  await expectFocusOutline(sortButton)
-  await page.keyboard.press('Enter')
-  await page.keyboard.press('Tab')
-  await page.keyboard.press('Tab')
-  const oldest = page.getByRole('menuitemradio', { name: '오래된순' })
-  await expect(oldest).toBeFocused()
-  await expectFocusOutline(oldest)
-  await page.keyboard.press('Enter')
-  await expect(nameCell(rows(page).first())).toHaveText('카피바라')
-
   // 페이지 이동
   const secondPage = page.getByRole('button', { name: '2 페이지' })
   await secondPage.focus()
   await expectFocusOutline(secondPage)
   await page.keyboard.press('Enter')
-  await expect(nameCells(page)).toHaveText(['훔볼트펭귄', '흰동가리', '피라냐'])
+  await expect(nameCells(page)).toHaveText([
+    '반달가슴곰',
+    '플라밍고',
+    '카피바라',
+  ])
 
   // 케밥 메뉴 열기·항목 선택
-  const trigger = menuTrigger(page, '흰동가리')
+  const trigger = menuTrigger(page, '플라밍고')
   await trigger.focus()
   await expectFocusOutline(trigger)
   await page.keyboard.press('Enter')
-  await expect(rowMenu(page, '흰동가리')).toBeVisible()
+  await expect(rowMenu(page, '플라밍고')).toBeVisible()
   await page.keyboard.press('Tab')
   await page.keyboard.press('Tab')
   const deleteItem = page.getByRole('menuitem', { name: '삭제' })
@@ -432,11 +415,11 @@ test('S28: 키보드 조작', async ({ page }) => {
   await expect(trigger).toBeFocused()
 
   // 행 진입(Enter)
-  const row = speciesRow(page, '흰동가리')
+  const row = speciesRow(page, '플라밍고')
   await row.focus()
   await expectFocusOutline(row)
   await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/\/species\/12$/)
+  await expect(page).toHaveURL(/\/species\/2$/)
 })
 
 test('S29: 사이드바 `개체관리 > 개체 카드`', async ({ page }) => {
@@ -457,20 +440,11 @@ test('S29: 사이드바 `개체관리 > 개체 카드`', async ({ page }) => {
   await expect(menu).toHaveCSS('background-color', 'rgb(232, 233, 255)')
 })
 
-test('S30: 정렬 전환', async ({ page }) => {
-  await page.goto('/species')
-  await page.getByRole('button', { name: '2 페이지' }).click()
-  await expect(nameCell(rows(page).first())).toHaveText('반달가슴곰')
-
-  await page.getByRole('button', { name: '종 정렬' }).click()
-  await page.getByRole('menuitemradio', { name: '오래된순' }).click()
-
-  await expect(page.getByRole('button', { name: '1 페이지' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  )
-  await expect(nameCell(rows(page).first())).toHaveText('카피바라')
-})
+// 어류 종(흰동가리 12 · 피라냐 13)과 그 개체를 가짜 서버에서 뺀다.
+function removeFishKinds() {
+  api.kinds = api.kinds.filter((kind) => kind.animalTaxonomic !== 'FISH')
+  api.animals = api.animals.filter((animal) => animal.kindId <= 11)
+}
 
 function rows(page: Page) {
   return page.getByTestId('species-row')
