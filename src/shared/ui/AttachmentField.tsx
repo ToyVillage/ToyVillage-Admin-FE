@@ -52,8 +52,6 @@ interface AttachmentFieldProps {
    * 원본을 받아 온다. 관찰 화면은 아직 mock 키라 false 로 두고, API 연동 후 켠다.
    */
   storedFiles?: boolean
-  /** 파일 서버에서 받지 못했을 때 호출한다. 알림은 화면이 띄운다. */
-  onDownloadError?: (fileName: string) => void
 }
 
 export function AttachmentField({
@@ -66,7 +64,6 @@ export function AttachmentField({
   onFileItemsChange,
   onAddResult,
   storedFiles = false,
-  onDownloadError,
 }: AttachmentFieldProps) {
   const [files, setFiles] = useState<AttachedFile[]>(() =>
     initialFiles
@@ -153,9 +150,10 @@ export function AttachmentField({
       return
     }
 
+    // 실패는 첨부 카드의 오류 자리에 알린다. 크기·중복 오류와 같은 자리다.
     downloadStoredFile({ fileName: name, fileKey }).catch((error: unknown) => {
       console.error(error)
-      onDownloadError?.(name)
+      setErrorMessage('파일 다운로드에 실패했습니다. 다시 시도해 주세요.')
     })
   }
 

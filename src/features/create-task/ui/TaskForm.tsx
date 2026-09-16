@@ -322,9 +322,6 @@ export function TaskForm({
         onFileItemsChange={setAttachmentItems}
         onAddResult={handleAttachmentResult}
         storedFiles
-        onDownloadError={() =>
-          setToast({ variant: 'error', message: '파일 다운로드에 실패했습니다' })
-        }
       />
 
       {mutation.isError && (
