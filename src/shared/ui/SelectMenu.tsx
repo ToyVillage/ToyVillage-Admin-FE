@@ -104,6 +104,7 @@ export function SelectMenu({
           role="listbox"
           aria-label={ariaLabel}
           $maxHeight={maxListHeight}
+          $openBorder={openBorder}
           $variant={variant}
           $top={height}
         >
@@ -201,6 +202,7 @@ const List = styled.div<{
   $maxHeight: number
   $variant: SelectMenuVariant
   $top: number
+  $openBorder: boolean
 }>`
   position: absolute;
   z-index: 2;
@@ -211,6 +213,9 @@ const List = styled.div<{
   max-height: ${({ $maxHeight }) => $maxHeight}px;
   flex-direction: column;
   padding: 20px 0;
+  border: ${({ $openBorder, theme }) =>
+    $openBorder ? `1px solid ${theme.colors.selectOpenBorder}` : '0'};
+  border-top: 0;
   border-radius: ${({ $variant }) =>
     $variant === 'field' ? '0 0 8px 8px' : '0 0 12px 12px'};
   background: ${({ theme, $variant }) =>
