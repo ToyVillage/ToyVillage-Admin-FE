@@ -23,7 +23,7 @@ const columns: DataTableColumn[] = [
   {
     key: 'fedTime',
     header: '급여시간',
-    width: 120,
+    width: 160,
     render: mutedCell('fedTime'),
   },
   { key: 'feeder', header: '급여자', width: 170, render: mutedCell('feeder') },
@@ -31,12 +31,18 @@ const columns: DataTableColumn[] = [
     key: 'feed',
     header: '먹이 종류 · 급여량',
     width: 250,
-    render: (row) => <StrongCell>{row.feed}</StrongCell>,
+    render: (row) => {
+      const value = String(row.feed ?? '')
+      return <StrongCell title={value}>{value}</StrongCell>
+    },
   },
   {
     key: 'note',
     header: '특이사항',
-    render: (row) => <NoteCell>{row.note}</NoteCell>,
+    render: (row) => {
+      const value = String(row.note ?? '')
+      return <NoteCell title={value}>{value}</NoteCell>
+    },
   },
 ]
 
@@ -74,22 +80,31 @@ export function FeedHistoryTable({
 // Figma 의 `급여날짜`·`급여시간`·`급여자` 는 gray/60(#848491) 20px 다.
 function mutedCell(key: string) {
   return function render(row: DataTableRow) {
-    return <MutedCell>{row[key]}</MutedCell>
+    const value = String(row[key] ?? '')
+    return <MutedCell title={value}>{value}</MutedCell>
   }
 }
 
-// Figma 의 급여일시·급여자는 한 줄로 놓인다(열 경계보다 글자가 살짝 넓다).
+// 값이 열 폭보다 길면 줄바꿈하지 않고 말줄임한다(행 높이가 늘면 표가 어긋난다).
 const MutedCell = styled.span`
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   color: ${({ theme }) => theme.colors.textGuide};
   font-size: 20px;
   font-weight: 500;
+  text-overflow: ellipsis;
   white-space: nowrap;
 `
 
 const StrongCell = styled.span`
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   color: ${({ theme }) => theme.colors.textStrong};
   font-size: 22px;
   font-weight: 500;
+  text-overflow: ellipsis;
   white-space: nowrap;
 `
 

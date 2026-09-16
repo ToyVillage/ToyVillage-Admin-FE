@@ -1,4 +1,3 @@
-import styled from '@emotion/styled'
 import {
   DataTable,
   type DataTableColumn,
@@ -7,6 +6,7 @@ import {
 } from '@/shared/ui'
 import { formatFedDate, formatFeedLabel } from '../model/format'
 import type { FeedRecord } from '../model/types'
+import { TruncatedCell } from './TruncatedCell'
 
 interface FeedTableProps {
   feeds: FeedRecord[]
@@ -19,14 +19,14 @@ interface FeedTableProps {
 // 남는 폭은 마지막 `급여시간` 열이 채운다.
 // 대상 개체와 급여일시는 각각 두 열로 나눠 보여 준다(한 칸에 붙이면 줄바꿈으로 깨진다).
 const columns: DataTableColumn[] = [
-  { key: 'animalKind', header: '종', width: 200, variant: 'title' },
-  { key: 'animalName', header: '개체명', width: 180, variant: 'title' },
-  { key: 'feed', header: '먹이 종류 · 급여량', width: 320, variant: 'title' },
+  { key: 'animalKind', header: '종', width: 200, render: cell('animalKind') },
+  { key: 'animalName', header: '개체명', width: 180, render: cell('animalName') },
+  { key: 'feed', header: '먹이 종류 · 급여량', width: 320, render: cell('feed') },
   { key: 'feeder', header: '급여자', width: 180, render: mutedCell('feeder') },
   {
     key: 'fedDate',
     header: '급여날짜',
-    width: 220,
+    width: 200,
     render: mutedCell('fedDate'),
   },
   { key: 'fedTime', header: '급여시간', render: mutedCell('fedTime') },
@@ -68,15 +68,16 @@ export function FeedTable({
   )
 }
 
-// Figma 의 `급여자`·`급여날짜`·`급여시간` 은 gray/60(#848491) 22px 다.
-function mutedCell(key: string) {
+// 값이 열 폭을 넘으면 말줄임한다.
+function cell(key: string) {
   return function render(row: DataTableRow) {
-    return <MutedCell>{row[key]}</MutedCell>
+    return <TruncatedCell value={String(row[key] ?? '')} />
   }
 }
 
-const MutedCell = styled.span`
-  color: ${({ theme }) => theme.colors.textGuide};
-  font-size: 22px;
-  font-weight: 500;
-`
+// Figma 의 `급여자`·`급여날짜`·`급여시간` 은 gray/60(#848491) 22px 다.
+function mutedCell(key: string) {
+  return function render(row: DataTableRow) {
+    return <TruncatedCell value={String(row[key] ?? '')} muted />
+  }
+}

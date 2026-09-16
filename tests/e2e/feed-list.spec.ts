@@ -1,5 +1,9 @@
 import { expect, test as base, type Page } from '@playwright/test'
-import { mockFeedApi, type FeedApiHandle } from './support/feed-api'
+import {
+  mockFeedApi,
+  todayIsoDate,
+  type FeedApiHandle,
+} from './support/feed-api'
 
 // 승인된 시나리오(feed-list.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
@@ -179,6 +183,37 @@ test('S10: 말일 보정', async ({ page }) => {
 
 // 조회 연도는 5개뿐이라 스크롤이 없다. 31개인 `조회 일` 로 확인한다.
 // 오늘이 월초여도 결과가 같도록 뒤쪽 날짜를 골라 두고 다시 펼친다.
+// 긴 값이 들어와도 행 높이가 늘지 않고 한 줄로 말줄임한다.
+test('S13: 열 폭보다 긴 값은 한 줄로 말줄임한다', async ({ page }) => {
+  const longKind = '아주아주아주아주긴이름을가진종이름입니다정말로깁니다'
+  await mockFeedApi(page, {
+    feedLogs: [
+      {
+        feedLogId: 1,
+        animalId: 1,
+        animalKind: longKind,
+        animalName: '금이',
+        animalTaxonomic: 'FISH',
+        feedType: '사료',
+        feedAmount: 1,
+        name: '관리자',
+        feedDateTime: `${todayIsoDate()}T09:30:00`,
+        significant: '정상',
+      },
+    ],
+  })
+
+  await page.goto('/feeds')
+
+  const cell = rows(page).first().getByTitle(longKind)
+  await expect(cell).toHaveCSS('text-overflow', 'ellipsis')
+  await expect(cell).toHaveCSS('white-space', 'nowrap')
+
+  // 한 줄 행 높이(92px)에서 늘지 않는다.
+  const box = await rows(page).first().boundingBox()
+  expect(box?.height).toBeLessThanOrEqual(93)
+})
+
 test('S12: 조회날짜 목록을 펼치면 선택된 항목이 보이게 스크롤된다', async ({
   page,
 }) => {
