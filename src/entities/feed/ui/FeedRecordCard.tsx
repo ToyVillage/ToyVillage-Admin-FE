@@ -32,10 +32,8 @@ export function FeedRecordCard({ feed }: FeedRecordCardProps) {
             <Field label="먹이 종류" value={feed.feedType} />
           </Row>
           <Row>
-            <Field label="급여량" value={feed.feedAmount} />
-          </Row>
-          <Row>
             <Field label="특이사항" value={feed.note} />
+            <Field label="급여량" value={feed.feedAmount} />
           </Row>
         </Fields>
       </Info>
