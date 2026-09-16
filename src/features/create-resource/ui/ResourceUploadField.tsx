@@ -10,6 +10,8 @@ import downloadIcon from './assets/download.svg'
 
 const maxFileSize = 50 * 1024 * 1024
 
+const downloadErrorMessage = '파일 다운로드에 실패했습니다. 다시 시도해 주세요.'
+
 const fileTypeIcon: Record<string, string> = {
   pdf: filePdfIcon,
   png: filePngIcon,
@@ -157,10 +159,17 @@ export function ResourceUploadField({
       return
     }
 
-    downloadStoredFile({ fileName: name, fileKey }).catch((error: unknown) => {
-      console.error(error)
-      setErrorMessage('파일 다운로드에 실패했습니다. 다시 시도해 주세요.')
-    })
+    downloadStoredFile({ fileName: name, fileKey })
+      .then(() =>
+        // 다시 받아졌으면 지난 실패 안내만 걷는다. 업로드·크기 안내는 그대로 둔다.
+        setErrorMessage((message) =>
+          message === downloadErrorMessage ? '' : message,
+        ),
+      )
+      .catch((error: unknown) => {
+        console.error(error)
+        setErrorMessage(downloadErrorMessage)
+      })
   }
 
   function handleRemove(id: string) {

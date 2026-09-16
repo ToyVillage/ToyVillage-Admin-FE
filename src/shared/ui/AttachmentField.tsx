@@ -7,6 +7,8 @@ import { downloadFile, downloadStoredFile } from './fileAttachment'
 
 const maxFileSize = 50 * 1024 * 1024
 
+const downloadErrorMessage = '파일 다운로드에 실패했습니다. 다시 시도해 주세요.'
+
 interface AttachedFile {
   id: string
   name: string
@@ -151,10 +153,17 @@ export function AttachmentField({
     }
 
     // 실패는 첨부 카드의 오류 자리에 알린다. 크기·중복 오류와 같은 자리다.
-    downloadStoredFile({ fileName: name, fileKey }).catch((error: unknown) => {
-      console.error(error)
-      setErrorMessage('파일 다운로드에 실패했습니다. 다시 시도해 주세요.')
-    })
+    downloadStoredFile({ fileName: name, fileKey })
+      .then(() =>
+        // 다시 받아졌으면 지난 실패 안내만 걷는다. 크기·중복 안내는 그대로 둔다.
+        setErrorMessage((message) =>
+          message === downloadErrorMessage ? '' : message,
+        ),
+      )
+      .catch((error: unknown) => {
+        console.error(error)
+        setErrorMessage(downloadErrorMessage)
+      })
   }
 
   return (
