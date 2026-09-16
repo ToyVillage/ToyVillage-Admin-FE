@@ -49,6 +49,8 @@ export function NoticeForm({
     () => initialNotice?.attachments ?? [],
     [initialNotice?.attachments],
   )
+  // 저장소 키까지 온 첨부만 파일 서버에서 원본을 받는다. mock 첨부는 이름뿐이다.
+  const initialAttachmentFiles = initialNotice?.attachmentFiles
   const formInitialCategories = useMemo(
     () => [initialCategory],
     [initialCategory],
@@ -285,6 +287,8 @@ export function NoticeForm({
 
       <AttachmentField
         initialFileNames={initialAttachmentNames}
+        initialFiles={initialAttachmentFiles}
+        storedFiles={Boolean(initialAttachmentFiles)}
         onFilesChange={setHasAttachments}
         onFileNamesChange={setAttachmentNames}
         onFileObjectsChange={setAttachmentFiles}

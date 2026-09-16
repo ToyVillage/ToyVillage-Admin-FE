@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type Ref } from 'react'
 import styled from '@emotion/styled'
 import { uploadFile } from '@/entities/file'
+import { downloadFile, downloadStoredFile } from '@/shared/ui'
 import filePdfIcon from '@/shared/ui/assets/file-pdf.svg'
 import filePngIcon from '@/shared/ui/assets/file-png.svg'
 import fileJpgIcon from '@/shared/ui/assets/file-jpg.svg'
@@ -149,16 +150,17 @@ export function ResourceUploadField({
     addFiles(event.dataTransfer.files)
   }
 
-  function handleDownload(attachedFile: AttachedFile) {
-    const source =
-      attachedFile.file ??
-      new Blob([`${attachedFile.name}\n`], { type: 'text/plain' })
-    const url = URL.createObjectURL(source)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = attachedFile.name
-    link.click()
-    URL.revokeObjectURL(url)
+  // 새로 고른 파일은 원본이 손에 있고, 저장된 첨부는 파일 서버에서 받아 온다.
+  function handleDownload({ name, file, fileKey }: AttachedFile) {
+    if (file || !fileKey) {
+      downloadFile(name, file)
+      return
+    }
+
+    downloadStoredFile({ fileName: name, fileKey }).catch((error: unknown) => {
+      console.error(error)
+      setErrorMessage('파일 다운로드에 실패했습니다. 다시 시도해 주세요.')
+    })
   }
 
   function handleRemove(id: string) {
