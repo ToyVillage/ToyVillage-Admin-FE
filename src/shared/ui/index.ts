@@ -22,7 +22,11 @@ export { AttachmentField } from './AttachmentField'
 export type { AttachmentAddResult, AttachmentItem } from './AttachmentField'
 export { AttachmentList } from './AttachmentList'
 export { AttachmentChip } from './AttachmentChip'
-export { downloadFile } from './fileAttachment'
+export {
+  downloadFile,
+  downloadStoredFile,
+  type StoredFile,
+} from './fileAttachment'
 export { FileDropZone } from './FileDropZone'
 export { PhotoUploadField } from './PhotoUploadField'
 export type { PhotoValue } from './PhotoUploadField'
