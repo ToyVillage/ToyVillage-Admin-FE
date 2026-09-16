@@ -1,8 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import {
+  mockAnimalManageApi,
+  type AnimalManageApiHandle,
+} from './support/animal-manage-api'
 
 // 승인된 시나리오(observation-detail.approved.json, S1~S16 · S13 삭제)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 관찰은 퍼블리싱 단계 localStorage mock(`toyvillage:observations`)을 쓴다.
+// 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 
 // 종 1 카피바라 · 개체 1 동식이 · 관찰 1(첨부 3개).
 const individualUrl = '/species/1/individuals/1'
@@ -10,13 +14,15 @@ const detailUrl = `${individualUrl}/observations/1`
 const title = '얼굴 콧잔등 부위 약 3cm 긁힌 상처 있음'
 const attachmentNames = ['상처사진.jpg', '상처사진_측면.jpg', '처치기록.pdf']
 
+let api: AnimalManageApiHandle
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
-    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. mock 상태만 비우고
-    // 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
+    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
     localStorage.setItem('accessToken', 'observation-detail-test-token')
   })
+  api = await mockAnimalManageApi(page)
 })
 
 test('S1: 상세 진입 기본 표시', async ({ page }) => {
@@ -156,9 +162,7 @@ test('S11: 삭제 취소', async ({ page }) => {
 })
 
 test('S12: 삭제 실패', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('toyvillage:observations:fail', 'delete')
-  })
+  api.failNext('observation.delete')
   await page.goto(detailUrl)
   await openDeleteDialog(page)
   await deleteDialog(page).getByRole('button', { name: '확인' }).click()
