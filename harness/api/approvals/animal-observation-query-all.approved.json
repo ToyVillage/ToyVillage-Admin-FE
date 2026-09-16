@@ -1,0 +1,14 @@
+{
+  "feature": "animal-observation-query-all",
+  "apiId": "ANIMAL_OBSERVATION_QUERY_ALL",
+  "approvedAt": "2026-09-16T15:20:14.409Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "116626bc617b41e1a85645afdf35f89fc0bffaf5cd1f78738f8fcab629b2e0d0",
+  "contractHash": "616071a7172bbeeb71b0f6a8997042d256f040d10c987596e152e73dedf48595",
+  "contractMarkdownHash": "748bc6f8ed62153cd10a08cff7af2eb5998e67ec6bea6f89e742bb2ba3faa6b0",
+  "planHash": "0c007d7494cec5fc2f164dade26d45be4c404928c641419f675986fa6d0671c9",
+  "scenarioHash": "689b4ad8cbe32e2db397b2109f98ef9b1bebc0982b56961d4a3a3fef20b2da1e",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}

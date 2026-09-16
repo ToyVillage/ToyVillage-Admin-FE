@@ -1,0 +1,14 @@
+{
+  "feature": "animal-observation-update",
+  "apiId": "ANIMAL_OBSERVATION_UPDATE",
+  "approvedAt": "2026-09-16T15:20:15.146Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "e6f30df5a6788a32d32594c67b257055839529fed498db94a1c233e6866d81c8",
+  "contractHash": "c7bedfcbe4b48143a3789f2a7e6d264d854908785dac94ed0ba0012f23cd1f09",
+  "contractMarkdownHash": "702db09a240abca24594957f0c0dde66993af89bccbfb93da9f72dd4c17c020c",
+  "planHash": "5dd23c8cf6da96c989e35c50fb6f78e2edc8e75f1b343f506e97a7004c4c1e07",
+  "scenarioHash": "df4ccfa987069db5e638cce620f4beb1e73938d841a397e8923daec8b41ce7f2",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}
