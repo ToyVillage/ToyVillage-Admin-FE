@@ -106,6 +106,36 @@ test('S4: 조회날짜를 바꾸면 그 날짜로 다시 조회한다', async ({
   expect(dates[1]?.startsWith(lastYear)).toBe(true)
 })
 
+// Swagger 는 `name`, 실제 서버는 `staffName` 이라 둘 다 받는다.
+test('S4-1: 급여자명이 name 으로 와도 표에 그린다', async ({ page }) => {
+  await mockFeedApi(page)
+  await page.route(feedListPattern, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        feedLogs: [
+          {
+            feedLogId: 1,
+            name: '관리자',
+            animalKind: '비단잉어',
+            animalName: '금이',
+            feedType: '사료',
+            feedAmount: 1,
+            feedDateTime: `${todayIsoDate()}T16:12:31.52`,
+          },
+        ],
+        totalPageSize: 1,
+      }),
+    })
+  })
+
+  await page.goto('/feeds')
+
+  await expect(rows(page)).toHaveCount(1)
+  await expect(rows(page).first()).toContainText('관리자')
+})
+
 test('S5: 목록 응답 형식이 명세와 다르면 빈 목록이 아니라 오류를 알린다', async ({
   page,
 }) => {

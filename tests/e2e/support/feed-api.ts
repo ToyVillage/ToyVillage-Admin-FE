@@ -163,7 +163,7 @@ export async function mockFeedApi(
 
     await json(route, 200, {
       animalId: target.animalId,
-      name: target.name,
+      staffName: target.name,
       animalKind: target.animalKind,
       animalName: target.animalName,
       animalImageUrl: { fileName: 'leo.png', fileKey: 'animal/leo.png' },
@@ -180,7 +180,8 @@ export async function mockFeedApi(
 function toListItem(item: MockFeedLog) {
   return {
     feedLogId: item.feedLogId,
-    name: item.name,
+    // 실제 서버는 급여자명을 `staffName` 으로 내려준다(Swagger 는 `name`).
+    staffName: item.name,
     animalKind: item.animalKind,
     animalName: item.animalName,
     feedType: item.feedType,
@@ -192,7 +193,7 @@ function toListItem(item: MockFeedLog) {
 function toHistoryItem(item: MockFeedLog) {
   return {
     feedLogId: item.feedLogId,
-    name: item.name,
+    staffName: item.name,
     feedType: item.feedType,
     feedAmount: item.feedAmount,
     feedDateTime: item.feedDateTime,

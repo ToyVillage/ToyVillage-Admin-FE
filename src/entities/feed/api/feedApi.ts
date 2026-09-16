@@ -54,7 +54,7 @@ export async function getFeeds({
         animalName: item.animalName,
         feedType: item.feedType,
         feedAmount: formatFeedAmount(item.feedAmount),
-        feederName: item.name,
+        feederName: feederNameOf(item),
         fedDate,
         fedTime,
       }
@@ -85,7 +85,7 @@ export async function getFeedDetail({
     animalName: data.animalName,
     feedType: data.feedType,
     feedAmount: formatFeedAmount(data.feedAmount),
-    feederName: data.name,
+    feederName: feederNameOf(data),
     fedDate,
     fedTime,
     note: data.significant,
@@ -115,7 +115,7 @@ async function getFeedHistory(
           id: String(item.feedLogId),
           fedDate,
           fedTime,
-          feederName: item.name,
+          feederName: feederNameOf(item),
           feedType: item.feedType,
           feedAmount: formatFeedAmount(item.feedAmount),
           note: item.significant,
@@ -126,6 +126,11 @@ async function getFeedHistory(
     // 최신 급여가 위로 온다(서버 정렬 명세 없음).
     .sort((left, right) => right.feedDateTime.localeCompare(left.feedDateTime))
     .map((item) => item.record)
+}
+
+/** 급여자명 키가 응답마다 다르다(`staffName` 실제, `name` 문서). */
+function feederNameOf(item: { staffName?: string; name?: string }): string {
+  return item.staffName ?? item.name ?? ''
 }
 
 /** `2026-09-16T09:30:00` → `2026-09-16` + `09:30` */
@@ -159,6 +164,10 @@ function assertFeedLogId(feedLogId: number): void {
   }
 }
 
+function hasFeederName(value: Record<string, unknown>): boolean {
+  return typeof value.staffName === 'string' || typeof value.name === 'string'
+}
+
 function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
   if (typeof value !== 'object' || value === null) return false
 
@@ -172,7 +181,7 @@ function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
       const feedLog = item as Record<string, unknown>
       return (
         Number.isInteger(feedLog.feedLogId) &&
-        typeof feedLog.name === 'string' &&
+        hasFeederName(feedLog) &&
         typeof feedLog.animalKind === 'string' &&
         typeof feedLog.animalName === 'string' &&
         typeof feedLog.feedType === 'string' &&
@@ -193,7 +202,7 @@ function isFeedLogAdminDetailResponse(
 
   return (
     Number.isInteger(detail.animalId) &&
-    typeof detail.name === 'string' &&
+    hasFeederName(detail) &&
     typeof detail.animalKind === 'string' &&
     typeof detail.animalName === 'string' &&
     typeof detail.feedType === 'string' &&
@@ -218,7 +227,7 @@ function isFeedLogHistoryResponse(
       const feedLog = item as Record<string, unknown>
       return (
         Number.isInteger(feedLog.feedLogId) &&
-        typeof feedLog.name === 'string' &&
+        hasFeederName(feedLog) &&
         typeof feedLog.feedType === 'string' &&
         typeof feedLog.feedAmount === 'number' &&
         typeof feedLog.feedDateTime === 'string' &&

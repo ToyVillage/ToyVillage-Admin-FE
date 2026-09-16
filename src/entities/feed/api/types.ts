@@ -10,11 +10,15 @@ export const animalTaxonomics = [
 ] as const
 export type AnimalTaxonomic = (typeof animalTaxonomics)[number]
 
-/** `GET /feed-log/admin` 의 배열 항목 */
+/**
+ * `GET /feed-log/admin` 의 배열 항목.
+ * 급여자명은 Swagger 에 `name` 으로 적혀 있지만 실제 응답은 `staffName` 이다(2026-09-16 확인).
+ * 서버가 문서에 맞출 수도 있어 둘 다 받는다.
+ */
 export interface FeedLogListItemResponse {
   feedLogId: number
-  /** 급여자명 */
-  name: string
+  staffName?: string
+  name?: string
   animalKind: string
   animalName: string
   feedType: string
@@ -32,8 +36,9 @@ export interface FeedLogListResponse {
 export interface FeedLogAdminDetailResponse {
   /** 개체 id(`animalManageId`) */
   animalId: number
-  /** 급여자명 */
-  name: string
+  /** 급여자명. 목록과 같은 이유로 `staffName`·`name` 을 모두 받는다. */
+  staffName?: string
+  name?: string
   animalKind: string
   animalName: string
   /** 개체 사진. `fileName`·`fileKey` 뿐이라 표시용 URL 은 없다. */
@@ -47,8 +52,9 @@ export interface FeedLogAdminDetailResponse {
 /** `GET /feed-log/admin/history/{animalManageId}` 의 배열 항목 */
 export interface FeedLogHistoryItemResponse {
   feedLogId: number
-  /** 급여자명 */
-  name: string
+  /** 급여자명. 목록과 같은 이유로 `staffName`·`name` 을 모두 받는다. */
+  staffName?: string
+  name?: string
   feedType: string
   feedAmount: number
   feedDateTime: string
