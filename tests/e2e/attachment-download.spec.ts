@@ -4,14 +4,19 @@ import { mockTaskApi } from './support/task-api'
 import { mockWorkReportApi } from './support/task-report-api'
 
 // #71 회귀: 조회 화면의 첨부 다운로드는 파일 서버(VITE_FILE_BASE_URL)에서 fileKey 로
-// 원본을 받아 원래 파일명으로 저장한다. 로컬에서 dev 서버를 재사용하면 파일 서버 주소가
-// .env 값이 되므로 오리진이 아니라 `/{encodeURIComponent(fileKey)}` 경로로 가로챈다.
+// 원본을 받아 원래 파일명으로 저장한다. 요청이 API 서버나 앱 오리진으로 새면 안 되므로
+// 오리진까지 확인한다. 기본값은 playwright.config.ts 의 webServer env 와 같고,
+// 로컬 dev 서버를 재사용할 때는 그 서버의 VITE_FILE_BASE_URL 을 같은 이름으로 넘긴다.
+const fileServerOrigin = new URL(
+  process.env.VITE_FILE_BASE_URL ?? 'https://cdn.e2e.invalid',
+).origin
 
 const taskFileKey = '2026/07/01/guide_a1b2c3.pdf'
 const reportFileKey = 'work-report/2026/07/notice.png'
 const fileBody = Buffer.from('%PDF-1.4 original file body')
 
 interface FileServerRequest {
+  origin: string
   path: string
   authorization?: string
 }
@@ -38,7 +43,11 @@ test('업무 상세: 파일 서버의 원본을 원래 파일명으로 내려받
   expect(await readFile(await download.path())).toEqual(fileBody)
   // 토큰은 파일 서버로 보내지 않는다.
   expect(requests).toEqual([
-    { path: `/${encodeURIComponent(taskFileKey)}`, authorization: undefined },
+    {
+      origin: fileServerOrigin,
+      path: `/${encodeURIComponent(taskFileKey)}`,
+      authorization: undefined,
+    },
   ])
 })
 
@@ -73,7 +82,11 @@ test('업무 수정: 기존 첨부도 파일 서버의 원본을 내려받는다
   expect(download.suggestedFilename()).toBe('당일 지침.pdf')
   expect(await readFile(await download.path())).toEqual(fileBody)
   expect(requests).toEqual([
-    { path: `/${encodeURIComponent(taskFileKey)}`, authorization: undefined },
+    {
+      origin: fileServerOrigin,
+      path: `/${encodeURIComponent(taskFileKey)}`,
+      authorization: undefined,
+    },
   ])
 })
 
@@ -91,7 +104,11 @@ test('업무보고 상세: 파일 서버의 원본을 원래 파일명으로 내
   expect(download.suggestedFilename()).toBe('휴관안내.png')
   expect(await readFile(await download.path())).toEqual(fileBody)
   expect(requests).toEqual([
-    { path: `/${encodeURIComponent(reportFileKey)}`, authorization: undefined },
+    {
+      origin: fileServerOrigin,
+      path: `/${encodeURIComponent(reportFileKey)}`,
+      authorization: undefined,
+    },
   ])
 })
 
@@ -117,12 +134,13 @@ async function mockFileServer(page: Page, status: number) {
   )
 
   await page.route(
-    (url) => filePaths.includes(url.pathname),
+    (url) => url.origin === fileServerOrigin && filePaths.includes(url.pathname),
     async (route) => {
-      const request = route.request()
+      const requestUrl = new URL(route.request().url())
       requests.push({
-        path: new URL(request.url()).pathname,
-        authorization: request.headers().authorization,
+        origin: requestUrl.origin,
+        path: requestUrl.pathname,
+        authorization: route.request().headers().authorization,
       })
       await route.fulfill({
         status,
