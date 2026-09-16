@@ -26,6 +26,9 @@ export function TaskReportDetailPage() {
   } | null>(null)
   const toastIdRef = useRef(0)
   const dismissToast = useCallback(() => setErrorToast(null), [])
+  // 다운로드 실패도 연달아 나면 토스트를 새로 띄운다. 0 이면 숨긴다.
+  const [downloadErrorId, setDownloadErrorId] = useState(0)
+  const dismissDownloadError = useCallback(() => setDownloadErrorId(0), [])
 
   const {
     data: report,
@@ -80,7 +83,13 @@ export function TaskReportDetailPage() {
           />
 
           <AttachmentCard>
-            <AttachmentList fileNames={report.attachments} />
+            <AttachmentList
+              files={report.attachmentFiles}
+              onDownloadError={() => {
+                toastIdRef.current += 1
+                setDownloadErrorId(toastIdRef.current)
+              }}
+            />
           </AttachmentCard>
         </Body>
 
@@ -104,6 +113,15 @@ export function TaskReportDetailPage() {
           variant={toast.variant}
           message={toast.message}
           onDismiss={dismissToast}
+        />
+      )}
+
+      {downloadErrorId > 0 && (
+        <Toast
+          key={downloadErrorId}
+          variant="error"
+          message="파일 다운로드에 실패했습니다"
+          onDismiss={dismissDownloadError}
         />
       )}
     </Page>

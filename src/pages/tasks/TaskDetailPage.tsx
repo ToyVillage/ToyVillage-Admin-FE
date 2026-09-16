@@ -28,6 +28,9 @@ export function TaskDetailPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteFailed, setDeleteFailed] = useState(false)
+  // 다운로드 실패가 연달아 나도 토스트를 새로 띄우도록 매번 값을 바꾼다. 0 이면 숨긴다.
+  const [downloadErrorId, setDownloadErrorId] = useState(0)
+  const dismissDownloadError = useCallback(() => setDownloadErrorId(0), [])
 
   const {
     data: task,
@@ -110,8 +113,6 @@ export function TaskDetailPage() {
     )
   }
 
-  const attachments = task.attachments
-
   return (
     <Page>
       <Content>
@@ -153,7 +154,12 @@ export function TaskDetailPage() {
           <BodyContent>{task.content}</BodyContent>
         </BodyCard>
 
-        {attachments.length > 0 && <AttachmentList fileNames={attachments} />}
+        {task.attachmentFiles.length > 0 && (
+          <AttachmentList
+            files={task.attachmentFiles}
+            onDownloadError={() => setDownloadErrorId((prev) => prev + 1)}
+          />
+        )}
 
         <BottomRow>
           {/* 제출된 줄만 누를 수 있다. id 는 `workReportId` 이고 업무보고 상세 조회가 같은 id 를 받는다. */}
@@ -183,6 +189,15 @@ export function TaskDetailPage() {
           variant="error"
           message="데이터 삭제에 실패했습니다"
           onDismiss={() => setDeleteFailed(false)}
+        />
+      )}
+
+      {downloadErrorId > 0 && (
+        <Toast
+          key={downloadErrorId}
+          variant="error"
+          message="파일 다운로드에 실패했습니다"
+          onDismiss={dismissDownloadError}
         />
       )}
     </Page>
