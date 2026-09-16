@@ -53,7 +53,7 @@ test('S2: 2페이지로 가면 page=1 로 다시 조회한다', async ({ page })
   expect(pages).toEqual(['0', '1'])
 })
 
-test('S3: 양식 관리 탭도 조회날짜를 함께 보낸다', async ({ page }) => {
+test('S3: 양식 관리 탭은 조회날짜를 보내지 않는다', async ({ page }) => {
   const requests: string[] = []
   await mockWorkLogApi(page)
   await page.route(templateListPattern, async (route) => {
@@ -66,7 +66,8 @@ test('S3: 양식 관리 탭도 조회날짜를 함께 보낸다', async ({ page 
 
   expect(requests).toHaveLength(1)
   const query = new URL(requests[0]).searchParams
-  expect(query.get('date')).toBe(todayIsoDate())
+  // 양식은 날짜에 묶이지 않는다 — 양식 관리 탭에 조회날짜 필터가 없다.
+  expect(query.get('date')).toBeNull()
   expect(query.get('page')).toBe('0')
   expect(query.get('size')).toBe('4')
 })
