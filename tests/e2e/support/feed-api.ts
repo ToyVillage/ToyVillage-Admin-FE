@@ -180,7 +180,6 @@ export async function mockFeedApi(
 function toListItem(item: MockFeedLog) {
   return {
     feedLogId: item.feedLogId,
-    // 실제 서버는 급여자명을 `staffName` 으로 내려준다(Swagger 는 `name`).
     staffName: item.name,
     animalKind: item.animalKind,
     animalName: item.animalName,

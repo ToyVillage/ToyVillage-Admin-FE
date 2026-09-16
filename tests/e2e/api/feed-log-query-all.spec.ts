@@ -106,8 +106,8 @@ test('S4: 조회날짜를 바꾸면 그 날짜로 다시 조회한다', async ({
   expect(dates[1]?.startsWith(lastYear)).toBe(true)
 })
 
-// Swagger 는 `name`, 실제 서버는 `staffName` 이라 둘 다 받는다.
-test('S4-1: 급여자명이 name 으로 와도 표에 그린다', async ({ page }) => {
+// 명세 예시의 `feedDateTime` 은 `Z`(UTC)가 붙는다. 표에는 현지 시각으로 보여야 한다.
+test('S4-1: UTC 로 온 급여일시를 현지 시각으로 표시한다', async ({ page }) => {
   await mockFeedApi(page)
   await page.route(feedListPattern, async (route) => {
     await route.fulfill({
@@ -117,12 +117,12 @@ test('S4-1: 급여자명이 name 으로 와도 표에 그린다', async ({ page 
         feedLogs: [
           {
             feedLogId: 1,
-            name: '관리자',
+            staffName: '관리자',
             animalKind: '비단잉어',
             animalName: '금이',
             feedType: '사료',
-            feedAmount: 1,
-            feedDateTime: `${todayIsoDate()}T16:12:31.52`,
+            feedAmount: 0.1,
+            feedDateTime: '2026-09-16T13:55:42.647Z',
           },
         ],
         totalPageSize: 1,
@@ -133,7 +133,12 @@ test('S4-1: 급여자명이 name 으로 와도 표에 그린다', async ({ page 
   await page.goto('/feeds')
 
   await expect(rows(page)).toHaveCount(1)
+  const expected = new Date('2026-09-16T13:55:42.647Z')
+  const hour = String(expected.getHours()).padStart(2, '0')
+  const minute = String(expected.getMinutes()).padStart(2, '0')
+  await expect(rows(page).first()).toContainText(`${hour}:${minute}`)
   await expect(rows(page).first()).toContainText('관리자')
+  await expect(rows(page).first()).toContainText('0.1kg')
 })
 
 test('S5: 목록 응답 형식이 명세와 다르면 빈 목록이 아니라 오류를 알린다', async ({

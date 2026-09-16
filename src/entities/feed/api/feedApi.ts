@@ -54,7 +54,7 @@ export async function getFeeds({
         animalName: item.animalName,
         feedType: item.feedType,
         feedAmount: formatFeedAmount(item.feedAmount),
-        feederName: feederNameOf(item),
+        feederName: item.staffName,
         fedDate,
         fedTime,
       }
@@ -85,7 +85,7 @@ export async function getFeedDetail({
     animalName: data.animalName,
     feedType: data.feedType,
     feedAmount: formatFeedAmount(data.feedAmount),
-    feederName: feederNameOf(data),
+    feederName: data.staffName,
     fedDate,
     fedTime,
     note: data.significant,
@@ -115,7 +115,7 @@ async function getFeedHistory(
           id: String(item.feedLogId),
           fedDate,
           fedTime,
-          feederName: feederNameOf(item),
+          feederName: item.staffName,
           feedType: item.feedType,
           feedAmount: formatFeedAmount(item.feedAmount),
           note: item.significant,
@@ -128,18 +128,39 @@ async function getFeedHistory(
     .map((item) => item.record)
 }
 
-/** 급여자명 키가 응답마다 다르다(`staffName` 실제, `name` 문서). */
-function feederNameOf(item: { staffName?: string; name?: string }): string {
-  return item.staffName ?? item.name ?? ''
-}
-
-/** `2026-09-16T09:30:00` → `2026-09-16` + `09:30` */
+/**
+ * `2026-09-16T09:30:00` → `2026-09-16` + `09:30`.
+ * `Z` 나 `+09:00` 처럼 오프셋이 붙어 오면 현지 시각으로 바꾼다.
+ * 오프셋이 없으면 이미 현지 시각이므로 문자열을 그대로 자른다.
+ */
 function splitFeedDateTime(feedDateTime: string): {
   fedDate: string
   fedTime: string
 } {
+  if (hasUtcOffset(feedDateTime)) {
+    const parsed = new Date(feedDateTime)
+
+    if (!Number.isNaN(parsed.getTime())) {
+      const year = parsed.getFullYear()
+      const month = pad(parsed.getMonth() + 1)
+      const day = pad(parsed.getDate())
+      return {
+        fedDate: `${year}-${month}-${day}`,
+        fedTime: `${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`,
+      }
+    }
+  }
+
   const [date, time = ''] = feedDateTime.split('T')
   return { fedDate: date, fedTime: time.slice(0, 5) }
+}
+
+function hasUtcOffset(value: string): boolean {
+  return /(?:Z|[+-]\d{2}:?\d{2})$/.test(value)
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0')
 }
 
 function assertIsoDate(date: string): void {
@@ -164,10 +185,6 @@ function assertFeedLogId(feedLogId: number): void {
   }
 }
 
-function hasFeederName(value: Record<string, unknown>): boolean {
-  return typeof value.staffName === 'string' || typeof value.name === 'string'
-}
-
 function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
   if (typeof value !== 'object' || value === null) return false
 
@@ -181,7 +198,7 @@ function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
       const feedLog = item as Record<string, unknown>
       return (
         Number.isInteger(feedLog.feedLogId) &&
-        hasFeederName(feedLog) &&
+        typeof feedLog.staffName === 'string' &&
         typeof feedLog.animalKind === 'string' &&
         typeof feedLog.animalName === 'string' &&
         typeof feedLog.feedType === 'string' &&
@@ -202,7 +219,7 @@ function isFeedLogAdminDetailResponse(
 
   return (
     Number.isInteger(detail.animalId) &&
-    hasFeederName(detail) &&
+    typeof detail.staffName === 'string' &&
     typeof detail.animalKind === 'string' &&
     typeof detail.animalName === 'string' &&
     typeof detail.feedType === 'string' &&
@@ -227,7 +244,7 @@ function isFeedLogHistoryResponse(
       const feedLog = item as Record<string, unknown>
       return (
         Number.isInteger(feedLog.feedLogId) &&
-        hasFeederName(feedLog) &&
+        typeof feedLog.staffName === 'string' &&
         typeof feedLog.feedType === 'string' &&
         typeof feedLog.feedAmount === 'number' &&
         typeof feedLog.feedDateTime === 'string' &&
