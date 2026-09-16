@@ -1,8 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import {
+  mockAnimalManageApi,
+  type AnimalManageApiHandle,
+} from './support/animal-manage-api'
 
 // 승인된 시나리오(observation-edit.approved.json, S1~S22 · S19 삭제)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 관찰은 퍼블리싱 단계 localStorage mock(`toyvillage:observations`)을 쓴다.
+// 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 
 // 종 1 카피바라 · 개체 1 동식이 · 관찰 1(첨부 3개).
 const individualUrl = '/species/1/individuals/1'
@@ -16,13 +20,15 @@ const attachmentNames = ['상처사진.jpg', '상처사진_측면.jpg', '처치�
 const detailUrlPattern = /\/species\/1\/individuals\/1\/observations\/1$/
 const editUrlPattern = /\/species\/1\/individuals\/1\/observations\/1\/edit$/
 
+let api: AnimalManageApiHandle
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
-    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. mock 상태만 비우고
-    // 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
+    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
     localStorage.setItem('accessToken', 'observation-edit-test-token')
   })
+  api = await mockAnimalManageApi(page)
 })
 
 test('S1: 관찰 상세에서 수정 진입', async ({ page }) => {
@@ -182,7 +188,7 @@ test('S12: 제목 미입력 검증', async ({ page }) => {
     await expectBetween(error, titleInput(page), dateInput(page))
     await expect(saveButton(page)).toBeFocused()
     await expect(page).toHaveURL(editUrlPattern)
-    expect(await storedObservationOverrides(page)).toBeNull()
+    expect(api.count('observation.update')).toBe(0)
   }
 })
 
@@ -197,7 +203,7 @@ test('S13: 관찰사항 미입력 검증', async ({ page }) => {
   await expect(error).toBeVisible()
   await expectBetween(error, contentInput(page), attachmentGroup(page))
   await expect(page).toHaveURL(editUrlPattern)
-  expect(await storedObservationOverrides(page)).toBeNull()
+  expect(api.count('observation.update')).toBe(0)
 })
 
 test('S14: 오류 줄 동시 표시', async ({ page }) => {
@@ -311,9 +317,7 @@ test('S18: 변경 후 사이드바·브라우저 뒤로가기 이탈 보호', as
 })
 
 test('S20: 저장 실패', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('toyvillage:observations:fail', 'update')
-  })
+  api.failNext('observation.update')
   await page.goto(editUrl)
   await titleInput(page).fill('실패할 관찰 제목')
   await saveButton(page).click()
@@ -445,11 +449,6 @@ function documentBox(locator: Locator) {
       bottom: rect.bottom + window.scrollY,
     }
   })
-}
-
-// 수정 요청이 한 번이라도 가면 mock 이 override 를 저장한다.
-function storedObservationOverrides(page: Page) {
-  return page.evaluate(() => localStorage.getItem('toyvillage:observations'))
 }
 
 function titleInput(page: Page) {
