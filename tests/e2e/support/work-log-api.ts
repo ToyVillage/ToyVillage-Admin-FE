@@ -447,8 +447,11 @@ function pageBody<T>(items: T[], query: URLSearchParams) {
   const size = Number(query.get('size') ?? 4)
   const number = Number(query.get('page') ?? 0)
 
+  // numberOfElements·empty 는 전체가 아니라 이 페이지의 content 기준이다.
+  const content = items.slice(number * size, (number + 1) * size)
+
   return {
-    content: items.slice(number * size, (number + 1) * size),
+    content,
     pageable: { pageNumber: number, pageSize: size },
     totalPages: Math.ceil(items.length / size),
     totalElements: items.length,
@@ -456,8 +459,8 @@ function pageBody<T>(items: T[], query: URLSearchParams) {
     number,
     first: number === 0,
     last: (number + 1) * size >= items.length,
-    numberOfElements: items.length,
-    empty: items.length === 0,
+    numberOfElements: content.length,
+    empty: content.length === 0,
   }
 }
 
