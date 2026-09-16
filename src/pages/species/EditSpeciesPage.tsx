@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getMockSpecies, speciesQueryKeys } from '@/entities/species'
+import { getSpecies, speciesQueryKeys } from '@/entities/species'
 import { SpeciesForm } from '@/features/species-form'
 import { LeaveConfirmationDialog } from '@/shared/ui'
 import { FormPageLayout } from './ui/FormPageLayout'
@@ -20,7 +20,7 @@ export function EditSpeciesPage() {
     isError,
   } = useQuery({
     queryKey: speciesQueryKeys.detail(speciesId),
-    queryFn: () => getMockSpecies(speciesId),
+    queryFn: () => getSpecies({ animalKindId: Number(speciesId) }),
     enabled: Boolean(speciesId),
   })
 
