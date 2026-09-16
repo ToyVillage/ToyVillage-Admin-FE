@@ -40,6 +40,7 @@ export {
   getWorkLogFormDetail,
   getWorkLogs,
   isDuplicateFormNameError,
+  isWorkLogNotFoundError,
   type WorkLogFormListPage,
   type WorkLogListPage,
 } from './api/workLogApi'

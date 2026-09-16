@@ -232,6 +232,11 @@ export async function deleteWorkLogForm({
   return data
 }
 
+/** 지워진 일지·양식은 404 다. 그 외 실패(500·네트워크)와 구분해 다루기 위한 판별이다. */
+export function isWorkLogNotFoundError(error: unknown): boolean {
+  return isAxiosError(error) && error.response?.status === 404
+}
+
 /** 양식명이 이미 있으면 서버가 409 를 준다(WORK_LOG_TEMPLATE_EXIST). */
 export function isDuplicateFormNameError(error: unknown): boolean {
   return isAxiosError(error) && error.response?.status === 409
