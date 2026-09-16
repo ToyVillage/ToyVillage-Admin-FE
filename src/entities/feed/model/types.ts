@@ -12,7 +12,7 @@ export interface FeedRecord {
   animalName: string
   /** 먹이 종류. `생닭` */
   feedType: string
-  /** 급여량. `1.2kg` */
+  /** 급여량 표기. 명세는 정수라 `1kg` 형태다. */
   feedAmount: string
   feederName: string
   /** YYYY-MM-DD */
@@ -36,6 +36,9 @@ export interface FeedHistoryRecord {
 
 // `/feeds/:id` 상세. 급여 기록 하나와 그 개체의 급여 이력이다.
 export interface FeedRecordDetail extends FeedRecord {
+  /** 개체 id(`animalManageId`). 급여 이력·개체 조회의 키다. */
+  animalManageId: number
+  /** 특이사항. `GET /feed-log/{feedLogId}` 의 `significant` */
   note: string
   animalPhotoUrl?: string
   history: FeedHistoryRecord[]
