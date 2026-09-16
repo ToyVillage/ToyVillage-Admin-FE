@@ -15,7 +15,7 @@ import {
   observationQueryKeys,
   ObservationTable,
 } from '@/entities/observation'
-import { speciesQueryKeys } from '@/entities/species'
+import { isNotFoundError, speciesQueryKeys } from '@/entities/species'
 import {
   BackLink,
   DeleteConfirmationDialog,
@@ -189,6 +189,15 @@ export function IndividualDetailPage() {
     (observationsQuery.isPending && !observationsQuery.isError)
   ) {
     return <PageStatus state="loading" message="개체를 불러오는 중입니다." />
+  }
+
+  if (individualQuery.isError && !isNotFoundError(individualQuery.error)) {
+    return (
+      <PageStatus
+        state="error"
+        message="개체를 불러오지 못했습니다. 다시 시도해 주세요."
+      />
+    )
   }
 
   const individual = individualQuery.data

@@ -2,7 +2,11 @@ import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getIndividual, individualQueryKeys } from '@/entities/individual'
-import { getSpecies, speciesQueryKeys } from '@/entities/species'
+import {
+  getSpecies,
+  isNotFoundError,
+  speciesQueryKeys,
+} from '@/entities/species'
 import { IndividualForm } from '@/features/individual-form'
 import { LeaveConfirmationDialog } from '@/shared/ui'
 import { FormPageLayout } from './ui/FormPageLayout'
@@ -37,6 +41,19 @@ export function EditIndividualPage() {
 
   if (speciesQuery.isPending || individualQuery.isPending) {
     return <PageStatus state="loading" message="개체를 불러오는 중입니다." />
+  }
+
+  if (
+    [speciesQuery, individualQuery].some(
+      (query) => query.isError && !isNotFoundError(query.error),
+    )
+  ) {
+    return (
+      <PageStatus
+        state="error"
+        message="개체를 불러오지 못했습니다. 다시 시도해 주세요."
+      />
+    )
   }
 
   const species = speciesQuery.data
