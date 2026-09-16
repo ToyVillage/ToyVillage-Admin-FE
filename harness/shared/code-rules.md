@@ -25,6 +25,7 @@
 
 - 공통 Axios 인스턴스는 `src/shared/api/axios.ts`이다.
 - 새 Axios 인스턴스, raw `axios` 호출, raw `fetch`를 추가하지 않는다.
+  - 예외: 파일 서버(CDN, `VITE_FILE_BASE_URL`)에서 첨부 원본을 받는 `src/shared/api/fileStorage.ts`는 `fetch`를 쓴다. 공통 인스턴스의 인증 인터셉터가 CDN에 토큰을 보내고 CDN의 403을 세션 만료로 처리하기 때문이다.
 - 컴포넌트에서 HTTP 요청을 직접 호출하지 않는다.
 
 ## 5. 라우팅
