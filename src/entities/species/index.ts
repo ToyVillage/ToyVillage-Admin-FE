@@ -1,8 +1,10 @@
 export type {
   CreateSpeciesInput,
+  LegalStatus,
   Photo,
   PhotoInput,
   Species,
+  SpeciesListItem,
   TaxonGroup,
   UpdateSpeciesInput,
 } from './model/types'
@@ -12,17 +14,37 @@ export {
   formatTaxonGroupLine,
   lastSubClassification,
 } from './model/classification'
-export { speciesQueryKeys } from './model/queryKeys'
+export { legalStatusQueryKeys, speciesQueryKeys } from './model/queryKeys'
 export {
-  createMockSpecies,
-  deleteMockSpecies,
-  deletedSpeciesStorageKey,
-  getMockSpecies,
-  getMockSpeciesList,
-  speciesFailStorageKey,
-  speciesStorageKey,
-  updateMockSpecies,
-} from './model/mock'
+  createSpecies,
+  deleteSpecies,
+  getSpecies,
+  getSpeciesList,
+  toPhoto,
+  updateSpecies,
+} from './api/speciesApi'
+export type { SpeciesListPage } from './api/speciesApi'
+export { resolvePhotoFileKey } from './api/photoUpload'
+export {
+  createLegalStatus,
+  deleteLegalStatus,
+  getLegalStatuses,
+} from './api/legalStatusApi'
+export {
+  assertPageRequest,
+  assertPositiveId,
+  expectStatus,
+  isFileResponse,
+  isMessageResponse,
+  isPageResponse,
+  isRecord,
+  isTaxonGroup,
+} from './api/guards'
+export type {
+  AnimalKindCreateRequest,
+  AnimalKindUpdateRequest,
+  AnimalMessageResponse,
+} from './api/types'
 export { LegalDesignationBadge } from './ui/LegalDesignationBadge'
 export { SpeciesProfileCard } from './ui/SpeciesProfileCard'
 export { SpeciesTable } from './ui/SpeciesTable'
