@@ -1,26 +1,15 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-  type UseQueryResult,
-} from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import {
-  getMockIndividuals,
-  individualQueryKeys,
-  type Individual,
-} from '@/entities/individual'
+import { individualQueryKeys } from '@/entities/individual'
 import { observationQueryKeys } from '@/entities/observation'
 import {
-  deleteMockSpecies,
-  getMockSpeciesList,
+  deleteSpecies,
+  getSpeciesList,
   SpeciesTable,
   speciesQueryKeys,
   TaxonGroupTabs,
-  type Species,
   type TaxonGroupTabValue,
 } from '@/entities/species'
 import {
@@ -30,27 +19,21 @@ import {
   PageHeader,
   Toast,
   useFocusFrame,
-  type DataTableSortValue,
 } from '@/shared/ui'
+import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { SpeciesEmptyMessage } from './ui/SpeciesEmptyMessage'
-import { tablePage } from './ui/tablePage'
+import { SEARCH_DEBOUNCE_MS, TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
 
-interface SpeciesIndividualNames {
-  namesBySpecies: Map<string, string[]>
-  /** 아직 개체를 읽는 중인 종이 있다 — 이름을 모르는 종은 검색에서 빼지 않는다. */
-  loading: boolean
-}
-
 // `/species` — 종 목록(Figma `individual (kebab)` yot 39:8751).
-// 필터·검색·정렬·페이지 슬라이싱은 mock 전체 목록을 받아 이 화면이 한다.
+// 분류군·검색어·페이지는 서버가 거른다(`ANIMAL_KIND_QUERY_ALL`). 정렬은 없다.
 export function SpeciesListPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [taxonGroup, setTaxonGroup] = useState<TaxonGroupTabValue>('ALL')
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<DataTableSortValue>('newest')
+  const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
@@ -62,63 +45,44 @@ export function SpeciesListPage() {
   const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
   const focusFrame = useFocusFrame()
 
+  // 입력값은 즉시 보이고, 조회 검색어는 디바운스해 타이핑 중 요청을 막는다.
+  useEffect(() => {
+    const timer = setTimeout(() => setKeyword(query.trim()), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  const selectedTaxonGroup = taxonGroup === 'ALL' ? undefined : taxonGroup
   const speciesQuery = useQuery({
-    queryKey: speciesQueryKeys.list,
-    queryFn: getMockSpeciesList,
-  })
-  const speciesList = useMemo(
-    () => speciesQuery.data ?? [],
-    [speciesQuery.data],
-  )
-
-  const keyword = query.trim().toLowerCase()
-
-  // 검색은 국명과 그 종에 속한 개체명을 함께 본다. 개체는 검색어가 있을 때만,
-  // 종 상세와 같은 query 로 종마다 읽는다(캐시를 함께 쓴다).
-  const individualNames = useQueries({
-    queries: speciesList.map((species) => ({
-      queryKey: individualQueryKeys.list(species.id),
-      queryFn: () => getMockIndividuals(species.id),
-      enabled: Boolean(keyword),
-    })),
-    combine: collectIndividualNames,
+    queryKey: speciesQueryKeys.list({
+      page,
+      taxonGroup: selectedTaxonGroup,
+      keyword,
+    }),
+    queryFn: () =>
+      getSpeciesList({
+        animalTaxonomic: selectedTaxonGroup,
+        keyword: keyword || undefined,
+        page,
+        size: TABLE_PAGE_SIZE,
+      }),
+    placeholderData: (previousData) => previousData,
   })
 
-  const deleteMutation = useMutation({ mutationFn: deleteMockSpecies })
+  const deleteMutation = useMutation({
+    mutationFn: (speciesId: string) =>
+      deleteSpecies({ animalKindId: Number(speciesId) }),
+  })
 
-  const filtered = useMemo(
-    () =>
-      speciesList
-        .filter(
-          (species) =>
-            taxonGroup === 'ALL' || species.taxonGroup === taxonGroup,
-        )
-        .filter(
-          (species) =>
-            !keyword || matchesKeyword(species, individualNames, keyword),
-        )
-        .sort((a, b) =>
-          sort === 'newest'
-            ? Number(b.id) - Number(a.id)
-            : Number(a.id) - Number(b.id),
-        ),
-    [individualNames, keyword, sort, speciesList, taxonGroup],
-  )
+  const pageCount = Math.max(1, speciesQuery.data?.totalPageSize ?? 1)
 
-  const {
-    pageCount,
-    currentPage,
-    pageRows: pageSpecies,
-  } = tablePage(filtered, page)
-
-  // 탭·검색어·정렬이 바뀌면 첫 페이지로, 삭제로 페이지가 범위를 벗어나면 마지막 페이지로 되돌린다.
+  // 탭·검색어가 바뀌면 첫 페이지로, 삭제로 페이지가 범위를 벗어나면 마지막 페이지로 되돌린다.
   // 렌더 중 상태 보정(effect 불필요).
-  const filterKey = `${taxonGroup}|${query}|${sort}`
+  const filterKey = `${taxonGroup}|${keyword}`
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
   if (prevFilterKey !== filterKey) {
     setPrevFilterKey(filterKey)
     setPage(1)
-  } else if (page > pageCount) {
+  } else if (speciesQuery.data && page > pageCount) {
     setPage(pageCount)
   }
 
@@ -142,7 +106,7 @@ export function SpeciesListPage() {
         queryClient.removeQueries({
           queryKey: speciesQueryKeys.detail(targetId),
         })
-        // 종 삭제는 그 종의 개체·관찰 기록도 함께 숨긴다(연쇄 삭제).
+        // 종 삭제는 그 종의 개체·관찰 기록도 함께 지운다(연쇄 삭제).
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: speciesQueryKeys.all }),
           queryClient.invalidateQueries({ queryKey: individualQueryKeys.all }),
@@ -168,6 +132,15 @@ export function SpeciesListPage() {
     focusMenuTrigger(targetId)
   }
 
+  if (speciesQuery.isError) {
+    return (
+      <PageStatus
+        state="error"
+        message="종 목록을 불러오지 못했습니다. 다시 시도해 주세요."
+      />
+    )
+  }
+
   // 로딩 중에는 빈 상태 문구를 띄우지 않는다.
   const emptyLabel = speciesQuery.isPending ? undefined : keyword ? (
     '검색결과가 없습니다'
@@ -190,7 +163,7 @@ export function SpeciesListPage() {
         <TaxonGroupTabs value={taxonGroup} onChange={setTaxonGroup} />
 
         <SpeciesTable
-          species={pageSpecies}
+          species={speciesQuery.data?.items ?? []}
           onRowClick={(id) => navigate(`/species/${id}`)}
           search={{
             value: query,
@@ -198,12 +171,11 @@ export function SpeciesListPage() {
             placeholder: '개체이름 또는 국명을 입력해주세요',
             ariaLabel: '종 검색',
           }}
-          sort={{
-            value: sort,
-            onChange: (value) => setSort(value as DataTableSortValue),
-            ariaLabel: '종 정렬',
+          pagination={{
+            page: Math.min(page, pageCount),
+            pageCount,
+            onChange: setPage,
           }}
-          pagination={{ page: currentPage, pageCount, onChange: setPage }}
           emptyLabel={emptyLabel}
           renderRowAction={(species) => (
             <KebabMenu
@@ -248,38 +220,6 @@ export function SpeciesListPage() {
         />
       )}
     </Page>
-  )
-}
-
-function collectIndividualNames(
-  results: UseQueryResult<Individual[]>[],
-): SpeciesIndividualNames {
-  const namesBySpecies = new Map<string, string[]>()
-  for (const individual of results.flatMap((result) => result.data ?? [])) {
-    const names = namesBySpecies.get(individual.speciesId) ?? []
-    names.push(individual.name)
-    namesBySpecies.set(individual.speciesId, names)
-  }
-  return {
-    namesBySpecies,
-    loading: results.some((result) => result.isLoading),
-  }
-}
-
-/**
- * 국명 또는 소속 개체명 부분 일치. `keyword` 는 앞뒤 공백을 뺀 소문자다.
- * 개체를 아직 못 읽은 종은 검색 결과에 남겨 둔다(읽고 나서 다시 판단한다).
- */
-function matchesKeyword(
-  species: Species,
-  { namesBySpecies, loading }: SpeciesIndividualNames,
-  keyword: string,
-) {
-  const individualNames = namesBySpecies.get(species.id)
-  if (!individualNames && loading) return true
-
-  return [species.koreanName, ...(individualNames ?? [])].some((name) =>
-    name.toLowerCase().includes(keyword),
   )
 }
 
