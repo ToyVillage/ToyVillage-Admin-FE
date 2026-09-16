@@ -148,13 +148,13 @@ export function WorkLogListPage() {
           <LinkButton to="/work-logs/forms/create">양식 생성하기</LinkButton>
         </Header>
 
-        <DateFilter value={date} onChange={setDate} />
-
         <CategoryTabs
           categories={tabs}
           active={tab === 'forms' ? formsTabLabel : logsTabLabel}
           onSelect={handleSelectTab}
         />
+
+        {tab === 'logs' && <DateFilter value={date} onChange={setDate} />}
 
         <TableArea>
           {tab === 'logs' ? (
