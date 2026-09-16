@@ -61,6 +61,15 @@ const formTypeByServerType: Record<string, WorkLogFormEditorType> = {
   FILE_UPLOAD: 'FILE',
 }
 
+// 양식 화면 유형 → 일지 시트 열 유형.
+const sheetTypeByFormType: Record<WorkLogFormEditorType, WorkLogQuestionType> =
+  {
+    TEXT: 'LONG_TEXT',
+    CHOICE: 'CHOICE',
+    CHECKBOX: 'CHECKBOX',
+    FILE: 'FILE',
+  }
+
 const serverTypeByFormType: Record<
   WorkLogFormEditorType,
   WorkLogServerQuestionType
@@ -104,6 +113,8 @@ export async function getWorkLogs({
 }
 
 // WORK_LOG_QUERY — 작성된 답변을 구역 순서대로 묶어 시트로 만든다.
+// 시트 열(질문)은 양식에서 가져온다. 답변이 하나도 없는 일지도 질문 열이 보여야 하고,
+// 질문 순서(questionOrder)는 양식 응답만 보장한다.
 export async function getWorkLogDetail({
   workLogId,
 }: WorkLogQueryRequest): Promise<WorkLogDetail> {
@@ -120,8 +131,28 @@ export async function getWorkLogDetail({
     date: data.writeAt,
     formName: data.templateTitle,
     authorName: data.writerName,
-    columns: toSheetColumns(data.sections),
+    columns: await getSheetColumns(data),
     rows: data.sections.map(toSheetRow),
+  }
+}
+
+async function getSheetColumns(
+  detail: WorkLogDetailResponse,
+): Promise<WorkLogSheetColumn[]> {
+  try {
+    const form = await getWorkLogFormDetail({
+      workLogTemplateId: detail.templateId,
+    })
+
+    return form.questions.map((question) => ({
+      id: question.id,
+      label: question.label,
+      type: sheetTypeByFormType[question.type],
+    }))
+  } catch {
+    // 양식이 삭제되면 상세 조회가 404 다(명세: 소프트 삭제). 작성된 일지는 남으므로
+    // 그때는 답변에서 질문을 모아 시트를 그린다.
+    return toSheetColumns(detail.sections)
   }
 }
 

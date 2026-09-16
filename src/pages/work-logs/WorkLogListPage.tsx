@@ -95,7 +95,8 @@ export function WorkLogListPage() {
   const activeQuery = tab === 'logs' ? logsQuery : formsQuery
   const isPending = activeQuery.isPending
 
-  const pageCount = Math.max(1, activeQuery.data?.totalPages ?? 1)
+  const totalPages = activeQuery.data?.totalPages
+  const pageCount = Math.max(1, totalPages ?? page)
   const currentPage = Math.min(page, pageCount)
   const pagination = { page: currentPage, pageCount, onChange: setPage }
 
@@ -109,7 +110,8 @@ export function WorkLogListPage() {
   }
 
   // 삭제로 마지막 페이지가 비면 직전 페이지를 다시 조회한다.
-  if (page > pageCount) setPage(pageCount)
+  // 로딩 중에는 총 페이지 수를 모르므로 응답을 받은 뒤에만 보정한다.
+  if (totalPages !== undefined && page > pageCount) setPage(pageCount)
 
   // 로딩 중에는 같은 자리에 빈 표를 두어 레이아웃이 튀지 않게 한다(빈 상태 문구는 아직 쓰지 않는다).
   const logsEmptyLabel = isPending
