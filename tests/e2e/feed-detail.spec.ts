@@ -22,7 +22,6 @@ test('S1: 상세 진입 기본 표시', async ({ page }) => {
 
   await expect(page.getByRole('link', { name: '뒤로가기' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '레오' })).toBeVisible()
-  await expect(page.getByText('포유류')).toBeVisible()
   await expect(page.getByText('급여일시').first()).toBeVisible()
   await expect(page.getByText('급여자').first()).toBeVisible()
   await expect(page.getByText('먹이 종류', { exact: true })).toBeVisible()

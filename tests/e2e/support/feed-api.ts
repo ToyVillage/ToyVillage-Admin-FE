@@ -1,8 +1,7 @@
 import type { Page, Route } from '@playwright/test'
 
 // 먹이 급여 관리 화면이 쓰는 API mock.
-// 대상: GET /feed-log/admin, /feed-log/admin/{feedLogId}, /feed-log/admin/history/{animalManageId},
-//       /feed-log/{feedLogId}, /animal-manage/{animalManageId}.
+// 대상: GET /feed-log/admin, /feed-log/admin/{feedLogId}, /feed-log/admin/history/{animalManageId}.
 // 실제 서버는 호출하지 않으며, 각 spec 은 필요한 응답만 page.route 로 덮어쓴다
 // (Playwright 는 나중에 등록한 route 를 먼저 매칭한다).
 
@@ -11,26 +10,18 @@ export const feedHistoryPattern =
   /^https:\/\/[^/]+\/feed-log\/admin\/history\/(\d+)(?:\?.*)?$/
 export const feedAdminDetailPattern =
   /^https:\/\/[^/]+\/feed-log\/admin\/(\d+)(?:\?.*)?$/
-export const feedOwnDetailPattern =
-  /^https:\/\/[^/]+\/feed-log\/(\d+)(?:\?.*)?$/
-export const animalManagePattern =
-  /^https:\/\/[^/]+\/animal-manage\/(\d+)(?:\?.*)?$/
-
-export type MockTaxonomic = 'MAMMALS' | 'REPTILES' | 'BIRDS' | 'FISH'
 
 export interface MockFeedLog {
   feedId: number
   animalId: number
   animalKind: string
   animalName: string
-  animalTaxonomic: MockTaxonomic
   feedType: string
   feedAmount: number
   /** 급여자명 — 관리자 상세의 `name` */
   name: string
   /** `YYYY-MM-DDTHH:mm:ss` */
   feedDateTime: string
-  significant: string
 }
 
 export function todayIsoDate(): string {
@@ -49,104 +40,52 @@ function isoDate(date: Date): string {
   return `${date.getFullYear()}-${month}-${day}`
 }
 
-// 오늘 급여 6건(포유류 4 · 파충류 1 · 조류 1 · 어류 0)으로 4행 페이지네이션 2쪽을 만든다.
+// 오늘 급여 6건으로 4행 페이지네이션 2쪽을 만든다.
 // 7·8번은 지난 날짜의 `레오`(개체 1) 급여라 목록에는 없고 급여 이력에만 나온다.
 export const mockFeedLogs: MockFeedLog[] = [
-  feedLog(
-    1,
-    1,
-    '표범',
-    '레오',
-    'MAMMALS',
-    '생닭',
-    2,
-    '김수인',
-    `${todayIsoDate()}T09:30:00`,
-    '평소보다 식욕이 왕성함. 잔반 없음.',
-  ),
-  feedLog(
-    2,
-    2,
-    '사자',
-    '심바',
-    'MAMMALS',
-    '소고기',
-    3,
-    '박도현',
-    `${todayIsoDate()}T09:10:00`,
-    '정상',
-  ),
+  feedLog(1, 1, '표범', '레오', '생닭', 2, '김수인', `${todayIsoDate()}T09:30:00`),
+  feedLog(2, 2, '사자', '심바', '소고기', 3, '박도현', `${todayIsoDate()}T09:10:00`),
   feedLog(
     3,
     3,
     '호랑이',
     '라라',
-    'MAMMALS',
     '닭가슴살',
     2,
     '김수인',
     `${todayIsoDate()}T08:40:00`,
-    '잔반 없음',
   ),
-  feedLog(
-    4,
-    4,
-    '곰',
-    '우니',
-    'MAMMALS',
-    '사료',
-    1,
-    '이서준',
-    `${todayIsoDate()}T08:20:00`,
-    '정상',
-  ),
+  feedLog(4, 4, '곰', '우니', '사료', 1, '이서준', `${todayIsoDate()}T08:20:00`),
   feedLog(
     5,
     5,
     '이구아나',
     '동식이',
-    'REPTILES',
     '채소',
     1,
     '김수인',
     `${todayIsoDate()}T08:00:00`,
-    '활동량이 많아 보임.',
   ),
-  feedLog(
-    6,
-    6,
-    '앵무',
-    '초코',
-    'BIRDS',
-    '견과',
-    1,
-    '이서준',
-    `${todayIsoDate()}T07:40:00`,
-    '정상',
-  ),
+  feedLog(6, 6, '앵무', '초코', '견과', 1, '이서준', `${todayIsoDate()}T07:40:00`),
   feedLog(
     7,
     1,
     '표범',
     '레오',
-    'MAMMALS',
     '닭가슴살',
     2,
     '김수인',
     `${shiftedIsoDate(-1)}T17:20:00`,
-    '잔반 없음',
   ),
   feedLog(
     8,
     1,
     '표범',
     '레오',
-    'MAMMALS',
     '소고기',
     3,
     '박도현',
     `${shiftedIsoDate(-2)}T09:15:00`,
-    '정상',
   ),
 ]
 
@@ -155,33 +94,27 @@ function feedLog(
   animalId: number,
   animalKind: string,
   animalName: string,
-  animalTaxonomic: MockTaxonomic,
   feedType: string,
   feedAmount: number,
   name: string,
   feedDateTime: string,
-  significant: string,
 ): MockFeedLog {
   return {
     feedId,
     animalId,
     animalKind,
     animalName,
-    animalTaxonomic,
     feedType,
     feedAmount,
     name,
     feedDateTime,
-    significant,
   }
 }
 
 export interface FeedApiRequests {
   list: number
   adminDetail: number
-  ownDetail: number
   history: number
-  animal: number
 }
 
 export interface FeedApiHandle {
@@ -208,7 +141,7 @@ export async function mockFeedApi(
 
   const handle: FeedApiHandle = {
     feedLogs,
-    requests: { list: 0, adminDetail: 0, ownDetail: 0, history: 0, animal: 0 },
+    requests: { list: 0, adminDetail: 0, history: 0 },
     listQueries: [],
   }
 
@@ -251,42 +184,6 @@ export async function mockFeedApi(
       feedType: target.feedType,
       feedAmount: target.feedAmount,
       feedDateTime: target.feedDateTime,
-    })
-  })
-
-  await page.route(feedOwnDetailPattern, async (route) => {
-    handle.requests.ownDetail += 1
-    const target = findFeedLog(handle, route, feedOwnDetailPattern)
-
-    if (!target) {
-      await json(route, 404, errorBody(404, '존재하지 않는 급여 기록입니다.'))
-      return
-    }
-
-    await json(route, 200, {
-      feedLogId: target.feedId,
-      feedType: target.feedType,
-      feedAmount: target.feedAmount,
-      feedDateTime: target.feedDateTime,
-      significant: target.significant,
-    })
-  })
-
-  await page.route(animalManagePattern, async (route) => {
-    handle.requests.animal += 1
-    const animalId = Number(matchId(route, animalManagePattern))
-    const target = handle.feedLogs.find((item) => item.animalId === animalId)
-
-    if (!target) {
-      await json(route, 404, errorBody(404, '존재하지 않는 개체입니다.'))
-      return
-    }
-
-    await json(route, 200, {
-      animalManageId: target.animalId,
-      animalName: target.animalName,
-      animalTaxonomic: target.animalTaxonomic,
-      kindName: target.animalKind,
     })
   })
 
