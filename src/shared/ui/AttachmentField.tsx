@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { AttachmentChip } from './AttachmentChip'
 import { FileDropZone } from './FileDropZone'
 import { RemoveIconButton } from './RemoveIconButton'
-import { downloadFile } from './fileAttachment'
+import { downloadFile, downloadStoredFile } from './fileAttachment'
 
 const maxFileSize = 50 * 1024 * 1024
 
@@ -47,6 +47,13 @@ interface AttachmentFieldProps {
   onFileItemsChange?: (items: AttachmentItem[]) => void
   /** 첨부 시도 결과. 토스트가 필요한 화면만 사용한다. */
   onAddResult?: (result: AttachmentAddResult) => void
+  /**
+   * 기존 첨부(`initialFiles`)의 `fileKey` 가 파일 서버에 있는 키면 true 다. 다운로드가
+   * 원본을 받아 온다. 관찰 화면은 아직 mock 키라 false 로 두고, API 연동 후 켠다.
+   */
+  storedFiles?: boolean
+  /** 파일 서버에서 받지 못했을 때 호출한다. 알림은 화면이 띄운다. */
+  onDownloadError?: (fileName: string) => void
 }
 
 export function AttachmentField({
@@ -58,6 +65,8 @@ export function AttachmentField({
   onFileObjectsChange,
   onFileItemsChange,
   onAddResult,
+  storedFiles = false,
+  onDownloadError,
 }: AttachmentFieldProps) {
   const [files, setFiles] = useState<AttachedFile[]>(() =>
     initialFiles
@@ -137,6 +146,19 @@ export function AttachmentField({
     setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id))
   }
 
+  // 새로 고른 파일은 원본이 손에 있고, 저장된 첨부는 파일 서버에서 받아 온다.
+  function handleDownload({ name, file, fileKey }: AttachedFile) {
+    if (file || !storedFiles || !fileKey) {
+      downloadFile(name, file)
+      return
+    }
+
+    downloadStoredFile({ fileName: name, fileKey }).catch((error: unknown) => {
+      console.error(error)
+      onDownloadError?.(name)
+    })
+  }
+
   return (
     <AttachmentSection role="group" aria-label="첨부파일" data-variant={variant}>
       <AttachmentCard data-testid="notice-attachment-card">
@@ -150,9 +172,7 @@ export function AttachmentField({
                     <AttachmentChip
                       key={attachedFile.id}
                       fileName={attachedFile.name}
-                      onDownload={() =>
-                        downloadFile(attachedFile.name, attachedFile.file)
-                      }
+                      onDownload={() => handleDownload(attachedFile)}
                       onRemove={() => handleRemove(attachedFile.id)}
                     />
                   )
@@ -167,9 +187,7 @@ export function AttachmentField({
                     <IconButton
                       type="button"
                       aria-label={`${attachedFile.name} 다운로드`}
-                      onClick={() =>
-                        downloadFile(attachedFile.name, attachedFile.file)
-                      }
+                      onClick={() => handleDownload(attachedFile)}
                     >
                       <DownloadIcon viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14" />
