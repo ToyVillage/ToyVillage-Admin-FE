@@ -2,7 +2,10 @@ import { useMemo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import type { WorkLogFormDraft } from '@/entities/work-log'
-import { createMockWorkLogForm } from '@/entities/work-log'
+import {
+  createWorkLogForm,
+  workLogFormQueryKeys,
+} from '@/entities/work-log'
 import {
   createEmptyDraft,
   isDraftTouched,
@@ -19,10 +22,13 @@ export function CreateWorkLogFormPage() {
   const initialDraft = useMemo(() => createEmptyDraft(), [])
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (draft: WorkLogFormDraft) => createMockWorkLogForm(draft),
+    mutationFn: (draft: WorkLogFormDraft) => createWorkLogForm(draft),
     onSuccess: () => {
       // 목록만 무효화한다. 상세까지 넓히면 지워진 id 를 다시 불러 404 가 난다.
-      void queryClient.invalidateQueries({ queryKey: ['work-log-forms', 'list'] })
+      void queryClient.invalidateQueries({
+        queryKey: workLogFormQueryKeys.all,
+        predicate: (query) => query.queryKey[1] === 'list',
+      })
       navigate(listPath)
     },
   })

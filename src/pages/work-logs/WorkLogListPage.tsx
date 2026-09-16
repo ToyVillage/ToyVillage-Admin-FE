@@ -3,12 +3,14 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  deleteMockWorkLog,
-  deleteMockWorkLogForm,
-  getMockWorkLogForms,
-  getMockWorkLogs,
+  deleteWorkLog,
+  deleteWorkLogForm,
+  getWorkLogForms,
+  getWorkLogs,
   todayWorkLogDate,
   toIsoDate,
+  workLogFormQueryKeys,
+  workLogQueryKeys,
   WorkLogFormTable,
   WorkLogTable,
   type WorkLogDate,
@@ -49,49 +51,53 @@ export function WorkLogListPage() {
   const tab: WorkLogTab = searchParams.get('tab') === 'forms' ? 'forms' : 'logs'
   const isoDate = toIsoDate(date)
 
+  // 서버 페이지네이션이다. 명세상 page 는 0부터 시작하고 화면은 1부터 센다.
+  const serverPage = page - 1
+
   const logsQuery = useQuery({
-    queryKey: ['work-logs', 'list', { date: isoDate }],
-    queryFn: () => getMockWorkLogs(isoDate),
+    queryKey: workLogQueryKeys.list(isoDate, page),
+    queryFn: () =>
+      getWorkLogs({ date: isoDate, page: serverPage, size: TABLE_PAGE_SIZE }),
     enabled: tab === 'logs',
   })
   const formsQuery = useQuery({
-    queryKey: ['work-log-forms', 'list'],
-    queryFn: getMockWorkLogForms,
+    queryKey: workLogFormQueryKeys.list(isoDate, page),
+    queryFn: () =>
+      getWorkLogForms({
+        date: isoDate,
+        page: serverPage,
+        size: TABLE_PAGE_SIZE,
+      }),
     enabled: tab === 'forms',
   })
 
   const deleteMutation = useMutation({
     mutationFn: ({ tab: target, id }: PendingDelete) =>
-      target === 'logs' ? deleteMockWorkLog(id) : deleteMockWorkLogForm(id),
+      target === 'logs'
+        ? deleteWorkLog({ workLogId: Number(id) })
+        : deleteWorkLogForm({ workLogTemplateId: Number(id) }),
     onSuccess: async (_data, variables) => {
       // 목록 쿼리만 무효화한다(상세 쿼리까지 넓히지 않는다).
       await queryClient.invalidateQueries({
         queryKey:
           variables.tab === 'logs'
-            ? ['work-logs', 'list']
-            : ['work-log-forms', 'list'],
+            ? workLogQueryKeys.all
+            : workLogFormQueryKeys.all,
+        predicate: (query) => query.queryKey[1] === 'list',
       })
       setPendingDelete(null)
       setToastMessage('데이터 삭제에 성공했습니다')
     },
   })
 
-  const logs = useMemo(() => logsQuery.data ?? [], [logsQuery.data])
-  const forms = useMemo(() => formsQuery.data ?? [], [formsQuery.data])
-  const items = tab === 'logs' ? logs : forms
-  const isPending = tab === 'logs' ? logsQuery.isPending : formsQuery.isPending
+  const logs = useMemo(() => logsQuery.data?.items ?? [], [logsQuery.data])
+  const forms = useMemo(() => formsQuery.data?.items ?? [], [formsQuery.data])
+  const activeQuery = tab === 'logs' ? logsQuery : formsQuery
+  const isPending = activeQuery.isPending
 
-  const pageCount = Math.max(1, Math.ceil(items.length / TABLE_PAGE_SIZE))
-  // 삭제로 마지막 페이지가 비면 자연히 직전 페이지가 된다.
+  const pageCount = Math.max(1, activeQuery.data?.totalPages ?? 1)
   const currentPage = Math.min(page, pageCount)
   const pagination = { page: currentPage, pageCount, onChange: setPage }
-
-  function slicePage<T>(list: T[]): T[] {
-    return list.slice(
-      (currentPage - 1) * TABLE_PAGE_SIZE,
-      currentPage * TABLE_PAGE_SIZE,
-    )
-  }
 
   // 탭·조회날짜가 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
   const tabAndDate = `${tab}:${isoDate}`
@@ -101,6 +107,9 @@ export function WorkLogListPage() {
     setPage(1)
     setOpenKebabId(null)
   }
+
+  // 삭제로 마지막 페이지가 비면 직전 페이지를 다시 조회한다.
+  if (page > pageCount) setPage(pageCount)
 
   // 로딩 중에는 같은 자리에 빈 표를 두어 레이아웃이 튀지 않게 한다(빈 상태 문구는 아직 쓰지 않는다).
   const logsEmptyLabel = isPending
@@ -116,6 +125,17 @@ export function WorkLogListPage() {
   function handleRequestDelete(id: string) {
     setOpenKebabId(null)
     setPendingDelete({ tab, id })
+  }
+
+  // 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
+  if (activeQuery.isError) {
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          업무일지를 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
   }
 
   return (
@@ -140,7 +160,7 @@ export function WorkLogListPage() {
         <TableArea>
           {tab === 'logs' ? (
             <WorkLogTable
-              logs={slicePage(logs)}
+              logs={logs}
               onRowClick={(id) => navigate(`/work-logs/${id}`)}
               onDelete={handleRequestDelete}
               openKebabId={openKebabId}
@@ -150,7 +170,7 @@ export function WorkLogListPage() {
             />
           ) : (
             <WorkLogFormTable
-              forms={slicePage(forms)}
+              forms={forms}
               onRowClick={(id) => navigate(`/work-logs/forms/${id}`)}
               onDelete={handleRequestDelete}
               openKebabId={openKebabId}
@@ -180,6 +200,25 @@ export function WorkLogListPage() {
     </Page>
   )
 }
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  width: min(100%, 560px);
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
 
 const Page = styled.main`
   padding: 32px;

@@ -2,7 +2,8 @@ import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
 import {
-  getMockWorkLogFormDetail,
+  getWorkLogFormDetail,
+  workLogFormQueryKeys,
   WorkLogFormQuestionCard,
 } from '@/entities/work-log'
 import { BackLink } from '@/shared/ui'
@@ -12,12 +13,19 @@ const listPath = '/work-logs?tab=forms'
 export function WorkLogFormDetailPage() {
   const { id = '' } = useParams()
 
+  const workLogTemplateId = Number(id)
   const { data: form, isPending } = useQuery({
-    queryKey: ['work-log-forms', 'detail', id],
-    queryFn: () => getMockWorkLogFormDetail(id),
+    queryKey: workLogFormQueryKeys.detail(id),
+    queryFn: () => getWorkLogFormDetail({ workLogTemplateId }),
+    enabled: Number.isSafeInteger(workLogTemplateId) && workLogTemplateId > 0,
+    retry: false,
   })
 
-  // 목록에서 삭제된 양식으로 진입하면 양식 관리 탭으로 되돌린다(spec).
+  // 삭제된 양식(404)이나 잘못된 id 로 진입하면 양식 관리 탭으로 되돌린다(spec).
+  if (!Number.isSafeInteger(workLogTemplateId) || workLogTemplateId <= 0) {
+    return <Navigate to={listPath} replace />
+  }
+
   if (!isPending && !form) return <Navigate to={listPath} replace />
 
   return (

@@ -1,35 +1,13 @@
 import styled from '@emotion/styled'
-import type {
-  WorkLogFormQuestion,
-  WorkLogFormQuestionType,
-} from '../model/types'
-import optionCheckboxIcon from './assets/option-checkbox.svg'
-import optionRadioIcon from './assets/option-radio.svg'
-import typeCheckboxIcon from './assets/type-checkbox.svg'
-import typeChoiceIcon from './assets/type-choice.svg'
-import typeTextIcon from './assets/type-text.svg'
+import type { WorkLogFormQuestion } from '../model/types'
+import {
+  workLogFormEditorTypeIcons as typeIcons,
+  workLogFormEditorTypeLabels as typeLabels,
+  workLogFormOptionIcons as optionIcons,
+} from './formEditorTypeOptions'
 
 interface WorkLogFormQuestionCardProps {
   question: WorkLogFormQuestion
-}
-
-const typeLabels: Record<WorkLogFormQuestionType, string> = {
-  CHOICE: '객관식 질문',
-  CHECKBOX: '체크박스',
-  TEXT: '주관식',
-}
-
-const typeIcons: Record<WorkLogFormQuestionType, string> = {
-  CHOICE: typeChoiceIcon,
-  CHECKBOX: typeCheckboxIcon,
-  TEXT: typeTextIcon,
-}
-
-// TEXT 는 선택지가 없어 옵션 아이콘을 쓰지 않지만, 인덱싱을 좁히지 않도록 함께 둔다.
-const optionIcons: Record<WorkLogFormQuestionType, string> = {
-  CHOICE: optionRadioIcon,
-  CHECKBOX: optionCheckboxIcon,
-  TEXT: optionRadioIcon,
 }
 
 // Figma 547:14132 / 547:14186 / 547:14240. 양식 정의를 읽기 전용으로 보여주는 카드.

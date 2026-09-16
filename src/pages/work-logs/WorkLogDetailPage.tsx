@@ -1,18 +1,29 @@
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
-import { getMockWorkLogDetail, WorkLogSheet } from '@/entities/work-log'
+import {
+  getWorkLogDetail,
+  workLogQueryKeys,
+  WorkLogSheet,
+} from '@/entities/work-log'
 import { BackLink } from '@/shared/ui'
 
 export function WorkLogDetailPage() {
   const { id = '' } = useParams()
 
+  const workLogId = Number(id)
   const { data: detail, isPending } = useQuery({
-    queryKey: ['work-logs', 'detail', id],
-    queryFn: () => getMockWorkLogDetail(id),
+    queryKey: workLogQueryKeys.detail(id),
+    queryFn: () => getWorkLogDetail({ workLogId }),
+    enabled: Number.isSafeInteger(workLogId) && workLogId > 0,
+    retry: false,
   })
 
-  // 목록에서 삭제된 일지로 진입하면 목록으로 되돌린다(spec).
+  // 삭제된 일지나 잘못된 id 로 진입하면 목록으로 되돌린다(spec).
+  if (!Number.isSafeInteger(workLogId) || workLogId <= 0) {
+    return <Navigate to="/work-logs" replace />
+  }
+
   if (!isPending && !detail) return <Navigate to="/work-logs" replace />
 
   return (
