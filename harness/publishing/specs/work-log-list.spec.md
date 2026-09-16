@@ -58,7 +58,6 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 - `작성된 일지` 행 클릭 → `/work-logs/:id` 로 이동한다. (해당 화면은 이 spec 범위 밖)
 - `양식 관리` 행 클릭 → `/work-logs/forms/:id` (양식 상세)로 이동한다.
   상세 화면 계약은 `harness/publishing/specs/work-log-form-detail.spec.md` 를 따른다.
-- `양식 관리` 케밥의 `수정` 클릭 → `/work-logs/forms/:id/edit` 로 이동한다. (해당 화면은 이 spec 범위 밖)
 - 사이드바 `업무일지관리 바로가기` 항목의 이동 대상을 `/work-logs` 로 지정한다.
   사이드바 자체의 동작 계약은 `harness/publishing/specs/sidebar.spec.md` 를 따르며 이 spec 은 `to` 지정만 한다.
 
@@ -107,7 +106,7 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
   표는 탭바 바로 아래에 붙는다.
 - 행 클릭 → 해당 양식의 `/work-logs/forms/:id` 로 이동한다.
   케밥 버튼과 케밥 메뉴를 클릭할 때는 행 이동이 일어나지 않는다.
-- 케밥 메뉴 항목은 `수정`, `삭제` 두 개다. `수정` 클릭 → `/work-logs/forms/:id/edit` 로 이동한다.
+- 케밥 메뉴 항목은 `삭제` 하나뿐이다(양식 수정 기능은 제거됐다).
 - 등록된 양식이 없으면 → 행 대신 `등록된 양식이 없습니다.` 를 표시하고 페이지네이션을 숨긴다.
 
 ## 데이터
@@ -145,6 +144,8 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 
 ## 개정 이력
 
+- 2026-09-17: `양식 관리` 케밥의 `수정` 항목과 `/work-logs/forms/:id/edit` 이동 계약을 지웠다.
+  양식 수정 기능이 제거돼 `WorkLogFormTable` 의 케밥에는 `삭제` 만 있다.
 - 2026-09-16: 탭바를 `조회날짜` 필터 위로 올리고, `양식 관리` 탭에서 조회날짜 필터와 날짜 파라미터를 뺐다.
   필터가 탭바 위에 있으면 양식 탭에서 필터가 사라질 때 탭바 자체가 움직였고, 날짜로 거르지 않는
   양식 목록에까지 날짜 필터가 걸려 있는 것처럼 보였다. 열린 드롭다운 패널에는 트리거와 같은 테두리를 넣었다.
