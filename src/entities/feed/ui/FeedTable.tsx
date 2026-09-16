@@ -20,17 +20,34 @@ interface FeedTableProps {
 // 대상 개체와 급여일시는 각각 두 열로 나눠 보여 준다(한 칸에 붙이면 줄바꿈으로 깨진다).
 const columns: DataTableColumn[] = [
   { key: 'animalKind', header: '종', width: 200, render: cell('animalKind') },
-  { key: 'animalName', header: '개체명', width: 180, render: cell('animalName') },
-  { key: 'feed', header: '먹이 종류 · 급여량', width: 320, render: cell('feed') },
+  {
+    key: 'animalName',
+    header: '개체명',
+    width: 180,
+    render: cell('animalName'),
+  },
+  // 남는 폭은 `먹이 종류 · 급여량` 이 채운다.
+  { key: 'feed', header: '먹이 종류 · 급여량', render: cell('feed') },
   { key: 'feeder', header: '급여자', width: 180, render: mutedCell('feeder') },
+  // 날짜·시간은 잘리면 안 되는 값이라 좌우 여백을 줄이고 폭을 넉넉히 둔다.
   {
     key: 'fedDate',
     header: '급여날짜',
-    width: 200,
+    width: 220,
+    paddingX: 24,
     render: mutedCell('fedDate'),
   },
-  { key: 'fedTime', header: '급여시간', render: mutedCell('fedTime') },
+  {
+    key: 'fedTime',
+    header: '급여시간',
+    width: 140,
+    paddingX: 24,
+    render: mutedCell('fedTime'),
+  },
 ]
+
+// 열 폭 합계. 화면이 이보다 좁아지면 표를 가로로 스크롤한다.
+export const feedTableMinWidth = 200 + 180 + 320 + 180 + 220 + 140
 
 const appearance = {
   headerBackground: 'tableHeaderStrong',

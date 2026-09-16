@@ -24,6 +24,9 @@ export type {
   FeedQueryRequest,
 } from './api/types'
 export { AnimalSpeciesBadge } from './ui/AnimalSpeciesBadge'
-export { FeedHistoryTable } from './ui/FeedHistoryTable'
+export {
+  FeedHistoryTable,
+  feedHistoryTableMinWidth,
+} from './ui/FeedHistoryTable'
 export { FeedRecordCard } from './ui/FeedRecordCard'
-export { FeedTable } from './ui/FeedTable'
+export { FeedTable, feedTableMinWidth } from './ui/FeedTable'

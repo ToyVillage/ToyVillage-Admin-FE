@@ -14,16 +14,19 @@ interface FeedHistoryTableProps {
 
 // Figma `1400:15136` (feed history table). 페이지네이션 없이 이력 전체를 보여준다.
 const columns: DataTableColumn[] = [
+  // 날짜·시간은 잘리면 안 되는 값이라 좌우 여백을 줄이고 폭을 넉넉히 둔다.
   {
     key: 'fedDate',
     header: '급여날짜',
-    width: 180,
+    width: 200,
+    paddingX: 24,
     render: mutedCell('fedDate'),
   },
   {
     key: 'fedTime',
     header: '급여시간',
-    width: 160,
+    width: 140,
+    paddingX: 24,
     render: mutedCell('fedTime'),
   },
   { key: 'feeder', header: '급여자', width: 170, render: mutedCell('feeder') },
@@ -45,6 +48,9 @@ const columns: DataTableColumn[] = [
     },
   },
 ]
+
+// 열 폭 합계(마지막 `특이사항` 은 최소 260 로 본다).
+export const feedHistoryTableMinWidth = 200 + 140 + 170 + 250 + 260
 
 const appearance = {
   headerBackground: 'tableHeaderStrong',

@@ -95,6 +95,20 @@ test('S6: 급여 이력이 자기 자신 한 건뿐인 상태', async ({ page })
   await expect(historyRows(page)).toHaveCount(1)
 })
 
+// 급여날짜는 열 폭이 모자라 말줄임되면 안 된다.
+test('S6-1: 급여 이력의 급여날짜는 잘리지 않는다', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 900 })
+  await page.goto('/feeds/1')
+  await expect(historyRows(page)).toHaveCount(3)
+
+  const dateCell = historyRows(page)
+    .first()
+    .getByText(/^\d{4}\.\d{2}\.\d{2}$/)
+  const scrollWidth = await dateCell.evaluate((node) => node.scrollWidth)
+  const clientWidth = await dateCell.evaluate((node) => node.clientWidth)
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
+})
+
 test('S7: 급여 이력 행은 클릭 대상이 아니다', async ({ page }) => {
   await page.goto('/feeds/1')
 

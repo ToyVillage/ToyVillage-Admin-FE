@@ -183,6 +183,31 @@ test('S10: 말일 보정', async ({ page }) => {
 
 // 조회 연도는 5개뿐이라 스크롤이 없다. 31개인 `조회 일` 로 확인한다.
 // 오늘이 월초여도 결과가 같도록 뒤쪽 날짜를 골라 두고 다시 펼친다.
+// 화면이 좁아져도 열이 표 밖으로 새지 않고, 날짜는 잘리지 않는다.
+test('S14: 화면이 좁으면 표만 가로로 스크롤한다', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 900 })
+  await page.goto('/feeds')
+  await expect(rows(page)).toHaveCount(4)
+
+  // 표는 가로로 스크롤되고, 페이지 자체는 가로로 넘치지 않는다.
+  const area = page.getByTestId('feed-table-scroll')
+  const overflow = await area.evaluate(
+    (node) => node.scrollWidth - node.clientWidth,
+  )
+  expect(overflow).toBeGreaterThan(0)
+
+  const pageOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  )
+  expect(pageOverflow).toBeLessThanOrEqual(1)
+
+  // 급여날짜는 말줄임 없이 온전히 보인다.
+  const dateCell = rows(page).first().getByText(/^\d{4}\.\d{2}\.\d{2}$/)
+  const scrollWidth = await dateCell.evaluate((node) => node.scrollWidth)
+  const clientWidth = await dateCell.evaluate((node) => node.clientWidth)
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
+})
+
 // 긴 값이 들어와도 행 높이가 늘지 않고 한 줄로 말줄임한다.
 test('S13: 열 폭보다 긴 값은 한 줄로 말줄임한다', async ({ page }) => {
   const longKind = '아주아주아주아주긴이름을가진종이름입니다정말로깁니다'

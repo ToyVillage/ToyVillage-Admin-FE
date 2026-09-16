@@ -7,6 +7,7 @@ import {
   animalTaxonomicBySpecies,
   feedQueryKeys,
   FeedTable,
+  feedTableMinWidth,
   getFeeds,
   type AnimalSpecies,
 } from '@/entities/feed'
@@ -106,7 +107,7 @@ export function FeedListPage() {
 
         <CategoryTabs categories={tabs} active={tab} onSelect={setTab} />
 
-        <TableArea>
+        <TableArea data-testid="feed-table-scroll">
           <FeedTable
             feeds={feeds}
             // 상세의 뒤로가기가 이 조회 조건으로 돌아오도록 현재 쿼리를 넘긴다.
@@ -201,6 +202,13 @@ const Subtitle = styled.p`
 `
 
 // DataTable 의 기본 margin-top(20)에 12를 더해 Figma 의 탭바-표 간격 32를 맞춘다.
+// 화면이 열 폭 합계보다 좁아지면 표만 가로로 스크롤한다(열이 표 밖으로 새지 않게).
 const TableArea = styled.div`
+  width: 100%;
   margin-top: 12px;
+  overflow-x: auto;
+
+  > * {
+    min-width: ${feedTableMinWidth}px;
+  }
 `

@@ -5,6 +5,7 @@ import { Navigate, useLocation, useParams } from 'react-router-dom'
 import {
   feedQueryKeys,
   FeedHistoryTable,
+  feedHistoryTableMinWidth,
   FeedRecordCard,
   getFeedDetail,
 } from '@/entities/feed'
@@ -51,10 +52,12 @@ export function FeedDetailPage() {
 
         <HistorySection>
           <SectionHeader title="급여 이력" count={history.length} />
-          <FeedHistoryTable
-            records={history}
-            emptyLabel={isPending ? ' ' : '급여 이력이 없습니다.'}
-          />
+          <HistoryTableArea>
+            <FeedHistoryTable
+              records={history}
+              emptyLabel={isPending ? ' ' : '급여 이력이 없습니다.'}
+            />
+          </HistoryTableArea>
         </HistorySection>
       </Content>
     </Page>
@@ -75,6 +78,16 @@ const Content = styled.div`
   align-items: flex-start;
   margin: 0 auto;
   padding-top: calc(75px - 32px);
+`
+
+// 화면이 열 폭 합계보다 좁아지면 표만 가로로 스크롤한다.
+const HistoryTableArea = styled.div`
+  width: 100%;
+  overflow-x: auto;
+
+  > * {
+    min-width: ${feedHistoryTableMinWidth}px;
+  }
 `
 
 // Figma 카드 아래 `급여 이력` 섹션 헤더까지의 간격(499 - 카드 하단).
