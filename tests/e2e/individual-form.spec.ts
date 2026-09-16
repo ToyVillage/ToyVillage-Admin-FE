@@ -1,25 +1,30 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import {
+  mockAnimalManageApi,
+  type AnimalManageApiHandle,
+} from './support/animal-manage-api'
 
 // 승인된 시나리오(individual-form.approved.json: S1~S29, S25 삭제)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 개체 mock 은 localStorage(`toyvillage:individuals`, 실패 주입 `toyvillage:individuals:fail`)를 쓴다.
+// 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 // 사진 업로드는 드롭존의 숨긴 file input 에 파일을 넣는다(파일 선택 창 대체 — 승인 메모 S29).
 
 // 공통 fixture — 종 1 카피바라, 개체 1 동식이(수컷, 2019, 사진 `동식이_2026.jpg`).
 const createUrl = '/species/1/individuals/create'
 const editUrl = '/species/1/individuals/1/edit'
-const individualStorageKey = 'toyvillage:individuals'
 const sexes = ['암컷', '수컷', '미상']
 
 type SkippableField = 'name' | 'sex' | 'birthYear' | 'photo'
 
+let api: AnimalManageApiHandle
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
-    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. mock 상태만 비우고
-    // 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
+    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
     localStorage.setItem('accessToken', 'individual-form-test-token')
   })
+  api = await mockAnimalManageApi(page)
 })
 
 test('S1: 등록 화면 진입과 빈 폼', async ({ page }) => {
@@ -365,9 +370,7 @@ test('S24: 수정 중 사이드바 이동 이탈 확인', async ({ page }) => {
 test('S26: 저장 실패 시 입력 보존', async ({ page }) => {
   await page.goto(editUrl)
   await expect(nameInput(page)).toHaveValue('동식이')
-  await page.evaluate(() =>
-    localStorage.setItem('toyvillage:individuals:fail', 'update'),
-  )
+  api.failNext('animal.update')
   await nameInput(page).fill('동식이(실패)')
   const submitButton = page.getByRole('button', { name: '저장하기' })
   await submitButton.click()
@@ -508,14 +511,10 @@ function errorRow(page: Page, message: string) {
   return page.getByRole('alert').filter({ hasText: message })
 }
 
-// 생성 요청이 가지 않았다 — mock 저장소가 비어 있고 화면에 머문다.
+// 생성 요청이 가지 않았다 — 가짜 서버가 생성 요청을 받지 않았고 화면에 머문다.
 async function expectNoCreateRequest(page: Page) {
   await expect(page).toHaveURL(/\/species\/1\/individuals\/create$/)
-  const stored = await page.evaluate(
-    (key) => localStorage.getItem(key),
-    individualStorageKey,
-  )
-  expect(stored).toBeNull()
+  expect(api.count('animal.create')).toBe(0)
 }
 
 // 카드 아래 오류 줄 위치를 확인한다. 첫 오류로 부드럽게 스크롤하는 중에도
