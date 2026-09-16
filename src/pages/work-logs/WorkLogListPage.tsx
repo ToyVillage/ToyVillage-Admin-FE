@@ -60,14 +60,10 @@ export function WorkLogListPage() {
       getWorkLogs({ date: isoDate, page: serverPage, size: TABLE_PAGE_SIZE }),
     enabled: tab === 'logs',
   })
+  // 양식은 날짜에 묶이지 않는다 — 조회날짜를 보내지 않는다(양식 관리 탭에 필터가 없다).
   const formsQuery = useQuery({
-    queryKey: workLogFormQueryKeys.list(isoDate, page),
-    queryFn: () =>
-      getWorkLogForms({
-        date: isoDate,
-        page: serverPage,
-        size: TABLE_PAGE_SIZE,
-      }),
+    queryKey: workLogFormQueryKeys.list(page),
+    queryFn: () => getWorkLogForms({ page: serverPage, size: TABLE_PAGE_SIZE }),
     enabled: tab === 'forms',
   })
 
@@ -101,7 +97,8 @@ export function WorkLogListPage() {
   const pagination = { page: currentPage, pageCount, onChange: setPage }
 
   // 탭·조회날짜가 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
-  const tabAndDate = `${tab}:${isoDate}`
+  // 양식 관리는 날짜로 거르지 않으므로 날짜 변경에 반응하지 않는다.
+  const tabAndDate = tab === 'logs' ? `logs:${isoDate}` : 'forms'
   const [prevTabAndDate, setPrevTabAndDate] = useState(tabAndDate)
   if (prevTabAndDate !== tabAndDate) {
     setPrevTabAndDate(tabAndDate)

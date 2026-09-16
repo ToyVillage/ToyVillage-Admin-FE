@@ -8,8 +8,8 @@ export const workLogQueryKeys = {
 
 export const workLogFormQueryKeys = {
   all: ['work-log-forms'] as const,
-  list: (date: string, page: number) =>
-    ['work-log-forms', 'list', { date, page }] as const,
+  // 양식 목록은 조회날짜로 거르지 않는다(양식 관리 탭에 날짜 필터가 없다).
+  list: (page: number) => ['work-log-forms', 'list', { page }] as const,
   detail: (templateId: string) =>
     ['work-log-forms', 'detail', templateId] as const,
 }
