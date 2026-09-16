@@ -36,6 +36,7 @@ export {
   expectStatus,
   isFileResponse,
   isMessageResponse,
+  isNotFoundError,
   isPageResponse,
   isRecord,
   isTaxonGroup,

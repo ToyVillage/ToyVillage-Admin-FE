@@ -7,7 +7,9 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-export function isFileResponse(value: unknown): value is AnimalKindImageResponse {
+export function isFileResponse(
+  value: unknown,
+): value is AnimalKindImageResponse {
   return (
     isRecord(value) &&
     typeof value.fileName === 'string' &&
@@ -24,6 +26,12 @@ export function isMessageResponse(
 // 개명 전 값(`MAMMAL` 등)이 통과하면 분류군 라벨 조회가 빈 값이 된다.
 export function isTaxonGroup(value: unknown): value is TaxonGroup {
   return taxonGroups.some((taxonGroup) => taxonGroup === value)
+}
+
+/** 개체관리 조회가 404 로 실패했다. 그 외 실패는 not-found 가 아니라 조회 오류로 보인다. */
+export function isNotFoundError(error: unknown): boolean {
+  if (!isRecord(error) || !isRecord(error.response)) return false
+  return error.response.status === 404
 }
 
 export function assertPositiveId(value: number, message: string) {
