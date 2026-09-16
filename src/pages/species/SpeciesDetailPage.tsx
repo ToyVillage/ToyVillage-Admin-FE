@@ -195,7 +195,7 @@ export function SpeciesDetailPage() {
     )
   }
 
-  const { items: individuals, totalElements } = individualsQuery.data
+  const individuals = individualsQuery.data.items
 
   // 0마리 종은 검색어가 있어도 빈 상태 문구를 유지한다(검색할 개체 자체가 없다).
   const emptyLabel =
@@ -246,7 +246,8 @@ export function SpeciesDetailPage() {
         <IndividualsSection>
           <SectionHeader
             title="개체"
-            count={totalElements}
+            // 검색 결과 수가 아니라 그 종의 전체 마리수다.
+            count={species.individualCount}
             unit="마리"
             action={
               <LinkButton to={`/species/${speciesId}/individuals/create`}>
