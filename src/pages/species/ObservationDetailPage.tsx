@@ -2,18 +2,18 @@ import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getMockIndividual, individualQueryKeys } from '@/entities/individual'
+import { getIndividual, individualQueryKeys } from '@/entities/individual'
 import {
-  deleteMockObservation,
+  deleteObservation,
   formatObservationDate,
-  getMockObservation,
+  getObservation,
   observationQueryKeys,
 } from '@/entities/observation'
 import {
   AttachmentChip,
   BackLink,
   DeleteConfirmationDialog,
-  downloadFile,
+  downloadStoredFile,
   KebabMenu,
   Toast,
   useFocusFrame,
@@ -31,22 +31,31 @@ export function ObservationDetailPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteFailed, setDeleteFailed] = useState(false)
+  const [downloadFailed, setDownloadFailed] = useState(false)
   const focusFrame = useFocusFrame()
 
   const observationQuery = useQuery({
     queryKey: observationQueryKeys.detail(observationId),
-    queryFn: () => getMockObservation(observationId),
+    queryFn: () =>
+      getObservation({
+        animalManageId: Number(individualId),
+        animalObservationId: Number(observationId),
+      }),
     enabled: Boolean(observationId),
   })
   // 경로 체인(종 → 개체 → 관찰) 검증용.
   const individualQuery = useQuery({
     queryKey: individualQueryKeys.detail(individualId),
-    queryFn: () => getMockIndividual(individualId),
+    queryFn: () => getIndividual({ animalManageId: Number(individualId) }),
     enabled: Boolean(individualId),
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteMockObservation(observationId),
+    mutationFn: () =>
+      deleteObservation({
+        animalManageId: Number(individualId),
+        animalObservationId: Number(observationId),
+      }),
   })
 
   const individualPath = `/species/${speciesId}/individuals/${individualId}`
@@ -163,7 +172,12 @@ export function ObservationDetailPage() {
                   <AttachmentChip
                     key={attachment.fileKey}
                     fileName={attachment.fileName}
-                    onDownload={() => downloadFile(attachment.fileName)}
+                    onDownload={() =>
+                      downloadStoredFile(attachment).then(
+                        () => setDownloadFailed(false),
+                        () => setDownloadFailed(true),
+                      )
+                    }
                   />
                 ))}
               </ChipList>
@@ -182,6 +196,14 @@ export function ObservationDetailPage() {
             focusMenuTrigger()
           }}
           onConfirm={handleDelete}
+        />
+      )}
+
+      {downloadFailed && (
+        <Toast
+          variant="error"
+          message="파일 다운로드에 실패했습니다"
+          onDismiss={() => setDownloadFailed(false)}
         />
       )}
 
