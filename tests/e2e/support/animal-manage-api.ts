@@ -9,6 +9,24 @@ export const animalManagePattern = /^https:\/\/[^/]+\/animal-manage(?:[/?].*)?$/
 export const animalFilePattern = /^https:\/\/[^/]+\/file(?:\?.*)?$/
 export const storedFilePattern = /^https:\/\/cdn\.e2e\.invalid\/.*/
 
+// API 시나리오가 엔드포인트 하나만 덮어쓸 때 쓰는 패턴.
+export const kindListPattern = /^https:\/\/[^/]+\/animal-manage\/kind(?:\?.*)?$/
+export const kindItemPattern =
+  /^https:\/\/[^/]+\/animal-manage\/kind\/\d+(?:\?.*)?$/
+export const kindAnimalsPattern =
+  /^https:\/\/[^/]+\/animal-manage\/kind\/\d+\/animal(?:\?.*)?$/
+export const legalStatusListPattern =
+  /^https:\/\/[^/]+\/animal-manage\/legal-status(?:\?.*)?$/
+export const legalStatusItemPattern =
+  /^https:\/\/[^/]+\/animal-manage\/legal-status\/\d+(?:\?.*)?$/
+export const animalCreatePattern = /^https:\/\/[^/]+\/animal-manage(?:\?.*)?$/
+export const animalItemPattern =
+  /^https:\/\/[^/]+\/animal-manage\/\d+(?:\?.*)?$/
+export const observationListPattern =
+  /^https:\/\/[^/]+\/animal-manage\/\d+\/observations(?:\?.*)?$/
+export const observationItemPattern =
+  /^https:\/\/[^/]+\/animal-manage\/\d+\/observations\/\d+(?:\?.*)?$/
+
 export type MockTaxonGroup = 'MAMMALS' | 'REPTILES' | 'BIRDS' | 'FISH'
 export type MockSex = 'WOMAN' | 'MAN' | 'UNKNOWN'
 
@@ -78,6 +96,7 @@ export interface AnimalManageRequest {
   operation: AnimalManageOperation
   url: URL
   body: unknown
+  headers: Record<string, string>
 }
 
 export interface AnimalManageApiHandle {
@@ -388,6 +407,7 @@ export async function mockAnimalManageApi(
       operation,
       url: new URL(route.request().url()),
       body,
+      headers: route.request().headers(),
     })
     const ms = delays.get(operation) ?? 0
     if (ms > 0) await new Promise((resolve) => setTimeout(resolve, ms))
@@ -892,7 +912,7 @@ async function notFound(route: Route, message: string) {
   await json(route, 404, errorBody(404, message))
 }
 
-function errorBody(status: number, message: string) {
+export function errorBody(status: number, message: string) {
   return {
     message,
     status,
@@ -901,7 +921,7 @@ function errorBody(status: number, message: string) {
   }
 }
 
-async function json(route: Route, status: number, body: unknown) {
+export async function json(route: Route, status: number, body: unknown) {
   await route.fulfill({
     status,
     contentType: 'application/json',
