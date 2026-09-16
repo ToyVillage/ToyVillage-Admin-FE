@@ -1,0 +1,14 @@
+{
+  "feature": "animal-kind-query",
+  "apiId": "ANIMAL_KIND_QUERY",
+  "approvedAt": "2026-09-16T15:59:58.516Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "a288f131c11ee5c399e571874d2cfc4bc249278350565217b6f1c704dc23d554",
+  "contractHash": "ec5f15b2a2b3b796f10fdeba3b25ee988486690bdbed03c3ff7c10c4a347f838",
+  "contractMarkdownHash": "2c1bccb57cb17568bf39b8ab36a694a261bb3a5bc73691258fb592b09136e18b",
+  "planHash": "036041284dc5c782d95a0bd9c893c9201a09a3146eb29d03b9554d8d8ff1ed33",
+  "scenarioHash": "8f8eef0cc89056fc3c3ce024a8998dc41aefee840bf863ab103b9b0f84b2ff2c",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}

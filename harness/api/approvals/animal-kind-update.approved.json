@@ -1,0 +1,14 @@
+{
+  "feature": "animal-kind-update",
+  "apiId": "ANIMAL_KIND_UPDATE",
+  "approvedAt": "2026-09-16T15:59:58.898Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "3fcc84b3346286d98220592387338b8791cec809a963d0b01f78c697f55ccb6e",
+  "contractHash": "10f214ec2d04ee52b153a403a061023347f374c3defca62a5dc65014985bc889",
+  "contractMarkdownHash": "f0ed4f8200532213568cf53bc76a8c3119cbfede36b005110ceeeb120e2d24fe",
+  "planHash": "11ace5768df9f25fad2e4197e2bf6822928db493fae3b6cf3e1d4647d0c48de2",
+  "scenarioHash": "e7f0c666ea0d9f561d22fb6dbdec0a4f8ef1ce21a47965d8520610c2dc4e7589",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}

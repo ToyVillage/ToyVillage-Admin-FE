@@ -1,0 +1,14 @@
+{
+  "feature": "animal-legal-status-delete",
+  "apiId": "ANIMAL_LEGAL_STATUS_DELETE",
+  "approvedAt": "2026-09-16T15:59:59.662Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "41eef32279f74935c1819a6a476369e749a6177b5a20d072c3a96a68e7a39ed4",
+  "contractHash": "4d8d0b3877fceb7fcadb3867febcad0558a5cfa9e0b34b43eeddf6dfa74bf951",
+  "contractMarkdownHash": "7ae7ecef629bdf789136fb95569d3d46e6894fa6f6be356eaa6d1a633691772e",
+  "planHash": "9558a986faa3a7c61b651a1cca72d628e9c3935349789d2e07a5d00c31ec7bff",
+  "scenarioHash": "298a57af0b73e3fd265757cbe2d56cbeb5256556f1d496174f219752e24f9dc7",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}

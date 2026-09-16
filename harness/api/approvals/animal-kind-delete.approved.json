@@ -1,0 +1,14 @@
+{
+  "feature": "animal-kind-delete",
+  "apiId": "ANIMAL_KIND_DELETE",
+  "approvedAt": "2026-09-16T15:20:11.169Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "9b8891dbde9ebaa1d7b85f1ce5f988c6e7c53bcca6dc3abb6c4492ef01d96fa8",
+  "contractHash": "2b593b5a8637377ec8d461f2229fe54f0e709fc16fb7e194869d37fd766bca94",
+  "contractMarkdownHash": "66c8fafd0872798233c2ad76b97278bb3b68f05502cf82785ffbb2817bc19aee",
+  "planHash": "e3eb7b73d8333936fa6123260b5f0d81c3cc4b7e97a2598c4036896a89b678fe",
+  "scenarioHash": "d7905e7ec8d0ed42c2e43edecc6e6cf01891d45f2b19c103b620d752f476e7f5",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}

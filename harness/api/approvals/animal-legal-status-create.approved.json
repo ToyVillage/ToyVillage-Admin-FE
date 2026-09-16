@@ -1,0 +1,14 @@
+{
+  "feature": "animal-legal-status-create",
+  "apiId": "ANIMAL_LEGAL_STATUS_CREATE",
+  "approvedAt": "2026-09-16T15:20:11.848Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "a5f24c4101eb5f8a6b280927c311f230fd79ea668a4e0928ac4d72522f26ee93",
+  "contractHash": "c44628933e530816f9a0a18eb5d3c6e0c351d6a7d8c0ba622977992271244b5b",
+  "contractMarkdownHash": "8d893eadf68200a2f08244e0b9644c56622a48663171e9de79a70dfae731db7f",
+  "planHash": "57bf2444ce1b37166a89e1965514a3598c9e3a788d016a5dd4c7fdaaa04288f0",
+  "scenarioHash": "9cb4afd7c216f4797f20075c1d85f95d690626f2a90f81f16f23b3e2322c02bb",
+  "testHash": null,
+  "realTestHash": null,
+  "realFixtureHash": null
+}
