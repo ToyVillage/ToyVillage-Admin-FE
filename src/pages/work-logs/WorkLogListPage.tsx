@@ -131,7 +131,9 @@ export function WorkLogListPage() {
     return (
       <StatePage>
         <StateCard role="alert">
-          업무일지를 불러오지 못했습니다. 다시 시도해 주세요.
+          {tab === 'forms'
+            ? '양식을 불러오지 못했습니다. 다시 시도해 주세요.'
+            : '업무일지를 불러오지 못했습니다. 다시 시도해 주세요.'}
         </StateCard>
       </StatePage>
     )
