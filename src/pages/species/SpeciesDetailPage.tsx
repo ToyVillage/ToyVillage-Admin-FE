@@ -1,17 +1,17 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  deleteMockIndividual,
-  getMockIndividuals,
+  deleteIndividual,
+  getIndividuals,
   IndividualTable,
   individualQueryKeys,
 } from '@/entities/individual'
 import { observationQueryKeys } from '@/entities/observation'
 import {
-  deleteMockSpecies,
-  getMockSpecies,
+  deleteSpecies,
+  getSpecies,
   SpeciesProfileCard,
   speciesQueryKeys,
 } from '@/entities/species'
@@ -23,12 +23,11 @@ import {
   SectionHeader,
   Toast,
   useFocusFrame,
-  type DataTableSortValue,
 } from '@/shared/ui'
 import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { SpeciesEmptyMessage } from './ui/SpeciesEmptyMessage'
-import { tablePage } from './ui/tablePage'
+import { SEARCH_DEBOUNCE_MS, TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
 
 type DeleteTarget =
@@ -44,7 +43,7 @@ export function SpeciesDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<DataTableSortValue>('newest')
+  const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [openMenuKey, setOpenMenuKey] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
@@ -56,57 +55,45 @@ export function SpeciesDetailPage() {
   const individualMenuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
   const focusFrame = useFocusFrame()
 
+  // 입력값은 즉시 보이고, 조회 검색어는 디바운스해 타이핑 중 요청을 막는다.
+  useEffect(() => {
+    const timer = setTimeout(() => setKeyword(query.trim()), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [query])
+
   const speciesQuery = useQuery({
     queryKey: speciesQueryKeys.detail(speciesId),
-    queryFn: () => getMockSpecies(speciesId),
+    queryFn: () => getSpecies({ animalKindId: Number(speciesId) }),
   })
+  // 검색(개체명)·페이지는 서버가 거른다(`ANIMAL_MANAGE_QUERY_ALL`). 정렬은 없다.
   const individualsQuery = useQuery({
-    queryKey: individualQueryKeys.list(speciesId),
-    queryFn: () => getMockIndividuals(speciesId),
+    queryKey: individualQueryKeys.list(speciesId, { page, keyword }),
+    queryFn: () =>
+      getIndividuals({
+        animalKindId: Number(speciesId),
+        keyword: keyword || undefined,
+        page,
+        size: TABLE_PAGE_SIZE,
+      }),
+    placeholderData: (previousData) => previousData,
   })
-  const individuals = useMemo(
-    () => individualsQuery.data ?? [],
-    [individualsQuery.data],
-  )
 
   const deleteMutation = useMutation({
     mutationFn: (target: DeleteTarget) =>
       target.kind === 'species'
-        ? deleteMockSpecies(speciesId)
-        : deleteMockIndividual(target.individualId),
+        ? deleteSpecies({ animalKindId: Number(speciesId) })
+        : deleteIndividual({ animalManageId: Number(target.individualId) }),
   })
 
-  // 검색 대상은 개체명이다(같은 종이라 국명 검색은 의미가 없다).
-  const keyword = query.trim().toLowerCase()
-  const filtered = useMemo(
-    () =>
-      individuals
-        .filter(
-          (individual) =>
-            !keyword || individual.name.toLowerCase().includes(keyword),
-        )
-        .sort((a, b) =>
-          sort === 'newest'
-            ? Number(b.id) - Number(a.id)
-            : Number(a.id) - Number(b.id),
-        ),
-    [individuals, keyword, sort],
-  )
+  const pageCount = Math.max(1, individualsQuery.data?.totalPages ?? 1)
 
-  const {
-    pageCount,
-    currentPage,
-    pageRows: pageIndividuals,
-  } = tablePage(filtered, page)
-
-  // 검색어·정렬이 바뀌면 첫 페이지로, 삭제로 페이지가 범위를 벗어나면 마지막 페이지로 되돌린다.
+  // 검색어가 바뀌면 첫 페이지로, 삭제로 페이지가 범위를 벗어나면 마지막 페이지로 되돌린다.
   // 렌더 중 상태 보정(effect 불필요).
-  const filterKey = `${query}|${sort}`
-  const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
-  if (prevFilterKey !== filterKey) {
-    setPrevFilterKey(filterKey)
+  const [prevKeyword, setPrevKeyword] = useState(keyword)
+  if (prevKeyword !== keyword) {
+    setPrevKeyword(keyword)
     setPage(1)
-  } else if (page > pageCount) {
+  } else if (individualsQuery.data && page > pageCount) {
     setPage(pageCount)
   }
 
@@ -126,7 +113,7 @@ export function SpeciesDetailPage() {
     // 이 화면이 보고 있는 종·개체 query 를 지금 다시 부르면 이동 전에 `종을 찾을 수 없습니다.` 가
     // 잠깐 보인다. 목록만 새로 받아 두고 이동한 뒤 나머지는 stale 로만 표시한다(다음 조회 때 새로 받는다).
     await queryClient.invalidateQueries({
-      queryKey: speciesQueryKeys.list,
+      queryKey: speciesQueryKeys.lists,
       refetchType: 'all',
     })
     navigate('/species', { state: { toast: 'delete-success' } })
@@ -199,9 +186,20 @@ export function SpeciesDetailPage() {
     )
   }
 
+  if (individualsQuery.isError) {
+    return (
+      <PageStatus
+        state="error"
+        message="개체 목록을 불러오지 못했습니다. 다시 시도해 주세요."
+      />
+    )
+  }
+
+  const { items: individuals, totalElements } = individualsQuery.data
+
   // 0마리 종은 검색어가 있어도 빈 상태 문구를 유지한다(검색할 개체 자체가 없다).
   const emptyLabel =
-    individuals.length === 0 ? (
+    species.individualCount === 0 ? (
       <SpeciesEmptyMessage
         title="등록된 개체가 없습니다"
         description="오른쪽 위 [개체 등록하기]로 첫 개체를 추가해주세요"
@@ -248,7 +246,7 @@ export function SpeciesDetailPage() {
         <IndividualsSection>
           <SectionHeader
             title="개체"
-            count={individuals.length}
+            count={totalElements}
             unit="마리"
             action={
               <LinkButton to={`/species/${speciesId}/individuals/create`}>
@@ -258,7 +256,7 @@ export function SpeciesDetailPage() {
           />
 
           <IndividualTable
-            individuals={pageIndividuals}
+            individuals={individuals}
             onRowClick={(id) =>
               navigate(`/species/${speciesId}/individuals/${id}`)
             }
@@ -268,12 +266,11 @@ export function SpeciesDetailPage() {
               placeholder: '개체이름 또는 국명을 입력해주세요',
               ariaLabel: '개체 검색',
             }}
-            sort={{
-              value: sort,
-              onChange: (value) => setSort(value as DataTableSortValue),
-              ariaLabel: '개체 정렬',
+            pagination={{
+              page: Math.min(page, pageCount),
+              pageCount,
+              onChange: setPage,
             }}
-            pagination={{ page: currentPage, pageCount, onChange: setPage }}
             emptyLabel={emptyLabel}
             renderRowAction={(individual) => (
               <KebabMenu
