@@ -71,7 +71,7 @@
 - Then: 모달이 닫히고 관찰 상세 화면이 그대로 남으며 초점이 `⋮` 로 돌아온다
 
 ### S12: 삭제 실패
-- Given: 삭제가 실패하는 조건(`toyvillage:observations:fail` = `'delete'`)에서 삭제 확인 모달이 열려 있음
+- Given: 삭제가 실패하는 조건(e2e 가짜 서버 `failNext('observation.delete')`)에서 삭제 확인 모달이 열려 있음
 - When: `확인` 을 클릭한다
 - Then: 모달이 닫히고 관찰 상세 화면에 `데이터 삭제에 실패했습니다` 토스트가 뜨며 화면이 유지된다
 
@@ -100,7 +100,7 @@
 - **문구 변경(id 유지)**: S9(카드 숨김 → 카드 유지 + `—`), S15(다른 종 경로 추가), S10(`Escape` 로 닫을 때만 초점 복귀 — 앞선 정합화).
 - 이 화면(`1323:15015`)에는 상태 프레임이 없다. S5~S15 는 개체 상세 프레임(`157:11525`·`610:14132`)과 `task-detail` 규칙을 승계해 게이트 ② 에서 확정한 동작이다.
 - S8 은 `individual-detail` S29 가 이동 state `{ toast: 'delete-success' }` 를 받아 토스트를 띄우고 관찰 목록을 다시 조회해야 성립한다. 두 spec 을 함께 승인한다.
-- S2 의 파일명 3개는 `individual-detail` 관찰 mock 명세 값이다. S12 는 실패 주입 `toyvillage:observations:fail` = `'delete'` 를 쓴다.
+- S2 의 파일명 3개는 `individual-detail` 관찰 mock 명세 값이다. S12 는 e2e 가짜 서버 실패 주입 `failNext('observation.delete')` 를 쓴다(API 연동 2026-09-17).
 - S10·S11 의 초점 복귀는 `KebabMenu` 보강(게이트 ② 채택)을 전제로 한다.
 - 관찰사항 줄바꿈 보존·긴 제목 줄바꿈은 여러 줄 fixture 가 없어 시나리오로 넣지 않았다(⑦ 육안 확인 대상).
 

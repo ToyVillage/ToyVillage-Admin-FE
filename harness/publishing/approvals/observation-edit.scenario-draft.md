@@ -104,7 +104,7 @@
 - Then: 같은 `정말 나가시겠습니까?` 모달이 뜨고, `취소` 시 현재 URL 과 입력이 유지된다
 
 ### S20: 저장 실패
-- Given: 다음 수정 요청이 실패하도록 설정된 상태(mock 실패 주입 `toyvillage:observations:fail` = `update`)에서 제목을 바꿨다
+- Given: 다음 수정 요청이 실패하도록 설정된 상태(e2e 가짜 서버 `failNext('observation.update')`)에서 제목을 바꿨다
 - When: `저장하기` 를 클릭한다
 - Then: URL 이 그대로이고 바꾼 제목·관찰사항·첨부 chip 이 유지되며 `저장하지 못했습니다. 다시 시도해 주세요.` 가 보인다
 
@@ -131,7 +131,7 @@
 - 관찰 등록 웹 화면이 없어(앱 작성) 생성 시나리오는 없다. 삭제 시나리오는 없다 — 이 화면에 삭제 버튼이 없다.
 - S1·S2 는 진입 화면(`observation-detail`·`individual-detail`)의 케밥 구현이 함께 있어야 통과한다.
 - S18 은 `sidebar.spec.md` 메뉴 절의 `개체관리 > 개체 카드` → `/species` 연결을 전제로 한다.
-  develop 병합(2026-09-15)으로 사이드바가 아코디언이 되어 평면 메뉴 `개체관리 바로가기` 를 이 하위 항목으로 옮겼다(개발자 결정). S20 실패 주입 키는 `individual-detail`(관찰 mock 소유) 명세 키다.
+  develop 병합(2026-09-15)으로 사이드바가 아코디언이 되어 평면 메뉴 `개체관리 바로가기` 를 이 하위 항목으로 옮겼다(개발자 결정). S20 실패 주입은 e2e 가짜 서버 `failNext('observation.update')` 다(API 연동 2026-09-17).
 - 수정 성공 토스트·첨부 추가 토스트는 넣지 않기로 결정해 시나리오에 없다.
 
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 observation-edit.approved.json의 scenarioIds에 적는다.
