@@ -41,6 +41,9 @@ export function LegalDesignationField({
   const hintId = useId()
   const queryClient = useQueryClient()
   const addButtonRef = useRef<HTMLButtonElement>(null)
+  // 렌더 전 연속 제출(더블클릭·Enter 연타)도 막는다. isPending 은 다음 렌더에야 바뀐다.
+  const addingRef = useRef(false)
+  const deletingRef = useRef(false)
   const removeButtonsRef = useRef(new Map<string, HTMLButtonElement>())
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<LegalStatus | null>(null)
@@ -90,9 +93,13 @@ export function LegalDesignationField({
 
   // 새 분류는 공용 목록을 다시 받은 뒤 선택값 끝에 붙는다.
   function handleAdd(name: string) {
-    if (addMutation.isPending) return
+    if (addingRef.current || addMutation.isPending) return
 
+    addingRef.current = true
     addMutation.mutate(name, {
+      onSettled: () => {
+        addingRef.current = false
+      },
       onSuccess: () => {
         onChange([...value.filter((item) => item !== name), name])
         closeAddDialog()
@@ -108,10 +115,14 @@ export function LegalDesignationField({
   }
 
   function handleConfirmDelete() {
-    if (!deleteTarget || deleteMutation.isPending) return
+    if (!deleteTarget || deletingRef.current || deleteMutation.isPending) return
 
+    deletingRef.current = true
     const target = deleteTarget
     deleteMutation.mutate(target, {
+      onSettled: () => {
+        deletingRef.current = false
+      },
       onSuccess: () => {
         setDeleteTarget(null)
         setDeleteFailed(false)
@@ -194,7 +205,9 @@ export function LegalDesignationField({
         </StatusRow>
       )}
       {deleteFailed && (
-        <StatusRow role="alert">삭제하지 못했습니다. 다시 시도해 주세요.</StatusRow>
+        <StatusRow role="alert">
+          삭제하지 못했습니다. 다시 시도해 주세요.
+        </StatusRow>
       )}
       {isAddDialogOpen && (
         <LegalDesignationAddDialog
