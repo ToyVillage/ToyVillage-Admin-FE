@@ -58,6 +58,25 @@ test('업무 상세: 파일 서버가 403 이면 로그아웃하지 않고 토�
   await expect(page).toHaveURL(/\/tasks\/1$/)
 })
 
+test('업무 수정: 기존 첨부도 파일 서버의 원본을 내려받는다', async ({ page }) => {
+  await mockTaskApi(page)
+  const requests = await mockFileServer(page, 200)
+  await page.goto('/tasks/1/edit')
+
+  const downloadPromise = page.waitForEvent('download')
+  await page
+    .getByRole('group', { name: '첨부파일' })
+    .getByRole('button', { name: '당일 지침.pdf 다운로드' })
+    .click()
+  const download = await downloadPromise
+
+  expect(download.suggestedFilename()).toBe('당일 지침.pdf')
+  expect(await readFile(await download.path())).toEqual(fileBody)
+  expect(requests).toEqual([
+    { path: `/${encodeURIComponent(taskFileKey)}`, authorization: undefined },
+  ])
+})
+
 test('업무보고 상세: 파일 서버의 원본을 원래 파일명으로 내려받는다', async ({
   page,
 }) => {
