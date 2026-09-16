@@ -437,7 +437,23 @@ function isAnswerResponse(value: unknown): value is WorkLogAnswerResponse {
     Number.isInteger(answer.questionId) &&
     typeof answer.question === 'string' &&
     typeof answer.questionType === 'string' &&
-    Array.isArray(answer.options)
+    Array.isArray(answer.options) &&
+    answer.options.every(isAnswerOption)
+  )
+}
+
+// 보기 배열만 확인하면 null 이나 필드가 빠진 항목이 그대로 시트로 흘러간다.
+function isAnswerOption(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null) return false
+
+  const option = value as Record<string, unknown>
+
+  return (
+    Number.isInteger(option.optionId) &&
+    Number.isInteger(option.number) &&
+    typeof option.content === 'string' &&
+    typeof option.etcOption === 'boolean' &&
+    (option.etcText === null || typeof option.etcText === 'string')
   )
 }
 
@@ -465,7 +481,21 @@ function isTemplateQuestion(value: unknown): boolean {
     Number.isInteger(question.questionId) &&
     typeof question.question === 'string' &&
     typeof question.questionType === 'string' &&
-    Array.isArray(question.options)
+    Array.isArray(question.options) &&
+    question.options.every(isTemplateOption)
+  )
+}
+
+function isTemplateOption(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null) return false
+
+  const option = value as Record<string, unknown>
+
+  return (
+    Number.isInteger(option.optionId) &&
+    Number.isInteger(option.number) &&
+    typeof option.content === 'string' &&
+    typeof option.etcOption === 'boolean'
   )
 }
 
