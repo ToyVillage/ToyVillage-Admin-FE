@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  createMockIndividual,
+  createIndividual,
   individualQueryKeys,
-  updateMockIndividual,
+  updateIndividual,
   type Individual,
 } from '@/entities/individual'
-import { speciesQueryKeys } from '@/entities/species'
+import { resolvePhotoFileKey, speciesQueryKeys } from '@/entities/species'
 import {
   FormFieldCard,
   PhotoUploadField,
@@ -55,18 +55,28 @@ export function IndividualForm({
   const isEditing = mode === 'edit'
 
   const mutation = useMutation({
-    mutationFn: (submitValues: IndividualFormValues) =>
-      initialIndividual
-        ? updateMockIndividual({
-            id: initialIndividual.id,
-            input: toUpdateIndividualInput(
-              submitValues,
-              initialIndividual.photo,
-            ),
+    mutationFn: async (submitValues: IndividualFormValues) => {
+      const input = initialIndividual
+        ? toUpdateIndividualInput(submitValues, initialIndividual.photo)
+        : toCreateIndividualInput(speciesId, submitValues)
+      const fileKey = await resolvePhotoFileKey(input.photo)
+      // 수정도 전체를 다시 보낸다. 빈 기타정보는 생략한다.
+      const request = {
+        animalKindId: Number(speciesId),
+        animalName: input.name,
+        animalGender: input.sex,
+        birthYear: input.birthYear,
+        ...(input.note ? { otherInfo: input.note } : {}),
+        fileKey,
+      }
+
+      return initialIndividual
+        ? updateIndividual({
+            animalManageId: Number(initialIndividual.id),
+            request,
           })
-        : createMockIndividual(
-            toCreateIndividualInput(speciesId, submitValues),
-          ),
+        : createIndividual(request)
+    },
   })
 
   useEffect(() => {

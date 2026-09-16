@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getMockIndividual, individualQueryKeys } from '@/entities/individual'
-import { getMockSpecies, speciesQueryKeys } from '@/entities/species'
+import { getIndividual, individualQueryKeys } from '@/entities/individual'
+import { getSpecies, speciesQueryKeys } from '@/entities/species'
 import { IndividualForm } from '@/features/individual-form'
 import { LeaveConfirmationDialog } from '@/shared/ui'
 import { FormPageLayout } from './ui/FormPageLayout'
@@ -18,12 +18,12 @@ export function EditIndividualPage() {
 
   const speciesQuery = useQuery({
     queryKey: speciesQueryKeys.detail(speciesId),
-    queryFn: () => getMockSpecies(speciesId),
+    queryFn: () => getSpecies({ animalKindId: Number(speciesId) }),
     enabled: Boolean(speciesId),
   })
   const individualQuery = useQuery({
     queryKey: individualQueryKeys.detail(individualId),
-    queryFn: () => getMockIndividual(individualId),
+    queryFn: () => getIndividual({ animalManageId: Number(individualId) }),
     enabled: Boolean(individualId),
   })
 
