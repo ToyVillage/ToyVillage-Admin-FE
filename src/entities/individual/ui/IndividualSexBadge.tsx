@@ -29,10 +29,10 @@ const Badge = styled.span<{ $sex: IndividualSex }>`
   line-height: 24px;
   white-space: nowrap;
   ${({ theme, $sex }) => {
-    if ($sex === 'MALE') {
+    if ($sex === 'MAN') {
       return `background: ${theme.colors.accentBg}; color: ${theme.colors.accent};`
     }
-    if ($sex === 'FEMALE') {
+    if ($sex === 'WOMAN') {
       return `background: ${theme.colors.dangerBg}; color: ${theme.colors.danger};`
     }
     return `background: ${theme.colors.background}; color: ${theme.colors.textGuide};`

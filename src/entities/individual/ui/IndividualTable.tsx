@@ -7,21 +7,19 @@ import {
   type DataTablePagination,
   type DataTableRow,
   type DataTableSearch,
-  type DataTableSort,
 } from '@/shared/ui'
-import type { Individual, IndividualSex } from '../model/types'
+import type { IndividualListItem, IndividualSex } from '../model/types'
 import { IndividualSexBadge } from './IndividualSexBadge'
 
 interface IndividualTableProps {
-  individuals: Individual[]
+  individuals: IndividualListItem[]
   onRowClick: (id: string) => void
   search: DataTableSearch
-  sort: DataTableSort
   pagination: DataTablePagination
   /** 빈 상태 문구. 로딩 중에는 생략해 문구를 띄우지 않는다. */
   emptyLabel?: ReactNode
   /** 행 우측 케밥 메뉴. 메뉴 동작(이동·삭제)은 페이지가 소유한다. */
-  renderRowAction: (individual: Individual) => ReactNode
+  renderRowAction: (individual: IndividualListItem) => ReactNode
 }
 
 interface IndividualTableRow extends DataTableRow {
@@ -67,7 +65,6 @@ export function IndividualTable({
   individuals,
   onRowClick,
   search,
-  sort,
   pagination,
   emptyLabel,
   renderRowAction,
@@ -106,7 +103,6 @@ export function IndividualTable({
           onRowClick={onRowClick}
           rowTestId="individual-row"
           search={search}
-          sort={sort}
           pagination={pagination}
           emptyLabel={emptyLabel}
           appearance={appearance}
