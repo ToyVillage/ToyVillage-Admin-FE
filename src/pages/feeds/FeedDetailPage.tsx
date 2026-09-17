@@ -11,6 +11,10 @@ import {
   isFeedNotFoundError,
   type AnimalSpecies,
 } from '@/entities/feed'
+import {
+  getIndividualSpeciesId,
+  individualQueryKeys,
+} from '@/entities/individual'
 import { BackLink, SectionHeader } from '@/shared/ui'
 
 const listPath = '/feeds'
@@ -47,6 +51,22 @@ export function FeedDetailPage() {
     retry: false,
   })
 
+  // `관찰 및 특이사항 보러가기` 링크에는 종 id 가 필요한데 급여 응답은 개체 id 만 준다.
+  const animalManageId = feed?.animalManageId
+  const individualId = animalManageId == null ? '' : String(animalManageId)
+  const { data: speciesId } = useQuery({
+    queryKey: individualQueryKeys.speciesId(individualId),
+    queryFn: () =>
+      getIndividualSpeciesId({ animalManageId: Number(individualId) }),
+    enabled: individualId !== '',
+    retry: false,
+  })
+
+  // 종 id 를 모르면(로딩 중·조회 실패) 링크를 걸지 않고 비활성으로 둔다.
+  const observationHref = speciesId
+    ? `/species/${speciesId}/individuals/${individualId}`
+    : null
+
   // 없는 기록이나 잘못된 id 로 진입하면 목록으로 되돌린다.
   if (!Number.isSafeInteger(feedLogId) || feedLogId <= 0) {
     return <Navigate to={listPath} replace />
@@ -75,7 +95,12 @@ export function FeedDetailPage() {
       <Content>
         <BackLink to={backPath} />
 
-        {feed && <FeedRecordCard feed={{ ...feed, species }} />}
+        {feed && (
+          <FeedRecordCard
+            feed={{ ...feed, species }}
+            observationHref={observationHref}
+          />
+        )}
 
         <HistorySection>
           <SectionHeader title="급여 이력" count={history.length} />
