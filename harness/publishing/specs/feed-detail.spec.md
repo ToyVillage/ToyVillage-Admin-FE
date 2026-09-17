@@ -36,7 +36,7 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
 ## 라우트와 진입
 
 - `/feeds/:id` → 급여 기록 상세를 표시한다. `:id` 는 급여 기록 id 다.
-- `뒤로가기` 클릭 → `/feeds` 로 이동한다.
+- `뒤로가기` 클릭 → `/feeds` 로 이동한다. 개체 상세의 `먹이 급여 기록 확인하기` 로 들어왔다면 그 개체 상세로 돌아간다(#119).
 
 ## 동작 (behavioral spec — source of truth)
 

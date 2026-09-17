@@ -8,7 +8,7 @@ figma:
     - 610:14132
     - 970:26390
 requires_functional_test: true
-paths: src/pages/species, src/entities/individual, src/entities/observation, src/shared/ui
+paths: src/pages/species, src/pages/feeds, src/entities/feed, src/entities/individual, src/entities/observation, src/shared/ui
 ---
 
 # 개체관리 · 개체 상세 행동명세
@@ -42,7 +42,7 @@ paths: src/pages/species, src/entities/individual, src/entities/observation, src
 - **Figma 근거 없음(게이트 ② 결정으로 채움)**: 관찰 0건 빈 상태 문구, 행 케밥 메뉴 위치(이 feature 에 행 케밥 열림 프레임 없음),
   관찰 삭제 확인 모달 문구, 삭제 실패·삭제 성공 토스트(개체관리 Figma 에 삭제 토스트 프레임 없음 — task-list 규격 승계),
   첨부 팝오버의 화면 위치와 여닫는 규칙(`970:26390` 은 팝오버를 표 오른쪽 밖 `@1632,585` 에 두었다),
-  `먹이 급여 기록 확인하기` 비활성 표현, 없는 id 처리, 접근성·반응형 절 전체.
+  `먹이 급여 기록 확인하기` 이동 대상·비활성 표현, 없는 id 처리, 접근성·반응형 절 전체.
 
 ## 목적
 
@@ -52,14 +52,14 @@ paths: src/pages/species, src/entities/individual, src/entities/observation, src
 
 ## 범위
 
-- 포함: 개체 조회, 프로필 카드(사진·이름·성별 뱃지·출생연도·기타정보), `먹이 급여 기록 확인하기` 버튼(`aria-disabled`),
+- 포함: 개체 조회, 프로필 카드(사진·이름·성별 뱃지·출생연도·기타정보), `먹이 급여 기록 확인하기` 버튼(최신 급여 기록 상세로 이동),
   카드 케밥(수정·삭제), 개체 삭제 확인 모달·결과 토스트, `관찰 및 특이사항 N건` 섹션 헤더,
   관찰 표(날짜·관찰자·제목·첨부), 첨부 다운로드와 `외 N개` 첨부 팝오버, 행 클릭 이동, 행 케밥(수정·삭제),
   관찰 삭제 확인 모달·결과 토스트, 페이지네이션, 관찰 0건 빈 상태, 없는 개체 처리, 관찰 상세에서 삭제 후 돌아왔을 때 토스트
 - 제외:
   - **관찰 기록 등록** — 관찰은 모바일 앱에서 작성한다(앱 섹션 `1:755` 의 `개체 선택`·`대상 개체`, `observation list` 설명
     `어드민 추가 불가`). 이 화면 섹션 헤더에는 등록 버튼이 없다(`section header` plain 변형).
-  - 먹이 급여 기록 화면(대상 화면·사이드바 `먹이 급여 관리` 미구현), 개체 수정 폼(`individual-form`),
+  - 먹이 급여 상세 화면 자체(`feed-detail`), 개체 수정 폼(`individual-form`),
     관찰 상세·수정(`observation-detail` / `observation-edit`), 종 상세(`species-detail`)
   - 실제 API 연동(`/api` 스킬 담당 — Notion API 명세 DB 에 개체·관찰 API 없음, 2026-09-15 확인)
   - 직원 권한별 케밥 숨김(범위 밖 — 결정 사항)
@@ -106,9 +106,11 @@ paths: src/pages/species, src/entities/individual, src/entities/observation, src
 ### 먹이 급여 기록 확인하기
 
 - 버튼은 카드 오른쪽 위, 카드 케밥 왼쪽에 보인다.
-- **이동할 화면이 없다**(사이드바 `먹이 급여 관리` 미구현). 사이드바의 화면 없는 메뉴처럼 `aria-disabled="true"` 로 두고,
-  클릭·Enter 해도 아무 반응이 없다. 초점은 받을 수 있다 (2026-09-15 Figma·저장소 근거 판단: `sidebar.spec.md` 화면 미구현 항목 규칙).
-- 시각은 Figma 외형 그대로 둔다(흐리게 처리하지 않는다). 먹이 급여 화면이 생기면 이동만 연결한다.
+- 화면 진입 시 이 개체의 급여 이력(`GET /feed-log/admin/history/{animalManageId}`)을 조회한다.
+- 이력이 있으면 클릭·Enter → 가장 최근 급여 기록 상세 `/feeds/:feedLogId` 로 이동한다.
+  급여 상세는 그 기록과 이 개체의 급여 이력 전체를 보여준다. 급여 상세의 `뒤로가기` 는 이 개체 상세로 돌아온다.
+- 이력을 불러오는 중이거나, 이력이 없거나(404 포함), 조회에 실패하면 `aria-disabled="true"` 로 두고 클릭·Enter 해도 반응이 없다. 초점은 받을 수 있다.
+- 시각은 Figma 외형 그대로 둔다(누를 수 없을 때도 흐리게 처리하지 않는다).
 
 ### 카드 케밥 메뉴
 
@@ -414,7 +416,7 @@ interface Observation {
 - 페이지 제목은 개체명(`h1`). 출생연도·기타정보는 라벨과 값을 프로그램적으로 연결한다(정의 목록 등).
 - 사진은 `alt="{개체명} 사진"` 을 준다.
 - 성별 뱃지의 기호(`♂` `♀` `?`)는 `aria-hidden`, 라벨 텍스트(`수컷`/`암컷`/`미상`)로 값을 전달한다.
-- `먹이 급여 기록 확인하기` 는 `aria-disabled="true"` 버튼이다. 초점을 받고, 활성화해도 아무 동작이 없다.
+- `먹이 급여 기록 확인하기` 는 버튼이다. 급여 이력이 없거나 불러오지 못하면 `aria-disabled="true"` 로 초점은 받고 활성화해도 아무 동작이 없다.
 - 섹션 헤더는 `h2` 이고 건수를 heading 텍스트에 포함한다(`관찰 및 특이사항 11건`).
 - 카드 `⋮` 이름 `{개체명} 개체 메뉴 열기`, 행 `⋮` 이름 `{관찰 제목} 관찰 메뉴 열기`. `aria-haspopup="menu"` / `aria-expanded`,
   메뉴 `role="menu"`, 항목 `role="menuitem"`, `Escape` 로 닫히고 초점이 `⋮` 로 돌아온다.
@@ -450,7 +452,7 @@ interface Observation {
 - S14: 행 `⋮` 클릭 → `수정` / `삭제` 메뉴가 열리고 행 이동은 일어나지 않는다.
 - S15: 행 메뉴 `수정` → `/species/1/individuals/1/observations/:observationId/edit` 로 이동한다.
 - S16: 행 메뉴 `삭제` → 모달 `확인` → 그 행이 사라지고 `관찰 및 특이사항 10건`, `데이터 삭제에 성공했습니다` 토스트가 뜬다.
-- S17: `먹이 급여 기록 확인하기` 클릭 → `aria-disabled` 이고 경로가 바뀌지 않는다.
+- S17: 급여 이력이 있는 개체에서 `먹이 급여 기록 확인하기` 클릭 → 최신 급여 기록 상세 `/feeds/:feedLogId` 로 이동하고, 그 화면 `뒤로가기` → 개체 상세로 돌아온다.
 - S18: 관찰 0건 개체(`/species/1/individuals/3`) → `관찰 및 특이사항 0건`, `등록된 관찰 기록이 없습니다`, 페이지네이션 없음.
 - S19: 기타정보 없는 개체(`/species/1/individuals/2`) → 성별 `암컷`, 기타정보 값 `—`. 성별 미상 개체(`/species/2/individuals/7` 체리) → 성별 `미상`.
 - S20: 카드·행 메뉴에서 바깥 클릭 / `Escape` → 메뉴가 닫히고, `Escape` 면 초점이 그 `⋮` 로 돌아온다.
@@ -463,13 +465,14 @@ interface Observation {
 - S27: 2페이지의 유일한 행 삭제 → 1페이지로 당겨지고 페이지네이션이 사라진다.
 - S28: 없는 개체 id / 다른 종의 개체 id 로 진입 → `개체를 찾을 수 없습니다.` 와 경로 종 상세로 가는 `종 상세로 돌아가기` 링크가 보인다.
 - S29: 관찰 상세 삭제 성공으로 이 화면에 돌아오면(state `delete-success`) → `데이터 삭제에 성공했습니다` 토스트가 보인다.
+- S31: 급여 이력이 없는 개체에서 `먹이 급여 기록 확인하기` 클릭 → `aria-disabled` 이고 경로가 바뀌지 않는다.
 - S30: 키보드만으로 행 진입·첨부 다운로드·팝오버 열기·케밥 조작을 할 수 있고, 행 안 컨트롤의 Enter 는 행 이동을 일으키지 않는다.
 
 ## 결정 사항
 
 - 라우트 `/species/:speciesId/individuals/:individualId` 와 하위 이동 경로는 개체관리 공통 라우트를 따른다 (2026-09-15 Figma·저장소 근거 판단: 사이드바 활성 판정 `pathname.startsWith(route + '/')`).
 - 관찰 등록 수단을 두지 않는다 — 관찰은 앱에서 작성한다 (2026-09-15 Figma·저장소 근거 판단: `observation list` 설명 `어드민 추가 불가`, section header plain, 앱 섹션 `1:755`).
-- `먹이 급여 기록 확인하기` 는 Figma 외형을 유지하고 `aria-disabled="true"`, 클릭 무반응이다. 화면이 생기면 이동만 연결한다 (2026-09-15 Figma·저장소 근거 판단: `sidebar.spec.md` 화면 미구현 항목 규칙).
+- `먹이 급여 기록 확인하기` 는 이 개체의 가장 최근 급여 기록 상세(`/feeds/:feedLogId`)로 이동한다. 개체 기준 급여 이력 화면을 따로 두지 않는다 — 급여 상세가 이미 그 개체의 급여 이력 전체를 보여준다. 이력이 없거나 불러오지 못하면 Figma 외형 그대로 `aria-disabled="true"` 다 (2026-09-17 개발자 결정, #119: 개체별 급여 이력 Figma 프레임 없음).
 - 기타정보가 없으면 행을 숨기지 않고 `—` 를 보인다 (2026-09-15 Figma·저장소 근거 판단: 같은 화면 첨부 칸 빈 값 `—`(`127:9223`)).
 - 관찰 표는 날짜 최신순 고정(같은 날짜는 id 내림차순), 검색·정렬 UI 없음, 한 페이지 10행이다 (2026-09-15 Figma·저장소 근거 판단: Figma `observation list` 에 검색·정렬 없음, `task-list` 10행).
 - 첨부 chip 전체가 다운로드 버튼이다. `외 N개` 에 hover 또는 focus → `외 N개` 아래에 첨부 전체 팝오버, mouseleave·blur·`Escape` 로 닫힘, 팝오버 chip 클릭 = 다운로드, 행 이동 없음 (2026-09-15 Figma·저장소 근거 판단: Figma `970:26390` `attach hover`).
@@ -499,4 +502,4 @@ interface Observation {
 
 ### 범위 밖
 
-- `RowActionMenu`↔`KebabMenu` 통합, `Wanted Sans`/`Inter` 글꼴 정리, 실제 API 연동(`/api` 스킬), 먹이 급여 화면, 직원 권한별 UI 분기.
+- `RowActionMenu`↔`KebabMenu` 통합, `Wanted Sans`/`Inter` 글꼴 정리, 실제 API 연동(`/api` 스킬), 개체 기준 급여 이력 전용 화면, 직원 권한별 UI 분기.
