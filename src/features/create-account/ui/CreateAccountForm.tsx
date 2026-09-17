@@ -6,7 +6,7 @@ import type { CreateAccountSubmit } from '../model/types'
 interface CreateAccountFormProps {
   onSubmit: CreateAccountSubmit
   onSuccess: () => void
-  onError: () => void
+  onError: (error: unknown) => void
 }
 
 type FieldName = 'name' | 'username'
@@ -56,8 +56,8 @@ export function CreateAccountForm({
       setUsername('')
       requestAnimationFrame(() => nameRef.current?.focus())
       onSuccess()
-    } catch {
-      onError()
+    } catch (error) {
+      onError(error)
     } finally {
       submittingRef.current = false
       setIsPending(false)

@@ -1,0 +1,15 @@
+{
+  "feature": "app-admin-employee-create",
+  "apiId": "APP_ADMIN_EMPLOYEE_CREATE",
+  "approvedAt": "2026-09-17T11:23:55.818Z",
+  "approvedBy": "claude (yunho 위임)",
+  "taskSpecHash": "7431a81e5676ee7b4d7a8e3274cc7d9d18e7a41f0dc5353e414453b48bb7810d",
+  "contractHash": "9a26d5569008532c6e62eb6bf9fa1d9b786666a06a796dcc92cd962ee352b03d",
+  "contractMarkdownHash": "d2dbaf14ab005dd11334cebeeadcd8aa90fe2c8136de15f825c84af027494ff0",
+  "planHash": "ba6f8a0d0eba18490060812c2373d91ff0363ca1024ac18bb805a25101677fec",
+  "scenarioHash": "3126807677901b41efc6299a57f2d0ea9f02e16041c9122081f37ae5198adab7",
+  "testHash": "2c54ae4140bfca7a841bffa9655ef9e93969b32897114e5d4f3855e8a313514b",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T11:25:47.004Z"
+}
