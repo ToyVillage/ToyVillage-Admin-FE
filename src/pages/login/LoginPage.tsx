@@ -2,7 +2,7 @@ import styled from '@emotion/styled'
 import { useNavigate } from 'react-router-dom'
 import { LoginForm, submitLogin } from '@/features/login'
 import { queryClient } from '@/shared/config/queryClient'
-import toVillageLogo from './assets/toyvillage-logo.png'
+import toVillageLogo from '@/shared/assets/toyvillage-logo.png'
 
 export function LoginPage() {
   const navigate = useNavigate()
