@@ -1,7 +1,13 @@
 import { test, expect } from '@playwright/test'
+import { mockDocumentApi } from './support/document-api'
 
 // 승인된 시나리오(resources-list.approved.json: S1~S7)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
+// 자료실 API 는 page.route mock(`support/document-api`)을 쓴다. 실제 서버는 호출하지 않는다.
+
+test.beforeEach(async ({ page }) => {
+  await mockDocumentApi(page)
+})
 
 test('S1: "자료 추가하기" 클릭 → /notices/resources/create 이동', async ({ page }) => {
   await page.goto('/notices/resources')

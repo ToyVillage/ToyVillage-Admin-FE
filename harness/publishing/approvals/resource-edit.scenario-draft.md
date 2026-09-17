@@ -37,13 +37,14 @@
 ### S7: 삭제 확인
 - Given: 수정 화면에서 삭제 dialog를 열었다.
 - When: 삭제를 확인한다.
-- Then: `/notices/resources`로 이동하고 해당 ID 자료가 목록과 직접 URL에서 보이지 않는다.
+- Then: `/notices/resources`로 이동하고 해당 ID 자료가 목록에서 보이지 않으며, 직접 URL로 다시 진입하면 목록으로 되돌아간다.
 
 ## 엣지 케이스
 
 ### S8: 잘못된 ID
 - Given: 존재하지 않는 자료 URL이다.
-- Then: `자료를 찾을 수 없습니다.` not-found 상태와 목록 복귀 링크를 표시한다.
+- Then: 별도 not-found 화면 없이 `/notices/resources` 목록으로 되돌아간다.
+- 비고: 디자인에 오류 화면이 없어 DOCUMENTS_QUERY 승인(`harness/api/approvals/documents-query.*`) 결정을 따른다.
 
 ### S9: 수정 중 이탈
 - Given: 기존 값을 수정했다(dirty).
@@ -59,7 +60,7 @@
 - Given: 저장 또는 삭제 요청이 실패한다.
 - When: 실패 응답을 받는다.
 - Then: 예외 모달(`ErrorDialog`)이 `저장에 실패하였습니다` / `삭제에 실패하였습니다`를 표시하고, `확인` 시 모달을 닫으며 현재 URL·입력을 유지한다.
-- 비고: mock은 `resourceFailStorageKey`(`update`|`delete`) 플래그로 저장·삭제 실패를 주입하며, e2e(S11)는 저장·삭제 실패 모두 예외 모달을 검증한다. (Figma 1039:50 시각 디테일은 rate limit 해제 후 확정)
+- 비고: e2e(S11)는 `page.route` mock 서버가 PUT·DELETE `/documents/{id}`에 500으로 응답하게 해 저장·삭제 실패 모두 예외 모달을 검증한다. (Figma 1039:50 시각 디테일은 rate limit 해제 후 확정)
 
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 resource-edit.approved.json의 scenarioIds에 적는다.
