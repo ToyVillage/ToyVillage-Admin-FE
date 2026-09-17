@@ -3,10 +3,12 @@ import {
   mockAnimalManageApi,
   type AnimalManageApiHandle,
 } from './support/animal-manage-api'
+import { feedHistoryPattern, mockFeedApi } from './support/feed-api'
 
-// 승인된 시나리오(individual-detail.approved.json, S1~S30)를 변환한 것.
+// 승인된 시나리오(individual-detail.approved.json, S1~S31)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
+// 급여 이력은 `support/feed-api` 가짜 서버가 준다(개체 1 은 급여 기록 1·7·8, 최신은 1).
 
 // 종 1 카피바라 · 개체 1 동식이(관찰 11건).
 const detailUrl = '/species/1/individuals/1'
@@ -21,6 +23,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem('accessToken', 'individual-detail-test-token')
   })
   api = await mockAnimalManageApi(page)
+  await mockFeedApi(page)
 })
 
 test('S1: 개체 상세 진입 기본 상태', async ({ page }) => {
@@ -233,7 +236,29 @@ test('S16: 관찰 삭제 확인', async ({ page }) => {
   await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
 })
 
-test('S17: 먹이 급여 기록 확인하기 비활성', async ({ page }) => {
+test('S17: 먹이 급여 기록 확인하기 이동', async ({ page }) => {
+  await page.goto(detailUrl)
+  const feedingButton = page.getByRole('button', {
+    name: '먹이 급여 기록 확인하기',
+  })
+  await expect(feedingButton).not.toHaveAttribute('aria-disabled', 'true')
+  await feedingButton.click()
+
+  await expect(page).toHaveURL(/\/feeds\/1$/)
+  await page.getByRole('link', { name: '뒤로가기' }).click()
+  await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
+})
+
+test('S31: 급여 이력이 없으면 먹이 급여 기록 확인하기 비활성', async ({
+  page,
+}) => {
+  await page.route(feedHistoryPattern, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ feedLogs: [] }),
+    }),
+  )
   await page.goto(detailUrl)
   const feedingButton = page.getByRole('button', {
     name: '먹이 급여 기록 확인하기',
