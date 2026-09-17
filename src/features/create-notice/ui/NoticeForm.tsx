@@ -446,6 +446,13 @@ const CategoryRadio = styled.input`
   height: 100%;
   margin: 0;
   opacity: 0;
+  cursor: pointer;
+
+  // 자원 폼 분류 pill 과 같은 선택 표시다.
+  &:checked + span {
+    background: ${({ theme }) => theme.colors.textStrong};
+    color: ${({ theme }) => theme.colors.surface};
+  }
 
   &:focus-visible + span {
     outline: 2px solid ${({ theme }) => theme.colors.textGuide};
@@ -473,6 +480,10 @@ const CategoryPill = styled.span`
     padding: 0 20px;
     color: #434343;
     font-size: 22px;
+  }
+
+  form input:checked + & {
+    color: ${({ theme }) => theme.colors.surface};
   }
 `
 
