@@ -40,7 +40,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - 자료 목록(`/notices/resources`)의 행 클릭 → `/notices/resources/:id`로 이동한다.
 - `/notices/resources/:id` → 해당 ID의 자료 수정 화면을 표시한다.
 - 저장 또는 삭제 성공 → `/notices/resources`로 이동한다.
-- 존재하지 않는 ID → 입력 폼 대신 `자료를 찾을 수 없습니다.`와 목록 복귀 링크를 표시한다.
+- 존재하지 않는 ID → 별도 안내 화면 없이 `/notices/resources`로 되돌아간다(디자인에 오류 화면 없음).
 
 ## 화면 구조 (Figma 2114:1704)
 
@@ -142,7 +142,7 @@ interface UpdateResourceInput {
 - S5: 기존 첨부 제거와 새 파일 추가 → 칩 목록이 즉시 갱신된다.
 - S6: 삭제 클릭 후 취소 → URL과 자료가 유지되고 삭제 button으로 포커스가 복귀한다.
 - S7: 삭제 확인 → 목록으로 이동하고 같은 ID 자료가 보이지 않는다.
-- S8: 존재하지 않는 ID 진입 → not-found 상태와 목록 복귀 링크가 보인다.
+- S8: 존재하지 않는 ID 진입 → 목록(`/notices/resources`)으로 되돌아간다.
 - S9: 수정 후 사이드바 또는 브라우저 뒤로가기 → 이탈 확인 dialog가 입력 손실을 막는다.
 - S10: 저장·삭제 요청 중 재클릭 → 중복 요청을 전송하지 않는다.
 
