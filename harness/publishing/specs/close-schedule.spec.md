@@ -45,6 +45,7 @@ paths: src/pages/notices/guide, src/features/create-close-schedule, src/entities
   - `확인` → 해당 ID로 삭제 요청을 한 번 보낸다. 요청 중 중복 확인을 막는다.
   - 성공 → 휴관 일정 query를 갱신해 카드와 캘린더 마커에서 사라지고 성공 토스트 `데이터 삭제에 성공했습니다`를 보인다.
   - 실패 → dialog를 닫고 목록을 유지하며 오류 토스트 `데이터 삭제에 실패했습니다`(Figma `246:13036`)를 보인다.
+- 생성 화면에서 성공해 돌아오면 성공 토스트 `데이터 생성에 성공했습니다`(Figma `1:6158`)를 보인다. 이동 state 로 전달받고, 닫으면 state를 비운다(`close-schedule-create.spec.md`).
 - 해당 월에 표시할 휴관 일정이 없으면 우측 결과 영역 중앙에 `아직 추가된 휴관일이 없습니다` 문구가 보인다.
 
 ## 데이터
