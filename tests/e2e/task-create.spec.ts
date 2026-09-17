@@ -60,7 +60,7 @@ test('S3: 완료기한 선택', async ({ page }) => {
 
   // 포커스가 있는 동안에는 네이티브 입력이 보이므로, 포커스를 옮긴 뒤 표기를 확인한다.
   await page.getByLabel(/제목/).focus()
-  await expect(page.getByText('2026. 12. 31')).toBeVisible()
+  await expect(page.getByText('2026.12.31')).toBeVisible()
 })
 
 test('S4: 팀 펼침·접힘', async ({ page }) => {

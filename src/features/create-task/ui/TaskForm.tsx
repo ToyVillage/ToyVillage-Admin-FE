@@ -115,10 +115,10 @@ export function TaskForm({
   const isEditing = mode === 'edit'
 
   // 담당자 트리의 유일한 데이터 출처. 업무지시 캐시(`['tasks']`)와 분리한다.
-  const {
-    data: teamTree,
-    isError: isTeamTreeError,
-  } = useQuery({ queryKey: ['teams', 'tree'], queryFn: getTeamTree })
+  const { data: teamTree, isError: isTeamTreeError } = useQuery({
+    queryKey: ['teams', 'tree'],
+    queryFn: getTeamTree,
+  })
 
   const mutation = useMutation({
     mutationFn: async (values: TaskSubmitValues) => {
@@ -156,13 +156,13 @@ export function TaskForm({
   useEffect(() => {
     const isDirty = Boolean(
       priority !== (initialTask?.priority ?? null) ||
-        dueDate !== (initialTask?.dueDate ?? '') ||
-        !sameArray(assigneeIds, initialAssigneeIds) ||
-        title !== (initialTask?.title ?? '') ||
-        content !== (initialTask?.content ?? '') ||
-        (isEditing
-          ? !sameArray(attachmentNames, initialAttachmentNames)
-          : hasAttachments),
+      dueDate !== (initialTask?.dueDate ?? '') ||
+      !sameArray(assigneeIds, initialAssigneeIds) ||
+      title !== (initialTask?.title ?? '') ||
+      content !== (initialTask?.content ?? '') ||
+      (isEditing
+        ? !sameArray(attachmentNames, initialAttachmentNames)
+        : hasAttachments),
     )
 
     onDirtyChange(isDirty)
@@ -414,29 +414,36 @@ const Required = styled.span`
   color: ${({ theme }) => theme.colors.danger};
 `
 
+// 공지 작성 제목과 같은 회색 입력 박스(높이 66, padding 0/24, radius 8).
 const TitleInput = styled.input`
   width: 100%;
+  height: 66px;
+  padding: 0 24px;
   border: 0;
+  border-radius: 8px;
   outline: 0;
-  background: transparent;
+  background: ${({ theme }) => theme.colors.background};
   color: ${({ theme }) => theme.colors.text};
   font-family: inherit;
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textGuide};
   }
 `
 
+// yot `task / 업무 폼`: 공지 작성과 같은 회색 입력 박스(radius 8, padding 20/24, 최소 높이 160).
 const ContentInput = styled.textarea`
   width: 100%;
-  min-height: 28px;
+  min-height: 160px;
   overflow: hidden;
+  padding: 20px 24px;
   border: 0;
+  border-radius: 8px;
   outline: 0;
-  background: transparent;
+  background: ${({ theme }) => theme.colors.background};
   color: ${({ theme }) => theme.colors.text};
   font-family: inherit;
   font-size: 20px;

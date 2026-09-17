@@ -1,8 +1,10 @@
 ---
 feature: reservations-detail
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 1631:875
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:6293
+  relatedNodeIds:
+    - 1:6494
 requires_functional_test: true
 paths: src/pages/notices/reservations, src/entities/reservation
 ---
@@ -12,7 +14,8 @@ paths: src/pages/notices/reservations, src/entities/reservation
 ## 상태와 근거
 
 - Status: Approved (kimjihwan8 승인, 시나리오 S1–S6)
-- 상세 화면 기준: Figma `1631:875` ("reservation detail")
+- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). yot 상세는 상담일·방문일·사전답사·페이지 권한 아코디언 카드의 읽기 전용 화면이라 본문 구조와 다르다. 반영은 #94에서 한다.
+- 상세 화면 기준: yot Figma `1:6293` ("reservation detail", 섹션 `단체예약 · 상세` `311:12768`), 담당자 미배정: `1:6494`
 - 리스트에서 행 클릭 → `/notices/reservations/:id` 로 진입(리스트 spec `reservations-list` S5의 이동 대상)
 - 라우트: `src/app/App.tsx`의 `/notices/reservations/:id` (현재 `ReservationDetailPage` 스텁 → 본 슬라이스에서 구현)
 - 좌상단 메뉴 아이콘·사이드바는 `AppLayout`(App.tsx)이 전역 렌더하므로 페이지는 본문만 담당한다.
@@ -24,9 +27,9 @@ paths: src/pages/notices/reservations, src/entities/reservation
 ## 범위
 
 - 포함: 뒤로가기 링크, 예약정보 카드(상담일·예약일·예약 시간 범위·예약인·전체 인원·지역·단체명·입장료·상태·인솔자 인원·인솔자 연락처), 페이지 권한 카드(직원 검색 + 권한 보유 직원 목록 + 직원별 `제거`), 로딩/찾을 수 없음 상태
-- 제외: 예약 승인/반려/수정 처리, 실제 예약·직원·권한 저장 API(이번 슬라이스는 mock 경계), 권한 부여(추가) 모달(리스트 슬라이스 `3414:3724` 담당)
+- 제외: 예약 승인/반려/수정 처리, 실제 예약·직원·권한 저장 API(이번 슬라이스는 mock 경계), 권한 부여(추가) 모달(리스트 슬라이스 구 `3414:3724` 담당, yot 대응 없음)
 
-## 화면 구조 (Figma 1631:875)
+## 화면 구조 (구 파일 1631:875 → yot 1:6293)
 
 1920px 데스크톱 기준. 본문은 좌측 x300, 상단 두 카드가 가로로 배치된다. 페이지 배경 gray/10(`background`).
 
@@ -53,7 +56,7 @@ paths: src/pages/notices/reservations, src/entities/reservation
 - 조회한 예약의 상세 필드를 예약정보 카드에 렌더한다. 예약 시간은 시작~종료 범위로 표시한다.
 - 페이지 권한 카드는 이 예약에 접근 권한을 가진 직원 목록을 보인다(mock 경계: 리스트 슬라이스가 남긴 `reservationAccessStorageKey` 매핑 → 직원 이름 해석). 권한 직원이 없으면 목록은 빈 상태로 둔다.
 - 검색어 입력 → 직원 이름 기준으로 권한 목록을 필터한다(부분 일치). 결과 없으면 목록만 비운다.
-- 직원 행의 `제거` 클릭 → 삭제 확인 모달(Figma 3551:4566, 전용 `RemoveAccessConfirmDialog`: 경고 아이콘 + "정말 삭제하시겠습니까?" + 컴팩트 취소/확인 100x48)을 연다. 카피·아이콘은 공용 삭제 모달과 같지만 이 화면은 별도 버튼 디자인을 쓴다. `확인` 시 해당 직원을 권한 목록에서 제거(mock 저장 경계 호출)하고 모달을 닫는다. `취소`/Escape는 변경 없이 닫는다.
+- 직원 행의 `제거` 클릭 → 삭제 확인 모달(구 파일 3551:4566, yot 대응 없음, 전용 `RemoveAccessConfirmDialog`: 경고 아이콘 + "정말 삭제하시겠습니까?" + 컴팩트 취소/확인 100x48)을 연다. 카피·아이콘은 공용 삭제 모달과 같지만 이 화면은 별도 버튼 디자인을 쓴다. `확인` 시 해당 직원을 권한 목록에서 제거(mock 저장 경계 호출)하고 모달을 닫는다. `취소`/Escape는 변경 없이 닫는다.
 - 뒤로가기 클릭/Enter → `/notices/reservations`로 이동한다.
 
 ## 데이터와 API 경계 (mock)

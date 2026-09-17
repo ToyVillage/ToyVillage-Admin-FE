@@ -286,7 +286,7 @@ export function SpeciesDetailPage() {
             search={{
               value: query,
               onChange: setQuery,
-              placeholder: '개체이름 또는 국명을 입력해주세요',
+              placeholder: '개체 이름을 입력해주세요',
               ariaLabel: '개체 검색',
             }}
             pagination={{

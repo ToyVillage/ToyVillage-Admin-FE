@@ -1,13 +1,14 @@
 ---
 feature: reservation-edit
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 4660:7623
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:7846
   relatedNodeIds:
-    - 4660:7623
-    - 5190:7575
-    - 4927:9326
-    - 4520:9075
+    - 1:8206
+    - 1:8026
+    - 1:8610
+    - 1:5968
+    - 1:7667
 requires_functional_test: true
 paths: src/pages/notices/reservations/ReservationDetailPage.tsx, src/features/reservation-form, src/entities/reservation
 ---
@@ -17,7 +18,8 @@ paths: src/pages/notices/reservations/ReservationDetailPage.tsx, src/features/re
 ## 상태와 근거
 
 - Status: Draft (게이트 승인 대기)
-- 수정(전체 펼침·데이터): Figma `4899:8525` / 참고(am·pm, 배정, 하단 삭제·저장): `4660:7623` / 검증 에러: `5190:7575`
+- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). yot는 상세(`1:6293`, 읽기 전용)와 수정(`1:7846`)을 나눠 두어 "상세를 편집 폼으로 대체"한 이 명세와 다르다. 반영은 #94에서 한다.
+- 수정(전체 펼침·데이터): yot Figma `1:7846` / 참고(am·pm, 배정, 삭제 확인): `1:8206` / 페이지 권한 검색 결과 없음: `1:8026` / 검증 에러: `1:8610`
 - 진입: 리스트 행 클릭 → `/notices/reservations/:id` (기존 라우트). **기존 읽기 전용 `reservations-detail`(예약정보 카드+페이지 권한 카드)를 이 편집 폼으로 대체한다.**
 - 생성 페이지와 레이아웃 동일(공용 `ReservationForm`). 차이는 (a) 초기값이 조회 데이터로 채워짐 (b) 하단 액션이 `삭제하기`/`저장하기` (c) 페이지 권한 섹션에 배정팀(취소하기)이 채워짐.
 - API 미연동(publishing) — 조회/저장/삭제는 mock 경계. 실제 연동은 별도 `/api` 슬라이스(이미 상세 조회/권한 조회·삭제 API는 연동됨 — 폼 편집 저장 계약은 미확정).

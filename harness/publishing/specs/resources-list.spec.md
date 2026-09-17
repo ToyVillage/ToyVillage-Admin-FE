@@ -1,13 +1,20 @@
 ---
 feature: resources-list
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 1787:1985
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:7158
+  relatedNodeIds:
+    - 1:7206
+    - 246:12368
+    - 246:12395
+    - 246:12305
 requires_functional_test: true
 paths: src/pages/notices/resources, src/features/create-resource, src/entities/resource
 ---
 
 # 자료실 리스트 페이지 행동명세
+
+> 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`) `1787:1985`에서 yot `1:7158`(섹션 `자료실 · 목록` `311:12762`)으로 교체했다(#80). 빈 상태 `1:7206`, 케밥 `246:12368`, 삭제 `246:12395`, 상세 `246:12305`. yot에는 상세 화면이 따로 있어 반영은 #92에서 한다.
 
 ## 목적
 파일 자료실 목록 화면. 오직 **자료(파일)만** 업로드/열람한다. 허용 유형: **pdf, jpg/jpeg, png, 기타**.

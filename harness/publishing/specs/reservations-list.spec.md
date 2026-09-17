@@ -1,11 +1,13 @@
 ---
 feature: reservations-list
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 1628:810
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:5902
   relatedNodeIds:
-    - 3414:3724
-    - 2413:3303
+    - 1:6114
+    - 1:6133
+    - 417:13157
+    - 417:13177
 requires_functional_test: true
 paths: src/pages/notices/reservations, src/entities/reservation, src/features/grant-reservation-access, src/shared/ui/DataTable.tsx
 ---
@@ -15,9 +17,10 @@ paths: src/pages/notices/reservations, src/entities/reservation, src/features/gr
 ## 상태와 근거
 
 - Status: Draft
-- 리스트 화면 기준: Figma `1628:810` ("group reservation")
-- 권한 부여 모달: Figma `3414:3724` — ⚠️ Figma API rate limit(Starter)로 라이브 추출 보류. 해제 후 정확한 시각 디테일 반영.
-- 빈 상태(데이터 없음): Figma `2413:3303` — ⚠️ 동일 사유로 추출 보류.
+- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). 본문 구조 설명은 구 디자인 기준이며 yot 반영은 #94에서 한다.
+- 리스트 화면 기준: yot Figma `1:5902` ("group reservation", 섹션 `단체예약 · 목록` `311:12767`)
+- 권한 부여 모달: 구 파일 `3414:3724` — yot에는 대응 프레임이 없다. 페이지 권한은 폼의 `페이지 권한` 섹션(`1:8206`)으로 옮겨졌다.
+- 빈 상태(데이터 없음): Figma `1:6114`, 검색 결과 없음: `1:6133`
 - 공통 테이블 프레젠테이션: `src/shared/ui/DataTable.tsx` (notice/resource 목록과 공유) — 이번 슬라이스에서 컬럼 설정 기반으로 일반화한다(아래 참조).
 - 라우트: `src/app/App.tsx`의 `/notices/reservations` (현재 `NoticeReservationsPage` 스텁)
 
@@ -30,7 +33,7 @@ paths: src/pages/notices/reservations, src/entities/reservation, src/features/gr
 - 포함: 상태별 카운트 카드(사전답사 전/사전답사 완료/방문 완료)와 상태 필터, 테이블(상담일·예약일·예약시간·단체명/지역·인원), 행 검색, 상담일순/예약일순 정렬, 페이지네이션, 행 클릭 → 상세 이동, 행 체크박스 다중 선택, `페이지 권한주기` → 권한 부여 모달, 데이터 없음 빈 상태
 - 제외: 예약 상세 페이지 본문(별도 슬라이스), 실제 예약/직원 데이터 및 권한 저장 API(이번 슬라이스는 mock), 예약 생성/승인/반려 처리
 
-## 화면 구조 (Figma 1628:810)
+## 화면 구조 (Figma 1:5902)
 
 1920px 데스크톱 기준. 좌상단 전역 메뉴 버튼은 기존 사이드바 기능을 재사용한다. 본문은 너비 1320px, 좌우 중앙 정렬이다.
 
@@ -59,7 +62,7 @@ paths: src/pages/notices/reservations, src/entities/reservation, src/features/gr
 - `페이지 권한주기` 클릭 → 선택된 예약이 없으면 안내(검증 모달), 있으면 권한 부여 모달을 연다.
 - 페이지네이션 → 현재 필터/정렬 결과를 PAGE_SIZE로 나눠 페이지 이동. 상태·검색 변경 시 1페이지로 리셋.
 
-## 권한 부여 모달 (Figma 3414:3724)
+## 권한 부여 모달 (구 파일 3414:3724, yot 대응 없음)
 
 - 진입: 하나 이상 선택 + `페이지 권한주기`.
 - 구조: 제목 `권한 줄 직원을 선택해주세요`, 직원 이름 검색바(placeholder `검색할 직원 이름 입력`), 직원 목록(각 행: 아바타 + `{이름} 사원` + `추가`/`추가 완료` 토글 버튼), 하단 `취소`/`확인`.
@@ -67,7 +70,7 @@ paths: src/pages/notices/reservations, src/entities/reservation, src/features/gr
 - 확인 시 mock 저장 경계만 호출하고(실 API 없음), 모달을 닫고 예약 선택을 초기화한다. 취소/Escape는 변경 없이 닫는다.
 - 접근성: `role="dialog"`, modal, 포커스 트랩, 호출 control 복귀.
 
-## 빈 상태 (Figma 2413:3303)
+## 빈 상태 (Figma 1:6114)
 
 - 예약 데이터가 없으면 테이블 카드(헤더 + 검색바)는 유지하고 본문에 `아직 단체예약이 없습니다`를 표시한다. 검색 결과 없음(`검색결과가 없습니다`)과 문구로 구분한다.
 - 데이터가 없을 때는 `페이지 권한주기` 버튼을 숨긴다.
@@ -132,6 +135,6 @@ interface Staff { id: string; name: string }
 
 ## 미결 사항
 
-- [ ] 권한 모달(`3414:3724`)·빈 상태(`2413:3303`)의 정확한 시각/카피 — Figma rate limit 해제 후 확정
+- [ ] 권한 모달(구 `3414:3724`, yot 없음) 존폐·빈 상태(`1:6114`)의 정확한 시각/카피 — #94에서 확정
 - [ ] 예약 상세 페이지(`/notices/reservations/:id`) 본문 — 별도 슬라이스
 - [ ] 실제 예약/직원/권한 API 계약 — `/api` 슬라이스

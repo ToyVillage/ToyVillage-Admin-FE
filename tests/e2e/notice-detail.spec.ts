@@ -26,7 +26,7 @@ test('S2: 읽기 전용 내용 표시', async ({ page }) => {
 
   await expect(page.getByText('분류', { exact: true })).toBeVisible()
   await expect(page.getByText('전체', { exact: true })).toBeVisible()
-  await expect(page.getByText('2026-07-06')).toBeVisible()
+  await expect(page.getByText('2026.07.06')).toBeVisible()
   await expect(
     page.getByRole('heading', { name: '7월 13일 휴관안내' }),
   ).toBeVisible()

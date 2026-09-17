@@ -1,11 +1,13 @@
 ---
 feature: resource-create
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 1602:736
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:7388
   relatedNodeIds:
-    - 2125:1778
-    - 2114:1400
+    - 1:7440
+    - 1:7454
+    - 1:7468
+    - 1:7158
 requires_functional_test: true
 paths: src/pages/notices/resources/CreateResourcePage.tsx, src/features/create-resource, src/entities/resource
 ---
@@ -15,9 +17,10 @@ paths: src/pages/notices/resources/CreateResourcePage.tsx, src/features/create-r
 ## 상태와 근거
 
 - Status: Draft
-- 생성 화면: Figma `1602:736`
-- 첨부자료 칩(파일 배지·다운로드·삭제): Figma `2125:1778`
-- 목록/진입점·검색·페이지네이션: Figma `2114:1400`, `harness/publishing/specs/resources-list.spec.md`
+- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). 차이 반영은 #92에서 한다.
+- 생성 화면: yot Figma `1:7388` (섹션 `자료실 · 작성` `311:12764`) / 제목 누락 `1:7440` / 파일 누락 `1:7454` / 생성 실패 `1:7468`
+- 첨부자료 칩(파일 배지·다운로드·삭제): Figma `1:6226`(수정 화면의 `첨부자료` 칩)
+- 목록/진입점·검색·페이지네이션: Figma `1:7158`, `harness/publishing/specs/resources-list.spec.md`
 - 공통 검증/이탈 모달은 공지 생성과 동일 컴포넌트(`ValidationDialog`, `LeaveConfirmationDialog`)를 재사용
 - 라우트: `src/app/App.tsx` (`/notices/resources/create`)
 
@@ -35,7 +38,7 @@ paths: src/pages/notices/resources/CreateResourcePage.tsx, src/features/create-r
 - `/notices/resources`의 `자료 추가하기` → `/notices/resources/create`
 - 생성 페이지 `뒤로가기` → `/notices/resources`
 
-## 화면 구조 (Figma 1602:736)
+## 화면 구조 (Figma 1:7388)
 
 1. 좌측 상단 전역 메뉴 버튼
 2. 콘텐츠 상단 `뒤로가기`
@@ -45,7 +48,7 @@ paths: src/pages/notices/resources/CreateResourcePage.tsx, src/features/create-r
    - 파일 업로드 — 점선 드롭존, `파일을 끌어서 놓거나 클릭하여 업로드 (최대 50MB)`
 4. 주요 액션 `생성하기` (우측, 검은색)
 
-## 첨부 동작 (Figma 2125:1778)
+## 첨부 동작 (Figma 1:6226)
 
 - 파일이 없을 땐 드롭존만 보이고 `첨부자료` 영역은 없다.
 - 파일을 올리면 드롭존 위에 `첨부자료` 박스가 나타나 파일별 칩(유형 배지·파일명·다운로드·삭제 X)을 보여준다.

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { mockNoticeApi } from './support/notice-api'
 
 const noticeApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
@@ -93,6 +94,7 @@ test('작성 중 사이드바로 이동하려 해도 이탈을 확인한다', as
 test('목록에서 생성 페이지로 진입한 뒤 브라우저 뒤로가기를 해도 이탈을 확인한다', async ({
   page,
 }) => {
+  await mockNoticeApi(page)
   await page.goto('/notices/list')
   await page.getByRole('link', { name: '공지 생성하기' }).click()
   await page.getByLabel(/제목/).fill('히스토리를 보호할 공지')
@@ -337,10 +339,7 @@ test('모달에 입력한 이름으로 팀을 추가한다', async ({ page }) =>
 
   await expect(page.getByRole('dialog', { name: '팀 추가하기' })).toBeHidden()
   await expect(page.getByRole('radio', { name: '새 팀' })).toBeChecked()
-  const removeButton = page.getByRole('button', { name: '새 팀 삭제' })
-  await expect(removeButton).toHaveCSS('opacity', '0')
-  await removeButton.locator('..').hover()
-  await expect(removeButton).toHaveCSS('opacity', '1')
+  await expect(page.getByRole('button', { name: '새 팀 삭제' })).toBeVisible()
 })
 
 test('팀을 처음 추가하면 전체가 사라지고 팀을 여러 번 추가할 수 있다', async ({
@@ -397,9 +396,7 @@ test('S11: 첨부파일 영역은 첨부자료 카드와 업로드 dropzone을 �
   expect(emptyCardBounds!.y).toBeLessThan(uploadBounds!.y)
 })
 
-test('S12: 분류와 첨부파일 삭제 control은 hover 시 공간과 함께 표시한다', async ({
-  page,
-}) => {
+test('S12: 분류와 첨부파일 삭제 control은 항상 표시한다', async ({ page }) => {
   await uploadInput(page).setInputFiles([
     filePayload('운영 안내.pdf', 'application/pdf'),
     filePayload('행사 이미지.png', 'image/png'),
@@ -408,42 +405,19 @@ test('S12: 분류와 첨부파일 삭제 control은 hover 시 공간과 함께 �
   await expect(attachmentGroup(page).getByText('운영 안내.pdf')).toBeVisible()
   await expect(attachmentGroup(page).getByText('행사 이미지.png')).toBeVisible()
   await addTeam(page, '팀 이름1')
-  const categoryRemove = page.locator('button[aria-label="팀 이름1 삭제"]')
-  const attachmentRemove = page.locator(
-    'button[aria-label="운영 안내.pdf 삭제"]',
-  )
+  const categoryRemove = page.getByRole('button', { name: '팀 이름1 삭제' })
+  const attachmentRemove = page.getByRole('button', {
+    name: '운영 안내.pdf 삭제',
+  })
 
   for (const removeButton of [categoryRemove, attachmentRemove]) {
-    const parent = removeButton.locator('..')
-
-    await expect(removeButton).toHaveCSS('position', 'absolute')
-    await expect(removeButton).toHaveCSS('opacity', '0')
+    await expect(removeButton).toBeVisible()
+    await expect(removeButton).toHaveCSS('opacity', '1')
     await expect(removeButton).toHaveCSS('color', 'rgb(132, 132, 145)')
     await expect(removeButton).toHaveCSS('border-style', 'none')
 
-    const initialParentBounds = await parent.boundingBox()
-    expect(initialParentBounds).not.toBeNull()
-
-    await parent.hover()
-    await expect(removeButton).toHaveCSS('position', 'static')
-    await expect(removeButton).toHaveCSS('opacity', '1')
-    await expect(removeButton).toHaveCSS('width', '20px')
-    await expect(removeButton).toHaveCSS('height', '20px')
-
-    const hoveredParentBounds = await parent.boundingBox()
-    expect(hoveredParentBounds).not.toBeNull()
-    expect(hoveredParentBounds!.width).toBeGreaterThan(
-      initialParentBounds!.width,
-    )
-    expect(hoveredParentBounds!.height).toBe(initialParentBounds!.height)
-
     await removeButton.hover()
     await expect(removeButton).toHaveCSS('color', 'rgb(255, 49, 49)')
-
-    await page.mouse.move(0, 0)
-    await expect(removeButton).toHaveCSS('opacity', '0')
-    await removeButton.focus()
-    await expect(removeButton).toHaveCSS('opacity', '1')
   }
 })
 
