@@ -125,7 +125,8 @@ async function getFeedHistory(
       }
     })
     // 최신 급여가 위로 온다(서버 정렬 명세 없음).
-    .sort((left, right) => right.feedDateTime.localeCompare(left.feedDateTime))
+    // 오프셋이 붙은 값과 안 붙은 값이 섞여도 되도록 시각으로 견준다.
+    .sort((left, right) => toEpoch(right.feedDateTime) - toEpoch(left.feedDateTime))
     .map((item) => item.record)
 }
 
@@ -154,6 +155,12 @@ function splitFeedDateTime(feedDateTime: string): {
 
   const [date, time = ''] = feedDateTime.split('T')
   return { fedDate: date, fedTime: time.slice(0, 5) }
+}
+
+/** 정렬용 시각. 파싱할 수 없으면 가장 뒤로 보낸다. */
+function toEpoch(feedDateTime: string): number {
+  const parsed = new Date(feedDateTime).getTime()
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed
 }
 
 function hasUtcOffset(value: string): boolean {
