@@ -1,0 +1,95 @@
+# API Contract — DASHBOARD_FEED_LOG_QUERY_ALL
+
+## Source
+
+- Notion 데이터베이스 `API 명세서 토이빌리지` (`https://app.notion.com/p/3de7a4d6147480e18466e66547493b25`, `collection://9717a4d6-1474-822a-8703-074d4cfad636`, 2026-09-17 개발자가 새로 옮긴 DB)
+- Resolved page: https://app.notion.com/p/aaf7a4d614748394bd4501dac6a97ea8
+- Requested page: 없음
+- Checked at: 2026-09-17
+- Exact match count: 1 (카테고리 `대시보드` 4건 중 API ID 정확 일치 1건)
+- staging Swagger(`/v3/api-docs`, `dash-board-controller`)의 Method·Path·응답 필드와 일치함을 확인했다.
+
+## Basic Information
+
+| API ID | Name | Description | Method | Full Path | Content-Type |
+| --- | --- | --- | --- | --- | --- |
+| DASHBOARD_FEED_LOG_QUERY_ALL | 대시보드 주간 급여일지 목록 조회 | 이번 주 급여일지를 최신순으로 페이지 조회하는 기능 | GET | /dashboard/feed-logs | application/json |
+
+## Authentication and Authorization
+
+| Required | Type | Roles |
+| --- | --- | --- |
+| true | Bearer | ADMIN |
+
+- Notion `접근권한` ADMIN, `토큰 여부` 체크. 관리자 액세스 토큰만 허용.
+
+## Request Headers
+
+| Name | Type | Required | Nullable | Default | Example | Description |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Authorization` | string | true | false | 없음 | `Bearer {accessToken}` | JWT 액세스 토큰. 관리자(ADMIN) 토큰만 허용 — Bearer scheme |
+
+## Path Parameters
+
+없음
+
+## Query Parameters
+
+| Name | Type | Required | Nullable | Default | Example | Description |
+| --- | --- | --- | --- | --- | --- | --- |
+| `page` | integer | false | false | 1 | `1` | 조회할 페이지 번호. 1부터 시작 |
+| `size` | integer | false | false | 10 | `10` | 페이지당 데이터 개수 |
+| `sort` | string | false | false | feedDateTime,desc | `feedDateTime,desc` | 정렬. 기본 정렬 `feedDateTime,desc` 이후 `id,desc` |
+
+## Request Body
+
+없음
+
+## Request Example
+
+`GET /dashboard/feed-logs?page=1&size=10`
+
+## Success Responses
+
+### HTTP 200 — 급여일지 페이지 (이번 주 일요일 00:00 이상 ~ 다음 주 일요일 00:00 미만)
+
+| Name | Type | Required | Nullable | Default | Example | Description |
+| --- | --- | --- | --- | --- | --- | --- |
+| `content` | array<object> | true | false | 없음 | `[{"animalKind":"사자","animalName":"라이언","feedDateTime":"2026-09-17T09:30:00"}]` | 급여일지 목록 |
+| `content[].animalKind` | string | true | false | 없음 | `사자` | 동물 종 |
+| `content[].animalName` | string | true | false | 없음 | `라이언` | 개체 이름 |
+| `content[].feedDateTime` | datetime | true | false | 없음 | `2026-09-17T09:30:00` | 급여 일시 |
+| `pageable` | object | true | false | 없음 | `{"pageNumber":0,"pageSize":10,"sort":{"empty":false,"sorted":true,"unsorted":false},"offset":0,"paged":true,"unpaged":false}` | 페이지 정보. `pageNumber`는 0부터 |
+| `last` | boolean | true | false | 없음 | `true` | 마지막 페이지 여부 |
+| `totalPages` | integer | true | false | 없음 | `1` | 전체 페이지 수 |
+| `totalElements` | integer | true | false | 없음 | `2` | 전체 건수 |
+| `size` | integer | true | false | 없음 | `10` | 페이지 크기 |
+| `number` | integer | true | false | 없음 | `0` | 현재 페이지 번호. 0부터 시작 |
+| `sort` | object | true | false | 없음 | `{"empty":false,"sorted":true,"unsorted":false}` | 정렬 정보 |
+| `first` | boolean | true | false | 없음 | `true` | 첫 페이지 여부 |
+| `numberOfElements` | integer | true | false | 없음 | `2` | 현재 페이지 건수 |
+| `empty` | boolean | true | false | 없음 | `false` | 빈 페이지 여부 |
+
+- 명세에 필드별 required·nullable 표기가 없어 200 예시에 모든 필드가 값으로 존재하는 것을 근거로 required·non-null로 기록했다.
+
+## Error Responses
+
+| Status | 설명 | Body |
+| --- | --- | --- |
+| 400 | 잘못된 요청 — 요청 값의 형식 또는 정렬 조건 오류 | `{ message, status, timestamp, description }` |
+| 401 | 만료된 토큰 | `{ message, status, timestamp, description }` |
+| 403 | 인증 토큰이 없거나 유효하지 않거나 관리자 권한 없음 — 본문 없이 반환될 수 있음 | 없음(본문 없이 반환될 수 있음) |
+| 405 | 지원하지 않는 메서드 | `{ message, status, timestamp, description }` |
+| 500 | 내부 서버 오류 | `{ message, status, timestamp, description }` |
+
+
+## Validation and Constraints
+
+- 명세에 별도 제약 없음.
+
+## Notes
+
+- 이번 주 일요일 00:00 이상부터 다음 주 일요일 00:00 미만까지의 급여일지를 조회한다.
+- 요청 `page`는 1부터, 응답 `number`·`pageable.pageNumber`는 0부터 시작한다.
+- 데이터베이스 엔드포인트 값 `/dashboard/feed-logs?page=1&size=10`의 Query String은 Path에서 분리했다.
+- `content[]` 항목에 식별자가 없다.
