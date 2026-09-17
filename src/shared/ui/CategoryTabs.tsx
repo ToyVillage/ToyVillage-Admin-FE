@@ -4,38 +4,26 @@ interface CategoryTabsProps {
   categories: string[]
   active: string
   onSelect: (category: string) => void
-  /** 고를 수 없는 탭. 서버가 그 필터를 지원하지 않을 때 쓴다. */
-  disabled?: string[]
 }
 
 export function CategoryTabs({
   categories,
   active,
   onSelect,
-  disabled = [],
 }: CategoryTabsProps) {
   return (
     <Tabs>
-      {categories.map((c) => {
-        const isDisabled = disabled.includes(c)
-
-        return (
-          <Tab
-            key={c}
-            type="button"
-            $active={c === active}
-            $disabled={isDisabled}
-            aria-pressed={c === active}
-            aria-disabled={isDisabled || undefined}
-            onClick={() => {
-              if (isDisabled) return
-              onSelect(c)
-            }}
-          >
-            {c}
-          </Tab>
-        )
-      })}
+      {categories.map((c) => (
+        <Tab
+          key={c}
+          type="button"
+          $active={c === active}
+          aria-pressed={c === active}
+          onClick={() => onSelect(c)}
+        >
+          {c}
+        </Tab>
+      ))}
     </Tabs>
   )
 }
@@ -46,12 +34,11 @@ const Tabs = styled.div`
   margin-top: 32px;
 `
 
-const Tab = styled.button<{ $active: boolean; $disabled?: boolean }>`
+const Tab = styled.button<{ $active: boolean }>`
   border: 0;
   border-bottom: ${({ $active, theme }) =>
     $active ? `2px solid ${theme.colors.text}` : '2px solid transparent'};
-  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
-  opacity: ${({ $disabled }) => ($disabled ? 0.4 : 1)};
+  cursor: pointer;
   padding: 10px 40px;
   font-weight: 600;
   font-size: 22px;
