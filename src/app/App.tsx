@@ -4,7 +4,7 @@ import {
   Outlet,
   RouterProvider,
 } from 'react-router-dom'
-import { HomePage } from '@/pages/home'
+import { DashboardPage } from '@/pages/dashboard'
 import { LoginPage } from '@/pages/login'
 import {
   CreateNoticePage,
@@ -74,7 +74,7 @@ const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: '/', element: <HomePage /> },
+          { path: '/', element: <DashboardPage /> },
           {
             path: '/notices',
             element: <Navigate to="/notices/list" replace />,
