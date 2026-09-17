@@ -1,5 +1,6 @@
 import { isAxiosError } from 'axios'
 import { api } from '@/shared/api/axios'
+import { storedFileUrl } from '@/shared/api/fileStorage'
 import { formatFeedAmount } from '../model/format'
 import type {
   FeedHistoryRecord,
@@ -95,8 +96,10 @@ export async function getFeedDetail({
     fedDate,
     fedTime,
     note: data.significant ?? '',
-    // `animalImageUrl` 은 `fileName`·`fileKey` 뿐이라 표시할 URL 이 없다.
-    animalPhotoUrl: undefined,
+    // 응답은 `fileName`·`fileKey` 만 준다. 개체·종 사진과 같은 규칙으로 URL 을 만든다.
+    animalPhotoUrl: data.animalImageUrl
+      ? storedFileUrl(data.animalImageUrl.fileKey)
+      : undefined,
     history,
   }
 }
