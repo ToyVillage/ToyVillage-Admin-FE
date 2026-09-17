@@ -48,9 +48,7 @@ export async function logoutApp(): Promise<AppAuthLogoutResponse> {
   return data
 }
 
-function isAppAuthLoginResponse(
-  value: unknown,
-): value is AppAuthLoginResponse {
+function isAppAuthLoginResponse(value: unknown): value is AppAuthLoginResponse {
   if (typeof value !== 'object' || value === null) return false
 
   const response = value as Record<string, unknown>
