@@ -33,5 +33,5 @@ export interface TaskReportAttachmentFile {
 
 export type TaskReportListItem = Pick<
   TaskReport,
-  'id' | 'assigneeName' | 'reviewStatus' | 'priority' | 'dueDate'
+  'id' | 'assigneeName' | 'title' | 'reviewStatus' | 'priority' | 'dueDate'
 >

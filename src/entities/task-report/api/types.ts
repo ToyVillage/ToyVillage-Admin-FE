@@ -5,8 +5,8 @@ export interface TaskReportQueryAllRequest {
   /** 1부터 시작한다. */
   page: number
   size: number
-  /** 상태 탭. 항상 보낸다(`전체` 탭 없음). */
-  status: TaskReportReviewStatus
+  /** 상태 필터. 목록 화면은 탭 값을 항상 보내고, 대시보드는 생략해 전체를 조회한다. */
+  status?: TaskReportReviewStatus
 }
 
 export interface TaskReportQueryAllResponseItem {
