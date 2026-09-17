@@ -47,25 +47,26 @@ export function TaskDetailPage() {
   })
 
   // 담당자별 보고 현황과 집계는 상세 조회 응답에 함께 온다. 따로 조회하지 않는다.
-  // 서버 `MISSING`(미제출)은 화면에서 `심사대기` 로 보여준다(개발자 결정).
+  // 서버 `MISSING`(미제출)은 `미제출` 배지로 따로 보여준다(yot 133:9725).
   const reportItems = useMemo<TaskReportSummaryItem[]>(
     () =>
       (task?.reports ?? []).map((report) => ({
         reportId: report.reportId,
         assigneeName: report.name,
-        reviewStatus: report.status === 'MISSING' ? 'PENDING' : report.status,
+        reviewStatus: report.status,
       })),
     [task],
   )
 
-  // 진행도도 같은 규칙이다. 미제출을 심사대기에 더한다.
+  // 진행도도 미제출을 심사대기와 따로 센다.
   const progress = useMemo<TaskReportProgressCounts | undefined>(
     () =>
       task && {
         total: task.progress.total,
         approved: task.progress.approved,
         rejected: task.progress.rejected,
-        pending: task.progress.pending + task.progress.missing,
+        pending: task.progress.pending,
+        missing: task.progress.missing,
       },
     [task],
   )

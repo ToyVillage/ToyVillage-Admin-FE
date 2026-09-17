@@ -5,8 +5,9 @@ export interface TaskReportProgressCounts {
   total: number
   approved: number
   rejected: number
-  /** 심사대기 + 미제출. 별도 조각 없이 심사대기에 합산한다(spec 결정 사항). */
   pending: number
+  /** 미제출. 조각을 그리지 않고 트랙 색으로 남긴다(yot 152:11536). */
+  missing: number
 }
 
 interface TaskProgressCardProps {
@@ -24,7 +25,7 @@ export function TaskProgressCard({ counts }: TaskProgressCardProps) {
   const segments = [
     { key: 'approved', value: counts.approved, color: theme.colors.accent },
     { key: 'rejected', value: counts.rejected, color: theme.colors.warning },
-    { key: 'pending', value: counts.pending, color: theme.colors.pageMuted },
+    { key: 'pending', value: counts.pending, color: theme.colors.textGuide },
   ].filter((segment) => segment.value > 0)
 
   let offset = 0
@@ -52,9 +53,14 @@ export function TaskProgressCard({ counts }: TaskProgressCardProps) {
           )
         })}
       </Donut>
+      {/* Figma 대로 두 줄로 나눈다. 좁은 폭에서는 줄 안에서 다시 접힌다. */}
       <Summary>
-        전체 {counts.total} · 승인 {counts.approved} · 반려 {counts.rejected} ·
-        심사대기 {counts.pending}
+        <SummaryLine>
+          전체 {counts.total} · 승인 {counts.approved} · 반려 {counts.rejected}
+        </SummaryLine>{' '}
+        <SummaryLine>
+          심사대기 {counts.pending} · 미제출 {counts.missing}
+        </SummaryLine>
       </Summary>
     </Card>
   )
@@ -94,7 +100,7 @@ const Donut = styled.svg`
 
 const Track = styled.circle`
   fill: none;
-  stroke: ${({ theme }) => theme.colors.background};
+  stroke: ${({ theme }) => theme.colors.tableHeaderStrong};
   stroke-width: 40;
 `
 
@@ -112,4 +118,8 @@ const Summary = styled.p`
   text-align: center;
   /* 좁은 폭에서 심사대기 같은 낱말이 글자 단위로 끊기지 않게 어절 단위로 접는다. */
   word-break: keep-all;
+`
+
+const SummaryLine = styled.span`
+  display: block;
 `
