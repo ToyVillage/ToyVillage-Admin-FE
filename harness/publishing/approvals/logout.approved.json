@@ -1,0 +1,14 @@
+{
+  "feature": "logout",
+  "approvedAt": "2026-09-17T01:29:20.391Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5"
+  ],
+  "scenarioHash": "8c96512a3beeefbafce4d4b1922c48a44ee196ffde7b166fb8d600b0848020cd",
+  "e2eHash": "50dcfb9257a07131a670746b46fcff335fe41abb483430bba05354a0c6d1d009"
+}

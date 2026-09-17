@@ -3,6 +3,7 @@ export type SidebarIconName =
   | 'dashboard'
   | 'facility'
   | 'inventory'
+  | 'logout'
   | 'megaphone'
   | 'settings'
   | 'task'
