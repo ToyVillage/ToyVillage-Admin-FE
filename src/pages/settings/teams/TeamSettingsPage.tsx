@@ -101,13 +101,19 @@ export function TeamSettingsPage() {
     mutationFn: (name: string) => createTeam({ name }),
     onSuccess: async () => {
       // 생성 응답이 새 팀 id 를 주지 않는다. 목록을 다시 받아 늘어난 id 를 고른다.
-      const before = new Set(teams.map((team) => team.id))
+      // 렌더 시점 목록 대신 캐시를 읽는다. 목록이 아직 로드되지 않았거나 다른
+      // 관리자가 함께 팀을 만들었으면 새 id 를 특정할 수 없어 선택을 건드리지 않는다.
+      const before = new Set(
+        (queryClient.getQueryData<Team[]>(teamsQueryKey) ?? []).map(
+          (team) => team.id,
+        ),
+      )
       await refreshTeams()
       const next = queryClient.getQueryData<Team[]>(teamsQueryKey) ?? []
-      const created = next.find((team) => !before.has(team.id))
+      const created = next.filter((team) => !before.has(team.id))
 
       setDialog(null)
-      if (created) setSelectedId(created.id)
+      if (created.length === 1) setSelectedId(created[0].id)
     },
     onError: () => {
       setDialog(null)
@@ -178,6 +184,17 @@ export function TeamSettingsPage() {
         }))
     : []
 
+  // 목록을 못 받은 것과 팀이 0개인 것은 다르다. 빈 레일로 숨기지 않는다.
+  if (teamsQuery.isError) {
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          팀 목록을 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
+  }
+
   return (
     <Page>
       <Content>
@@ -194,11 +211,18 @@ export function TeamSettingsPage() {
             onAddClick={() => setDialog('add-team')}
           />
 
-          {selectedTeam && (
+          {selectedTeam && membersQuery.isError && (
+            <PanelStatus role="alert">
+              팀원을 불러오지 못했습니다. 다시 시도해 주세요.
+            </PanelStatus>
+          )}
+
+          {selectedTeam && !membersQuery.isError && (
             <TeamDetailPanel
               key={selectedTeam.id}
               team={selectedTeam}
               members={members}
+              membersPending={membersQuery.isPending}
               onRename={(name) =>
                 renameTeamMutation.mutate({ teamId: selectedTeam.id, name })
               }
@@ -296,4 +320,43 @@ const Layout = styled.div`
   align-items: stretch;
   gap: 20px;
   margin-top: 88px;
+`
+
+// 조회 실패 카드. TaskListPage·SpeciesListPage 와 같은 형태다.
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  display: flex;
+  width: min(100%, 560px);
+  flex-direction: column;
+  align-items: center;
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
+
+// 레일은 그대로 두고 상세 패널 자리만 대체한다. 패널과 같은 테두리·배경을 쓴다.
+const PanelStatus = styled.section`
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  border: 1px solid ${({ theme }) => theme.colors.tableHeaderStrong};
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
 `

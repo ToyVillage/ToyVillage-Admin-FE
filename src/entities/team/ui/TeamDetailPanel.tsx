@@ -7,6 +7,8 @@ interface TeamDetailPanelProps {
   team: Team
   /** 팀원 목록. 멤버 조회와 직원 목록을 합친 결과를 화면에서 넘긴다. */
   members: TeamMember[]
+  /** 멤버 조회 중. 아직 모르는 목록을 `팀원 없음` 으로 단정하지 않기 위해 쓴다. */
+  membersPending: boolean
   onRename: (name: string) => void
   onDeleteClick: () => void
   onAddMemberClick: () => void
@@ -18,6 +20,7 @@ interface TeamDetailPanelProps {
 export function TeamDetailPanel({
   team,
   members,
+  membersPending,
   onRename,
   onDeleteClick,
   onAddMemberClick,
@@ -118,14 +121,22 @@ export function TeamDetailPanel({
       <SectionHeaderRow>
         <LabelGroup>
           <SectionLabel>팀원</SectionLabel>
-          <SectionCount>{members.length}명</SectionCount>
+          <SectionCount>{membersPending ? '' : `${members.length}명`}</SectionCount>
         </LabelGroup>
-        <AddMemberButton type="button" onClick={onAddMemberClick}>
+        <AddMemberButton
+          type="button"
+          disabled={membersPending}
+          onClick={onAddMemberClick}
+        >
           ＋&nbsp;&nbsp;인원 추가하기
         </AddMemberButton>
       </SectionHeaderRow>
 
-      <TeamMemberTable members={members} onRemove={onRemoveMember} />
+      <TeamMemberTable
+        members={members}
+        pending={membersPending}
+        onRemove={onRemoveMember}
+      />
     </Panel>
   )
 }
@@ -288,6 +299,11 @@ const AddMemberButton = styled.button`
   color: ${({ theme }) => theme.colors.surface};
   font-size: 22px;
   font-weight: 600;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.accent};
