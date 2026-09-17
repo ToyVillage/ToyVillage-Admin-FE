@@ -22,7 +22,8 @@ test('S1: 상세 진입 기본 표시', async ({ page }) => {
 
   await expect(page.getByRole('link', { name: '뒤로가기' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '레오' })).toBeVisible()
-  await expect(page.getByText('급여일시').first()).toBeVisible()
+  await expect(page.getByText('급여날짜').first()).toBeVisible()
+  await expect(page.getByText('급여시간').first()).toBeVisible()
   await expect(page.getByText('급여자').first()).toBeVisible()
   await expect(page.getByText('먹이 종류', { exact: true })).toBeVisible()
   await expect(page.getByText('급여량', { exact: true })).toBeVisible()
@@ -39,6 +40,25 @@ test('S2: 목록에서 상세로, 뒤로가기로 목록으로', async ({ page }
   await expect(page).toHaveURL(/\/feeds$/)
 })
 
+// 상세에 다녀와도 목록의 조회 조건(조회날짜·분류·페이지)이 그대로여야 한다.
+test('S2-1: 뒤로가기하면 목록의 조회 조건이 유지된다', async ({ page }) => {
+  await page.goto('/feeds')
+
+  await page.getByRole('button', { name: '파충류' }).click()
+  await expect(page.getByTestId('feed-row')).toHaveCount(1)
+
+  await page.getByTestId('feed-row').first().click()
+  await expect(page).toHaveURL(/\/feeds\/5$/)
+
+  await page.getByRole('link', { name: '뒤로가기' }).click()
+
+  await expect(page.getByRole('button', { name: '파충류' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(page.getByTestId('feed-row')).toHaveCount(1)
+})
+
 test('S3: 급여 이력 건수와 행 수가 일치한다', async ({ page }) => {
   await page.goto('/feeds/1')
 
@@ -49,7 +69,8 @@ test('S3: 급여 이력 건수와 행 수가 일치한다', async ({ page }) => 
 test('S4: 급여 이력 표의 열 구성', async ({ page }) => {
   await page.goto('/feeds/1')
 
-  await expect(page.getByText('급여일시').last()).toBeVisible()
+  await expect(page.getByText('급여날짜').last()).toBeVisible()
+  await expect(page.getByText('급여시간').last()).toBeVisible()
   await expect(page.getByText('급여자').last()).toBeVisible()
   await expect(page.getByText('먹이 종류 · 급여량')).toBeVisible()
   await expect(page.getByText('특이사항').last()).toBeVisible()
@@ -72,6 +93,20 @@ test('S6: 급여 이력이 자기 자신 한 건뿐인 상태', async ({ page })
 
   await expect(page.getByText('1건')).toBeVisible()
   await expect(historyRows(page)).toHaveCount(1)
+})
+
+// 급여날짜는 열 폭이 모자라 말줄임되면 안 된다.
+test('S6-1: 급여 이력의 급여날짜는 잘리지 않는다', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 900 })
+  await page.goto('/feeds/1')
+  await expect(historyRows(page)).toHaveCount(3)
+
+  const dateCell = historyRows(page)
+    .first()
+    .getByText(/^\d{4}\.\d{2}\.\d{2}$/)
+  const scrollWidth = await dateCell.evaluate((node) => node.scrollWidth)
+  const clientWidth = await dateCell.evaluate((node) => node.clientWidth)
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
 })
 
 test('S7: 급여 이력 행은 클릭 대상이 아니다', async ({ page }) => {

@@ -1,16 +1,12 @@
-import styled from '@emotion/styled'
 import {
   DataTable,
   type DataTableColumn,
   type DataTablePagination,
   type DataTableRow,
 } from '@/shared/ui'
-import {
-  formatAnimalLabel,
-  formatFedAt,
-  formatFeedLabel,
-} from '../model/format'
+import { formatFedDate, formatFeedLabel } from '../model/format'
 import type { FeedRecord } from '../model/types'
+import { TruncatedCell } from './TruncatedCell'
 
 interface FeedTableProps {
   feeds: FeedRecord[]
@@ -20,13 +16,38 @@ interface FeedTableProps {
 }
 
 // Figma `748:14291` 의 열 구성. 케밥 열은 디자인에서 가려져 있어 만들지 않고,
-// 남는 폭은 마지막 `급여일시` 열이 채운다.
+// 남는 폭은 마지막 `급여시간` 열이 채운다.
+// 대상 개체와 급여일시는 각각 두 열로 나눠 보여 준다(한 칸에 붙이면 줄바꿈으로 깨진다).
 const columns: DataTableColumn[] = [
-  { key: 'animal', header: '대상 개체', width: 240, variant: 'title' },
-  { key: 'feed', header: '먹이 종류 · 급여량', width: 480, variant: 'title' },
-  { key: 'feeder', header: '급여자', width: 280, render: mutedCell('feeder') },
-  { key: 'fedAt', header: '급여일시', render: mutedCell('fedAt') },
+  { key: 'animalKind', header: '종', width: 200, render: cell('animalKind') },
+  {
+    key: 'animalName',
+    header: '개체명',
+    width: 180,
+    render: cell('animalName'),
+  },
+  // 남는 폭은 `먹이 종류 · 급여량` 이 채운다.
+  { key: 'feed', header: '먹이 종류 · 급여량', render: cell('feed') },
+  { key: 'feeder', header: '급여자', width: 180, render: mutedCell('feeder') },
+  // 날짜·시간은 잘리면 안 되는 값이라 좌우 여백을 줄이고 폭을 넉넉히 둔다.
+  {
+    key: 'fedDate',
+    header: '급여날짜',
+    width: 220,
+    paddingX: 24,
+    render: mutedCell('fedDate'),
+  },
+  {
+    key: 'fedTime',
+    header: '급여시간',
+    width: 140,
+    paddingX: 24,
+    render: mutedCell('fedTime'),
+  },
 ]
+
+// 열 폭 합계. 화면이 이보다 좁아지면 표를 가로로 스크롤한다.
+export const feedTableMinWidth = 200 + 180 + 320 + 180 + 220 + 140
 
 const appearance = {
   headerBackground: 'tableHeaderStrong',
@@ -45,10 +66,12 @@ export function FeedTable({
       rows={feeds.map(
         (feed): DataTableRow => ({
           id: feed.id,
-          animal: formatAnimalLabel(feed.animalType, feed.animalName),
+          animalKind: feed.animalType,
+          animalName: feed.animalName,
           feed: formatFeedLabel(feed.feedType, feed.feedAmount),
           feeder: feed.feederName,
-          fedAt: formatFedAt(feed.fedDate, feed.fedTime),
+          fedDate: formatFedDate(feed.fedDate),
+          fedTime: feed.fedTime,
         }),
       )}
       columns={columns}
@@ -62,15 +85,16 @@ export function FeedTable({
   )
 }
 
-// Figma 의 `급여자`·`급여일시` 는 gray/60(#848491) 22px 다.
-function mutedCell(key: string) {
+// 값이 열 폭을 넘으면 말줄임한다.
+function cell(key: string) {
   return function render(row: DataTableRow) {
-    return <MutedCell>{row[key]}</MutedCell>
+    return <TruncatedCell value={String(row[key] ?? '')} />
   }
 }
 
-const MutedCell = styled.span`
-  color: ${({ theme }) => theme.colors.textGuide};
-  font-size: 22px;
-  font-weight: 500;
-`
+// Figma 의 `급여자`·`급여날짜`·`급여시간` 은 gray/60(#848491) 22px 다.
+function mutedCell(key: string) {
+  return function render(row: DataTableRow) {
+    return <TruncatedCell value={String(row[key] ?? '')} muted />
+  }
+}

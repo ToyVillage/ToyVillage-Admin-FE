@@ -601,9 +601,13 @@ const HeadCell = styled.div<{
   justify-content: ${({ $align }) =>
     $align === 'center' ? 'center' : 'flex-start'};
   padding: 12px ${({ $paddingX }) => $paddingX ?? 40}px;
+  overflow: hidden;
   color: ${({ theme, $color }) => theme.colors[$color]};
   font-weight: ${({ $fontWeight }) => $fontWeight};
   font-size: ${({ $fontSize }) => $fontSize}px;
+  /* 라벨이 열 폭보다 길어도 두 줄로 깨지지 않고 말줄임한다. */
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `
 
 const Cell = styled.div<{
