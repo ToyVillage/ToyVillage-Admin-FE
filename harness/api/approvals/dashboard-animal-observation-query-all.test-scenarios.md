@@ -11,7 +11,7 @@ route 패턴은 `^https://[^/]+/dashboard/<path>(?:\?.*)?$`.
 
 ## S2: content 를 `개체관리` 카드 행으로 표시한다
 
-- content `[{title:"식욕 저하 관찰",createdAt:"2026-09-03T09:30:00"}, {title:"건강 상태 양호",createdAt:"2026-09-01T10:05:00"}]`
+- content `[{animalObservationId:31,animalId:7,title:"식욕 저하 관찰",createdAt:"2026-09-03T09:30:00"}, {animalObservationId:30,animalId:7,title:"건강 상태 양호",createdAt:"2026-09-01T10:05:00"}]`
 - 행 1 `식욕 저하 관찰` / `3시간 전`, 행 2 `건강 상태 양호` / `2026.09.01`
 
 ## S3: 4건 이상 내려와도 3행만 표시한다
@@ -24,7 +24,25 @@ route 패턴은 `^https://[^/]+/dashboard/<path>(?:\?.*)?$`.
 
 ## S7: 응답 형식 오류 → 오류 상태
 
-- `content` 누락 또는 항목 필드 타입 불일치
+- `content` 누락, 항목 필드 타입 불일치, `animalObservationId`·`animalId` 누락
+
+## S8: 행을 누르면 종 ID를 찾아 관찰 상세로 이동한다
+
+- `mockAnimalManageApi(page, { animals: observationAnimals(), observations: observationFixture() })` (개체 7 = 종 1, 관찰 31 `식욕 감소`)
+- content `animalObservationId:31, animalId:7` 행 클릭 → `/individuals/7/observations/31` → `GET /animal-manage/7` → URL `/species/1/individuals/7/observations/31`, 제목 `식욕 감소` 표시
+- 뒤로 가기 시 대시보드(`/`)로 돌아간다(`replace` 이동)
+
+## S9: 경유 경로 — 개체 조회 중 로딩 문구
+
+- `GET /animal-manage/7` 지연 → `관찰 기록을 불러오는 중입니다.`
+
+## S10: 경유 경로 — 개체 404 → `관찰 기록을 찾을 수 없습니다.`
+
+## S11: 경유 경로 — 개체 500 → `관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요.`
+
+## S12: 경유 경로 — id가 양의 정수가 아니면 요청 없이 찾을 수 없음
+
+- `/individuals/abc/observations/31` → `GET /animal-manage/*` 호출 0회, `관찰 기록을 찾을 수 없습니다.`
 
 ## 범위 밖
 

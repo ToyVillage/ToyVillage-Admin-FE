@@ -84,6 +84,8 @@
               "default": null,
               "example": [
                 {
+                  "animalObservationId": 12,
+                  "animalId": 5,
                   "title": "식욕 저하 관찰",
                   "createdAt": "2026-09-17T14:20:00"
                 }
@@ -93,6 +95,28 @@
               "items": {
                 "type": "object",
                 "fields": [
+                  {
+                    "name": "animalObservationId",
+                    "location": "response",
+                    "type": "integer",
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "example": 12,
+                    "description": "관찰 및 특이사항 ID",
+                    "constraints": []
+                  },
+                  {
+                    "name": "animalId",
+                    "location": "response",
+                    "type": "integer",
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "example": 5,
+                    "description": "관찰 대상 개체 ID(animalManageId)",
+                    "constraints": []
+                  },
                   {
                     "name": "title",
                     "location": "response",

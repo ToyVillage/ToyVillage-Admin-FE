@@ -55,7 +55,9 @@
 
 | Name | Type | Required | Nullable | Default | Example | Description |
 | --- | --- | --- | --- | --- | --- | --- |
-| `content` | array<object> | true | false | 없음 | `[{"title":"식욕 저하 관찰","createdAt":"2026-09-17T14:20:00"}]` | 관찰 및 특이사항 목록 |
+| `content` | array<object> | true | false | 없음 | `[{"animalObservationId":12,"animalId":5,"title":"식욕 저하 관찰","createdAt":"2026-09-17T14:20:00"}]` | 관찰 및 특이사항 목록 |
+| `content[].animalObservationId` | integer | true | false | 없음 | `12` | 관찰 및 특이사항 ID |
+| `content[].animalId` | integer | true | false | 없음 | `5` | 관찰 대상 개체 ID(animalManageId) |
 | `content[].title` | string | true | false | 없음 | `식욕 저하 관찰` | 관찰 및 특이사항 제목 |
 | `content[].createdAt` | datetime | true | false | 없음 | `2026-09-17T14:20:00` | 작성 일시 |
 | `pageable` | object | true | false | 없음 | `{"pageNumber":0,"pageSize":10,"sort":{"empty":false,"sorted":true,"unsorted":false},"offset":0,"paged":true,"unpaged":false}` | 페이지 정보. `pageNumber`는 0부터 |
@@ -91,4 +93,5 @@
 - 이번 주 일요일 00:00 이상부터 다음 주 일요일 00:00 미만까지 작성된 관찰 및 특이사항을 조회한다.
 - 요청 `page`는 1부터, 응답 `number`·`pageable.pageNumber`는 0부터 시작한다.
 - 데이터베이스 엔드포인트 값 `/dashboard/animal-observations?page=1&size=10`의 Query String은 Path에서 분리했다.
-- `content[]` 항목에 식별자가 없다.
+- `content[].animalObservationId`·`animalId`는 Notion 명세에 아직 없다. 백엔드 develop `1247f43`(hotfix :: 대시보드 개체관리에 id 추가)의 `DashBoardQueryAnimalManageResponse`를 근거로 추가했다(2026-09-17, 개발자 결정).
+- 응답에 종 ID(`animalKindId`)는 없다.
