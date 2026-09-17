@@ -245,8 +245,15 @@ function createCalendarDays(month: Date, schedules: CloseSchedule[]) {
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1)
   const start = new Date(firstDay)
   start.setDate(firstDay.getDate() - firstDay.getDay())
+  // yot `1:6148`: 6주로 고정하지 않고 그 달이 걸친 주만 그린다.
+  const lastDate = new Date(
+    month.getFullYear(),
+    month.getMonth() + 1,
+    0,
+  ).getDate()
+  const weekCount = Math.ceil((firstDay.getDay() + lastDate) / 7)
 
-  return Array.from({ length: 42 }, (_, index): CalendarDay => {
+  return Array.from({ length: weekCount * 7 }, (_, index): CalendarDay => {
     const date = new Date(start)
     date.setDate(start.getDate() + index)
 
