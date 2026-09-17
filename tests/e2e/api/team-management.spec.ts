@@ -245,10 +245,11 @@ test('S12: 팀 목록 조회 실패를 빈 목록으로 숨기지 않는다', as
 
   await page.goto('/settings/teams')
 
-  await expect(page.getByRole('heading', { name: '팀 관리' })).toBeVisible()
-  await expect(railRows(page)).toHaveCount(0)
-  await expect(page.getByText('0개')).toBeVisible()
-  // 상세 패널은 선택된 팀이 없으므로 아예 렌더하지 않는다.
+  // 팀이 0개인 것과 목록을 못 받은 것을 구분한다. 빈 레일로 넘어가지 않는다.
+  await expect(page.getByRole('alert')).toContainText(
+    '팀 목록을 불러오지 못했습니다',
+  )
+  await expect(page.getByRole('button', { name: '팀 추가하기' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: '팀 삭제' })).toHaveCount(0)
 })
 
@@ -325,4 +326,31 @@ test('S15: 멤버 조회는 팀마다 따로 캐시되어 재방문 시 다시 �
   await expect(memberRows(page)).toHaveCount(5)
 
   expect(memberRequests).toEqual(['/team/1/members', '/team/2/members'])
+})
+
+test('S16: 멤버 조회에 실패하면 팀원 없음으로 숨기지 않는다', async ({ page }) => {
+  await mockTeamApi(page)
+  await page.route(teamMembersPattern, async (route) => {
+    await route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: '예상하지 못한 에러가 발생했습니다.',
+        status: 500,
+        timestamp: '2026-09-17T12:00:00',
+        description: '에러 설명',
+      }),
+    })
+  })
+
+  await page.goto('/settings/teams')
+
+  await expect(page.getByRole('alert')).toContainText(
+    '팀원을 불러오지 못했습니다',
+  )
+  await expect(page.getByText('아직 팀원이 없어요')).toHaveCount(0)
+  // 레일은 살아 있고, 멤버를 모르는 상태에서 추가·제거는 노출하지 않는다.
+  await expect(railRows(page)).toHaveCount(4)
+  await expect(page.getByRole('button', { name: '인원 추가하기' })).toHaveCount(0)
+  await expect(memberRows(page)).toHaveCount(0)
 })

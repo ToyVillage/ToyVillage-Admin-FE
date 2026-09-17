@@ -135,10 +135,23 @@ export async function mockTeamApi(
       return
     }
 
-    if (route.request().method() === 'PUT') {
+    const method = route.request().method()
+
+    if (method === 'PUT') {
       const raw = route.request().postData() ?? '{}'
       team.name = (JSON.parse(raw) as { name: string }).name
       await json(route, 200, { message: '팀이 수정되었습니다.' })
+      return
+    }
+
+    // 실제 서버는 PUT·DELETE 만 받는다. 다른 메서드를 삭제로 처리하지 않는다.
+    if (method !== 'DELETE') {
+      await json(route, 405, {
+        message: 'Method Not Allowed',
+        status: 405,
+        timestamp: '2026-09-17T12:00:00',
+        description: '에러 설명',
+      })
       return
     }
 
