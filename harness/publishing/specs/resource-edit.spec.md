@@ -82,7 +82,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - `삭제하기` → 삭제 확인 dialog를 표시한다.
 - 취소 또는 Escape → 삭제하지 않고 dialog를 닫아 `삭제하기`로 포커스를 복귀한다.
 - 확인 → 해당 ID 삭제 요청을 한 번 전송한다.
-- 성공 → 자료 query를 갱신하고 `/notices/resources`로 이동하며 삭제된 자료는 목록과 직접 URL에서 사라진다.
+- 성공 → 자료 query를 갱신하고 `/notices/resources`로 이동하며 삭제된 자료는 목록에서 사라지고, 직접 URL로 진입하면 목록으로 되돌아간다.
 - 실패 → 현재 화면과 입력을 유지하고 예외 모달(`ErrorDialog`)로 `삭제에 실패하였습니다`를 표시한다. 확인 시 모달을 닫고 현재 화면을 유지한다.
 
 ## 예외(에러) 모달 — `ErrorDialog` (신규 공용, shared/ui)
@@ -93,7 +93,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - props: `ErrorDialog { title, onConfirm }`.
 - 동작: Escape 또는 `확인` → `onConfirm`으로 닫는다. 열릴 때 확인 버튼 포커스, 닫힐 때 호출 control로 포커스 복귀. app root `inert`/`aria-hidden` 처리(기존 다이얼로그와 동일).
 - 사용처: 자료 저장·삭제 실패. notice/schedule 수정에서도 동일 컴포넌트를 재사용할 수 있게 shared/ui에 둔다.
-- 검증: mock은 항상 성공하므로, 예외 모달 경로 e2e(S11)는 `localStorage` 키 `toyvillage:resources:fail`(`update`|`delete`)로 실패를 1회 주입한다. 실제 API 연동(`/api`) 시 이 훅을 제거한다.
+- 검증: 예외 모달 경로 e2e(S11)는 `page.route` mock 서버(`tests/e2e/support/document-api.ts`)를 `mockDocumentApi(page, { updateStatus: 500, deleteStatus: 500 })`로 띄워 `PUT`·`DELETE /documents/:id` 실패를 주입한다.
 
 ## 이탈 보호
 
@@ -102,7 +102,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - 저장·삭제 성공 이동은 이탈 확인 대상에서 제외한다.
 - 새로고침과 탭 닫기는 브라우저 기본 이탈 경고로 보호한다.
 
-## 데이터와 API 경계 (mock)
+## 데이터와 API 경계
 
 ```ts
 interface UpdateResourceInput {
@@ -112,12 +112,12 @@ interface UpdateResourceInput {
 }
 ```
 
-- 조회 endpoint 후보: `GET /resources/:id`
-- 수정 endpoint 후보: `PUT /resources/:id`
-- 삭제 endpoint 후보: `DELETE /resources/:id`
-- query key: `['resources']`, 단건은 `['resources', id]`
-- 현재 슬라이스는 localStorage 기반 mock으로 대체한다. 수정값은 ID로 기본 mock을 override하고 삭제 ID는 별도 tombstone으로 유지한다(공지 수정과 동일 패턴).
-- 실제 API 연결과 첨부 업로드/다운로드 계약은 별도 `/api` 슬라이스에서 확정한다.
+- 목록 조회: `GET /documents`
+- 단건 조회·수정·삭제: `GET`·`PUT`·`DELETE /documents/:id`
+- 첨부 업로드: `POST /file`
+- query key: 목록은 `['resources', 'list', …]`, 단건은 `['resources', id]`
+- 기능 테스트는 실제 서버 대신 `page.route` mock 서버(`tests/e2e/support/document-api.ts`의 `mockDocumentApi`)로 위 endpoint에 응답한다. 생성·수정·삭제는 mock 목록에 반영돼 재조회 결과가 바뀐다.
+- 요청·응답 계약은 API 승인 문서(`harness/api/approvals/documents-*`)를 따른다.
 
 ## 접근성
 
