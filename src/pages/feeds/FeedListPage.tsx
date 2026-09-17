@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
@@ -34,6 +34,27 @@ export function FeedListPage() {
   const species: AnimalSpecies | null =
     tab === allTabLabel ? null : (tab as AnimalSpecies)
 
+  // 조회날짜·분류가 바뀌면 첫 페이지로 되돌린다.
+  function setDate(next: CalendarDate) {
+    updateParams({ date: toIsoDate(next), tab, page: 1 })
+  }
+
+  function setTab(next: string) {
+    updateParams({ date: isoDate, tab: next, page: 1 })
+  }
+
+  function setPage(next: number) {
+    updateParams({ date: isoDate, tab, page: next })
+  }
+
+  function updateParams(next: { date: string; tab: string; page: number }) {
+    const params = new URLSearchParams()
+    params.set('date', next.date)
+    if (next.tab !== allTabLabel) params.set('tab', next.tab)
+    if (next.page > 1) params.set('page', String(next.page))
+    setSearchParams(params, { replace: true })
+  }
+
   // 서버 페이지네이션이다. 명세상 page 는 0부터 시작하고 화면은 1부터 센다.
   const feedsQuery = useQuery({
     queryKey: feedQueryKeys.list(isoDate, species, page),
@@ -56,28 +77,12 @@ export function FeedListPage() {
   const pagination = { page: currentPage, pageCount, onChange: setPage }
 
   // 마지막 페이지가 비면 직전 페이지를 다시 조회한다.
-  if (totalPageSize !== undefined && page > pageCount) setPage(pageCount)
-
-  // 조회날짜·분류가 바뀌면 첫 페이지로 되돌린다.
-  function setDate(next: CalendarDate) {
-    updateParams({ date: toIsoDate(next), tab, page: 1 })
-  }
-
-  function setTab(next: string) {
-    updateParams({ date: isoDate, tab: next, page: 1 })
-  }
-
-  function setPage(next: number) {
-    updateParams({ date: isoDate, tab, page: next })
-  }
-
-  function updateParams(next: { date: string; tab: string; page: number }) {
-    const params = new URLSearchParams()
-    params.set('date', next.date)
-    if (next.tab !== allTabLabel) params.set('tab', next.tab)
-    if (next.page > 1) params.set('page', String(next.page))
-    setSearchParams(params, { replace: true })
-  }
+  // URL 을 바꾸는 일이라 렌더가 끝난 뒤에 한다(렌더 중 라우터 갱신 금지).
+  useEffect(() => {
+    if (totalPageSize !== undefined && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalPageSize, page, pageCount])
 
   // 로딩 중에는 같은 자리에 빈 표를 두어 레이아웃이 튀지 않게 한다.
   const emptyLabel = feedsQuery.isPending
