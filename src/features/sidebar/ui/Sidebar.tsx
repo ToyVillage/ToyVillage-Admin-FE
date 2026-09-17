@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useLocation } from 'react-router-dom'
+import { readSessionUser } from '@/shared/api/session'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
-import {
-  mockSidebarDashboardItem,
-  mockSidebarGroups,
-  mockSidebarUser,
-} from '../model/mock'
+import { mockSidebarDashboardItem, mockSidebarGroups } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
 import { SidebarGroupSection } from './SidebarGroupSection'
 import { SidebarItem } from './SidebarItem'
@@ -52,6 +49,10 @@ export function Sidebar() {
 
   if (!isOpen) return null
 
+  // 사용자 조회 API가 없어 로그인 응답으로 저장한 세션 사용자를 쓴다.
+  // 열 때마다 읽으므로 다른 계정으로 다시 로그인해도 바로 반영된다.
+  const userName = readSessionUser()?.name ?? ''
+
   return (
     <Layer>
       <Overlay type="button" aria-label="사이드바 닫기" onClick={close} />
@@ -67,8 +68,8 @@ export function Sidebar() {
         </CloseButton>
 
         <Profile>
-          <Avatar role="img" aria-label={mockSidebarUser.avatarLabel} />
-          <UserName>{mockSidebarUser.name}</UserName>
+          <Avatar role="img" aria-label={`${userName} 프로필`.trim()} />
+          <UserName>{userName}</UserName>
         </Profile>
 
         <Nav aria-label="주요 메뉴">
