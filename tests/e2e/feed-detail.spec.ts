@@ -1,6 +1,10 @@
 import { expect, test as base, type Page } from '@playwright/test'
 import { mockFeedApi, type FeedApiHandle } from './support/feed-api'
 
+// `관찰 및 특이사항 보러가기` 링크가 종 id 를 얻으려고 개체 상세를 함께 조회한다.
+// 공용 `mockFeedApi` 에 넣으면 개체관리 스펙의 가짜 서버를 덮어쓰므로 여기서만 건다.
+const animalManagePattern = /^https:\/\/[^/]+\/animal-manage\/(\d+)(?:\?.*)?$/
+
 // 승인된 시나리오(feed-detail.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 먹이 급여 API 연동 이후 mock 데이터 대신 `support/feed-api` 의 page.route mock 을 쓴다.
@@ -9,7 +13,33 @@ import { mockFeedApi, type FeedApiHandle } from './support/feed-api'
 const test = base.extend<{ feedApi: FeedApiHandle }>({
   feedApi: [
     async ({ page }, runTest) => {
-      await runTest(await mockFeedApi(page))
+      const handle = await mockFeedApi(page)
+
+      // 개체 id 를 그대로 종 id 로 쓴다. 링크 경로만 확인하면 되므로 값 자체는 중요하지 않다.
+      await page.route(animalManagePattern, async (route) => {
+        const animalManageId = Number(
+          animalManagePattern.exec(route.request().url())?.[1] ?? '0',
+        )
+        const feed = handle.feedLogs.find(
+          (item) => item.animalId === animalManageId,
+        )
+
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            animalManageId,
+            animalName: feed?.animalName ?? '개체',
+            animalGender: 'UNKNOWN',
+            birthYear: 2020,
+            otherInfo: null,
+            animalImage: { fileName: 'photo.png', fileKey: 'photo-key' },
+            animalKindId: animalManageId * 10,
+          }),
+        })
+      })
+
+      await runTest(handle)
     },
     { auto: true },
   ],
@@ -76,14 +106,21 @@ test('S4: 급여 이력 표의 열 구성', async ({ page }) => {
   await expect(page.getByText('특이사항').last()).toBeVisible()
 })
 
-test('S5: `관찰 및 특이사항 보러가기` 는 비활성이다', async ({ page }) => {
+test('S5: `관찰 및 특이사항 보러가기` 로 개체 상세로 간다', async ({ page }) => {
   await page.goto('/feeds/1')
 
-  const button = page.getByText('관찰 및 특이사항 보러가기')
-  await expect(button).toHaveAttribute('aria-disabled', 'true')
+  // 급여 기록 1 의 개체는 1, mock 이 주는 종 id 는 10 이다.
+  const link = page.getByRole('link', { name: /관찰 및 특이사항 보러가기/ })
+  await expect(link).toHaveAttribute(
+    'href',
+    '/species/10/individuals/1',
+  )
 
-  await button.click()
-  await expect(page).toHaveURL(/\/feeds\/1$/)
+  await link.click()
+  await expect(page).toHaveURL(/\/species\/10\/individuals\/1$/)
+  await expect(
+    page.getByRole('heading', { name: '관찰 및 특이사항' }),
+  ).toBeVisible()
 })
 
 // 급여 이력은 개체 기준이라 조회 중인 급여 기록 자신이 항상 한 건 포함된다.
