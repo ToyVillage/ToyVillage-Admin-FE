@@ -164,3 +164,14 @@ test('S8: 진입 시 스크롤은 맨 위다', async ({ page }) => {
     .poll(() => page.evaluate(() => window.scrollY))
     .toBeLessThanOrEqual(1)
 })
+
+test('S17: 개체 사진을 fileKey 로 만든 URL 로 띄운다', async ({ page }) => {
+  await page.goto('/feeds/1')
+
+  // 응답의 `animalImageUrl.fileKey` 를 파일 서버 주소와 합쳐 개체 상세와 같은
+  // 사진 컴포넌트에 넘긴다.
+  await expect(page.getByRole('img', { name: '레오 사진' })).toHaveAttribute(
+    'src',
+    'https://cdn.e2e.invalid/animal%2Fleo.png',
+  )
+})
