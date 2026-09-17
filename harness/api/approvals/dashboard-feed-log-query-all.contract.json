@@ -84,6 +84,7 @@
               "default": null,
               "example": [
                 {
+                  "feedLogId": 31,
                   "animalKind": "사자",
                   "animalName": "라이언",
                   "feedDateTime": "2026-09-17T09:30:00"
@@ -94,6 +95,17 @@
               "items": {
                 "type": "object",
                 "fields": [
+                  {
+                    "name": "feedLogId",
+                    "location": "response",
+                    "type": "integer",
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "example": 31,
+                    "description": "급여일지 ID",
+                    "constraints": []
+                  },
                   {
                     "name": "animalKind",
                     "location": "response",

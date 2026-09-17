@@ -55,7 +55,8 @@
 
 | Name | Type | Required | Nullable | Default | Example | Description |
 | --- | --- | --- | --- | --- | --- | --- |
-| `content` | array<object> | true | false | 없음 | `[{"animalKind":"사자","animalName":"라이언","feedDateTime":"2026-09-17T09:30:00"}]` | 급여일지 목록 |
+| `content` | array<object> | true | false | 없음 | `[{"feedLogId":31,"animalKind":"사자","animalName":"라이언","feedDateTime":"2026-09-17T09:30:00"}]` | 급여일지 목록 |
+| `content[].feedLogId` | integer | true | false | 없음 | `31` | 급여일지 ID |
 | `content[].animalKind` | string | true | false | 없음 | `사자` | 동물 종 |
 | `content[].animalName` | string | true | false | 없음 | `라이언` | 개체 이름 |
 | `content[].feedDateTime` | datetime | true | false | 없음 | `2026-09-17T09:30:00` | 급여 일시 |
@@ -92,4 +93,4 @@
 - 이번 주 일요일 00:00 이상부터 다음 주 일요일 00:00 미만까지의 급여일지를 조회한다.
 - 요청 `page`는 1부터, 응답 `number`·`pageable.pageNumber`는 0부터 시작한다.
 - 데이터베이스 엔드포인트 값 `/dashboard/feed-logs?page=1&size=10`의 Query String은 Path에서 분리했다.
-- `content[]` 항목에 식별자가 없다.
+- `content[].feedLogId`는 Notion 명세에 아직 없다. 백엔드 PR #172(develop `0b5b7ec`)와 staging Swagger `DashBoardQueryFeedLogResponse`를 근거로 추가했다(2026-09-17, 개발자 결정).

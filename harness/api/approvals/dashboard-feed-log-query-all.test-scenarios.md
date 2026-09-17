@@ -11,7 +11,7 @@ route 패턴은 `^https://[^/]+/dashboard/<path>(?:\?.*)?$`.
 
 ## S2: content 를 `먹이 급여 관리` 카드 행으로 표시한다
 
-- content `[{animalKind:"사자",animalName:"라이언",feedDateTime:"2026-09-03T09:30:00"}, {animalKind:"호랑이",animalName:"타이거",feedDateTime:"2026-09-02T16:10:00"}]`
+- content `[{feedLogId:31,animalKind:"사자",animalName:"라이언",feedDateTime:"2026-09-03T09:30:00"}, {feedLogId:30,animalKind:"호랑이",animalName:"타이거",feedDateTime:"2026-09-02T16:10:00"}]`
 - 행 1 `사자 · 라이언` / `2026.09.03 09:30`, 행 2 `호랑이 · 타이거` / `2026.09.02 16:10`
 
 ## S3: 4건 이상 내려와도 3행만 표시한다
@@ -24,7 +24,11 @@ route 패턴은 `^https://[^/]+/dashboard/<path>(?:\?.*)?$`.
 
 ## S7: 응답 형식 오류 → 오류 상태
 
-- `content` 누락 또는 항목 필드 타입 불일치
+- `content` 누락, 항목 필드 타입 불일치, `feedLogId` 누락
+
+## S8: 행을 누르면 급여 상세로 이동한다
+
+- `mockFeedApi(page)`로 급여 상세 조회를 막는다. content `feedLogId:2` 행 클릭 → URL `/feeds/2`
 
 ## 범위 밖
 
