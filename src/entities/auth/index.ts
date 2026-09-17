@@ -2,6 +2,8 @@ export type {
   AppAuthLoginErrorResponse,
   AppAuthLoginRequest,
   AppAuthLoginResponse,
+  AppAuthLogoutErrorResponse,
+  AppAuthLogoutResponse,
   AppAuthReissueErrorResponse,
   AppAuthReissueRequest,
   AppAuthReissueResponse,
@@ -10,7 +12,9 @@ export type {
 export type { AppSessionUser } from './model/types'
 export {
   appAuthLoginPath,
+  appAuthLogoutPath,
   appAuthReissuePath,
   login,
+  logoutApp,
   reissueAppToken,
 } from './api/authApi'

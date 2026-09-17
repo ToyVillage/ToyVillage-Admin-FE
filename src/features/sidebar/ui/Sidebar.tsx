@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import { useLocation } from 'react-router-dom'
 import { readSessionUser } from '@/shared/api/session'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
-import { logout } from '../model/logout'
+import { useLogout } from '../model/useLogout'
 import { mockSidebarDashboardItem, mockSidebarGroups } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
 import { SidebarGroupSection } from './SidebarGroupSection'
@@ -14,6 +14,7 @@ export function Sidebar() {
   const { pathname } = useLocation()
   const isOpen = useSidebarStore((state) => state.isOpen)
   const close = useSidebarStore((state) => state.close)
+  const logout = useLogout()
   const panelRef = useRef<HTMLDivElement>(null)
   // 아코디언은 한 번에 하나만 펼친다(Figma variant `열린메뉴=*`).
   const [openGroupId, setOpenGroupId] = useState<string | null>(null)
