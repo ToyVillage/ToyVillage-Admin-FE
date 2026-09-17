@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
 import {
@@ -7,10 +8,12 @@ import {
   workLogQueryKeys,
   WorkLogSheet,
 } from '@/entities/work-log'
-import { BackLink } from '@/shared/ui'
+import { BackLink, Toast } from '@/shared/ui'
 
 export function WorkLogDetailPage() {
   const { id = '' } = useParams()
+  // 첨부 다운로드 실패는 토스트로만 알린다(같은 파일을 다시 눌러도 다시 뜨게 key 를 올린다).
+  const [downloadErrorId, setDownloadErrorId] = useState(0)
 
   const workLogId = Number(id)
   const {
@@ -61,9 +64,19 @@ export function WorkLogDetailPage() {
           <WorkLogSheet
             columns={detail?.columns ?? []}
             rows={detail?.rows ?? []}
+            onDownloadError={() => setDownloadErrorId((prev) => prev + 1)}
           />
         </SheetArea>
       </Content>
+
+      {downloadErrorId > 0 && (
+        <Toast
+          key={downloadErrorId}
+          variant="error"
+          message="파일 다운로드에 실패했습니다"
+          onDismiss={() => setDownloadErrorId(0)}
+        />
+      )}
     </Page>
   )
 }
