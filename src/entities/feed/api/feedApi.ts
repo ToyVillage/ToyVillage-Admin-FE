@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios'
 import { api } from '@/shared/api/axios'
 import { formatFeedAmount } from '../model/format'
 import type {
@@ -61,6 +62,11 @@ export async function getFeeds({
     }),
     totalPageSize: data.totalPageSize,
   }
+}
+
+/** 지워졌거나 없는 급여 기록은 404 다. 그 외 실패(500·네트워크)와 구분한다. */
+export function isFeedNotFoundError(error: unknown): boolean {
+  return isAxiosError(error) && error.response?.status === 404
 }
 
 // 상세는 급여 기록 한 건과 그 개체의 급여 이력이다.

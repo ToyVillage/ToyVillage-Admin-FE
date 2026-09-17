@@ -8,6 +8,7 @@ import {
   feedHistoryTableMinWidth,
   FeedRecordCard,
   getFeedDetail,
+  isFeedNotFoundError,
 } from '@/entities/feed'
 import { BackLink, SectionHeader } from '@/shared/ui'
 
@@ -27,7 +28,11 @@ export function FeedDetailPage() {
   }, [])
 
   const feedLogId = Number(id)
-  const { data: feed, isPending } = useQuery({
+  const {
+    data: feed,
+    isPending,
+    error,
+  } = useQuery({
     queryKey: feedQueryKeys.detail(id),
     queryFn: () => getFeedDetail({ feedLogId }),
     enabled: Number.isSafeInteger(feedLogId) && feedLogId > 0,
@@ -39,7 +44,20 @@ export function FeedDetailPage() {
     return <Navigate to={listPath} replace />
   }
 
-  if (!isPending && !feed) return <Navigate to={listPath} replace />
+  // 404(없는 기록)만 목록으로 되돌린다. 500·네트워크 실패까지 되돌리면
+  // 조회 실패가 '없는 기록'으로 오인된다.
+  if (!isPending && !feed) {
+    if (isFeedNotFoundError(error)) {
+      return <Navigate to={listPath} replace />
+    }
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          급여 기록을 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
+  }
 
   const history = feed?.history ?? []
 
@@ -63,6 +81,25 @@ export function FeedDetailPage() {
     </Page>
   )
 }
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  width: min(100%, 560px);
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
 
 const Page = styled.main`
   padding: 32px;

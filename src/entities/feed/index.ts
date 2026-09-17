@@ -16,6 +16,7 @@ export { feedQueryKeys } from './model/queryKeys'
 export {
   getFeedDetail,
   getFeeds,
+  isFeedNotFoundError,
   type FeedListPage,
 } from './api/feedApi'
 export type {
