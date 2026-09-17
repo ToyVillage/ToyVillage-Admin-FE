@@ -120,8 +120,10 @@ function isDocumentsQueryAllResponse(
   return (
     Array.isArray(documents) &&
     documents.every(isDocumentsQueryAllItem) &&
+    // 전체 페이지 수는 0 이상의 정수다. 음수·소수는 페이지 번호 계산을 망가뜨린다.
     typeof totalPageSize === 'number' &&
-    Number.isFinite(totalPageSize)
+    Number.isInteger(totalPageSize) &&
+    totalPageSize >= 0
   )
 }
 
