@@ -37,6 +37,21 @@ export function copyRequired(source, target) {
   copyFileSync(source, target)
 }
 
+// 테스트가 직접 `page.route(` 를 쓰거나, 상대 경로로 import 한 support 모듈이 쓰면 route 기반 mock 으로 본다.
+export function usesPageRouteMock(testPath) {
+  const source = readFileSync(testPath, 'utf8')
+  if (source.includes('page.route(')) return true
+
+  const imports = source.matchAll(/from\s+['"](\.{1,2}\/[^'"]+)['"]/g)
+  return [...imports].some(([, specifier]) => {
+    const modulePath = resolve(dirname(testPath), `${specifier}.ts`)
+    return (
+      existsSync(modulePath) &&
+      readFileSync(modulePath, 'utf8').includes('page.route(')
+    )
+  })
+}
+
 export function parseOption(args, name) {
   const index = args.indexOf(name)
   return index >= 0 ? args[index + 1] : undefined
