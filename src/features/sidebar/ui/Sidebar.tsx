@@ -225,6 +225,12 @@ const Nav = styled.nav`
   gap: 8px;
   padding-bottom: 32px;
   overscroll-behavior: contain;
+  /* 스크롤은 유지하되 스크롤바는 숨긴다. 스크롤바 폭만큼 항목이 좁아지지 않게 한다. */
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `
 
 // Figma: divider (40, 986) 320×1, 로그아웃 항목 (20, 1000) 360×56 — 패널 하단 기준으로 고정한다.
