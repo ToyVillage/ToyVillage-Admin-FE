@@ -15,6 +15,23 @@ const test = base.extend<{ feedApi: FeedApiHandle }>({
     async ({ page }, runTest) => {
       const handle = await mockFeedApi(page)
 
+      // 개체 사진은 파일 서버에서 받는다. e2e 의 파일 서버 주소는 실제로 닿지 않아
+      // 그대로 두면 `ProfilePhoto` 가 `사진 없음` 으로 넘어간다. 1x1 png 로 고정한다.
+      await page.route(
+        (url) => url.origin === 'https://cdn.e2e.invalid',
+        async (route) => {
+          await route.fulfill({
+            status: 200,
+            headers: { 'access-control-allow-origin': '*' },
+            contentType: 'image/png',
+            body: Buffer.from(
+              'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+              'base64',
+            ),
+          })
+        },
+      )
+
       // 개체 id 를 그대로 종 id 로 쓴다. 링크 경로만 확인하면 되므로 값 자체는 중요하지 않다.
       await page.route(animalManagePattern, async (route) => {
         const animalManageId = Number(
