@@ -4,7 +4,13 @@
   "description": "자료실에 있던 자료를 영구삭제하는 기능",
   "method": "DELETE",
   "path": "/documents/{id}",
-  "authentication": { "required": true, "type": "Bearer", "roles": ["ADMIN"] },
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
   "contentType": "application/json",
   "headers": [
     {
@@ -16,7 +22,9 @@
       "default": null,
       "example": "Bearer <access-token>",
       "description": "액세스 토큰",
-      "constraints": ["Bearer 스킴"]
+      "constraints": [
+        "Bearer 스킴"
+      ]
     }
   ],
   "pathParameters": [
@@ -29,7 +37,9 @@
       "default": null,
       "example": 1,
       "description": "자료 id",
-      "constraints": ["정수"]
+      "constraints": [
+        "정수"
+      ]
     }
   ],
   "queryParameters": [],
@@ -232,23 +242,35 @@
     ]
   },
   "source": {
-    "notionDatabase": "e58e8d82-a450-822f-885e-01958a22bd25",
-    "notionDataSource": "a34e8d82-a450-82f4-8abe-07079f4f2841",
-    "resolvedNotionPage": "https://app.notion.com/p/88ee8d82a45083d0ba5b812c40c1eece",
+    "notionDatabase": "ed4e8d82-a450-830a-afc9-812bfcd1234a",
+    "notionDataSource": "b53e8d82-a450-8355-b0f9-8702915ee325",
+    "resolvedNotionPage": "https://app.notion.com/p/3b3e8d82a4508383b00e013e561e1e58",
     "requestedNotionPage": null,
-    "checkedAt": "2026-07-29T00:00:00.000Z",
+    "checkedAt": "2026-09-17T12:00:00.000Z",
     "apiIdMatchCount": 1,
     "databaseValues": {
       "apiId": "DOCUMENTS_DELETE",
       "method": "DELETE",
       "path": "/documents/{id}",
-      "authentication": { "required": true, "type": "Bearer", "roles": ["ADMIN"] }
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
     },
     "detailValues": {
       "apiId": "DOCUMENTS_DELETE",
       "method": "DELETE",
       "path": "/documents/{id}",
-      "authentication": { "required": true, "type": "Bearer", "roles": ["ADMIN"] }
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
     }
   }
 }
