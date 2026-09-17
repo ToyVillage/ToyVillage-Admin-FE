@@ -24,7 +24,7 @@ const section = (page: Page, title: string) =>
 
 const kpiCards = [
   { label: '먹이 급여 기록', value: '3', url: /\/feeds$/ },
-  { label: '개체 관리', value: '12', url: /\/species$/ },
+  { label: '관찰 및 특이사항', value: '12', url: /\/species$/ },
   { label: '업무보고', value: '3', url: /\/task-reports$/ },
   { label: '작성된 일지', value: '9', url: /\/work-logs$/ },
 ]
@@ -33,7 +33,7 @@ const sections = [
   { title: '휴관일 관리', url: /\/notices\/guide$/ },
   { title: '전체 업무', url: /\/tasks$/ },
   { title: '먹이 급여 관리', url: /\/feeds$/ },
-  { title: '개체관리', url: /\/species$/ },
+  { title: '관찰 및 특이사항', url: /\/species$/ },
   { title: '업무보고', url: /\/task-reports$/ },
   { title: '업무일지관리', url: /\/work-logs$/ },
 ]
@@ -82,7 +82,7 @@ for (const { title, url } of sections) {
 test('S5: 키보드로 카드 이동', async ({ page }) => {
   await open(page)
   const card = page.getByRole('link', {
-    name: '12 개체 관리',
+    name: '12 관찰 및 특이사항',
     exact: true,
   })
   await card.focus()
@@ -135,7 +135,7 @@ test('S8: 최근 목록 카드 내용', async ({ page }) => {
   await expect(feeds.nth(0)).toContainText('표범 · 레오')
   await expect(feeds.nth(0)).toContainText('2026.09.03 09:30')
 
-  const observations = section(page, '개체관리').getByRole('listitem')
+  const observations = section(page, '관찰 및 특이사항').getByRole('listitem')
   await expect(observations.nth(0)).toContainText('3시간 전')
   await expect(observations.nth(1)).toContainText('2026.09.02')
 

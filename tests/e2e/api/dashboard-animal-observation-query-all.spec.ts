@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
 
 const rows = (page: Page) =>
   page
-    .getByRole('region', { name: '개체관리', exact: true })
+    .getByRole('region', { name: '관찰 및 특이사항', exact: true })
     .getByRole('listitem')
 
 test('S1: 진입 시 GET /dashboard/animal-observations?page=1&size=3 을 Bearer 토큰으로 1회 호출한다', async ({
