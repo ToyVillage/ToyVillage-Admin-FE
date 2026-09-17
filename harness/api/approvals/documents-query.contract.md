@@ -3,10 +3,10 @@
 ## Source
 
 - API ID 검색 결과: exact match 1건
-- Notion database/data source: `e58e8d82-...` / `a34e8d82-...`
-- Resolved page: https://app.notion.com/p/345e8d82a45083208dbb81c3cdeef04e
+- Notion database/data source: `ed4e8d82-...` / `b53e8d82-...`
+- Resolved page: https://app.notion.com/p/377e8d82a45083f1a968817fb9d023c6
 - Requested page: 없음(데이터베이스 인덱스)
-- Checked at: 2026-07-29 / Exact match count: 1
+- Checked at: 2026-09-17 / Exact match count: 1
 
 ## Basic Information
 
