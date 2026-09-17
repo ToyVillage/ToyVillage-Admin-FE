@@ -8,11 +8,6 @@ export type SidebarIconName =
   | 'settings'
   | 'task'
 
-export interface SidebarUser {
-  name: string
-  avatarLabel: string
-}
-
 // 아코디언 하위 항목. 화면이 아직 없는 메뉴는 to를 비워 비활성 항목으로 표시한다.
 export interface SidebarSubItem {
   id: string

@@ -7,6 +7,17 @@ const sidebar = (page: Page) => page.getByRole('dialog', { name: '사이드바' 
 const group = (page: Page, name: string) =>
   page.getByRole('button', { name, exact: true })
 
+// 보호 경로라 토큰이 필요하고, 프로필 이름은 로그인 때 저장한 세션 사용자에서 온다.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('accessToken', 'sidebar-test-token')
+    localStorage.setItem(
+      'toyvillage.session.user',
+      JSON.stringify({ name: '김직원', role: 'EMPLOYEE' }),
+    )
+  })
+})
+
 async function openSidebar(page: Page, path: string) {
   await page.goto(path)
   await page.getByRole('button', { name: '사이드바 열기' }).click()
@@ -15,10 +26,25 @@ async function openSidebar(page: Page, path: string) {
 
 test('S1: 사이드바 열기와 닫기', async ({ page }) => {
   await openSidebar(page, '/notices/list')
-  await expect(sidebar(page).getByText('관리자 1')).toBeVisible()
+  await expect(sidebar(page).getByText('김직원')).toBeVisible()
+  await expect(
+    sidebar(page).getByRole('img', { name: '김직원 프로필' }),
+  ).toBeVisible()
 
   await page.keyboard.press('Escape')
   await expect(sidebar(page)).toBeHidden()
+})
+
+test('S1-1: 세션 사용자 정보가 없으면 기본 이름을 보인다', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem('toyvillage.session.user')
+  })
+  await openSidebar(page, '/notices/list')
+
+  await expect(sidebar(page).getByText('사용자', { exact: true })).toBeVisible()
+  await expect(
+    sidebar(page).getByRole('img', { name: '사용자 프로필' }),
+  ).toBeVisible()
 })
 
 test('S2: 대분류를 펼쳐 하위 메뉴로 이동', async ({ page }) => {
@@ -71,9 +97,7 @@ test('S6: 현재 경로의 대분류가 자동으로 펼쳐진다', async ({ pag
   await openSidebar(page, '/feeds')
 
   await expect(group(page, '개체관리')).toHaveAttribute('aria-expanded', 'true')
-  await expect(
-    page.getByRole('link', { name: '먹이 급여 관리' }),
-  ).toBeVisible()
+  await expect(page.getByRole('link', { name: '먹이 급여 관리' })).toBeVisible()
 })
 
 test('S7: 대시보드는 바로 이동하고 현재 경로일 때 활성이다', async ({

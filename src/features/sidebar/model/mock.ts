@@ -1,14 +1,6 @@
-import type {
-  SidebarDashboardItem,
-  SidebarGroup,
-  SidebarUser,
-} from './types'
+import type { SidebarDashboardItem, SidebarGroup } from './types'
 
-// API 연동 전까지 사용하는 사이드바 표시 데이터.
-export const mockSidebarUser: SidebarUser = {
-  name: '관리자 1',
-  avatarLabel: '관리자 프로필',
-}
+// 사이드바 메뉴 구성.
 
 export const mockSidebarDashboardItem: SidebarDashboardItem = {
   id: 'dashboard',
