@@ -129,9 +129,9 @@ test('S9: 화면이 없는 하위 항목은 비활성이다', async ({ page }) =
 
   await group(page, '설정').click()
 
-  const teamSettings = page.getByText('팀 설정', { exact: true })
-  await expect(teamSettings).toHaveAttribute('aria-disabled', 'true')
-  await expect(page.getByRole('link', { name: '팀 설정' })).toHaveCount(0)
+  const permissions = page.getByText('권한 관리', { exact: true })
+  await expect(permissions).toHaveAttribute('aria-disabled', 'true')
+  await expect(page.getByRole('link', { name: '권한 관리' })).toHaveCount(0)
 })
 
 test('S11: 현재 경로의 하위 항목이 선택 상태로 표시된다', async ({ page }) => {
@@ -141,8 +141,8 @@ test('S11: 현재 경로의 하위 항목이 선택 상태로 표시된다', asy
   await expect(selected).toHaveCSS('color', 'rgb(73, 82, 255)')
   await expect(selected).toHaveCSS('background-color', 'rgb(232, 233, 255)')
 
-  // 같은 그룹의 다른 하위 항목에는 밴드가 없다(`개체 카드` 는 화면이 없어 링크가 아니다).
-  await expect(page.getByText('개체 카드', { exact: true })).toHaveCSS(
+  // 같은 그룹의 다른 하위 항목에는 밴드가 없다.
+  await expect(page.getByRole('link', { name: '개체 카드' })).toHaveCSS(
     'background-color',
     'rgba(0, 0, 0, 0)',
   )
