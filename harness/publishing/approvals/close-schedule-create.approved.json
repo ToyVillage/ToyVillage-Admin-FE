@@ -1,7 +1,7 @@
 {
   "feature": "close-schedule-create",
-  "approvedAt": "2026-07-16T13:42:44.962Z",
-  "approvedBy": "user",
+  "approvedAt": "2026-09-17T14:07:41.444Z",
+  "approvedBy": "claude (yunho09 위임)",
   "scenarioIds": [
     "S1",
     "S2",
@@ -13,6 +13,6 @@
     "S8",
     "S9"
   ],
-  "scenarioHash": "411a382ca69c9de6e817ae9778f6073cbff2780b6d9fb4266b18dfa1ba150db7",
-  "e2eHash": "60c8788f9cbd346f31dc0a5b7d26dc14f464673b6f59c88dfd43dba44b5c469e"
+  "scenarioHash": "7d39726c29ae7318d3ed13fd857dd9af6241d3dec8a946ce949873c483e6c841",
+  "e2eHash": "c13ed345f31ea9b231ac90fae6f2416c617b28d9a424b03953800ab245289b70"
 }

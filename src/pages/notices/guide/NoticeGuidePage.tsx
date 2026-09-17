@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   deleteCloseSchedule,
   getCloseSchedules,
@@ -18,6 +18,10 @@ import {
 import arrowIcon from './ui/assets/arrow.svg'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+interface NoticeGuideLocationState {
+  toast?: 'create-success'
+}
 
 interface CalendarDay {
   key: string
@@ -37,6 +41,16 @@ export function NoticeGuidePage() {
     variant: ToastVariant
     message: string
   } | null>(null)
+  // 생성 화면에서 이동 state 로 전달받은 결과. yot `1:6158`.
+  const location = useLocation()
+  const createdToast =
+    (location.state as NoticeGuideLocationState | null)?.toast ===
+    'create-success'
+  const visibleToast =
+    toast ??
+    (createdToast
+      ? { variant: 'success' as const, message: '데이터 생성에 성공했습니다' }
+      : null)
   const deletingRef = useRef(false)
   // 카드별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
   const kebabTriggersRef = useRef(new Map<string, HTMLButtonElement>())
@@ -230,11 +244,17 @@ export function NoticeGuidePage() {
         />
       )}
 
-      {toast && (
+      {visibleToast && (
         <Toast
-          variant={toast.variant}
-          message={toast.message}
-          onDismiss={() => setToast(null)}
+          variant={visibleToast.variant}
+          message={visibleToast.message}
+          onDismiss={() => {
+            setToast(null)
+            // 재방문·새로고침 때 다시 뜨지 않게 이동 state 를 비운다.
+            if (createdToast) {
+              navigate(location.pathname, { replace: true, state: null })
+            }
+          }}
         />
       )}
     </Page>

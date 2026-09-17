@@ -64,6 +64,7 @@ paths: src/pages/notices/guide/EditCloseSchedulePage.tsx, src/features/create-cl
 - 성공 → `['close-schedules']` query를 갱신하고 `/notices/guide`로 이동한다.
 - 목록에는 동일한 ID의 일정이 하나만 보이며 수정된 날짜와 제목이 즉시 반영된다.
 - 실패 → 현재 URL과 입력값을 유지하고 `수정하지 못했습니다. 다시 시도해 주세요.`를 표시한다.
+  - yot `휴관일 관리 · 수정`·`토스트` 섹션에는 수정 성공·실패 프레임이 없어 이 표시를 유지한다(2026-09-17 #133 확인).
 - 실패 후 같은 화면에서 다시 시도할 수 있다.
 
 ## 데이터와 API 경계

@@ -75,6 +75,7 @@ test('S7: 유효한 값으로 생성하면 목록에서 확인할 수 있다', a
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
+  await expect(page.getByText('데이터 생성에 성공했습니다')).toBeVisible()
   await expect(page.getByText('새 휴관 일정')).toHaveCount(1)
   expect(createRequests).toHaveLength(1)
 })
@@ -87,6 +88,11 @@ test('S8: 저장 실패 시 입력을 보존하고 재시도할 수 있다', asy
   await page.getByLabel('종료일').fill('2026-07-19')
   await page.getByLabel(/제목/).fill('보존할 휴관 일정')
   await page.getByRole('button', { name: '생성하기' }).click()
+
+  const dialog = page.getByRole('alertdialog')
+  await expect(dialog).toContainText('데이터 생성에 실패했습니다')
+  await dialog.getByRole('button', { name: '확인' }).click()
+  await expect(dialog).toHaveCount(0)
 
   await expect(page).toHaveURL(/\/notices\/guide\/create$/)
   await expect(page.getByLabel('시작일')).toHaveValue('2026-07-18')

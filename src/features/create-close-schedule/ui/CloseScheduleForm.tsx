@@ -8,8 +8,7 @@ import {
   type CloseSchedule,
   type CreateCloseScheduleInput,
 } from '@/entities/close-schedule'
-import { ValidationDialog } from '@/shared/ui'
-import { DateField } from '@/shared/ui'
+import { DateField, ErrorDialog, ValidationDialog } from '@/shared/ui'
 
 type ValidationError = 'date' | 'title' | 'range'
 
@@ -99,7 +98,11 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
           await queryClient.invalidateQueries({
             queryKey: ['close-schedules'],
           })
-          navigate('/notices/guide')
+          // 생성 성공은 목록이 토스트로 알린다(yot `1:6158`).
+          navigate(
+            '/notices/guide',
+            isEditing ? undefined : { state: { toast: 'create-success' } },
+          )
         },
         onError: () => {
           submittingRef.current = false
@@ -158,12 +161,16 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
         </SubmitButton>
       </Actions>
 
-      {mutation.isError && (
-        <Status role="status">
-          {isEditing
-            ? '수정하지 못했습니다. 다시 시도해 주세요.'
-            : '생성하지 못했습니다. 다시 시도해 주세요.'}
-        </Status>
+      {mutation.isError && isEditing && (
+        <Status role="status">수정하지 못했습니다. 다시 시도해 주세요.</Status>
+      )}
+
+      {/* yot `1:7020`: 생성 실패는 입력을 유지한 채 모달로 알린다. */}
+      {mutation.isError && !isEditing && (
+        <ErrorDialog
+          title="데이터 생성에 실패했습니다"
+          onConfirm={() => mutation.reset()}
+        />
       )}
 
       {validationError && (
