@@ -185,6 +185,7 @@ export function DashboardPage() {
                     key: feed.id,
                     primary: `${feed.species} · ${feed.animalName}`,
                     secondary: formatDateTime(feed.fedAt),
+                    to: `/feeds/${feed.id}`,
                   }))}
                 />
               </ListCard>
@@ -201,6 +202,8 @@ export function DashboardPage() {
                       key: observation.id,
                       primary: observation.content,
                       secondary: formatRecentDate(observation.recordedAt, now),
+                      // 응답에 종 ID 가 없어 종 ID 없는 경로에서 개체를 조회한 뒤 관찰 상세로 옮긴다.
+                      to: `/individuals/${observation.individualId}/observations/${observation.id}`,
                     }))}
                 />
               </ListCard>
