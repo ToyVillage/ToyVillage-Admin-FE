@@ -56,7 +56,11 @@ export async function getDashboardObservations(req: DashboardPageRequest): Promi
   - work logs: `getWorkLogs({ date: toIsoDay(now), page: 0, size: 3 })`
   - close schedules: `getCloseSchedules()`
 - 하나라도 `isPending` → 로딩 문구, 하나라도 `isError` → 오류 문구(퍼블리싱 문구·마크업 유지).
-- 레이아웃·링크 유지. 업무보고 행 `primary: report.title` + 상태 배지, 업무일지 행 `formName` / `authorName`.
+- 레이아웃·카드 링크 유지. 업무보고 행 `primary: report.title` + 상태 배지, 업무일지 행 `formName` / `authorName`.
+- 행 상세 이동: `DashboardListRow`에 선택 `to`, `HolidayList`에 선택 `getScheduleHref`를 추가해 행을 `Link`로 렌더한다.
+  행 링크는 `position: relative; z-index: 1`로 카드 전체 링크(`::after`) 위에 둔다.
+  - 휴관일 `/notices/guide/{id}`, 업무보고 `/task-reports/{id}`, 업무일지 `/work-logs/{id}`
+  - 먹이 급여·관찰 행은 `to` 없음(응답에 id 없음).
 
 ## 6. 테스트
 

@@ -57,7 +57,12 @@ real_server:
 
 # 페이지 이동 또는 사용자 알림
 
-- 없음. 기존 카드 링크 유지. 디자인에 없는 토스트를 만들지 않는다.
+- 행 클릭 시 상세로 이동한다(개발자 결정, 2026-09-17). 행 링크는 카드 전체 링크(`자세히 보기`)보다 위에 놓인다.
+  - 휴관일 관리 행 → `/notices/guide/{id}` (`CLOSE_DAT_QUERY_ALL` `id`)
+  - 업무보고 행 → `/task-reports/{id}` (`APP_WORK_REPORT_QUERY_ALL` `reports[].id`)
+  - 업무일지관리 행 → `/work-logs/{id}` (`WORK_LOG_QUERY_ALL` `content[].workLogId`)
+- 먹이 급여 관리·개체관리 행은 응답에 식별자가 없어 행 이동이 없다. 카드 전체 링크만 유지한다(백엔드에 id 추가 요청 대상).
+- 디자인에 없는 토스트를 만들지 않는다.
 
 # 비고 및 제약
 

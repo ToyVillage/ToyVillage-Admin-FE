@@ -44,6 +44,16 @@ route 패턴은 `^https://[^/]+/dashboard/<path>(?:\?.*)?$`.
 
 ### S9: 재사용 API 하나가 500이면 대시보드 오류 상태
 
+### S10: 휴관일·업무보고·업무일지 행을 누르면 각 상세로 이동한다
+
+- 휴관일 행(id 1) → `/notices/guide/1`
+- 업무보고 행(id 7) → `/task-reports/7`
+- 업무일지 행(workLogId 9) → `/work-logs/9`
+
+### S11: 먹이 급여·개체관리 행은 링크가 아니다
+
+- 두 카드의 행 안에 link 역할 요소가 없다
+
 ## 범위 밖
 
 - 실제 staging 서버 호출 (real_server.enabled=false)
