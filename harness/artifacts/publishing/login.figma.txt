@@ -106,3 +106,36 @@ export default function LoginEmpty() {
   );
 }
 // svg fills: 2aba8 circle #234F2B / 074b1 circle #38B14A 0.9 / e5bc5 quarter #458F4F / 47da1 circle #A9ECDD 0.34 / 6f6c3 eye-off #848491
+
+// source: get_design_context fileKey=P7Jhnu8qV5m9q2QJNzkwAN nodeId=1830:17246 (login (mismatch) > password field) 2026-09-17
+// styles: gray color/60: #848491, gray color/10: #F5F5F7
+export default function PasswordField() {
+  return (
+    <div className="content-stretch flex flex-col gap-[8px] items-start relative size-full" data-node-id="1830:17246" data-name="password field">
+      <p className="font-['Wanted_Sans:SemiBold'] leading-[normal] text-[22px] text-black w-full" data-node-id="1830:17247">비밀번호</p>
+      <div className="bg-[#f5f5f7] border border-[#c6c6ce] border-solid flex items-center justify-between px-[16px] py-[18px] rounded-[8px] w-full" data-node-id="1830:17248">
+        <p className="font-['Inter:Medium'] font-medium text-[#36363f] text-[20px]" data-node-id="1830:17253">••••••••</p>
+        <div className="size-[28px]" data-node-id="1830:17250" data-name="mdi:eye-off" />
+      </div>
+      <div className="flex gap-[8px] items-center w-full" data-node-id="1830:17254" data-name="error">
+        <div className="bg-[#ff3131] rounded-[11px] size-[22px]" data-node-id="1830:17255" data-name="alert">
+          <p className="absolute font-['Inter:Semi_Bold'] font-semibold left-[9px] text-[14px] text-white top-[3px]" data-node-id="1830:17256">!</p>
+        </div>
+        <p className="font-['Inter:Medium'] font-medium text-[#ff3131] text-[18px]" data-node-id="1830:17257">아이디 또는 비밀번호를 확인해주세요</p>
+      </div>
+    </div>
+  );
+}
+
+// source: get_design_context fileKey=P7Jhnu8qV5m9q2QJNzkwAN nodeId=1830:17301 (login (server error) > toast / fail) 2026-09-17
+// styles: red: #FF3131
+export default function ToastFail() {
+  return (
+    <div className="bg-white flex flex-col items-start px-[24px] py-[20px] rounded-[12px] shadow-[0px_0px_10px_0px_rgba(255,49,49,0.25)]" data-node-id="1830:17301" data-name="toast / fail">
+      <div className="flex gap-[24px] items-center justify-center w-full" data-node-id="1830:17302">
+        <div className="size-[40px]" data-node-id="1830:17303" data-name="Frame" />
+        <p className="font-['Inter:Medium'] font-medium text-[28px] text-black" data-node-id="1830:17306">로그인에 실패했습니다</p>
+      </div>
+    </div>
+  );
+}
