@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
+import { feedQueryKeys, getFeedHistory } from '@/entities/feed'
 import {
   deleteIndividual,
   getIndividual,
@@ -70,6 +71,13 @@ export function IndividualDetailPage() {
     enabled: Boolean(individualId),
     placeholderData: (previousData) => previousData,
   })
+  // `먹이 급여 기록 확인하기` 는 이 개체의 최신 급여 기록 상세로 간다. 이력이 있어야 누를 수 있다.
+  const feedHistoryQuery = useQuery({
+    queryKey: feedQueryKeys.history(individualId),
+    queryFn: () => getFeedHistory(Number(individualId)),
+    enabled: Boolean(individualId),
+  })
+  const latestFeedId = feedHistoryQuery.data?.[0]?.id
 
   const deleteIndividualMutation = useMutation({
     mutationFn: () =>
@@ -235,8 +243,18 @@ export function IndividualDetailPage() {
             photo={individual.photo}
             actions={
               <>
-                {/* 먹이 급여 화면이 아직 없다 — 초점은 받지만 동작하지 않는다(sidebar 화면 미구현 항목 규칙). */}
-                <FeedingRecordButton type="button" aria-disabled="true">
+                {/* 이력을 불러오는 중이거나 없으면(실패 포함) 초점은 받지만 동작하지 않는다. */}
+                <FeedingRecordButton
+                  type="button"
+                  aria-disabled={latestFeedId ? undefined : 'true'}
+                  onClick={() => {
+                    if (!latestFeedId) return
+                    // 급여 상세의 뒤로가기가 이 개체 상세로 돌아오게 한다.
+                    navigate(`/feeds/${latestFeedId}`, {
+                      state: { backPath: detailPath },
+                    })
+                  }}
+                >
                   먹이 급여 기록 확인하기
                   <ChevronRightIcon viewBox="0 0 24 24" aria-hidden="true">
                     <path d="m9 4 8 8-8 8" />
@@ -390,7 +408,7 @@ const ObservationSection = styled.section`
   margin-top: 60px;
 `
 
-// Figma `link / 먹이 급여 기록`(949:26307) 245×52 — 이동할 화면이 없어 흐리게 두지 않고 외형만 유지한다.
+// Figma `link / 먹이 급여 기록`(949:26307) 245×52 — 누를 수 없을 때도 흐리게 두지 않고 외형을 유지한다.
 const FeedingRecordButton = styled.button`
   display: inline-flex;
   min-height: 52px;
@@ -401,12 +419,16 @@ const FeedingRecordButton = styled.button`
   border-radius: 8px;
   background: ${({ theme }) => theme.colors.accentBg};
   color: ${({ theme }) => theme.colors.accent};
-  cursor: default;
+  cursor: pointer;
   font: inherit;
   font-size: 18px;
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.accent};
