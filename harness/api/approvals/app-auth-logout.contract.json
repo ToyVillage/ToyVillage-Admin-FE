@@ -1,0 +1,215 @@
+{
+  "apiId": "APP_AUTH_LOGOUT",
+  "name": "앱 관리자·직원 로그아웃",
+  "description": "로그인한 앱 슈퍼관리자 또는 직원의 refresh token을 서버에서 무효화하는 기능",
+  "method": "POST",
+  "path": "/app/auth/logout",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "USER",
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "앱 access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [],
+  "queryParameters": [],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "로그아웃 성공",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "결과 메시지 (MessageResponse)",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "로그아웃되었습니다.",
+              "description": "결과 메시지",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 403,
+        "description": "인증 토큰이 없거나 유효하지 않음, 또는 접근 권한 없음 (Swagger에 body 스키마 없음)",
+        "noContent": true,
+        "body": null
+      },
+      {
+        "status": 405,
+        "description": "Method Not Allowed",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "Method Not Allowed",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 405,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-09-17T20:00:00.000000",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "Method Not Allowed",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "Internal Server Error",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-09-17T20:00:00.000000",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "https://api-stag.toyvillage.kr/v3/api-docs",
+    "notionDataSource": null,
+    "resolvedNotionPage": "https://api-stag.toyvillage.kr/v3/api-docs#/paths/~1app~1auth~1logout/post",
+    "requestedNotionPage": null,
+    "checkedAt": "2026-09-17T20:25:00+09:00",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "APP_AUTH_LOGOUT",
+      "method": "POST",
+      "path": "/app/auth/logout",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "USER",
+          "ADMIN"
+        ]
+      }
+    },
+    "detailValues": {
+      "apiId": "APP_AUTH_LOGOUT",
+      "method": "POST",
+      "path": "/app/auth/logout",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "USER",
+          "ADMIN"
+        ]
+      }
+    }
+  }
+}

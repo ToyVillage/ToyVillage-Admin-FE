@@ -2,6 +2,7 @@ import { api } from '@/shared/api/axios'
 import type {
   AppAuthLoginRequest,
   AppAuthLoginResponse,
+  AppAuthLogoutResponse,
   AppAuthReissueRequest,
   AppAuthReissueResponse,
   AppAuthRole,
@@ -10,6 +11,8 @@ import type {
 // Contract: 인증이 필요 없는 공개 엔드포인트. 요청 인터셉터가 토큰을 붙이지 않는다.
 export const appAuthLoginPath = '/app/auth/login'
 export const appAuthReissuePath = '/app/auth/reissue'
+// 로그아웃은 인증 API다. 요청 인터셉터가 access token 을 붙인다.
+export const appAuthLogoutPath = '/app/auth/logout'
 
 export async function login(
   input: AppAuthLoginRequest,
@@ -35,9 +38,17 @@ export async function reissueAppToken(
   return data
 }
 
-function isAppAuthLoginResponse(
-  value: unknown,
-): value is AppAuthLoginResponse {
+export async function logoutApp(): Promise<AppAuthLogoutResponse> {
+  const { data } = await api.post<unknown>(appAuthLogoutPath)
+
+  if (!isAppAuthLogoutResponse(data)) {
+    throw new Error('앱 로그아웃 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data
+}
+
+function isAppAuthLoginResponse(value: unknown): value is AppAuthLoginResponse {
   if (typeof value !== 'object' || value === null) return false
 
   const response = value as Record<string, unknown>
@@ -61,6 +72,14 @@ function isAppAuthReissueResponse(
     typeof response.refresh_token === 'string' &&
     response.refresh_token.length > 0
   )
+}
+
+function isAppAuthLogoutResponse(
+  value: unknown,
+): value is AppAuthLogoutResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  return typeof (value as Record<string, unknown>).message === 'string'
 }
 
 function isAppAuthRole(value: unknown): value is AppAuthRole {

@@ -36,3 +36,14 @@ export interface AppAuthReissueErrorResponse {
   timestamp: string
   description: string
 }
+
+export interface AppAuthLogoutResponse {
+  message: string
+}
+
+export interface AppAuthLogoutErrorResponse {
+  message: string
+  status: number
+  timestamp: string
+  description: string
+}
