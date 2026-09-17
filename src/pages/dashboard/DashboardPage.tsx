@@ -121,7 +121,7 @@ export function DashboardPage() {
                 to="/feeds"
               />
               <DashboardKpiCard
-                label="개체 관리"
+                label="관찰 및 특이사항"
                 value={kpi.individuals}
                 icon={dashboardIcons.kpi.animal}
                 to="/species"
@@ -190,7 +190,7 @@ export function DashboardPage() {
                 />
               </ListCard>
               <ListCard
-                title="개체관리"
+                title="관찰 및 특이사항"
                 icon={dashboardIcons.title.animal}
                 to="/species"
               >

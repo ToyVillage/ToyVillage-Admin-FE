@@ -40,7 +40,7 @@ test('S2: 200 응답 건수를 KPI 카드에 표시한다', async ({ page }) => 
   await page.goto('/')
 
   await expect(kpi(page, 24, '먹이 급여 기록')).toBeVisible()
-  await expect(kpi(page, 3, '개체 관리')).toBeVisible()
+  await expect(kpi(page, 3, '관찰 및 특이사항')).toBeVisible()
   await expect(kpi(page, 12, '업무보고')).toBeVisible()
   await expect(kpi(page, 8, '작성된 일지')).toBeVisible()
 })
@@ -60,7 +60,7 @@ test('S3: 0건도 0으로 표시한다', async ({ page }) => {
 
   for (const label of [
     '먹이 급여 기록',
-    '개체 관리',
+    '관찰 및 특이사항',
     '업무보고',
     '작성된 일지',
   ]) {
@@ -238,7 +238,7 @@ for (const { title, text, url } of [
   })
 }
 
-test('S11: 먹이 급여·개체관리 행은 링크다', async ({ page }) => {
+test('S11: 먹이 급여·관찰 및 특이사항 행은 링크다', async ({ page }) => {
   await mockDashboardApi(page)
   await page.goto('/')
 
@@ -246,6 +246,6 @@ test('S11: 먹이 급여·개체관리 행은 링크다', async ({ page }) => {
     section(page, '먹이 급여 관리').getByRole('link', { name: /레오/ }),
   ).toHaveAttribute('href', '/feeds/1')
   await expect(
-    section(page, '개체관리').getByRole('link', { name: /콧잔등/ }),
+    section(page, '관찰 및 특이사항').getByRole('link', { name: /콧잔등/ }),
   ).toHaveAttribute('href', '/individuals/5/observations/1')
 })
