@@ -10,6 +10,7 @@ import type {
   WorkLogQuestionType,
   WorkLogSheetColumn,
   WorkLogSheetRow,
+  WorkLogSheetValue,
 } from '../model/types'
 import type {
   PageResponse,
@@ -323,17 +324,15 @@ function toSheetRow(section: WorkLogSectionResponse): WorkLogSheetRow {
   return { zone: section.sectionName, values }
 }
 
-function toSheetValue(
-  answer: WorkLogAnswerResponse,
-): string | string[] | null {
+function toSheetValue(answer: WorkLogAnswerResponse): WorkLogSheetValue {
   const picked = answer.options.map(
     (option) => option.etcText ?? option.content,
   )
 
   if (answer.questionType === 'CHECK_BOX') return picked
   if (answer.questionType === 'MULTIPLE_CHOICE') return picked[0] ?? null
-  // 파일 답변은 시트에 표기하지 않는다.
-  if (answer.questionType === 'FILE_UPLOAD') return null
+  // 파일 답변은 첨부 칩으로 그린다(파일명 + 다운로드).
+  if (answer.questionType === 'FILE_UPLOAD') return answer.file ?? null
 
   return answer.answerText
 }

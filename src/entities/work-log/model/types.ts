@@ -38,11 +38,19 @@ export interface WorkLogSheetColumn {
   type: WorkLogQuestionType
 }
 
+/** 파일 업로드 질문의 답변. 시트에서 첨부 칩으로 그린다. */
+export interface WorkLogSheetFile {
+  fileName: string
+  fileKey: string
+}
+
+export type WorkLogSheetValue = string | string[] | WorkLogSheetFile | null
+
 export interface WorkLogSheetRow {
   /** `설정된 구역` 열의 값. 행 하나가 구역 하나에 대응한다. */
   zone: string
-  /** 질문 id → 답변. CHECKBOX 는 배열, 답변이 없으면 null. */
-  values: Record<string, string | string[] | null>
+  /** 질문 id → 답변. CHECKBOX 는 배열, FILE 은 첨부, 답변이 없으면 null. */
+  values: Record<string, WorkLogSheetValue>
 }
 
 export interface WorkLogDetail {
