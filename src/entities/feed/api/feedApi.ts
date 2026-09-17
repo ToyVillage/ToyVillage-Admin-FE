@@ -81,8 +81,13 @@ export async function getFeedDetail({
     throw new Error('급여 상세 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  // 이력이 없거나(404) 이력 조회만 실패해도 급여 기록 본문은 보여준다.
-  const history = await getFeedHistory(data.animalId).catch(() => [])
+  // 이력이 없으면(404) 빈 표로 두고 본문은 보여준다.
+  // 그 밖의 실패(500·네트워크·형식 오류)는 그대로 올려 상세를 오류 상태로 만든다 —
+  // 불러오지 못한 것을 '이력 없음'으로 보여주지 않는다.
+  const history = await getFeedHistory(data.animalId).catch((error: unknown) => {
+    if (isFeedNotFoundError(error)) return []
+    throw error
+  })
   const { fedDate, fedTime } = splitFeedDateTime(data.feedDateTime)
 
   return {
