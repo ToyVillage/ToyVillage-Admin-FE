@@ -1,0 +1,15 @@
+{
+  "feature": "dashboard-overall-operations-query",
+  "apiId": "DASHBOARD_OVERALL_OPERATIONS_QUERY",
+  "approvedAt": "2026-09-17T11:53:07.357Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "c4c820975bc25c83e94841bd89576b01361c0ff72f66e7e64ce34caaa08b86a8",
+  "contractHash": "4ec6847b3bde82b41969c8049ab170599979166bc2ddb647dff02232924260e1",
+  "contractMarkdownHash": "cb90d360c373e90e8432733cd8360a6399799c20be5a038c32e85e34802e79a1",
+  "planHash": "9f75f375a1fc8fdbfef35e62c04a9a4e80d4742970e7aa1162ff12d41219795a",
+  "scenarioHash": "ddf7025a3372468b5c7ff4c364c1e6e0d8065c70544d373eab9f0af00fb4ae77",
+  "testHash": "88090896fab634951f4433cfbe6cbd910dc7ce16748d23ad4f16785274c7becd",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T12:00:31.018Z"
+}
