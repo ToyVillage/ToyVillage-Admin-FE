@@ -6,62 +6,49 @@
 
 - matched: 기존 tokens.ts 값과 동일
 - new: 기존에 없는 semantic token 후보 → 개발자가 이름 부여(color.* / font.body) 후 반영
-- 신규 semantic token 후보 개수: **1**
+- 신규 semantic token 후보 개수: **7**
 
 ## Semantic token candidates
 
 ### Solid colors → color.*
 | 값 | 사용 | 상태 | 제안 tokens.ts 경로 |
 |----|------|------|---------------------|
+| `#848491` | 5 | ✅ matched | (기존) |
 | `#F5F5F7` | 4 | ✅ matched | (기존) |
-| `#848491` | 4 | ✅ matched | (기존) |
-| `#C6C6CE` | 2 | ✅ matched | (기존) |
-| `#FFFFFF` | 1 | ✅ matched | (기존) |
-| `#000000` | 1 | ✅ matched | (기존) |
+| `#C6C6CE` | 4 | ✅ matched | (기존) |
+| `#FF3131` | 4 | ✅ matched | (기존) |
+| `#2B6034` | 1 | 🆕 new | color.<name> |
+| `#377B43` | 1 | 🆕 new | color.<name> |
+| `#3A7D44` | 1 | 🆕 new | color.<name> |
+| `#234F2B` | 1 | 🆕 new | color.<name> |
+| `#38B14A` | 1 | 🆕 new | color.<name> |
+| `#458F4F` | 1 | 🆕 new | color.<name> |
+| `#A9ECDD` | 1 | 🆕 new | color.<name> |
 
 ### Font families → font.*
-| 값 | 사용 | 상태 | 제안 tokens.ts 경로 |
-|----|------|------|---------------------|
-| `Wanted Sans` | 7 | 🆕 new | font.<name> |
+(없음)
 
 ## Direct CSS implementation values
 
 ### Alpha/calculated colors
-(없음)
+| 값 | 사용 |
+|----|------|
+| `rgba(115,84,55,0.55)` | 1 |
+| `rgba(169,236,221,0.34)` | 1 |
+| `rgba(255,255,255,0.7)` | 1 |
+| `rgba(20,26,23,0.1)` | 1 |
 
 ### Font sizes
-| 값 | 사용 |
-|----|------|
-| `22px` | 2 |
-| `20px` | 2 |
-| `40px` | 1 |
-| `24px` | 1 |
-| `28px` | 1 |
+(없음)
 
 ### Font weights
-| 값 | 사용 |
-|----|------|
-| `500` | 4 |
-| `600` | 2 |
-| `700` | 1 |
+(없음)
 
 ### Spacing
-| 값 | 사용 |
-|----|------|
-| `16px` | 4 |
-| `8px` | 3 |
-| `20px` | 2 |
-| `18px` | 2 |
-| `190px` | 1 |
-| `23px` | 1 |
-| `12px` | 1 |
+(없음)
 
 ### Radius
-| 값 | 사용 |
-|----|------|
-| `8px` | 2 |
-| `20px` | 1 |
-| `12px` | 1 |
+(없음)
 
 
 > 참고: 확정 시 `color.*`는 theme.ts에서 `colors.*`로 투영됨(color→colors 리네임).

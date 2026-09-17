@@ -85,7 +85,8 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
           />
           {errorField === 'username' && (
             <ErrorMessage id="login-username-error" role="alert">
-              아이디를 입력해주세요
+              <ErrorBadge aria-hidden="true">!</ErrorBadge>
+              아이디를 입력해주세요!
             </ErrorMessage>
           )}
         </Field>
@@ -118,7 +119,8 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
           </PasswordInputBox>
           {errorField === 'password' && (
             <ErrorMessage id="login-password-error" role="alert">
-              비밀번호를 입력해주세요
+              <ErrorBadge aria-hidden="true">!</ErrorBadge>
+              비밀번호를 입력해주세요!
             </ErrorMessage>
           )}
         </Field>
@@ -147,14 +149,18 @@ const Form = styled.form`
 const Fields = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 32px;
 `
 
+// 오류 문구가 나타나도 다음 필드와 버튼 위치가 흔들리지 않게 높이를 고정한다.
 const Field = styled.div`
-  position: relative;
   display: flex;
+  min-height: 160px;
   flex-direction: column;
   gap: 8px;
+
+  @media (max-width: 767px) {
+    min-height: 136px;
+  }
 `
 
 const Label = styled.label`
@@ -166,9 +172,8 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  height: 64px;
   padding: 20px 16px;
-  border: 2px solid transparent;
+  border: 1px solid ${({ theme }) => theme.colors.dialogBorder};
   border-radius: 8px;
   outline: 0;
   background: ${({ theme }) => theme.colors.background};
@@ -176,6 +181,7 @@ const Input = styled.input`
   font: inherit;
   font-size: 20px;
   font-weight: 500;
+  line-height: normal;
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textGuide};
@@ -198,10 +204,10 @@ const Input = styled.input`
 const PasswordInputBox = styled.div`
   display: flex;
   align-items: center;
+  gap: 8px;
   width: 100%;
-  height: 64px;
-  padding: 14px 12px 14px 16px;
-  border: 2px solid transparent;
+  padding: 18px 16px;
+  border: 1px solid ${({ theme }) => theme.colors.dialogBorder};
   border-radius: 8px;
   background: ${({ theme }) => theme.colors.background};
 
@@ -217,7 +223,6 @@ const PasswordInputBox = styled.div`
 const PasswordInput = styled.input`
   min-width: 0;
   flex: 1;
-  height: 100%;
   padding: 0;
   border: 0;
   outline: 0;
@@ -226,6 +231,7 @@ const PasswordInput = styled.input`
   font: inherit;
   font-size: 20px;
   font-weight: 500;
+  line-height: normal;
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textGuide};
@@ -234,12 +240,27 @@ const PasswordInput = styled.input`
 `
 
 const ErrorMessage = styled.span`
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: ${({ theme }) => theme.colors.danger};
+  font-size: 18px;
+  font-weight: 500;
+  line-height: normal;
+`
+
+const ErrorBadge = styled.span`
+  display: grid;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 11px;
+  background: ${({ theme }) => theme.colors.danger};
+  color: ${({ theme }) => theme.colors.surface};
   font-size: 14px;
   font-weight: 600;
+  line-height: 1;
 `
 
 const SubmitButton = styled.button`
@@ -247,15 +268,17 @@ const SubmitButton = styled.button`
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 77px;
-  margin-top: 160px;
+  margin-top: 68px;
+  padding: 23px;
   border: 0;
+  border-top: 1px solid ${({ theme }) => theme.colors.dialogBorder};
   border-radius: 12px;
-  background: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.brandAction};
   color: ${({ theme }) => theme.colors.surface};
   font: inherit;
   font-size: 28px;
   font-weight: 500;
+  line-height: normal;
   cursor: pointer;
 
   &:disabled {
@@ -269,6 +292,6 @@ const SubmitButton = styled.button`
   }
 
   @media (max-width: 767px) {
-    margin-top: 48px;
+    margin-top: 32px;
   }
 `

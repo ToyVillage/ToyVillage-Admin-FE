@@ -46,6 +46,9 @@ export const tokens = {
     iconMuted: '#858585',
     menuChevron: '#858591', // gray/70 — 사이드바 대분류 펼침 chevron
     danger: '#FF3131',
+    brandPanel: '#2B6034', // 로그인 브랜드 패널 배경
+    brandPanelShape: '#377B43', // 로그인 브랜드 패널 사각형 도형
+    brandAction: '#3A7D44', // 로그인 버튼 배경
     dangerSoftBg: '#FFECEC', // 대시보드 미니 달력 휴관일 칸 배경
     filePng: '#13A76B',
     fileJpg: '#E8B64C',

@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import eyeIcon from '../assets/eye.svg'
 import eyeOffIcon from '../assets/eye-off.svg'
 
 interface PasswordVisibilityButtonProps {
@@ -20,17 +21,21 @@ export function PasswordVisibilityButton({
       onPointerDown={(event) => event.preventDefault()}
       onClick={onToggle}
     >
-      <Icon src={eyeOffIcon} alt="" aria-hidden="true" />
+      <Icon
+        src={isVisible ? eyeIcon : eyeOffIcon}
+        alt=""
+        aria-hidden="true"
+      />
     </ToggleButton>
   )
 }
 
 const ToggleButton = styled.button`
   display: grid;
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
-  padding: 4px;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border: 0;
   border-radius: 6px;
   background: transparent;
