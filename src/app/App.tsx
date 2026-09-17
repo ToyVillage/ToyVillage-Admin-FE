@@ -53,6 +53,7 @@ import {
   SpeciesListPage,
 } from '@/pages/species'
 import { TeamSettingsPage } from '@/pages/settings/teams'
+import { CreateAccountPage } from '@/pages/settings/accounts'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
 
@@ -159,6 +160,10 @@ const router = createBrowserRouter([
             element: <EditObservationPage />,
           },
           { path: '/settings/teams', element: <TeamSettingsPage /> },
+          {
+            path: '/settings/accounts/create',
+            element: <CreateAccountPage />,
+          },
         ],
       },
     ],
