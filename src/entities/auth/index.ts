@@ -14,6 +14,7 @@ export {
   appAuthLoginPath,
   appAuthLogoutPath,
   appAuthReissuePath,
+  isLoginCredentialError,
   login,
   logoutApp,
   reissueAppToken,

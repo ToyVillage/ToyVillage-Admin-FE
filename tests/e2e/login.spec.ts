@@ -16,9 +16,7 @@ test('S1: 로그인 화면을 표시하고 전역 사이드바는 제외한다',
 }) => {
   await expect(page.getByRole('img', { name: '토이빌리지' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible()
-  await expect(
-    page.getByText('토이빌리지 관리자에 로그인하고'),
-  ).toBeVisible()
+  await expect(page.getByText('토이빌리지 관리자에 로그인하고')).toBeVisible()
   await expect(page.getByLabel('아이디')).toBeVisible()
   await expect(passwordInput(page)).toBeVisible()
   await expect(page.getByRole('button', { name: '로그인' })).toBeVisible()
@@ -106,8 +104,12 @@ test('S8: 제출 중 연속 submit에도 한 번만 제출한다', async ({ page
 
   await submit.evaluate((button) => {
     const form = button.closest('form')
-    form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-    form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    form?.dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    )
+    form?.dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    )
   })
 
   await expect(page.getByRole('button', { name: '로그인 중' })).toBeDisabled()
@@ -159,6 +161,48 @@ test('S11: 키보드만으로 입력, 표시 전환과 제출을 조작한다', 
   await expect(page).toHaveURL(/\/$/)
 })
 
+test('S12: 자격증명 불일치 시 비밀번호 아래에 안내하고 다시 입력하면 지운다', async ({
+  page,
+}) => {
+  await mockLoginFailure(page)
+  await fillValidCredentials(page)
+  await page.getByRole('button', { name: '로그인' }).click()
+
+  const message = page.getByText('아이디 또는 비밀번호를 확인해주세요')
+  await expect(message).toBeVisible()
+  await expect(passwordInput(page)).toHaveValue('')
+  await expect(passwordInput(page)).toHaveAccessibleDescription(
+    '아이디 또는 비밀번호를 확인해주세요',
+  )
+  await expect(page.getByText('로그인에 실패했습니다')).toBeHidden()
+
+  await passwordInput(page).fill('p')
+  await expect(message).toBeHidden()
+})
+
+test('S13: 서버·네트워크 실패 시 토스트로 안내한다', async ({ page }) => {
+  await mockLoginServerError(page)
+  await fillValidCredentials(page)
+  await page.getByRole('button', { name: '로그인' }).click()
+
+  await expect(page.getByRole('alert')).toContainText('로그인에 실패했습니다')
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByLabel('아이디')).toHaveValue('admin')
+  await expect(passwordInput(page)).toHaveValue('')
+  await expect(passwordInput(page)).toBeFocused()
+  await expect(
+    page.getByText('아이디 또는 비밀번호를 확인해주세요'),
+  ).toBeHidden()
+
+  await page.unroute(loginApiPath)
+  await page.route(loginApiPath, (route) => route.abort('failed'))
+  await page.reload()
+  await fillValidCredentials(page)
+  await page.getByRole('button', { name: '로그인' }).click()
+
+  await expect(page.getByRole('alert')).toContainText('로그인에 실패했습니다')
+})
+
 // 제출 함수가 성공하는 경로. 응답 형식은 APP_AUTH_LOGIN Contract 를 따른다.
 async function mockLoginSuccess(page: Page) {
   await page.route(loginApiPath, async (route) => {
@@ -186,6 +230,22 @@ async function mockLoginFailure(page: Page) {
         status: 401,
         timestamp: '2026-08-10T22:30:00.000000',
         description: '아이디 또는 비밀번호를 확인해주세요',
+      }),
+    })
+  })
+}
+
+// 자격증명 외 실패 경로. 서버 오류(500)를 쓴다.
+async function mockLoginServerError(page: Page) {
+  await page.route(loginApiPath, async (route) => {
+    await route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: '내부 서버 오류가 발생했습니다.',
+        status: 500,
+        timestamp: '2026-09-17T22:30:00.000000',
+        description: '내부 서버 오류가 발생했습니다.',
       }),
     })
   })
