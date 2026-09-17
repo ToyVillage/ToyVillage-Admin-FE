@@ -27,12 +27,15 @@ export const dashboardPatterns: Record<DashboardEndpoint, RegExp> = {
 }
 
 export interface MockDashboardFeedLog {
+  feedLogId: number
   animalKind: string
   animalName: string
   feedDateTime: string
 }
 
 export interface MockDashboardObservation {
+  animalObservationId: number
+  animalId: number
   title: string
   createdAt: string
 }
@@ -92,16 +95,19 @@ export function createDashboardMockData(): DashboardMockData {
     overallOperations: { TOTAL: 30, IN_PROGRESS: 9, COMPLETED: 15, EXPIRED: 6 },
     feedLogs: [
       {
+        feedLogId: 1,
         animalKind: '표범',
         animalName: '레오',
         feedDateTime: '2026-09-03T09:30:00',
       },
       {
+        feedLogId: 2,
         animalKind: '사자',
         animalName: '심바',
         feedDateTime: '2026-09-03T09:10:00',
       },
       {
+        feedLogId: 3,
         animalKind: '호랑이',
         animalName: '라라',
         feedDateTime: '2026-09-02T17:40:00',
@@ -109,14 +115,23 @@ export function createDashboardMockData(): DashboardMockData {
     ],
     animalObservations: [
       {
+        animalObservationId: 1,
+        animalId: 5,
         title: '얼굴 콧잔등 부위 약 3cm 긁힌 상처 있음',
         createdAt: '2026-09-03T09:30:00',
       },
       {
+        animalObservationId: 2,
+        animalId: 6,
         title: '배변상태 평소보다 조금 묽음',
         createdAt: '2026-09-02T08:00:00',
       },
-      { title: '식욕 정상, 활동량 양호', createdAt: '2026-08-31T08:00:00' },
+      {
+        animalObservationId: 3,
+        animalId: 7,
+        title: '식욕 정상, 활동량 양호',
+        createdAt: '2026-08-31T08:00:00',
+      },
     ],
     closeDays: [
       {
