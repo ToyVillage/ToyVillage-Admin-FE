@@ -88,7 +88,7 @@ export async function getFeedDetail({
     feederName: data.staffName,
     fedDate,
     fedTime,
-    note: data.significant,
+    note: data.significant ?? '',
     // `animalImageUrl` 은 `fileName`·`fileKey` 뿐이라 표시할 URL 이 없다.
     animalPhotoUrl: undefined,
     history,
@@ -118,7 +118,7 @@ async function getFeedHistory(
           feederName: item.staffName,
           feedType: item.feedType,
           feedAmount: formatFeedAmount(item.feedAmount),
-          note: item.significant,
+          note: item.significant ?? '',
         },
         feedDateTime: item.feedDateTime,
       }
@@ -185,6 +185,11 @@ function assertFeedLogId(feedLogId: number): void {
   }
 }
 
+// 특이사항은 명세에 필수 표기가 없다. 값이 없으면 null 로 오므로 빈 문자열로 읽는다.
+function isNullableString(value: unknown): boolean {
+  return value === null || value === undefined || typeof value === 'string'
+}
+
 function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
   if (typeof value !== 'object' || value === null) return false
 
@@ -225,7 +230,7 @@ function isFeedLogAdminDetailResponse(
     typeof detail.feedType === 'string' &&
     typeof detail.feedAmount === 'number' &&
     typeof detail.feedDateTime === 'string' &&
-    typeof detail.significant === 'string'
+    isNullableString(detail.significant)
   )
 }
 
@@ -248,7 +253,7 @@ function isFeedLogHistoryResponse(
         typeof feedLog.feedType === 'string' &&
         typeof feedLog.feedAmount === 'number' &&
         typeof feedLog.feedDateTime === 'string' &&
-        typeof feedLog.significant === 'string'
+        isNullableString(feedLog.significant)
       )
     })
   )

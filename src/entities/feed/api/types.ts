@@ -41,7 +41,8 @@ export interface FeedLogAdminDetailResponse {
   feedType: string
   feedAmount: number
   feedDateTime: string
-  significant: string
+  /** 특이사항. 값이 없으면 null 이다. */
+  significant: string | null
 }
 
 /** `GET /feed-log/admin/history/{animalManageId}` 의 배열 항목 */
@@ -52,7 +53,8 @@ export interface FeedLogHistoryItemResponse {
   feedType: string
   feedAmount: number
   feedDateTime: string
-  significant: string
+  /** 특이사항. 값이 없으면 null 이다. */
+  significant: string | null
 }
 
 export interface FeedLogHistoryResponse {
