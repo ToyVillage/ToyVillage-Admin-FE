@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import type { Team } from '../model/types'
+import type { Team, TeamMember } from '../model/types'
 import { TeamMemberTable } from './TeamMemberTable'
 
 interface TeamDetailPanelProps {
   team: Team
+  /** 팀원 목록. 멤버 조회와 직원 목록을 합친 결과를 화면에서 넘긴다. */
+  members: TeamMember[]
   onRename: (name: string) => void
   onDeleteClick: () => void
   onAddMemberClick: () => void
@@ -15,6 +17,7 @@ interface TeamDetailPanelProps {
 // 팀명 인라인 수정 모드(1760:17881)를 자체 상태로 가진다.
 export function TeamDetailPanel({
   team,
+  members,
   onRename,
   onDeleteClick,
   onAddMemberClick,
@@ -115,14 +118,14 @@ export function TeamDetailPanel({
       <SectionHeaderRow>
         <LabelGroup>
           <SectionLabel>팀원</SectionLabel>
-          <SectionCount>{team.members.length}명</SectionCount>
+          <SectionCount>{members.length}명</SectionCount>
         </LabelGroup>
         <AddMemberButton type="button" onClick={onAddMemberClick}>
           ＋&nbsp;&nbsp;인원 추가하기
         </AddMemberButton>
       </SectionHeaderRow>
 
-      <TeamMemberTable members={team.members} onRemove={onRemoveMember} />
+      <TeamMemberTable members={members} onRemove={onRemoveMember} />
     </Panel>
   )
 }

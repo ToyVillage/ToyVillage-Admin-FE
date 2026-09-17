@@ -36,7 +36,7 @@ export function TeamRail({
                 >
                   <RowName $selected={selected}>{team.name}</RowName>
                   <RowCount $selected={selected}>
-                    {team.members.length}명
+                    {team.memberCount}명
                   </RowCount>
                 </Row>
               </li>
