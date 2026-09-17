@@ -15,6 +15,7 @@ export type {
 export { getDocuments, getDocument } from './api/getDocuments'
 export type {
   DocumentsQueryAllRequest,
+  DocumentsPage,
   DocumentOrderDirection,
   DocumentQueryRequest,
 } from './api/getDocuments'

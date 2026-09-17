@@ -6,6 +6,7 @@ import {
   ResourceTable,
   getDocuments,
   fileTypeTabs,
+  fileTypeToDocumentType,
   tabToFileType,
 } from '@/entities/resource'
 import { CreateResourceButton } from '@/features/create-resource'
@@ -47,19 +48,30 @@ export function ResourceListPage() {
     return () => clearTimeout(timer)
   }, [query])
 
-  // 서버 사이드 페이지네이션: page(0부터)·size·keyword 로 해당 페이지만 요청한다.
+  // 파일 유형 탭 → DOCUMENTS_QUERY_ALL 의 types 필터. '전체'면 보내지 않는다.
+  const types = useMemo(() => {
+    const fileType = tabToFileType[active]
+    return fileType ? [fileTypeToDocumentType[fileType]] : undefined
+  }, [active])
+
+  // 서버 사이드 페이지네이션: page(0부터)·size·keyword·types 로 해당 페이지만 요청한다.
   const { data } = useQuery({
-    queryKey: ['resources', 'list', { page, size: PAGE_SIZE, keyword: debouncedKeyword }],
+    queryKey: [
+      'resources',
+      'list',
+      { page, size: PAGE_SIZE, keyword: debouncedKeyword, types },
+    ],
     queryFn: () =>
       getDocuments({
         page: page - 1,
         size: PAGE_SIZE,
         keyword: debouncedKeyword || undefined,
         orderDirection: 'DESC',
+        types,
       }),
     placeholderData: (previousData) => previousData,
   })
-  const pageItems = useMemo(() => data ?? [], [data])
+  const resources = useMemo(() => data?.resources ?? [], [data])
 
   // 탭·검색이 바뀌면 첫 페이지로 되돌린다(최초 마운트에서는 URL 페이지를 유지).
   const filterKey = `${active} ${debouncedKeyword}`
@@ -71,28 +83,16 @@ export function ResourceListPage() {
     }
   }, [filterKey, setPage])
 
-  // 마지막 페이지가 정확히 size(10)개면 빈 다음 페이지가 노출될 수 있다(응답에 총개수가
-  // 없어 사전 판단 불가). 조회 성공 응답이 빈 배열이고 1페이지가 아니면 이전 페이지로
+  // 응답의 totalPageSize(전체 페이지 수)로 페이지 번호를 그린다. 자료가 없으면 1로 둔다.
+  const pageCount = Math.max(1, data?.totalPageSize ?? 1)
+
+  // 삭제·필터로 전체 페이지 수가 줄어 URL 의 page 가 범위를 벗어나면 마지막 페이지로
   // 되돌려 빈 페이지에 고착되지 않게 한다.
   useEffect(() => {
-    if (data && data.length === 0 && page > 1) {
-      setPage(page - 1, { replace: true })
+    if (data && page > pageCount) {
+      setPage(pageCount, { replace: true })
     }
-  }, [data, page, setPage])
-
-  // 자료 타입 탭은 API 필터 파라미터가 없어 현재 페이지 내 클라이언트 필터로 임시 처리한다.
-  // (정식 타입 필터는 백엔드 type 파라미터 추가 후 서버 페이지네이션으로 전환)
-  const resources = useMemo(() => {
-    const type = tabToFileType[active]
-    return type === null || type === undefined
-      ? pageItems
-      : pageItems.filter((resource) => resource.fileType === type)
-  }, [active, pageItems])
-
-  // 총 개수가 응답에 없어(배열만) 마지막 페이지를 알 수 없다. 현재 페이지가 가득 차면
-  // 다음 페이지가 있다고 보고 이동을 허용한다(백엔드 총개수 확정 시 정식 번호로 전환).
-  const hasNextPage = pageItems.length === PAGE_SIZE
-  const pageCount = hasNextPage ? page + 1 : Math.max(page, 1)
+  }, [data, page, pageCount, setPage])
 
   return (
     <Page>

@@ -1,6 +1,6 @@
 import { api } from '@/shared/api/axios'
 import { documentTypeToFileType } from '../model/types'
-import type { FileType, Resource } from '../model/types'
+import type { DocumentType, FileType, Resource } from '../model/types'
 
 export type DocumentOrderDirection = 'ASC' | 'DESC'
 
@@ -10,6 +10,14 @@ export interface DocumentsQueryAllRequest {
   size: number
   keyword?: string
   orderDirection?: DocumentOrderDirection
+  // 자료 타입 필터. 선택된 타입에 해당하는 자료만 조회된다(미지정이면 전체).
+  types?: DocumentType[]
+}
+
+// DOCUMENTS_QUERY_ALL 응답: 자료 한 페이지 + 전체 페이지 수.
+export interface DocumentsPage {
+  resources: Resource[]
+  totalPageSize: number
 }
 
 interface DocumentQueryAllRuntimeItem {
@@ -17,6 +25,11 @@ interface DocumentQueryAllRuntimeItem {
   title: string
   type?: unknown
   createdAt?: unknown
+}
+
+interface DocumentsQueryAllRuntimeResponse {
+  documents: DocumentQueryAllRuntimeItem[]
+  totalPageSize: number
 }
 
 export interface DocumentQueryRequest {
@@ -32,17 +45,24 @@ interface DocumentQueryRuntimeItem extends DocumentQueryAllRuntimeItem {
   files?: DocumentQueryRuntimeFile[]
 }
 
-// 서버 사이드 페이지네이션. 해당 page(0부터)의 자료 한 페이지를 조회한다.
+// 서버 사이드 페이지네이션. 해당 page(0부터)의 자료 한 페이지와 전체 페이지 수를 조회한다.
 export async function getDocuments(
   params: DocumentsQueryAllRequest,
-): Promise<Resource[]> {
-  const { data } = await api.get<unknown>('/documents', { params })
+): Promise<DocumentsPage> {
+  const { data } = await api.get<unknown>('/documents', {
+    params,
+    // types 는 배열이지만 `types[]=` 가 아니라 `types=PDF&types=PNG` 로 보내야 한다.
+    paramsSerializer: { indexes: null },
+  })
 
   if (!isDocumentsQueryAllResponse(data)) {
     throw new Error('자료 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  return data.map(toResource)
+  return {
+    resources: data.documents.map(toResource),
+    totalPageSize: data.totalPageSize,
+  }
 }
 
 // DOCUMENTS_QUERY (GET /documents/{id}) — id로 자료 상세 조회.
@@ -93,8 +113,16 @@ function toDisplayDate(value: unknown): string {
 
 function isDocumentsQueryAllResponse(
   value: unknown,
-): value is DocumentQueryAllRuntimeItem[] {
-  return Array.isArray(value) && value.every(isDocumentsQueryAllItem)
+): value is DocumentsQueryAllRuntimeResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  const { documents, totalPageSize } = value as Record<string, unknown>
+  return (
+    Array.isArray(documents) &&
+    documents.every(isDocumentsQueryAllItem) &&
+    typeof totalPageSize === 'number' &&
+    Number.isFinite(totalPageSize)
+  )
 }
 
 function isDocumentsQueryAllItem(
