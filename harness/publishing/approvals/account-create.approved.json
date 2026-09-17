@@ -1,0 +1,21 @@
+{
+  "feature": "account-create",
+  "approvedAt": "2026-09-17T10:39:08.467Z",
+  "approvedBy": "claude (yunho 위임)",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
+  ],
+  "scenarioHash": "d953c2a506e1039dcec24ab0f3302ca741ac9159663be5773f87850042757950",
+  "e2eHash": "8f0b305ab393456a5a1337ff5fa3635272841aa7ea3c6b3700c13bdc87c70963"
+}

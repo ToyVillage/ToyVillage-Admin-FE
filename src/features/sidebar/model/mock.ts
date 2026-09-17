@@ -76,7 +76,11 @@ export const mockSidebarGroups: SidebarGroup[] = [
     icon: 'settings',
     items: [
       { id: 'team-settings', label: '팀 설정', to: '/settings/teams' },
-      { id: 'staff-accounts', label: '직원 계정 관리' },
+      {
+        id: 'staff-accounts',
+        label: '직원 계정 관리',
+        to: '/settings/accounts/create',
+      },
       { id: 'permissions', label: '권한 관리' },
     ],
   },
