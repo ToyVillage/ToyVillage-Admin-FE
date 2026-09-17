@@ -46,6 +46,7 @@ export const tokens = {
     iconMuted: '#858585',
     menuChevron: '#858591', // gray/70 — 사이드바 대분류 펼침 chevron
     danger: '#FF3131',
+    dangerSoftBg: '#FFECEC', // 대시보드 미니 달력 휴관일 칸 배경
     filePng: '#13A76B',
     fileJpg: '#E8B64C',
   },
