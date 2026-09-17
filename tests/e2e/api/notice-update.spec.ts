@@ -35,7 +35,7 @@ test('S1: route ID와 JSON body로 공지를 한 번 수정하고 목록으로 �
     await fulfillNoticeList(route, 'API 수정 공지')
   })
 
-  await page.goto('/notices/list/7')
+  await page.goto('/notices/list/7/edit')
   await fillNotice(page, 'API 수정 공지', 'API 수정 내용')
   await page.getByRole('button', { name: '저장하기' }).click()
 
@@ -56,7 +56,7 @@ test('S2: HTTP 400이면 입력을 보존하고 다시 제출할 수 있다', as
 }) => {
   await mockUpdateError(page, 400, '존재하지 않는 공지사항 분류 항목입니다')
 
-  await page.goto('/notices/list/7')
+  await page.goto('/notices/list/7/edit')
   await fillNotice(page, '검증 오류 공지', '검증 오류 내용')
   await page.getByRole('button', { name: '저장하기' }).click()
 
@@ -66,7 +66,7 @@ test('S2: HTTP 400이면 입력을 보존하고 다시 제출할 수 있다', as
 test('S3: HTTP 403이면 세션을 비우고 로그인으로 보낸다', async ({ page }) => {
   await mockUpdateError(page, 403, '접근할 수 있는 권한이 없습니다.')
 
-  await page.goto('/notices/list/7')
+  await page.goto('/notices/list/7/edit')
   await fillNotice(page, '권한 오류 공지', '권한 오류 내용')
   await page.getByRole('button', { name: '저장하기' }).click()
 
@@ -79,7 +79,7 @@ test('S3: HTTP 403이면 세션을 비우고 로그인으로 보낸다', async (
 test('S4: HTTP 404이면 mock 저장으로 대체하지 않는다', async ({ page }) => {
   await mockUpdateError(page, 404, '존재하지 않는 공지사항입니다.', 999)
 
-  await page.goto('/notices/list/999')
+  await page.goto('/notices/list/999/edit')
   await fillNotice(page, '없는 공지', '없는 공지 내용')
   await page.getByRole('button', { name: '저장하기' }).click()
 
@@ -89,7 +89,7 @@ test('S4: HTTP 404이면 mock 저장으로 대체하지 않는다', async ({ pag
 test('S5: HTTP 500이면 입력을 보존하고 재시도할 수 있다', async ({ page }) => {
   await mockUpdateError(page, 500, '예상하지 못한 에러가 발생했습니다.')
 
-  await page.goto('/notices/list/7')
+  await page.goto('/notices/list/7/edit')
   await fillNotice(page, '서버 오류 공지', '서버 오류 내용')
   await page.getByRole('button', { name: '저장하기' }).click()
 
@@ -125,7 +125,7 @@ test('S6: 연속 submit에도 수정 요청은 한 번만 전송한다', async (
     await fulfillNoticeList(route, '중복 방지 공지')
   })
 
-  await page.goto('/notices/list/7')
+  await page.goto('/notices/list/7/edit')
   await fillNotice(page, '중복 방지 공지', '중복 방지 내용')
   await page.getByRole('button', { name: '저장하기' }).evaluate((button) => {
     const form = button.closest('form')
@@ -164,7 +164,7 @@ test('S7: HTTP 200 응답이 Contract와 다르면 성공 처리하지 않는다
     })
   })
 
-  await page.goto('/notices/list/7')
+  await page.goto('/notices/list/7/edit')
   await fillNotice(page, '잘못된 응답 공지', '잘못된 응답 내용')
   await page.getByRole('button', { name: '저장하기' }).click()
 
@@ -177,7 +177,7 @@ async function fillNotice(page: Page, title: string, content: string) {
 }
 
 async function expectUpdateFailure(page: Page, title: string, content: string) {
-  await expect(page).toHaveURL(/\/notices\/list\/\d+$/)
+  await expect(page).toHaveURL(/\/notices\/list\/\d+\/edit$/)
   await expect(page.getByLabel('제목')).toHaveValue(title)
   await expect(page.getByLabel('내용')).toHaveValue(content)
   await expect(
@@ -234,13 +234,16 @@ async function fulfillNoticeList(route: Route, title: string) {
   await route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify([
-      {
-        id: 7,
-        title,
-        kind: '공지사항 분류',
-        createAt: '2026-07-28',
-      },
-    ]),
+    body: JSON.stringify({
+      notices: [
+        {
+          id: 7,
+          title,
+          kind: '공지사항 분류',
+          createdAt: '2026-07-28',
+        },
+      ],
+      totalPageSize: 1,
+    }),
   })
 }

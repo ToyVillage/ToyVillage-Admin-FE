@@ -2,7 +2,9 @@ import { expect, test } from '@playwright/test'
 
 const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
 
-test('실제 서버의 완화된 상세 응답도 공지 폼에 표시한다', async ({ page }) => {
+test('실제 서버의 완화된 상세 응답도 공지 상세와 폼에 표시한다', async ({
+  page,
+}) => {
   await page.route(detailApiPath, async (route) => {
     await route.fulfill({
       status: 200,
@@ -17,6 +19,14 @@ test('실제 서버의 완화된 상세 응답도 공지 폼에 표시한다', a
   })
 
   await page.goto('/notices/list/7')
+
+  await expect(
+    page.getByRole('heading', { name: '실제 응답 형태의 상세 공지' }),
+  ).toBeVisible()
+  await expect(page.getByText('등록된 자료가 없습니다.')).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+
+  await page.goto('/notices/list/7/edit')
 
   await expect(page.getByLabel('제목')).toHaveValue(
     '실제 응답 형태의 상세 공지',

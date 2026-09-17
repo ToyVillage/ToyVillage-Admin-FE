@@ -1,15 +1,21 @@
 {
   "feature": "notice-list",
-  "approvedAt": "2026-07-17T11:47:43.388Z",
-  "approvedBy": "kimjihwan",
+  "approvedAt": "2026-09-17T04:01:29.033Z",
+  "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
     "S2",
     "S3",
     "S4",
     "S5",
-    "S6"
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
   ],
-  "scenarioHash": "3355804b7086458853674247bc96b647c2b5653647fb10662222c01f971589e7",
-  "e2eHash": "9fb70c3fff9896ff91ff90b63533f32861cea56c7420e21bcbbc80b541de00df"
+  "scenarioHash": "6cb7d081d30d63f9a26e9a9c71789489821deddc6028db2cf0d0da6166ef3946",
+  "e2eHash": "008fd1d6c6d0a952392bff85494845193d8367459afd47fd3c05968ff85fe2ad"
 }

@@ -2,12 +2,20 @@
 
 ## Mock S1 — 정상 상세 조회
 
-- 목적: route ID로 API를 호출하고 상세 폼에 응답을 표시한다.
+- 목적: route ID로 API를 호출하고 읽기 전용 상세 화면에 응답을 표시한다.
 - Mock request: `GET /api/notice/7`
 - Mock response: HTTP 200, `id`, `title`, `kind`, `content`, `createdAt`,
   `files: [{"fileName":"notice.pdf","fileKey":"notice-key.pdf"}]`
 - 사용자 동작: `/notices/list/7` 진입
-- 기대 결과: 요청 path 확인, 제목·분류·내용·`notice.pdf` 첨부 chip 표시
+- 기대 결과: 요청 path 확인, 제목(heading)·분류·날짜·내용 텍스트와 `notice.pdf 다운로드` 첨부 chip 표시, 편집 입력 없음
+
+## Mock S5 — 수정 화면 초기값
+
+- 목적: 같은 조회 결과를 수정 폼 초기값으로 사용한다.
+- Mock request: `GET /api/notice/7`
+- Mock response: S1과 같은 HTTP 200
+- 사용자 동작: `/notices/list/7/edit` 진입
+- 기대 결과: 제목·내용 입력값과 `notice.pdf` 첨부 chip 표시
 
 ## Mock S2 — 존재하지 않는 공지
 

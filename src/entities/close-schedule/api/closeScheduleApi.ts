@@ -4,6 +4,7 @@ import type {
   CloseDateCreateRequest,
   CloseDateCreateResponse,
   CloseDateDeleteRequest,
+  CloseDateDeleteResponse,
   CloseDateQueryAllResponseItem,
   CloseDateQueryByDateRequest,
   CloseDateUpdateRequest,
@@ -19,12 +20,23 @@ export async function createCloseSchedule(
 
 export async function deleteCloseSchedule({
   id,
-}: CloseDateDeleteRequest): Promise<void> {
+}: CloseDateDeleteRequest): Promise<CloseDateDeleteResponse> {
   if (!Number.isSafeInteger(id) || id <= 0) {
     throw new Error('휴관일 삭제 요청 ID가 올바르지 않습니다.')
   }
 
-  await api.delete(`/close-day/${id}`)
+  const { data, status } = await api.delete<unknown>(`/close-day/${id}`)
+
+  // Contract 성공 status 는 201 하나다. 200 등은 성공으로 처리하지 않는다.
+  if (status !== 201) {
+    throw new Error('휴관일 삭제 응답 상태가 올바르지 않습니다.')
+  }
+
+  if (!isCloseDateMessageResponse(data)) {
+    throw new Error('휴관일 삭제 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data
 }
 
 export async function updateCloseSchedule({
@@ -45,7 +57,7 @@ export async function updateCloseSchedule({
     throw new Error('휴관일 수정 응답 상태가 올바르지 않습니다.')
   }
 
-  if (!isCloseDateUpdateResponse(data)) {
+  if (!isCloseDateMessageResponse(data)) {
     throw new Error('휴관일 수정 응답 형식이 올바르지 않습니다.')
   }
 
@@ -127,9 +139,9 @@ function toCloseSchedule(schedule: CloseDateQueryAllResponseItem) {
   }
 }
 
-function isCloseDateUpdateResponse(
+function isCloseDateMessageResponse(
   value: unknown,
-): value is CloseDateUpdateResponse {
+): value is CloseDateUpdateResponse | CloseDateDeleteResponse {
   if (typeof value !== 'object' || value === null) return false
 
   return typeof (value as Record<string, unknown>).message === 'string'

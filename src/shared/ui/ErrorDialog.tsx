@@ -98,9 +98,4 @@ const ConfirmButton = styled.button`
   font: inherit;
   font-size: 28px;
   font-weight: 500;
-
-  &:focus-visible {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 4px;
-  }
 `

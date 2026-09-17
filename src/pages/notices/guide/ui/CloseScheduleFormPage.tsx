@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
-import { GuideBackLink } from './GuideBackLink'
+import { BackLink } from '@/shared/ui'
 
 interface CloseScheduleFormPageProps {
   children: ReactNode
@@ -13,7 +13,7 @@ export function CloseScheduleFormPage({
     <Page>
       <Content>
         <BackRow>
-          <GuideBackLink />
+          <BackLink to="/notices/guide" />
         </BackRow>
         {children}
       </Content>
@@ -31,9 +31,13 @@ const Page = styled.main`
 const Content = styled.div`
   width: min(100%, 1320px);
   margin: 0 auto;
-  padding-top: 80px;
+  padding-top: 76px;
 `
 
+// Figma: 뒤로가기(top 76, 높이 36) → 32 → 날짜 카드(top 144).
 const BackRow = styled.div`
-  margin: 0 0 35px;
+  display: flex;
+  height: 36px;
+  align-items: center;
+  margin: 0 0 32px;
 `

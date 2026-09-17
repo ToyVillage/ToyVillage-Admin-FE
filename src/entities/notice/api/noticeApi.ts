@@ -15,7 +15,17 @@ interface NoticeQueryAllRuntimeItem {
   id: number | string
   title: string
   kind?: unknown
-  createAt?: unknown
+  createdAt?: unknown
+}
+
+interface NoticeQueryAllRuntimeResponse {
+  notices: NoticeQueryAllRuntimeItem[]
+  totalPageSize: number
+}
+
+export interface NoticePage {
+  notices: NoticeListItem[]
+  totalPageSize: number
 }
 
 interface NoticeQueryRuntimeItem extends NoticeQueryAllRuntimeItem {
@@ -75,21 +85,25 @@ export async function deleteNotice({
   return data
 }
 
+// NOTICE_QUERY_ALL — page 는 1부터 시작한다(2026-09-17 사용자 결정).
 export async function getNotices(
   params: NoticeQueryAllRequest,
-): Promise<NoticeListItem[]> {
+): Promise<NoticePage> {
   const { data } = await api.get<unknown>('/notice', { params })
 
   if (!isNoticeQueryAllResponse(data)) {
     throw new Error('공지사항 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  return data.map((notice) => ({
-    id: String(notice.id),
-    category: normalizeNoticeCategory(notice.kind),
-    title: notice.title,
-    date: typeof notice.createAt === 'string' ? notice.createAt : '',
-  }))
+  return {
+    notices: data.notices.map((notice) => ({
+      id: String(notice.id),
+      category: normalizeNoticeCategory(notice.kind),
+      title: notice.title,
+      date: typeof notice.createdAt === 'string' ? notice.createdAt : '',
+    })),
+    totalPageSize: data.totalPageSize,
+  }
 }
 
 export async function getAllNotices({
@@ -102,8 +116,12 @@ export async function getAllNotices({
   const allNotices: NoticeListItem[] = []
   const noticeIds = new Set<string>()
 
-  for (let page = 0; ; page += 1) {
-    const notices = await getNotices({ page, size })
+  // 분류 탭·검색·정렬이 전체 목록 기준이라 totalPageSize 까지 모두 읽어 합친다.
+  let totalPageSize = 1
+  for (let page = 1; page <= totalPageSize; page += 1) {
+    const response = await getNotices({ page, size })
+    const { notices } = response
+    totalPageSize = response.totalPageSize
 
     if (notices.length > size) {
       throw new Error('공지사항 페이지 응답 크기가 올바르지 않습니다.')
@@ -117,11 +135,9 @@ export async function getAllNotices({
       noticeIds.add(notice.id)
       allNotices.push(notice)
     }
-
-    if (notices.length < size) {
-      return allNotices
-    }
   }
+
+  return allNotices
 }
 
 export async function getNotice({ id }: NoticeQueryRequest): Promise<Notice> {
@@ -166,8 +182,16 @@ function normalizeNoticeCategory(value: unknown) {
 
 function isNoticeQueryAllResponse(
   value: unknown,
-): value is NoticeQueryAllRuntimeItem[] {
-  return Array.isArray(value) && value.every(isNoticeQueryAllResponseItem)
+): value is NoticeQueryAllRuntimeResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  const response = value as Record<string, unknown>
+  return (
+    Array.isArray(response.notices) &&
+    response.notices.every(isNoticeQueryAllResponseItem) &&
+    Number.isSafeInteger(response.totalPageSize) &&
+    Number(response.totalPageSize) >= 0
+  )
 }
 
 function isNoticeQueryAllResponseItem(

@@ -1,6 +1,7 @@
 export type {
   CreateNoticeInput,
   Notice,
+  NoticeAttachmentFile,
   NoticeListItem,
   UpdateNoticeInput,
 } from './model/types'

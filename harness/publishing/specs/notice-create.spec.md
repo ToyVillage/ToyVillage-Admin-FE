@@ -1,15 +1,17 @@
 ---
 feature: notice-create
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 2431:2235
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:6919
   relatedNodeIds:
-    - 1541:1442
+    - 1:6711
 requires_functional_test: true
 paths: src/pages/notices/notice/CreateNoticePage.tsx, src/features/create-notice, src/entities/notice
 ---
 
 # 공지사항 생성 페이지 행동명세
+
+> 2026-09-17: 기준을 yot `make notification`(`1:6919`)으로 교체. 제목·내용은 회색 입력 박스(`#F5F5F7`, radius 8), 드롭존은 `#DDDDE3` 배경·`#5C5C68` 점선이다.
 
 ## 상태와 근거
 
@@ -77,9 +79,9 @@ Figma `1541:1442`에서 검증된 생성 진입 CTA의 문구는 `공지 생성�
 
 ### 내용
 
-- label: `내용 *`
+- label: `상세 업무 내용 *` (yot `1:6919`에서 보이는 라벨)
 - 필수 여러 줄 일반 텍스트 필드다.
-- placeholder 초안: `내용을 입력해주세요`
+- placeholder: `상세 업무 내용을 입력해주세요`
 - 줄바꿈은 유지하고, 값 전체의 앞뒤 공백만 제거한다.
 - 공백 제거 후 빈 문자열이면 입력하지 않은 것으로 판단한다.
 - Figma에서 편집 도구가 확인되지 않았으므로 `contenteditable` 또는 리치 텍스트 에디터를 도입하지 않는다.
@@ -91,14 +93,14 @@ Figma `1541:1442`에서 검증된 생성 진입 CTA의 문구는 `공지 생성�
 - 첨부파일 영역은 항상 화면에 노출한다.
 - 첨부파일 영역에는 첨부 상태 카드와 업로드 dropzone을 함께 표시한다.
 - 첨부 상태 카드는 upload dropzone 위에 배치한다.
-- 첨부된 파일이 없을 때도 참조 이미지처럼 내용이 없는 빈 첨부 상태 카드를 표시한다.
+- 첨부된 파일이 없을 때도 `첨부자료` 라벨만 있는 첨부 상태 카드를 표시한다(yot `1:6919`).
 - upload dropzone은 클릭과 drag-and-drop으로 파일을 추가할 수 있어야 한다.
 - upload control은 keyboard focus를 받을 수 있어야 하며 접근 가능한 이름은 `파일 업로드`다.
 - 파일 선택 dialog에서는 여러 파일을 한 번에 선택할 수 있어야 한다.
 - 첨부된 파일은 첨부 상태 카드 안에서 파일명 chip으로 표시한다.
 - 각 파일명 chip은 해당 파일을 제거하는 control을 제공한다. 제거 `X`와 그 공간은 기본 상태에서 숨기고, 해당 chip을 hover하거나 내부 control에 키보드 포커스가 들어오면 chip이 가로로 확장되며 표시한다.
 - 제거 control의 접근 가능한 이름은 `${파일명} 삭제` 형식을 사용한다.
-- 첨부 파일을 모두 제거하면 첨부 상태 카드는 다시 내용이 없는 빈 상태로 돌아간다.
+- 첨부 파일을 모두 제거하면 첨부 상태 카드는 다시 `첨부자료` 라벨만 남는다.
 - 개별 파일 크기는 최대 50MB까지 허용한다.
 - 50MB를 초과한 파일은 첨부하지 않고 오류 상태로 알려야 한다. 정확한 오류 문구와 시각 상태는 제품·디자인 확인 전 확정하지 않는다.
 

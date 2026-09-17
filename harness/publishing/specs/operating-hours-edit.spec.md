@@ -1,8 +1,10 @@
 ---
 feature: operating-hours-edit
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 2456:5047
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:7101
+  relatedNodeIds:
+    - 1:7110
 requires_functional_test: true
 paths: src/pages/notices/guide, src/features/edit-operating-hours, src/entities/operating-hours
 ---
@@ -13,7 +15,7 @@ paths: src/pages/notices/guide, src/features/edit-operating-hours, src/entities/
 
 - Status: Active
 - Last refreshed: 2026-07-17
-- Figma 기본 화면: `2456:5047`
+- Figma 기본 화면: yot `1:7101`(수정), `1:7110`(작성) — 섹션 `휴관일 관리 · 운영시간`(`311:12758`). 2026-09-17 폐기된 `toyvillage-dev`에서 교체
 - 로컬 추출본: `harness/artifacts/publishing/operating-hours-edit.figma.txt`
 - 기준 viewport: 1920×1080
 - 공통 UI 원칙과 구현 제약은 `DESIGN.md`, 캘린더 진입 동작은 `harness/publishing/specs/close-schedule.spec.md`를 따른다.
@@ -137,8 +139,8 @@ type UpdateOperatingHoursRequest = OperatingHours
 
 - `date`: `YYYY-MM-DD`
 - `opensAt`, `closesAt`: 24시간제 `HH:mm`
-- 조회 endpoint 후보: `GET /operating-hours/:date`
-- 수정 endpoint 후보: `PUT /operating-hours/:date`
+- 조회: `OPEN_TIME_QUERY_BY_DATE`(`GET /open-time/date?date=`) — 응답 `id`가 `null`이면 저장값 없음
+- 저장: `id`가 `null`이면 `OPEN_TIME_CREATE`(`POST /open-time`), 있으면 `OPEN_TIME_UPDATE`(`PUT /open-time/{id}`) — 2026-09-17 사용자 결정
 - 실제 API 계약 전에는 `entities/operating-hours`의 localStorage 목업 어댑터를 사용한다.
 - 서버 상태와 mutation은 TanStack Query, HTTP 연동 시 `src/shared/api/axios.ts`를 사용한다.
 - 시·분·오전/오후 입력과 검증 메시지는 feature 로컬 상태로 관리한다.

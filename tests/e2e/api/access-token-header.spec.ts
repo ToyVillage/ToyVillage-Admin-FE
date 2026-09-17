@@ -14,7 +14,7 @@ test('accessToken이 있으면 Bearer 인증 헤더를 전송한다', async ({ p
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: '[]',
+      body: JSON.stringify({ notices: [], totalPageSize: 0 }),
     })
   })
 

@@ -1,0 +1,385 @@
+{
+  "apiId": "OPEN_TIME_UPDATE",
+  "name": "운영 시간 수정 기능",
+  "description": "운영 시간을 수정하는 기능",
+  "method": "PUT",
+  "path": "/open-time/{open-time-id}",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "USER",
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "Bearer access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [
+    {
+      "name": "open-time-id",
+      "location": "path",
+      "type": "integer",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": 1,
+      "description": "운영시간 ID(OPEN_TIME_QUERY_BY_DATE 응답 id)",
+      "constraints": [
+        "positive integer"
+      ]
+    }
+  ],
+  "queryParameters": [],
+  "requestBody": {
+    "required": true,
+    "fields": [
+      {
+        "name": "openDate",
+        "location": "body",
+        "type": "string",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "2026-07-30",
+        "description": "운영 날짜",
+        "constraints": [
+          "YYYY-MM-DD",
+          "실제 달력 날짜"
+        ]
+      },
+      {
+        "name": "startOpenTime",
+        "location": "body",
+        "type": "string",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "10:00",
+        "description": "영업 시작 시간",
+        "constraints": [
+          "HH:mm"
+        ]
+      },
+      {
+        "name": "endOpenTime",
+        "location": "body",
+        "type": "string",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "19:00",
+        "description": "영업 종료 시간",
+        "constraints": [
+          "HH:mm",
+          "startOpenTime보다 늦음(화면 검증)"
+        ]
+      }
+    ],
+    "example": {
+      "openDate": "2026-07-30",
+      "startOpenTime": "10:00",
+      "endOpenTime": "19:00"
+    }
+  },
+  "responses": {
+    "success": [
+      {
+        "status": 201,
+        "description": "운영 시간 수정 기능 완료",
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "운영 시간 수정 기능 결과",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "운영시간이 수정되었습니다.",
+              "description": "수정 성공 메시지",
+              "constraints": []
+            }
+          ]
+        },
+        "noContent": false
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "description": "잘못된 요청",
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "요청 검증 오류",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "요청이 유효하지 않습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "response",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 400,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "response",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "오류 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        },
+        "noContent": false
+      },
+      {
+        "status": 401,
+        "description": "만료된 토큰",
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "인증 오류",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "만료된 토큰입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "response",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 401,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "response",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "오류 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        },
+        "noContent": false
+      },
+      {
+        "status": 404,
+        "description": "대상 없음(Notion 예시 문구 그대로)",
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "휴관일 없음 오류",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "존재하지 않는 공지사항 분류 항목입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "response",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 404,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "response",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "오류 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        },
+        "noContent": false
+      },
+      {
+        "status": 500,
+        "description": "예상하지 못한 서버 오류",
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "서버 오류",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "예상하지 못한 에러가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "response",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP 상태 코드",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "response",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-02-06T19:56:53.62201",
+              "description": "오류 발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "에러 설명",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        },
+        "noContent": false
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "https://app.notion.com/p/3dd7a4d6147480feb564ce3b172329f5",
+    "notionDataSource": "collection://4817a4d6-1474-820e-ace3-072e3d0100a7",
+    "resolvedNotionPage": "https://app.notion.com/p/6277a4d6147483fcb3f581afe5440232",
+    "requestedNotionPage": "https://app.notion.com/p/6277a4d6147483fcb3f581afe5440232",
+    "checkedAt": "2026-09-17T00:00:00+09:00",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "OPEN_TIME_UPDATE",
+      "method": "PUT",
+      "path": "/open-time/{open-time-id}",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "USER",
+          "ADMIN"
+        ]
+      }
+    },
+    "detailValues": {
+      "apiId": "OPEN_TIME_UPDATE",
+      "method": "PUT",
+      "path": "/open-time/{open-time-id}",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "USER",
+          "ADMIN"
+        ]
+      }
+    }
+  }
+}

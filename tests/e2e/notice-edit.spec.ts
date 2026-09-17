@@ -1,16 +1,27 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+import { mockNoticeApi, noticeItemPattern } from './support/notice-api'
 
-// 승인된 시나리오(notice-edit.approved.json: S1~S12)를 변환한 것.
+// 승인된 시나리오(notice-edit.approved.json: S1~S11)를 변환한 것.
 // 승인 후에는 시나리오를 재도출하지 않고 실패 시 프로덕션 코드를 수정한다.
+// 공지 API 는 page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
 
-test('S1: 공지 행 클릭 → 수정 URL 이동', async ({ page }) => {
+const editPath = '/notices/list/1/edit'
+
+test.beforeEach(async ({ page }) => {
+  await mockNoticeApi(page)
+})
+
+test('S1: 목록 케밥 수정 → 수정 URL 이동', async ({ page }) => {
   await page.goto('/notices/list')
-  await page.getByTestId('notice-row').first().click()
-  await expect(page).toHaveURL(/\/notices\/list\/1$/)
+  await page
+    .getByRole('button', { name: '7월 13일 휴관안내 관리 메뉴' })
+    .click()
+  await page.getByRole('menuitem', { name: '수정' }).click()
+  await expect(page).toHaveURL(/\/notices\/list\/1\/edit$/)
 })
 
 test('S2: 기존 제목·내용·첨부 복원', async ({ page }) => {
-  await page.goto('/notices/list/1')
+  await page.goto(editPath)
 
   await expect(page.getByLabel('제목')).toHaveValue('7월 13일 휴관안내')
   await expect(page.getByLabel('내용')).toContainText('그냥 더미 텍스트')
@@ -23,7 +34,7 @@ test('S2: 기존 제목·내용·첨부 복원', async ({ page }) => {
 })
 
 test('S3: 수정 저장 → 목록에 같은 ID 수정값 반영', async ({ page }) => {
-  await page.goto('/notices/list/1')
+  await page.goto(editPath)
   await page.getByLabel('제목').fill('수정된 휴관 안내')
   await page.getByLabel('내용').fill('수정된 공지 내용입니다.')
   await page.getByRole('button', { name: '저장하기' }).click()
@@ -35,7 +46,7 @@ test('S3: 수정 저장 → 목록에 같은 ID 수정값 반영', async ({ page
 })
 
 test('S4: 빈 제목 → 오류 확인 후 제목 포커스', async ({ page }) => {
-  await page.goto('/notices/list/1')
+  await page.goto(editPath)
   const title = page.getByLabel('제목')
   await title.fill('   ')
   await page.getByRole('button', { name: '저장하기' }).click()
@@ -48,7 +59,7 @@ test('S4: 빈 제목 → 오류 확인 후 제목 포커스', async ({ page }) =
 })
 
 test('S5: 빈 내용 → 오류 확인 후 내용 포커스', async ({ page }) => {
-  await page.goto('/notices/list/1')
+  await page.goto(editPath)
   const content = page.getByLabel('내용')
   await content.fill('   ')
   await page.getByRole('button', { name: '저장하기' }).click()
@@ -61,7 +72,7 @@ test('S5: 빈 내용 → 오류 확인 후 내용 포커스', async ({ page }) =
 })
 
 test('S6: 기존 첨부 제거와 새 파일 추가', async ({ page }) => {
-  await page.goto('/notices/list/1')
+  await page.goto(editPath)
   const removeButton = page.getByRole('button', {
     name: '당일 지침.pdf 삭제',
   })
@@ -77,29 +88,15 @@ test('S6: 기존 첨부 제거와 새 파일 추가', async ({ page }) => {
   await expect(page.getByText('새 안내.pdf')).toBeVisible()
 })
 
-test('S7: 삭제 취소 → 화면 유지와 포커스 복귀', async ({ page }) => {
-  await page.goto('/notices/list/1')
-  const deleteButton = page.getByRole('button', { name: '삭제하기' })
-  await deleteButton.click()
-  await page.getByRole('button', { name: '취소' }).click()
-
-  await expect(page).toHaveURL(/\/notices\/list\/1$/)
-  await expect(deleteButton).toBeFocused()
+test('S7: 삭제 버튼 없음·상세 업무 내용 라벨', async ({ page }) => {
+  await page.goto(editPath)
+  await expect(page.getByRole('button', { name: '저장하기' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '삭제하기' })).toHaveCount(0)
+  await expect(page.getByText('상세 업무 내용')).toBeVisible()
 })
 
-test('S8: 삭제 확인 → 목록에서 제거', async ({ page }) => {
-  await page.goto('/notices/list/1')
-  await page.getByRole('button', { name: '삭제하기' }).click()
-  await page.getByRole('button', { name: '확인', exact: true }).click()
-
-  await expect(page).toHaveURL(/\/notices\/list$/)
-  await expect(
-    page.getByText('7월 13일 휴관안내', { exact: true }),
-  ).toHaveCount(0)
-})
-
-test('S9: 존재하지 않는 공지 → 복구 UI', async ({ page }) => {
-  await page.goto('/notices/list/missing')
+test('S8: 존재하지 않는 공지 → 복구 UI', async ({ page }) => {
+  await page.goto('/notices/list/999/edit')
   await expect(
     page.getByRole('heading', { name: '공지사항을 찾을 수 없습니다.' }),
   ).toBeVisible()
@@ -108,8 +105,8 @@ test('S9: 존재하지 않는 공지 → 복구 UI', async ({ page }) => {
   ).toHaveAttribute('href', '/notices/list')
 })
 
-test('S10: 수정 중 사이드바 이동 → 이탈 확인', async ({ page }) => {
-  await page.goto('/notices/list/1')
+test('S9: 수정 중 사이드바 이동 → 이탈 확인', async ({ page }) => {
+  await page.goto(editPath)
   await page.getByLabel('제목').fill('저장 전 제목')
   await page.getByRole('button', { name: '사이드바 열기' }).click()
   // `/notices/list/*` 는 `공지사항` 대분류라 사이드바를 열면 이미 펼쳐져 있다.
@@ -118,40 +115,51 @@ test('S10: 수정 중 사이드바 이동 → 이탈 확인', async ({ page }) =
   await expect(
     page.getByRole('alertdialog', { name: '정말 나가시겠습니까?' }),
   ).toBeVisible()
-  await expect(page).toHaveURL(/\/notices\/list\/1$/)
+  await expect(page).toHaveURL(/\/notices\/list\/1\/edit$/)
 })
 
-test('S11: 저장 더블클릭 → 동일 ID 한 건만 저장', async ({ page }) => {
-  await page.goto('/notices/list/1')
+test('S10: 저장 더블클릭 → 수정 요청 한 번', async ({ page }) => {
+  let putCount = 0
+  page.on('request', (request) => {
+    if (request.method() === 'PUT' && noticeItemPattern.test(request.url())) {
+      putCount += 1
+    }
+  })
+
+  await page.goto(editPath)
   await page.getByLabel('제목').fill('중복 없는 수정')
   await page.getByRole('button', { name: '저장하기' }).dblclick()
   await expect(page).toHaveURL(/\/notices\/list$/)
-
-  const savedCount = await page.evaluate(() => {
-    const raw = localStorage.getItem('toyvillage:notices')
-    if (!raw) return 0
-    const notices = JSON.parse(raw) as Array<{ id?: string }>
-    return notices.filter((notice) => notice.id === '1').length
-  })
-  expect(savedCount).toBe(1)
+  expect(putCount).toBe(1)
 })
 
-test('S12: 키보드로 편집과 삭제 취소', async ({ page }) => {
-  await page.goto('/notices/list/1')
+test('S11: 키보드로 편집·검증·저장', async ({ page }) => {
+  await page.goto(editPath)
   const title = page.getByLabel('제목')
   await title.focus()
-  await title.fill('키보드 수정 공지')
-  await page.getByRole('button', { name: '삭제하기' }).focus()
+  await page.keyboard.press('ControlOrMeta+A')
+  await page.keyboard.press('Delete')
+  await page.getByRole('button', { name: '저장하기' }).focus()
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('button', { name: '취소' })).toBeFocused()
-  await page.keyboard.press('Escape')
-  await expect(page.getByRole('button', { name: '삭제하기' })).toBeFocused()
+  await expect(
+    page.getByRole('alertdialog', { name: '제목을 입력해 주세요' }),
+  ).toBeVisible()
+  await page.keyboard.press('Enter')
+  await expect(title).toBeFocused()
+
+  await page.keyboard.type('키보드 수정 공지')
+  await page.getByRole('button', { name: '저장하기' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/notices\/list$/)
+  await expect(
+    page.getByText('키보드 수정 공지', { exact: true }),
+  ).toBeVisible()
 })
 
 test('수정에서도 팀을 추가하면 전체가 사라지고 여러 팀을 유지한다', async ({
   page,
 }) => {
-  await page.goto('/notices/list/1')
+  await page.goto(editPath)
 
   await addTeam(page, '기획팀')
   await expect(page.getByRole('radio', { name: '전체' })).toHaveCount(0)
@@ -166,7 +174,7 @@ test('수정에서도 팀을 추가하면 전체가 사라지고 여러 팀을 �
 })
 
 test('수정에서 마지막 팀을 삭제하면 전체 분류로 돌아간다', async ({ page }) => {
-  await page.goto('/notices/list/2')
+  await page.goto('/notices/list/2/edit')
 
   await expect(page.getByRole('radio', { name: '팀 이름1' })).toBeChecked()
   await expect(page.getByRole('radio')).toHaveCount(1)
@@ -178,10 +186,7 @@ test('수정에서 마지막 팀을 삭제하면 전체 분류로 돌아간다',
   await expect(page.getByRole('radio')).toHaveCount(1)
 })
 
-async function addTeam(
-  page: import('@playwright/test').Page,
-  teamName: string,
-) {
+async function addTeam(page: Page, teamName: string) {
   await page.getByRole('button', { name: '팀 추가' }).click()
   const dialog = page.getByRole('dialog', { name: '팀 추가하기' })
   await dialog.getByRole('textbox', { name: '팀 이름' }).fill(teamName)

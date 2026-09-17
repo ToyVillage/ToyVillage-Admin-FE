@@ -329,9 +329,17 @@ function fulfillNoticeList(route: Route) {
   return route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify([
-      { id: 7, title: '재발급 대상 공지', kind: 'ALL', createAt: '2026-08-01' },
-    ]),
+    body: JSON.stringify({
+      notices: [
+        {
+          id: 7,
+          title: '재발급 대상 공지',
+          kind: 'ALL',
+          createdAt: '2026-08-01',
+        },
+      ],
+      totalPageSize: 1,
+    }),
   })
 }
 

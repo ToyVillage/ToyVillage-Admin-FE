@@ -174,11 +174,6 @@ const DialogButton = styled.button`
     cursor: wait;
     opacity: 0.6;
   }
-
-  &:focus-visible {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 4px;
-  }
 `
 
 const CancelButton = styled(DialogButton)`

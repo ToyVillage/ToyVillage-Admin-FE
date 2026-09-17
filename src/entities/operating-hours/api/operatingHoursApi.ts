@@ -1,10 +1,22 @@
 import { api } from '@/shared/api/axios'
 import type { OperatingHours } from '../model/types'
 import type {
+  OpenTimeCreateRequest,
+  OpenTimeCreateResponse,
   OpenTimeQueryByDateRequest,
   OpenTimeQueryByDateResponse,
   OpenTimeQueryByDateResponseItem,
+  OpenTimeUpdateRequest,
+  OpenTimeUpdateResponse,
 } from './types'
+
+export interface SaveOperatingHoursInput {
+  date: string
+  /** 24시간제 HH:mm */
+  opensAt: string
+  /** 24시간제 HH:mm */
+  closesAt: string
+}
 
 export async function getOperatingHoursByDate({
   date,
@@ -28,10 +40,79 @@ export async function getOperatingHoursByDate({
   const [hours] = data
 
   return {
+    id: hours.id,
     date: hours.openDate,
     opensAt: hours.startOpenTime,
     closesAt: hours.endOpenTime,
   }
+}
+
+// OPEN_TIME_CREATE — 그 날짜에 저장값이 없을 때(조회 id 가 null) 쓴다.
+export async function createOperatingHours({
+  date,
+  opensAt,
+  closesAt,
+}: SaveOperatingHoursInput): Promise<OpenTimeCreateResponse> {
+  const request: OpenTimeCreateRequest = {
+    openDate: assertDateKey(date),
+    startOpenTime: `${assertHourMinute(opensAt)}:00`,
+    endOpenTime: `${assertHourMinute(closesAt)}:00`,
+  }
+
+  const { data, status } = await api.post<unknown>('/open-time', request)
+
+  if (status !== 201 || !isMessageResponse(data)) {
+    throw new Error('운영시간 등록 응답이 올바르지 않습니다.')
+  }
+
+  return data
+}
+
+// OPEN_TIME_UPDATE — 조회 id 가 있을 때 그 id 로 수정한다.
+export async function updateOperatingHours({
+  id,
+  input: { date, opensAt, closesAt },
+}: {
+  id: number
+  input: SaveOperatingHoursInput
+}): Promise<OpenTimeUpdateResponse> {
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error('운영시간 수정 요청 ID가 올바르지 않습니다.')
+  }
+
+  const request: OpenTimeUpdateRequest = {
+    openDate: assertDateKey(date),
+    startOpenTime: assertHourMinute(opensAt),
+    endOpenTime: assertHourMinute(closesAt),
+  }
+
+  const { data, status } = await api.put<unknown>(`/open-time/${id}`, request)
+
+  if (status !== 201 || !isMessageResponse(data)) {
+    throw new Error('운영시간 수정 응답이 올바르지 않습니다.')
+  }
+
+  return data
+}
+
+function assertDateKey(value: string) {
+  if (!isDateKey(value)) {
+    throw new Error('운영시간 저장 요청 날짜가 올바르지 않습니다.')
+  }
+  return value
+}
+
+function assertHourMinute(value: string) {
+  const match = /^(\d{2}):(\d{2})$/.exec(value)
+  if (!match || Number(match[1]) > 23 || Number(match[2]) > 59) {
+    throw new Error('운영시간 저장 요청 시간이 올바르지 않습니다.')
+  }
+  return value
+}
+
+function isMessageResponse(value: unknown): value is { message: string } {
+  if (typeof value !== 'object' || value === null) return false
+  return typeof (value as Record<string, unknown>).message === 'string'
 }
 
 function isOpenTimeQueryByDateResponse(

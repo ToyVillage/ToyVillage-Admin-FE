@@ -15,7 +15,9 @@ test('S2: 생성 폼 표시', async ({ page }) => {
   await expect(page.getByRole('radio', { name: '전체' })).toBeChecked()
   await expect(page.getByRole('radio')).toHaveCount(1)
   await expect(attachmentGroup(page)).toBeVisible()
-  await expect(page.getByTestId('notice-attachment-card')).toBeEmpty()
+  await expect(page.getByTestId('notice-attachment-card')).toHaveText(
+    '첨부자료',
+  )
   await expect(uploadControl(page)).toBeVisible()
   await expect(page.getByRole('button', { name: '생성하기' })).toBeVisible()
 })
@@ -370,7 +372,7 @@ test('여러 팀 중 선택한 팀을 삭제하면 남은 팀을 선택한다', 
   await expect(page.getByRole('radio', { name: '전체' })).toHaveCount(0)
 })
 
-test('S11: 첨부파일 영역은 빈 첨부 카드와 업로드 dropzone을 표시한다', async ({
+test('S11: 첨부파일 영역은 첨부자료 카드와 업로드 dropzone을 표시한다', async ({
   page,
 }) => {
   const attachments = attachmentGroup(page)
@@ -379,14 +381,14 @@ test('S11: 첨부파일 영역은 빈 첨부 카드와 업로드 dropzone을 표
 
   await expect(attachments).toBeVisible()
   await expect(emptyCard).toBeVisible()
-  await expect(emptyCard).toBeEmpty()
+  await expect(emptyCard).toHaveText('첨부자료')
   await expect(upload).toBeVisible()
-  await expect(upload).toHaveCSS('background-color', 'rgb(225, 225, 225)')
-  await expect(upload).toHaveCSS('border-color', 'rgb(132, 132, 145)')
+  await expect(upload).toHaveCSS('background-color', 'rgb(221, 221, 227)')
+  await expect(upload).toHaveCSS('border-color', 'rgb(92, 92, 104)')
 
   await upload.hover()
-  await expect(upload).toHaveCSS('background-color', 'rgb(225, 225, 225)')
-  await expect(upload).toHaveCSS('border-color', 'rgb(132, 132, 145)')
+  await expect(upload).toHaveCSS('background-color', 'rgb(221, 221, 227)')
+  await expect(upload).toHaveCSS('border-color', 'rgb(92, 92, 104)')
 
   const emptyCardBounds = await emptyCard.boundingBox()
   const uploadBounds = await upload.boundingBox()
@@ -475,7 +477,9 @@ test('용량 초과 파일만 제외하고 함께 선택한 정상 파일은 첨
   )
 })
 
-test('S13: 첨부 파일을 제거하면 빈 첨부 카드로 돌아간다', async ({ page }) => {
+test('S13: 첨부 파일을 제거하면 첨부자료 라벨만 남은 카드로 돌아간다', async ({
+  page,
+}) => {
   await uploadInput(page).setInputFiles([
     filePayload('삭제할 파일.txt', 'text/plain'),
   ])
@@ -488,7 +492,9 @@ test('S13: 첨부 파일을 제거하면 빈 첨부 카드로 돌아간다', asy
   await expect(attachmentGroup(page).getByText('삭제할 파일.txt')).toHaveCount(
     0,
   )
-  await expect(page.getByTestId('notice-attachment-card')).toBeEmpty()
+  await expect(page.getByTestId('notice-attachment-card')).toHaveText(
+    '첨부자료',
+  )
 })
 
 async function fillValidNotice(page: Page, title: string) {
@@ -559,14 +565,17 @@ async function mockSuccessfulNoticeCreate(page: Page, title: string) {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          id: 7,
-          title,
-          kind: '공지사항 분류',
-          createAt: '2026-07-28',
-        },
-      ]),
+      body: JSON.stringify({
+        notices: [
+          {
+            id: 7,
+            title,
+            kind: '공지사항 분류',
+            createdAt: '2026-07-28',
+          },
+        ],
+        totalPageSize: 1,
+      }),
     })
   })
 

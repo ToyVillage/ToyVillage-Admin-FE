@@ -26,11 +26,6 @@ const BackLink = styled(Link)`
   font-weight: 500;
   line-height: 1.2;
   text-decoration: none;
-
-  &:focus-visible {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 4px;
-  }
 `
 
 const BackIcon = styled.svg`

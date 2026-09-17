@@ -167,13 +167,16 @@ async function fulfillNoticeList(route: Route, title: string) {
   await route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify([
-      {
-        id: 7,
-        title,
-        kind: '공지사항 분류',
-        createAt: '2026-07-28',
-      },
-    ]),
+    body: JSON.stringify({
+      notices: [
+        {
+          id: 7,
+          title,
+          kind: '공지사항 분류',
+          createdAt: '2026-07-28',
+        },
+      ],
+      totalPageSize: 1,
+    }),
   })
 }

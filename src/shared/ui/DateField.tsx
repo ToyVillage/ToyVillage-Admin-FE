@@ -9,58 +9,67 @@ interface DateFieldProps {
   onTabForward: () => void
   onTabBackward?: () => void
   /**
-   * 카드 타이포 규격. `lg` 는 휴관일 폼(라벨 24 / 값 24),
-   * `md` 는 업무 폼(라벨 20 / 값 22, 카드 420×194)이다.
+   * 카드 타이포 규격. `lg` 는 예약 폼(라벨 24 / 값 24),
+   * `md` 는 업무 폼(라벨 20 / 값 22, 카드 420×194),
+   * `sm` 은 휴관일 폼(Figma yot `date picker` 1:7067, 라벨 20 / 값 22, 카드 426×184)이다.
    */
-  size?: 'lg' | 'md'
+  size?: 'lg' | 'md' | 'sm'
 }
 
-export const DateField = forwardRef<
-  HTMLInputElement,
-  DateFieldProps
->(function DateField(
-  { id, label, value, onChange, onTabForward, onTabBackward, size = 'lg' },
-  ref,
-) {
-  return (
-    <Card data-size={size}>
-      <Label htmlFor={id}>{label}</Label>
-      <Field>
-        <DateText $empty={!value} aria-hidden="true">
-          {value ? formatDate(value) : '연도. 월. 일'}
-        </DateText>
-        <CalendarIcon viewBox="0 0 28 28" aria-hidden="true">
-          <path d="M2.333 22.167c0 1.983 1.517 3.5 3.5 3.5h16.334c1.983 0 3.5-1.517 3.5-3.5v-9.334H2.333v9.334Zm19.834-17.5h-2.334V3.5c0-.7-.466-1.167-1.166-1.167S17.5 2.8 17.5 3.5v1.167h-7V3.5c0-.7-.467-1.167-1.167-1.167S8.167 2.8 8.167 3.5v1.167H5.833c-1.983 0-3.5 1.516-3.5 3.5V10.5h23.334V8.167c0-1.984-1.517-3.5-3.5-3.5Z" />
-        </CalendarIcon>
-        <NativeInput
-          ref={ref}
-          id={id}
-          type="date"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onClick={(event) => {
-            if (typeof event.currentTarget.showPicker === 'function') {
-              event.currentTarget.showPicker()
-            }
-          }}
-          onKeyDown={(event) => {
-            if (event.key !== 'Tab') return
+export const DateField = forwardRef<HTMLInputElement, DateFieldProps>(
+  function DateField(
+    { id, label, value, onChange, onTabForward, onTabBackward, size = 'lg' },
+    ref,
+  ) {
+    return (
+      <Card data-size={size}>
+        <Label htmlFor={id}>{label}</Label>
+        <Field>
+          <DateText $empty={!value} aria-hidden="true">
+            {value ? formatDate(value) : '연도. 월. 일'}
+          </DateText>
+          <CalendarIcon viewBox="0 0 28 28" aria-hidden="true">
+            <path d="M2.333 22.167c0 1.983 1.517 3.5 3.5 3.5h16.334c1.983 0 3.5-1.517 3.5-3.5v-9.334H2.333v9.334Zm19.834-17.5h-2.334V3.5c0-.7-.466-1.167-1.166-1.167S17.5 2.8 17.5 3.5v1.167h-7V3.5c0-.7-.467-1.167-1.167-1.167S8.167 2.8 8.167 3.5v1.167H5.833c-1.983 0-3.5 1.516-3.5 3.5V10.5h23.334V8.167c0-1.984-1.517-3.5-3.5-3.5Z" />
+          </CalendarIcon>
+          <NativeInput
+            ref={ref}
+            id={id}
+            type="date"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            onClick={(event) => {
+              if (typeof event.currentTarget.showPicker === 'function') {
+                event.currentTarget.showPicker()
+              }
+            }}
+            onKeyDown={(event) => {
+              // 입력 칸이 보이지 않으므로 키보드로는 달력을 연다.
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                if (typeof event.currentTarget.showPicker === 'function') {
+                  event.currentTarget.showPicker()
+                }
+                return
+              }
 
-            if (event.shiftKey) {
-              if (!onTabBackward) return
+              if (event.key !== 'Tab') return
+
+              if (event.shiftKey) {
+                if (!onTabBackward) return
+                event.preventDefault()
+                onTabBackward()
+                return
+              }
+
               event.preventDefault()
-              onTabBackward()
-              return
-            }
-
-            event.preventDefault()
-            onTabForward()
-          }}
-        />
-      </Field>
-    </Card>
-  )
-})
+              onTabForward()
+            }}
+          />
+        </Field>
+      </Card>
+    )
+  },
+)
 
 function formatDate(value: string) {
   const [year, month, day] = value.split('-')
@@ -85,11 +94,18 @@ const Card = styled.div`
     gap: 20px;
   }
 
+  &[data-size='sm'] {
+    min-height: 184px;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
   @media (max-width: 980px) {
     width: 100%;
     padding: 24px;
 
-    &[data-size='md'] {
+    &[data-size='md'],
+    &[data-size='sm'] {
       width: 100%;
     }
   }
@@ -101,7 +117,8 @@ const Label = styled.label`
   font-weight: 500;
   line-height: 1.2;
 
-  [data-size='md'] & {
+  [data-size='md'] &,
+  [data-size='sm'] & {
     font-size: 20px;
     line-height: 1.3;
   }
@@ -117,18 +134,8 @@ const Field = styled.div`
   border-radius: 8px;
   background: ${({ theme }) => theme.colors.background};
 
-  &:focus-within {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 4px;
-  }
-
-  &:focus-within > span,
-  &:focus-within > svg {
-    visibility: hidden;
-  }
-
-  &:focus-within > input {
-    opacity: 1;
+  [data-size='sm'] & {
+    min-height: 66px;
   }
 `
 
@@ -139,7 +146,8 @@ const DateText = styled.span<{ $empty: boolean }>`
   font-weight: 500;
   line-height: 1.2;
 
-  [data-size='md'] & {
+  [data-size='md'] &,
+  [data-size='sm'] & {
     font-size: 22px;
   }
 `

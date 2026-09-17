@@ -1,0 +1,15 @@
+{
+  "feature": "open-time-update",
+  "apiId": "OPEN_TIME_UPDATE",
+  "approvedAt": "2026-09-17T08:02:45.229Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "46496bda4c71cc0271fd15946b8f84d98b700f0f8433b42d164a5a0c061dd6f0",
+  "contractHash": "7b676c0fd0e519cc4aeaef1cbfd90223f4f1bc2462b23ba071abcd47ecc624dc",
+  "contractMarkdownHash": "d9bc0bff6c0e00418fb35d4041bed317adf6b1efbe03725f5e579ba7be3c3f2b",
+  "planHash": "a40946ca6eae7c66211a1ad064b3a19b5812ebe9170f77cd2e0ad2ba53e73ab6",
+  "scenarioHash": "6b3cb1c7ff46869f81ba146bf1174f5695f0ca66831b801bd5a5532760774e0f",
+  "testHash": "14e3aaec3fe0d9abf3ee085f66f7d6ef9c3d58d25aaeac3643d7d7a5ca84ceb2",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T08:08:32.782Z"
+}
