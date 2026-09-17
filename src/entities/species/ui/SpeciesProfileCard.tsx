@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
+import { ProfilePhoto } from '@/shared/ui'
 import {
   formatTaxonGroupLine,
   lastSubClassification,
@@ -92,7 +93,7 @@ const Card = styled.section`
   }
 `
 
-const Photo = styled.img`
+const Photo = styled(ProfilePhoto)`
   display: block;
   width: 260px;
   max-width: 100%;
