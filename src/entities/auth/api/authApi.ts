@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios'
 import { api } from '@/shared/api/axios'
 import type {
   AppAuthLoginRequest,
@@ -46,6 +47,11 @@ export async function logoutApp(): Promise<AppAuthLogoutResponse> {
   }
 
   return data
+}
+
+/** 아이디·비밀번호 불일치는 401 이다. 그 외 실패(500·네트워크·응답 형식)와 구분해 다루기 위한 판별이다. */
+export function isLoginCredentialError(error: unknown): boolean {
+  return isAxiosError(error) && error.response?.status === 401
 }
 
 function isAppAuthLoginResponse(value: unknown): value is AppAuthLoginResponse {
