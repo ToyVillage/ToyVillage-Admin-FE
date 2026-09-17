@@ -201,8 +201,10 @@ export function IndividualDetailPage() {
   }
 
   const individual = individualQuery.data
+  // 관찰 목록 404 는 개체가 없어진 것이다.
   if (
     individualQuery.isError ||
+    (observationsQuery.isError && isNotFoundError(observationsQuery.error)) ||
     !individual ||
     individual.speciesId !== speciesId
   ) {
