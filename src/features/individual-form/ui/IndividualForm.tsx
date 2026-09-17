@@ -154,6 +154,7 @@ export function IndividualForm({
           <NoteInput
             id="individual-note"
             value={values.note}
+            maxLength={255}
             placeholder="기타정보를 입력해주세요"
             onChange={(event) => setField('note', event.target.value)}
           />
