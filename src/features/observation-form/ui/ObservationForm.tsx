@@ -136,6 +136,7 @@ export function ObservationForm({
           <TextInput
             id="observation-title"
             aria-required="true"
+            maxLength={100}
             aria-describedby={errors.title ? titleErrorId : undefined}
             value={title}
             autoComplete="off"
@@ -174,6 +175,7 @@ export function ObservationForm({
             ref={contentRef}
             id="observation-content"
             aria-required="true"
+            maxLength={2000}
             aria-describedby={errors.content ? contentErrorId : undefined}
             value={content}
             onChange={(event) => setContent(event.target.value)}
