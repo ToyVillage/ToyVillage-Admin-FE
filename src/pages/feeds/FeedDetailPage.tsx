@@ -9,6 +9,7 @@ import {
   FeedRecordCard,
   getFeedDetail,
   isFeedNotFoundError,
+  type AnimalSpecies,
 } from '@/entities/feed'
 import { BackLink, SectionHeader } from '@/shared/ui'
 
@@ -18,9 +19,13 @@ export function FeedDetailPage() {
   const { id = '' } = useParams()
   const location = useLocation()
   // 목록에서 넘어왔다면 그때의 조회 조건(날짜·분류·페이지)으로 돌아간다.
-  const listSearch = (location.state as { listSearch?: string } | null)
-    ?.listSearch
-  const backPath = `${listPath}${listSearch ?? ''}`
+  // 분류는 급여 API 가 주지 않아 목록에서 고른 탭을 그대로 받아 뱃지에 쓴다.
+  const navState = location.state as {
+    listSearch?: string
+    species?: AnimalSpecies | null
+  } | null
+  const backPath = `${listPath}${navState?.listSearch ?? ''}`
+  const species = navState?.species ?? undefined
 
   // 상세 진입 시 페이지 상단으로 스크롤한다.
   useEffect(() => {
@@ -66,7 +71,7 @@ export function FeedDetailPage() {
       <Content>
         <BackLink to={backPath} />
 
-        {feed && <FeedRecordCard feed={feed} />}
+        {feed && <FeedRecordCard feed={{ ...feed, species }} />}
 
         <HistorySection>
           <SectionHeader title="급여 이력" count={history.length} />

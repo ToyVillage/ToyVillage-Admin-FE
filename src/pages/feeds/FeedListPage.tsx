@@ -115,10 +115,10 @@ export function FeedListPage() {
         <TableArea data-testid="feed-table-scroll">
           <FeedTable
             feeds={feeds}
-            // 상세의 뒤로가기가 이 조회 조건으로 돌아오도록 현재 쿼리를 넘긴다.
+            // 상세의 뒤로가기와 분류 뱃지가 이 조회 조건을 쓴다.
             onRowClick={(id) =>
               navigate(`/feeds/${id}`, {
-                state: { listSearch: location.search },
+                state: { listSearch: location.search, species },
               })
             }
             pagination={pagination}
