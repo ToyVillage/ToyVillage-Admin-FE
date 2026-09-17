@@ -1,6 +1,6 @@
 {
   "feature": "species-list",
-  "approvedAt": "2026-09-15T11:24:38.397Z",
+  "approvedAt": "2026-09-17T00:44:47.017Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -31,9 +31,8 @@
     "S26",
     "S27",
     "S28",
-    "S29",
-    "S30"
+    "S29"
   ],
-  "scenarioHash": "46758dafdd6da6a3287d8a952c26e59e5186a163a2415d6d75482f5bc37397b7",
-  "e2eHash": "12eb72c5a9921f0415a841bc4ceba3cd807b4297d251decdb5ac8aee9ddcd1a7"
+  "scenarioHash": "353f9cdb7a1761e7cacc4c698890d926b63f73e20e535b2bd864b23138e1616f",
+  "e2eHash": "c4e63b50796f946f51195eb2f590abd02c55535d7ee9c0feebf1ef730c3f58f0"
 }
