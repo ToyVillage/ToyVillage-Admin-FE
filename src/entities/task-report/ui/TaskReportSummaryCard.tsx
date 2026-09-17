@@ -1,12 +1,14 @@
 import styled from '@emotion/styled'
-import { TaskReportReviewBadge } from './TaskReportReviewBadge'
-import type { TaskReportReviewStatus } from '../model/types'
+import {
+  TaskReportReviewBadge,
+  type TaskReportBadgeStatus,
+} from './TaskReportReviewBadge'
 
 export interface TaskReportSummaryItem {
   /** 업무보고 id. 아직 제출되지 않았으면 null 이고 열 보고가 없어 누를 수 없다. */
   reportId: string | null
   assigneeName: string
-  reviewStatus: TaskReportReviewStatus
+  reviewStatus: TaskReportBadgeStatus
 }
 
 interface TaskReportSummaryCardProps {
@@ -34,16 +36,26 @@ export function TaskReportSummaryCard({
               </Chevron>
             )
 
-            // 아직 제출되지 않은 줄은 열 보고가 없어 누를 수 없고, `onSelect` 가 없으면
-            // 어느 줄도 누를 수 없다. 다만 chevron 은 나머지 줄과 같은 자리에
-            // 그대로 둔다(Figma 152:11510 은 전 줄에 있다).
+            // 아직 제출되지 않은 줄은 열 보고가 없어 누를 수 없다. Figma
+            // `report item / 미제출 (disabled)`(yot 2073:17292)대로 흐리게 그리고 chevron 을 뺀다.
             const reportId = item.reportId
-            if (reportId === null || !onSelect) {
+            if (reportId === null) {
               return (
                 <StaticItem
-                  key={reportId ?? `no-report-${item.assigneeName}-${index}`}
+                  key={`no-report-${item.assigneeName}-${index}`}
                   data-testid="task-report-row"
+                  $disabled
                 >
+                  <Name $disabled>{item.assigneeName}</Name>
+                  {badge}
+                </StaticItem>
+              )
+            }
+
+            // `onSelect` 가 없으면 제출된 줄도 누를 수 없지만 모양은 그대로 둔다.
+            if (!onSelect) {
+              return (
+                <StaticItem key={reportId} data-testid="task-report-row">
                   <Name>{item.assigneeName}</Name>
                   {badge}
                   {chevron}
@@ -122,19 +134,22 @@ const Item = styled.button`
   }
 `
 
-// 제출 전 줄. 항목과 같은 크기·간격을 쓰되 버튼이 아니다.
-const StaticItem = styled.div`
+// 누를 수 없는 줄. 항목과 같은 크기·간격을 쓰되 버튼이 아니다.
+// 미제출 줄은 배경을 50% 로 흐리게 한다(yot 2073:17292 `rgba(245,245,247,0.5)`).
+const StaticItem = styled.div<{ $disabled?: boolean }>`
   display: flex;
   min-height: 68px;
   align-items: center;
   gap: 16px;
   padding: 0 30px 0 24px;
   border-radius: 12px;
-  background: ${({ theme }) => theme.colors.background};
+  background: ${({ theme, $disabled }) =>
+    $disabled ? 'rgba(245, 245, 247, 0.5)' : theme.colors.background};
 `
 
-const Name = styled.span`
-  color: ${({ theme }) => theme.colors.text};
+const Name = styled.span<{ $disabled?: boolean }>`
+  color: ${({ theme, $disabled }) =>
+    $disabled ? theme.colors.textFaint : theme.colors.text};
   font-size: 22px;
   font-weight: 500;
   line-height: 1.2;

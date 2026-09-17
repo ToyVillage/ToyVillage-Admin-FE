@@ -307,10 +307,10 @@ test('S15: 담당자별 보고 현황을 표시하고 제출 전 줄은 누를 �
   await expect(rows.nth(0)).toContainText('완료')
   await expect(rows.nth(1)).toContainText('반려')
   await expect(rows.nth(2)).toContainText('심사대기')
-  // 서버 `MISSING`(미제출)도 화면에서는 `심사대기` 다.
+  // 서버 `MISSING`(미제출)은 화면에서도 `미제출` 이다.
   await expect(rows.nth(3)).toContainText('김유영')
-  await expect(rows.nth(3)).toContainText('심사대기')
-  await expect(rows.nth(3)).not.toContainText('미제출')
+  await expect(rows.nth(3)).toContainText('미제출')
+  await expect(rows.nth(3)).not.toContainText('심사대기')
 
   // 제출된 3줄만 버튼이다. 누르면 `workReportId` 로 업무보고 상세에 들어간다.
   // 이동한 화면의 업무보고 조회는 이 시나리오 범위가 아니라 요청만 끊는다(실제 서버 요청 없음).
@@ -322,7 +322,7 @@ test('S15: 담당자별 보고 현황을 표시하고 제출 전 줄은 누를 �
   await expect(page).toHaveURL(/\/task-reports\/31$/)
 })
 
-test('S16: 진행도는 서버 집계를 쓰고 미제출을 심사대기에 합산한다', async ({
+test('S16: 진행도는 서버 집계를 쓰고 미제출을 따로 센다', async ({
   page,
 }) => {
   // reports 로 다시 세면 이 값과 어긋난다.
@@ -333,10 +333,9 @@ test('S16: 진행도는 서버 집계를 쓰고 미제출을 심사대기에 합
   })
   await page.goto('/tasks/12')
 
-  // 심사대기 2 = pending 1 + missing 1. 나머지는 응답 값 그대로다.
-  await expect(
-    page.getByText('전체 9 · 승인 5 · 반려 2 · 심사대기 2'),
-  ).toBeVisible()
+  // 응답 값 그대로다.
+  await expect(page.getByText('전체 9 · 승인 5 · 반려 2')).toBeVisible()
+  await expect(page.getByText('심사대기 1 · 미제출 1')).toBeVisible()
 })
 
 test('S17: 모르는 보고 상태가 와도 상세 화면을 살린다', async ({ page }) => {
@@ -354,11 +353,11 @@ test('S17: 모르는 보고 상태가 와도 상세 화면을 살린다', async 
 
   const rows = page.getByTestId('task-report-row')
   await expect(rows).toHaveCount(2)
-  // 제출된 줄은 심사대기로, 미제출(`workReportId: null`) 줄도 심사대기로 낙관 처리한다.
+  // 제출된 줄은 심사대기로, 미제출(`workReportId: null`) 줄은 미제출로 낙관 처리한다.
   await expect(rows.nth(0)).toContainText('이승현')
   await expect(rows.nth(0)).toContainText('심사대기')
   await expect(rows.nth(1)).toContainText('김유영')
-  await expect(rows.nth(1)).toContainText('심사대기')
+  await expect(rows.nth(1)).toContainText('미제출')
   await expect(page.getByText('업무를 찾을 수 없습니다.')).toHaveCount(0)
 })
 
