@@ -158,6 +158,9 @@ export function DashboardPage() {
                       year,
                       month,
                     ).slice(0, LIST_LIMIT)}
+                    getScheduleHref={(schedule) =>
+                      `/notices/guide/${schedule.id}`
+                    }
                   />
                 </HolidayBody>
               </TallCard>
@@ -210,6 +213,7 @@ export function DashboardPage() {
                   emptyText="최근 업무보고가 없습니다."
                   rows={taskReports.slice(0, LIST_LIMIT).map((report) => ({
                     key: report.id,
+                    to: `/task-reports/${report.id}`,
                     primary: report.title,
                     secondary: (
                       <TaskReportReviewBadge status={report.reviewStatus} />
@@ -226,6 +230,7 @@ export function DashboardPage() {
                   emptyText="최근 업무일지가 없습니다."
                   rows={workLogs.slice(0, LIST_LIMIT).map((workLog) => ({
                     key: workLog.id,
+                    to: `/work-logs/${workLog.id}`,
                     primary: workLog.formName,
                     secondary: workLog.authorName,
                   }))}
