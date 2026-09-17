@@ -35,6 +35,18 @@ test('S1: 사이드바 열기와 닫기', async ({ page }) => {
   await expect(sidebar(page)).toBeHidden()
 })
 
+test('S1-1: 세션 사용자 정보가 없으면 기본 이름을 보인다', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem('toyvillage.session.user')
+  })
+  await openSidebar(page, '/notices/list')
+
+  await expect(sidebar(page).getByText('사용자', { exact: true })).toBeVisible()
+  await expect(
+    sidebar(page).getByRole('img', { name: '사용자 프로필' }),
+  ).toBeVisible()
+})
+
 test('S2: 대분류를 펼쳐 하위 메뉴로 이동', async ({ page }) => {
   // `/` 는 어느 대분류에도 속하지 않아 모두 접힌 상태로 열린다.
   await openSidebar(page, '/')
@@ -85,9 +97,7 @@ test('S6: 현재 경로의 대분류가 자동으로 펼쳐진다', async ({ pag
   await openSidebar(page, '/feeds')
 
   await expect(group(page, '개체관리')).toHaveAttribute('aria-expanded', 'true')
-  await expect(
-    page.getByRole('link', { name: '먹이 급여 관리' }),
-  ).toBeVisible()
+  await expect(page.getByRole('link', { name: '먹이 급여 관리' })).toBeVisible()
 })
 
 test('S7: 대시보드는 바로 이동하고 현재 경로일 때 활성이다', async ({

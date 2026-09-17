@@ -51,7 +51,8 @@ export function Sidebar() {
 
   // 사용자 조회 API가 없어 로그인 응답으로 저장한 세션 사용자를 쓴다.
   // 열 때마다 읽으므로 다른 계정으로 다시 로그인해도 바로 반영된다.
-  const userName = readSessionUser()?.name ?? ''
+  // 토큰만 남고 사용자 정보가 없는 세션(이전 로그인)은 이름 대신 기본 문구를 보인다.
+  const userName = readSessionUser()?.name ?? '사용자'
 
   return (
     <Layer>
@@ -68,7 +69,7 @@ export function Sidebar() {
         </CloseButton>
 
         <Profile>
-          <Avatar role="img" aria-label={`${userName} 프로필`.trim()} />
+          <Avatar role="img" aria-label={`${userName} 프로필`} />
           <UserName>{userName}</UserName>
         </Profile>
 
@@ -109,8 +110,7 @@ function findActiveMenu(pathname: string): {
   for (const group of mockSidebarGroups) {
     for (const item of group.items) {
       if (!item.to) continue
-      const matched =
-        pathname === item.to || pathname.startsWith(`${item.to}/`)
+      const matched = pathname === item.to || pathname.startsWith(`${item.to}/`)
       if (!matched) continue
       if (!best || item.to.length > best.length) {
         best = { groupId: group.id, itemId: item.id, length: item.to.length }
