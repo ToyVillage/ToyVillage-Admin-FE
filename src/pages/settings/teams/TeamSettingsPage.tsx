@@ -1,17 +1,19 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getEmployees } from '@/entities/employee'
 import {
-  addMockTeamMembers,
-  createMockTeam,
-  deleteMockTeam,
-  getMockStaff,
-  getMockTeams,
-  removeMockTeamMember,
-  renameMockTeam,
+  createTeam,
+  deleteTeam,
+  getTeamMembers,
+  getTeams,
+  joinTeam,
+  quitTeam,
   TeamDetailPanel,
   TeamRail,
+  updateTeam,
   type Team,
+  type TeamMember,
 } from '@/entities/team'
 import { AddTeamDialog, AddTeamMemberDialog } from '@/features/team-settings'
 import { DeleteConfirmationDialog, Toast, type ToastVariant } from '@/shared/ui'
@@ -19,6 +21,14 @@ import { DeleteConfirmationDialog, Toast, type ToastVariant } from '@/shared/ui'
 type OpenDialog = 'add-team' | 'add-member' | 'delete-team' | null
 
 const teamsQueryKey = ['teams', 'list'] as const
+const employeesQueryKey = ['employees', 'list'] as const
+// 업무지시 담당자 트리(`['teams', 'tree']`)도 팀·소속을 읽는다. 팀이 바뀌면
+// 트리의 팀 행과 `미배정` 이 함께 달라지므로 같이 무효화한다.
+const teamTreeQueryKey = ['teams', 'tree'] as const
+
+function teamMembersQueryKey(teamId: number) {
+  return ['teams', 'members', teamId] as const
+}
 
 export function TeamSettingsPage() {
   const queryClient = useQueryClient()
@@ -29,75 +39,161 @@ export function TeamSettingsPage() {
     message: string
   } | null>(null)
 
-  const teamsQuery = useQuery({
-    queryKey: teamsQueryKey,
-    queryFn: getMockTeams,
+  const teamsQuery = useQuery({ queryKey: teamsQueryKey, queryFn: getTeams })
+  const employeesQuery = useQuery({
+    queryKey: employeesQueryKey,
+    queryFn: getEmployees,
   })
-  const staffQuery = useQuery({ queryKey: ['staff', 'list'], queryFn: getMockStaff })
 
   const teams = teamsQuery.data ?? []
-  const staff = staffQuery.data ?? []
+  const employees = employeesQuery.data ?? []
 
   // 선택한 팀이 없거나 사라졌으면 첫 번째 팀을 고른다(진입·삭제 직후).
   const selectedTeam: Team | null =
     teams.find((team) => team.id === selectedId) ?? teams[0] ?? null
 
-  function applyTeams(next: Team[]) {
-    queryClient.setQueryData(teamsQueryKey, next)
+  const selectedTeamId = selectedTeam?.id ?? null
+
+  const membersQuery = useQuery({
+    queryKey: teamMembersQueryKey(selectedTeamId ?? 0),
+    queryFn: () => {
+      if (selectedTeamId == null) {
+        throw new Error('선택된 팀이 없습니다.')
+      }
+      return getTeamMembers(selectedTeamId)
+    },
+    enabled: selectedTeamId != null,
+  })
+
+  // `GET /team/{teamId}/members` 는 직급을 주지 않는다. 직원 목록으로 채운다.
+  const positionByEmployeeId = useMemo(
+    () =>
+      new Map(
+        (employeesQuery.data ?? []).map((employee) => [
+          employee.id,
+          employee.position,
+        ]),
+      ),
+    [employeesQuery.data],
+  )
+
+  const members: TeamMember[] = (membersQuery.data ?? []).map((member) => ({
+    ...member,
+    position: positionByEmployeeId.get(member.id) ?? null,
+  }))
+
+  function notifyFailure(message: string) {
+    setToast({ variant: 'error', message })
   }
 
-  const createTeam = useMutation({
-    mutationFn: (name: string) => createMockTeam(name),
-    onSuccess: (next) => {
-      applyTeams(next)
+  async function refreshTeams() {
+    await queryClient.invalidateQueries({ queryKey: teamsQueryKey })
+    await queryClient.invalidateQueries({ queryKey: teamTreeQueryKey })
+  }
+
+  async function refreshMembers(teamId: number) {
+    await queryClient.invalidateQueries({
+      queryKey: teamMembersQueryKey(teamId),
+    })
+  }
+
+  const createTeamMutation = useMutation({
+    mutationFn: (name: string) => createTeam({ name }),
+    onSuccess: async () => {
+      // 생성 응답이 새 팀 id 를 주지 않는다. 목록을 다시 받아 늘어난 id 를 고른다.
+      // 렌더 시점 목록 대신 캐시를 읽는다. 목록이 아직 로드되지 않았거나 다른
+      // 관리자가 함께 팀을 만들었으면 새 id 를 특정할 수 없어 선택을 건드리지 않는다.
+      const before = new Set(
+        (queryClient.getQueryData<Team[]>(teamsQueryKey) ?? []).map(
+          (team) => team.id,
+        ),
+      )
+      await refreshTeams()
+      const next = queryClient.getQueryData<Team[]>(teamsQueryKey) ?? []
+      const created = next.filter((team) => !before.has(team.id))
+
       setDialog(null)
-      // 새로 만든 팀은 목록 맨 뒤에 붙고 바로 선택된다.
-      setSelectedId(next[next.length - 1]?.id ?? null)
+      if (created.length === 1) setSelectedId(created[0].id)
+    },
+    onError: () => {
+      setDialog(null)
+      notifyFailure('팀 추가에 실패했습니다')
     },
   })
 
-  const renameTeam = useMutation({
+  const renameTeamMutation = useMutation({
     mutationFn: ({ teamId, name }: { teamId: number; name: string }) =>
-      renameMockTeam(teamId, name),
-    onSuccess: applyTeams,
+      updateTeam({ teamId, input: { name } }),
+    onSuccess: refreshTeams,
+    onError: () => notifyFailure('팀명 변경에 실패했습니다'),
   })
 
-  const deleteTeam = useMutation({
-    mutationFn: (teamId: number) => deleteMockTeam(teamId),
-    onSuccess: (next) => {
-      applyTeams(next)
+  const deleteTeamMutation = useMutation({
+    mutationFn: (teamId: number) => deleteTeam(teamId),
+    onSuccess: async (_data, teamId) => {
+      // 삭제된 팀의 멤버 캐시는 다시 쓸 일이 없다. 무효화 대신 걷어낸다.
+      queryClient.removeQueries({ queryKey: teamMembersQueryKey(teamId) })
+      await refreshTeams()
+
+      const next = queryClient.getQueryData<Team[]>(teamsQueryKey) ?? []
       setDialog(null)
       setSelectedId(next[0]?.id ?? null)
       setToast({ variant: 'success', message: '데이터 삭제에 성공했습니다' })
     },
     onError: () => {
       setDialog(null)
-      setToast({ variant: 'error', message: '데이터 삭제에 실패했습니다' })
+      notifyFailure('데이터 삭제에 실패했습니다')
     },
   })
 
-  const addMembers = useMutation({
-    mutationFn: ({ teamId, memberIds }: { teamId: number; memberIds: number[] }) =>
-      addMockTeamMembers(teamId, memberIds),
-    onSuccess: (next) => {
-      applyTeams(next)
+  const addMembersMutation = useMutation({
+    mutationFn: ({
+      teamId,
+      memberIds,
+    }: {
+      teamId: number
+      memberIds: number[]
+    }) => joinTeam({ teamId, appAdminIds: memberIds }),
+    onSuccess: async (_data, { teamId }) => {
+      await Promise.all([refreshTeams(), refreshMembers(teamId)])
       setDialog(null)
     },
+    onError: () => {
+      setDialog(null)
+      notifyFailure('팀원 추가에 실패했습니다')
+    },
   })
 
-  const removeMember = useMutation({
+  const removeMemberMutation = useMutation({
     mutationFn: ({ teamId, memberId }: { teamId: number; memberId: number }) =>
-      removeMockTeamMember(teamId, memberId),
-    onSuccess: applyTeams,
+      quitTeam({ teamId, appAdminIds: [memberId] }),
+    onSuccess: async (_data, { teamId }) => {
+      await Promise.all([refreshTeams(), refreshMembers(teamId)])
+    },
+    onError: () => notifyFailure('팀원 제거에 실패했습니다'),
   })
 
   // 팀원 추가 모달에는 그 팀에 아직 없는 직원만 올린다.
-  const memberCandidates = selectedTeam
-    ? staff.filter(
-        (person) =>
-          !selectedTeam.members.some((member) => member.id === person.id),
-      )
+  const memberCandidates: TeamMember[] = selectedTeam
+    ? employees
+        .filter((employee) => !members.some((member) => member.id === employee.id))
+        .map((employee) => ({
+          id: employee.id,
+          name: employee.name,
+          position: employee.position,
+        }))
     : []
+
+  // 목록을 못 받은 것과 팀이 0개인 것은 다르다. 빈 레일로 숨기지 않는다.
+  if (teamsQuery.isError) {
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          팀 목록을 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
+  }
 
   return (
     <Page>
@@ -115,17 +211,28 @@ export function TeamSettingsPage() {
             onAddClick={() => setDialog('add-team')}
           />
 
-          {selectedTeam && (
+          {selectedTeam && membersQuery.isError && (
+            <PanelStatus role="alert">
+              팀원을 불러오지 못했습니다. 다시 시도해 주세요.
+            </PanelStatus>
+          )}
+
+          {selectedTeam && !membersQuery.isError && (
             <TeamDetailPanel
               key={selectedTeam.id}
               team={selectedTeam}
+              members={members}
+              membersPending={membersQuery.isPending}
               onRename={(name) =>
-                renameTeam.mutate({ teamId: selectedTeam.id, name })
+                renameTeamMutation.mutate({ teamId: selectedTeam.id, name })
               }
               onDeleteClick={() => setDialog('delete-team')}
               onAddMemberClick={() => setDialog('add-member')}
               onRemoveMember={(memberId) =>
-                removeMember.mutate({ teamId: selectedTeam.id, memberId })
+                removeMemberMutation.mutate({
+                  teamId: selectedTeam.id,
+                  memberId,
+                })
               }
             />
           )}
@@ -135,7 +242,7 @@ export function TeamSettingsPage() {
       {dialog === 'add-team' && (
         <AddTeamDialog
           onCancel={() => setDialog(null)}
-          onSubmit={(name) => createTeam.mutate(name)}
+          onSubmit={(name) => createTeamMutation.mutate(name)}
         />
       )}
 
@@ -145,16 +252,16 @@ export function TeamSettingsPage() {
           candidates={memberCandidates}
           onCancel={() => setDialog(null)}
           onSubmit={(memberIds) =>
-            addMembers.mutate({ teamId: selectedTeam.id, memberIds })
+            addMembersMutation.mutate({ teamId: selectedTeam.id, memberIds })
           }
         />
       )}
 
       {dialog === 'delete-team' && selectedTeam && (
         <DeleteConfirmationDialog
-          pending={deleteTeam.isPending}
+          pending={deleteTeamMutation.isPending}
           onCancel={() => setDialog(null)}
-          onConfirm={() => deleteTeam.mutate(selectedTeam.id)}
+          onConfirm={() => deleteTeamMutation.mutate(selectedTeam.id)}
         />
       )}
 
@@ -213,4 +320,43 @@ const Layout = styled.div`
   align-items: stretch;
   gap: 20px;
   margin-top: 88px;
+`
+
+// 조회 실패 카드. TaskListPage·SpeciesListPage 와 같은 형태다.
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  display: flex;
+  width: min(100%, 560px);
+  flex-direction: column;
+  align-items: center;
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
+
+// 레일은 그대로 두고 상세 패널 자리만 대체한다. 패널과 같은 테두리·배경을 쓴다.
+const PanelStatus = styled.section`
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  border: 1px solid ${({ theme }) => theme.colors.tableHeaderStrong};
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
 `

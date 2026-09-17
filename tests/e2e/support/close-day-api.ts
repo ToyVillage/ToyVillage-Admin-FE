@@ -1,8 +1,8 @@
 import type { Page, Route } from '@playwright/test'
 
 // 휴관일 관리 화면(목록·수정)이 쓰는 API mock.
-// 대상: GET /close-day, PUT·DELETE /close-day/{id}.
-// 실제 서버는 호출하지 않는다. 삭제·수정은 mock 목록에 반영해 재조회 결과가 바뀐다.
+// 대상: GET·POST /close-day, PUT·DELETE /close-day/{id}.
+// 실제 서버는 호출하지 않는다. 생성·삭제·수정은 mock 목록에 반영해 재조회 결과가 바뀐다.
 
 export const closeDayListPattern = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 export const closeDayItemPattern =
@@ -47,7 +47,10 @@ interface CloseDayApiOptions {
   deleteStatus?: number
   /** PUT 응답 상태. 200 이 아니면 목록을 바꾸지 않는다. */
   updateStatus?: number
+  /** POST 응답 상태. 200 이 아니면 목록을 바꾸지 않는다. */
+  createStatus?: number
   onDelete?: (id: number) => void
+  onCreate?: (body: Omit<MockCloseDay, 'id'>) => void
 }
 
 export async function mockCloseDayApi(
@@ -56,12 +59,29 @@ export async function mockCloseDayApi(
     closeDays = createMockCloseDays(),
     deleteStatus = 201,
     updateStatus = 200,
+    createStatus = 200,
     onDelete,
+    onCreate,
   }: CloseDayApiOptions = {},
 ) {
   const store = [...closeDays]
 
   await page.route(closeDayListPattern, async (route) => {
+    const request = route.request()
+    if (request.method() === 'POST') {
+      const body = request.postDataJSON() as Omit<MockCloseDay, 'id'>
+      onCreate?.(body)
+      if (createStatus !== 200) {
+        await json(route, createStatus, { message: '생성 실패' })
+        return
+      }
+      const id = Math.max(0, ...store.map((item) => item.id)) + 1
+      store.push({ id, ...body })
+      // CLOSE_DAT_CREATE 는 응답 본문을 쓰지 않고 200 으로 성공을 판단한다.
+      await route.fulfill({ status: 200 })
+      return
+    }
+
     await json(route, 200, store)
   })
 

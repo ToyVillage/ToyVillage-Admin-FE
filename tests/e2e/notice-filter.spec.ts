@@ -1,4 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { mockNoticeApi } from './support/notice-api'
+
+// 공지사항 API 는 page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
+test.beforeEach(async ({ page }) => {
+  await mockNoticeApi(page)
+})
 
 test('날짜 필터에서 오래된순을 선택하면 공지가 오름차순으로 정렬된다', async ({
   page,
@@ -16,7 +22,8 @@ test('날짜 필터에서 오래된순을 선택하면 공지가 오름차순으
 
   await expect(sortMenu).toBeHidden()
   await expect(page.getByTestId('notice-row').first()).toContainText(
-    '회원 혜택 개편 안내',
+    // mock 공지 중 가장 오래된 공지(2026-07-01)
+    '사육사 교육 일정',
   )
 })
 

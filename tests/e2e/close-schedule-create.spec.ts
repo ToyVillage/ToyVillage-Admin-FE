@@ -1,13 +1,17 @@
 import { expect, test } from '@playwright/test'
-import { closeScheduleStorageKey } from '../../src/entities/close-schedule/model/mock'
+import { mockCloseDayApi } from './support/close-day-api'
+
+// 휴관일 API 는 page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
+// 생성 요청(POST /close-day) 본문을 기록해 전송 여부와 횟수를 확인한다.
+let createRequests: unknown[]
 
 test.beforeEach(async ({ page }) => {
+  createRequests = []
+  await mockCloseDayApi(page, {
+    closeDays: [],
+    onCreate: (body) => createRequests.push(body),
+  })
   await page.goto('/notices/guide/create')
-  await page.evaluate(
-    (storageKey) => localStorage.removeItem(storageKey),
-    closeScheduleStorageKey,
-  )
-  await page.reload()
 })
 
 test('S1: 생성 폼 표시', async ({ page }) => {
@@ -60,14 +64,7 @@ test('S6: 종료일이 시작일보다 빠르면 생성하지 않는다', async 
   await expect(page.getByRole('alertdialog')).toContainText(
     '종료일은 시작일과 같거나 이후여야 합니다',
   )
-  await expect
-    .poll(() =>
-      page.evaluate(
-        (key) => localStorage.getItem(key),
-        closeScheduleStorageKey,
-      ),
-    )
-    .toBeNull()
+  expect(createRequests).toHaveLength(0)
 })
 
 test('S7: 유효한 값으로 생성하면 목록에서 확인할 수 있다', async ({ page }) => {
@@ -79,24 +76,12 @@ test('S7: 유효한 값으로 생성하면 목록에서 확인할 수 있다', a
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
   await expect(page.getByText('새 휴관 일정')).toHaveCount(1)
-  await expect
-    .poll(() =>
-      page.evaluate((key) => {
-        const value = localStorage.getItem(key)
-        return value ? JSON.parse(value).length : 0
-      }, closeScheduleStorageKey),
-    )
-    .toBe(1)
+  expect(createRequests).toHaveLength(1)
 })
 
 test('S8: 저장 실패 시 입력을 보존하고 재시도할 수 있다', async ({ page }) => {
-  await page.evaluate((storageKey) => {
-    const originalSetItem = Storage.prototype.setItem
-    Storage.prototype.setItem = function setItem(key, value) {
-      if (key === storageKey) throw new DOMException('저장 실패')
-      originalSetItem.call(this, key, value)
-    }
-  }, closeScheduleStorageKey)
+  // 나중에 등록한 route 가 먼저 매칭되므로 생성 요청만 실패로 바꾼다.
+  await mockCloseDayApi(page, { closeDays: [], createStatus: 500 })
 
   await page.getByLabel('시작일').fill('2026-07-18')
   await page.getByLabel('종료일').fill('2026-07-19')

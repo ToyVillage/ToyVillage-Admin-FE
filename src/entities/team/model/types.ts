@@ -21,9 +21,19 @@ export interface TeamTree {
   groups: TeamTreeGroup[]
 }
 
-/** 팀 관리 화면(`/settings/teams`)이 다루는 팀 한 건. */
+/** 팀 관리 화면(`/settings/teams`) 좌측 레일이 다루는 팀 한 건. */
 export interface Team {
   id: number
   name: string
-  members: TeamMember[]
+  /** 팀 소속 직원 수. 레일 행의 `n명` 이다. */
+  memberCount: number
+}
+
+/**
+ * 팀 멤버 조회(`GET /team/{teamId}/members`) 가 주는 팀원 한 명.
+ * 이 응답에는 직급이 없어 `TeamMember` 와 달리 이름만 있다.
+ */
+export interface TeamMemberBrief {
+  id: number
+  name: string
 }

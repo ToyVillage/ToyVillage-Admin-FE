@@ -3,13 +3,20 @@ import type { TeamMember } from '../model/types'
 
 interface TeamMemberTableProps {
   members: TeamMember[]
+  /** 조회 중. 빈 상태 문구 대신 빈 표를 그려 같은 자리를 지킨다. */
+  pending: boolean
   onRemove: (memberId: number) => void
 }
 
 // Figma `team / member table`(1770:16153) — 이름·직급 두 열과 행별 `제거`.
 // 팀원이 0명이면 머리행 대신 빈 상태(1760:17847)를 보여준다.
-export function TeamMemberTable({ members, onRemove }: TeamMemberTableProps) {
-  if (members.length === 0) {
+export function TeamMemberTable({
+  members,
+  pending,
+  onRemove,
+}: TeamMemberTableProps) {
+  // 조회가 끝나기 전에는 `팀원 없음` 으로 단정하지 않는다.
+  if (members.length === 0 && !pending) {
     return (
       <Table>
         <Empty>

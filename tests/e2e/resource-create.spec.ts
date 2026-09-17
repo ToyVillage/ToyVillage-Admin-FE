@@ -1,16 +1,13 @@
 import { expect, test } from '@playwright/test'
-import { resourceStorageKey } from '../../src/entities/resource/model/mock'
+import { mockDocumentApi } from './support/document-api'
 
 // 승인된 시나리오(resource-create.approved.json: S1~S8)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
+// 자료실·파일 업로드 API 는 page.route mock(`support/document-api`)을 쓴다. 실제 서버는 호출하지 않는다.
 
 test.beforeEach(async ({ page }) => {
+  await mockDocumentApi(page)
   await page.goto('/notices/resources/create')
-  await page.evaluate(
-    (storageKey) => localStorage.removeItem(storageKey),
-    resourceStorageKey,
-  )
-  await page.reload()
 })
 
 test('S1: 생성 폼 표시', async ({ page }) => {
