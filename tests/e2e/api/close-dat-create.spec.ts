@@ -209,9 +209,9 @@ async function expectCreateFailure(
   await expect(page.getByLabel('시작일')).toHaveValue(startDate)
   await expect(page.getByLabel('종료일')).toHaveValue(endDate)
   await expect(page.getByLabel(/제목/)).toHaveValue(title)
-  await expect(
-    page.getByText('생성하지 못했습니다. 다시 시도해 주세요.'),
-  ).toBeVisible()
+  const dialog = page.getByRole('alertdialog')
+  await expect(dialog).toContainText('데이터 생성에 실패했습니다')
+  await dialog.getByRole('button', { name: '확인' }).click()
   await expect(page.getByRole('button', { name: '생성하기' })).toBeEnabled()
 }
 
