@@ -60,14 +60,15 @@ export function FeedListPage() {
     setSearchParams(params, { replace: true })
   }
 
-  // 서버 페이지네이션이다. 명세상 page 는 0부터 시작하고 화면은 1부터 센다.
+  // 서버 페이지네이션이다. 급여 목록은 화면과 같은 1-based 로 보낸다
+  // (다른 목록은 0-based 다 — 개발자 결정).
   const feedsQuery = useQuery({
     queryKey: feedQueryKeys.list(isoDate, species, page),
     queryFn: () =>
       getFeeds({
         date: isoDate,
         animalTaxonomic: species && animalTaxonomicBySpecies[species],
-        page: page - 1,
+        page,
         size: TABLE_PAGE_SIZE,
       }),
     // 급여 내역은 다른 직원이 계속 추가하므로 전역 staleTime(60초) 캐시를 쓰지 않는다.

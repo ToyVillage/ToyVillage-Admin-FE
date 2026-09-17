@@ -30,7 +30,7 @@ test('S1: 진입 시 date=오늘 · page=0 · size=4 로 한 번만 조회한다
   expect(requests).toHaveLength(1)
   const query = new URL(requests[0].url).searchParams
   expect(query.get('date')).toBe(todayIsoDate())
-  expect(query.get('page')).toBe('0')
+  expect(query.get('page')).toBe('1')
   expect(query.get('size')).toBe('4')
   // 전체 탭은 분류를 보내지 않는다.
   expect(query.get('animalTaxonomic')).toBeNull()
@@ -84,7 +84,7 @@ test('S3: 총 페이지 수는 서버 응답(totalPageSize)을 따른다', async
   await page.getByRole('button', { name: '2 페이지' }).click()
   await expect(rows(page)).toHaveCount(2)
 
-  await expect.poll(() => pages).toEqual(['0', '1'])
+  await expect.poll(() => pages).toEqual(['1', '2'])
 })
 
 test('S4: 조회날짜를 바꾸면 그 날짜로 다시 조회한다', async ({ page }) => {

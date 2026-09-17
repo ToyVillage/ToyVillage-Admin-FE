@@ -127,7 +127,8 @@ export async function mockFeedApi(
     const date = query.get('date')
     const taxonomic = query.get('animalTaxonomic')
     const size = Number(query.get('size') ?? 4)
-    const number = Number(query.get('page') ?? 0)
+    // 급여 목록은 1-based 로 요청한다.
+    const number = Number(query.get('page') ?? 1)
 
     const matched = handle.feedLogs.filter(
       (item) =>
@@ -137,7 +138,7 @@ export async function mockFeedApi(
 
     await json(route, 200, {
       feedLogs: matched
-        .slice(number * size, (number + 1) * size)
+        .slice((number - 1) * size, number * size)
         .map(toListItem),
       totalPageSize: Math.ceil(matched.length / size),
     })
