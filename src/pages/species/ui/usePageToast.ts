@@ -7,6 +7,8 @@ export type PageToastKey =
   | 'delete-success'
   | 'delete-error'
   | 'download-error'
+  | 'feed-history-empty'
+  | 'feed-history-error'
 
 interface PageToastLocationState {
   toast?: PageToastKey
@@ -26,6 +28,11 @@ const toastByKey: Record<
   },
   'delete-error': { variant: 'error', message: '데이터 삭제에 실패했습니다' },
   'download-error': { variant: 'error', message: '파일 다운로드에 실패했습니다' },
+  'feed-history-empty': { variant: 'error', message: '급여 기록이 없습니다' },
+  'feed-history-error': {
+    variant: 'error',
+    message: '급여 기록을 불러오지 못했습니다',
+  },
 }
 
 /**

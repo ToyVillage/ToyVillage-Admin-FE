@@ -6,4 +6,6 @@ export const feedQueryKeys = {
   list: (date: string, species: AnimalSpecies | null, page: number) =>
     ['feeds', 'list', { date, species, page }] as const,
   detail: (feedLogId: string) => ['feeds', 'detail', feedLogId] as const,
+  history: (animalManageId: string) =>
+    ['feeds', 'history', animalManageId] as const,
 }

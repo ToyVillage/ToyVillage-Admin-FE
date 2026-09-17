@@ -19,12 +19,15 @@ export function FeedDetailPage() {
   const { id = '' } = useParams()
   const location = useLocation()
   // 목록에서 넘어왔다면 그때의 조회 조건(날짜·분류·페이지)으로 돌아간다.
+  // 개체 상세에서 넘어왔다면 그 개체 상세로 돌아간다(`backPath`).
   // 분류는 급여 API 가 주지 않아 목록에서 고른 탭을 그대로 받아 뱃지에 쓴다.
   const navState = location.state as {
     listSearch?: string
+    backPath?: string
     species?: AnimalSpecies | null
   } | null
-  const backPath = `${listPath}${navState?.listSearch ?? ''}`
+  const backPath =
+    navState?.backPath ?? `${listPath}${navState?.listSearch ?? ''}`
   const species = navState?.species ?? undefined
 
   // 상세 진입 시 페이지 상단으로 스크롤한다.

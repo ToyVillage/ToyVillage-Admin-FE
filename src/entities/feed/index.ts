@@ -15,6 +15,7 @@ export {
 export { feedQueryKeys } from './model/queryKeys'
 export {
   getFeedDetail,
+  getFeedHistory,
   getFeeds,
   isFeedNotFoundError,
   type FeedListPage,

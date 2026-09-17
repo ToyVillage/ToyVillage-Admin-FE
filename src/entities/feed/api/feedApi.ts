@@ -81,13 +81,7 @@ export async function getFeedDetail({
     throw new Error('급여 상세 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  // 이력이 없으면(404) 빈 표로 두고 본문은 보여준다.
-  // 그 밖의 실패(500·네트워크·형식 오류)는 그대로 올려 상세를 오류 상태로 만든다 —
-  // 불러오지 못한 것을 '이력 없음'으로 보여주지 않는다.
-  const history = await getFeedHistory(data.animalId).catch((error: unknown) => {
-    if (isFeedNotFoundError(error)) return []
-    throw error
-  })
+  const history = await getFeedHistory(data.animalId)
   const { fedDate, fedTime } = splitFeedDateTime(data.feedDateTime)
 
   return {
@@ -107,12 +101,19 @@ export async function getFeedDetail({
   }
 }
 
-async function getFeedHistory(
+// 개체의 급여 이력. 최신 급여가 맨 앞이다.
+// 이력이 없으면(404) 빈 배열이다. 그 밖의 실패(500·네트워크·형식 오류)는 그대로 올린다 —
+// 불러오지 못한 것을 '이력 없음'으로 보여주지 않는다.
+export async function getFeedHistory(
   animalManageId: number,
 ): Promise<FeedHistoryRecord[]> {
-  const { data } = await api.get<unknown>(
-    `/feed-log/admin/history/${animalManageId}`,
-  )
+  const data = await api
+    .get<unknown>(`/feed-log/admin/history/${animalManageId}`)
+    .then((response) => response.data)
+    .catch((error: unknown) => {
+      if (isFeedNotFoundError(error)) return { feedLogs: [] }
+      throw error
+    })
 
   if (!isFeedLogHistoryResponse(data)) {
     throw new Error('급여 이력 조회 응답 형식이 올바르지 않습니다.')

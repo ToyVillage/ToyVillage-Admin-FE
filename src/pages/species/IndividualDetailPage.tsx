@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
+import { feedQueryKeys, getFeedHistory } from '@/entities/feed'
 import {
   deleteIndividual,
   getIndividual,
@@ -49,6 +50,7 @@ export function IndividualDetailPage() {
   // 삭제 결과 토스트(이동 state 로 받은 것과 이 화면에서 발생한 것).
   const { toast, showToast, dismissToast } = usePageToast()
   const deletingRef = useRef(false)
+  const openingFeedRef = useRef(false)
   // 케밥 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
   const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
   const focusFrame = useFocusFrame()
@@ -118,6 +120,30 @@ export function IndividualDetailPage() {
 
   function deleteTargetMenuId(target: DeleteTarget) {
     return target.kind === 'individual' ? profileMenuId : target.observationId
+  }
+
+  // `먹이 급여 기록 확인하기` — 누를 때 이 개체의 급여 이력을 조회해 최신 급여 기록 상세로 간다.
+  // 이력이 없거나 조회에 실패하면 이동하지 않고 토스트로 알린다.
+  async function handleOpenFeedHistory() {
+    if (openingFeedRef.current) return
+    openingFeedRef.current = true
+    try {
+      const history = await queryClient.fetchQuery({
+        queryKey: feedQueryKeys.history(individualId),
+        queryFn: () => getFeedHistory(Number(individualId)),
+      })
+      const latestFeedId = history[0]?.id
+      if (!latestFeedId) {
+        showToast('feed-history-empty')
+        return
+      }
+      // 급여 상세의 뒤로가기가 이 개체 상세로 돌아오게 한다.
+      navigate(`/feeds/${latestFeedId}`, { state: { backPath: detailPath } })
+    } catch {
+      showToast('feed-history-error')
+    } finally {
+      openingFeedRef.current = false
+    }
   }
 
   function handleCancelDelete() {
@@ -235,8 +261,10 @@ export function IndividualDetailPage() {
             photo={individual.photo}
             actions={
               <>
-                {/* 먹이 급여 화면이 아직 없다 — 초점은 받지만 동작하지 않는다(sidebar 화면 미구현 항목 규칙). */}
-                <FeedingRecordButton type="button" aria-disabled="true">
+                <FeedingRecordButton
+                  type="button"
+                  onClick={() => void handleOpenFeedHistory()}
+                >
                   먹이 급여 기록 확인하기
                   <ChevronRightIcon viewBox="0 0 24 24" aria-hidden="true">
                     <path d="m9 4 8 8-8 8" />
@@ -390,7 +418,7 @@ const ObservationSection = styled.section`
   margin-top: 60px;
 `
 
-// Figma `link / 먹이 급여 기록`(949:26307) 245×52 — 이동할 화면이 없어 흐리게 두지 않고 외형만 유지한다.
+// Figma `link / 먹이 급여 기록`(949:26307) 245×52.
 const FeedingRecordButton = styled.button`
   display: inline-flex;
   min-height: 52px;
@@ -401,7 +429,7 @@ const FeedingRecordButton = styled.button`
   border-radius: 8px;
   background: ${({ theme }) => theme.colors.accentBg};
   color: ${({ theme }) => theme.colors.accent};
-  cursor: default;
+  cursor: pointer;
   font: inherit;
   font-size: 18px;
   font-weight: 500;

@@ -1,6 +1,6 @@
 {
   "feature": "individual-detail",
-  "approvedAt": "2026-09-17T00:44:47.738Z",
+  "approvedAt": "2026-09-17T11:40:05.075Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -32,8 +32,10 @@
     "S27",
     "S28",
     "S29",
-    "S30"
+    "S30",
+    "S31",
+    "S32"
   ],
-  "scenarioHash": "00c8e6a2297af030b12fd065fff89ae3f041312d00d4ad1e795b73f5075f34b9",
-  "e2eHash": "2eb342bb759f30d6ccf8614bd91f5ec2d66b1067394bc9d2a185f19bae5d582e"
+  "scenarioHash": "fd4b16249a22c93ab1301f60744a6fbb401661f6d2b068f004d685a052bfb059",
+  "e2eHash": "eebf419765085a701b3c31fa68829159c945ee71b9607ec3ddd176d8b7b111a9"
 }
