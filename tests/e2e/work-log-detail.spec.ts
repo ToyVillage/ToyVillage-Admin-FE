@@ -98,22 +98,56 @@ test('S5: 구역 행 표기', async ({ page }) => {
   await expect(rows(page).nth(2)).toContainText('A3')
 })
 
-test('S6: 체크박스 셀은 선택 값마다 chip 으로 표기한다', async ({ page }) => {
+test('S6: 체크박스 셀은 chip 으로 표기하고 넘치면 +N 으로 접는다', async ({
+  page,
+}) => {
   await page.goto('/work-logs/1')
+  await expect(rows(page)).toHaveCount(3)
 
-  // 체크박스 열은 6번째 셀(구역 + 온도 + 청소방법 + 습도 + 청소여부).
+  // 선택 값마다 chip 하나(접힌 chip 포함).
   await expect(chips(page, 0)).toHaveCount(1)
   await expect(chips(page, 1)).toHaveCount(2)
   await expect(chips(page, 2)).toHaveCount(3)
+
+  for (const rowIndex of [0, 1, 2]) {
+    const cell = rows(page).nth(rowIndex).locator('> div').nth(4)
+    const total = await cell.locator('[data-chip]').count()
+    const shown = await cell.locator('[data-chip]:visible').count()
+    const counter = cell.locator('[data-chip-counter]')
+
+    expect(shown, `행 ${rowIndex}`).toBeGreaterThan(0)
+
+    // 들어가지 않는 chip 은 반쯤 잘리는 대신 `+N` 으로 접힌다.
+    if (shown < total) {
+      await expect(counter).toHaveText(`+${total - shown}`)
+    } else {
+      await expect(counter).toHaveCount(0)
+    }
+
+    // 보이는 chip 은 셀 밖으로 삐져나오지 않는다.
+    const cellBox = await cell.boundingBox()
+    for (let index = 0; index < shown; index += 1) {
+      const chipBox = await cell
+        .locator('[data-chip]:visible')
+        .nth(index)
+        .boundingBox()
+      expect(
+        (chipBox?.x ?? 0) + (chipBox?.width ?? 0),
+        `행 ${rowIndex} chip ${index}`,
+      ).toBeLessThanOrEqual((cellBox?.x ?? 0) + (cellBox?.width ?? 0) + 1)
+    }
+  }
 })
 
-test('S7: 파일 업로드 셀은 비워 둔다', async ({ page }) => {
+test('S7: 파일 업로드 셀은 첨부 칩으로 표기한다', async ({ page }) => {
   await page.goto('/work-logs/1')
 
   await expect(page.getByText('사진', { exact: true })).toBeVisible()
-  // 마지막 열(파일 업로드) 셀에는 아무 내용이 없다.
+  // 마지막 열(파일 업로드) 셀에 파일명과 다운로드가 있는 칩이 놓인다.
   const fileCell = rows(page).first().locator('> div').last()
-  await expect(fileCell).toHaveText('')
+  await expect(
+    fileCell.getByRole('button', { name: 'feed.png 다운로드' }),
+  ).toBeVisible()
 })
 
 // 명세상 답변이 없는 구역은 answers 가 빈 배열이다. 그런 구역도 행으로는 그려진다.
@@ -139,6 +173,100 @@ test('S9: 장문형 셀은 한 줄로 말줄임한다', async ({ page }) => {
   expect(box?.height).toBeLessThanOrEqual(65)
 })
 
+test('S11: 헤더 셀은 질문명이 길어도 항상 한 줄이다', async ({ page }) => {
+  await page.goto('/work-logs/1')
+
+  const header = page.getByTestId('work-log-sheet-header')
+  await expect(header.locator('> *')).toHaveCount(7)
+
+  // 두 줄이 되면 헤더 높이가 한 줄(56px) 기준을 넘는다.
+  const box = await header.boundingBox()
+  expect(box?.height).toBeLessThanOrEqual(57)
+
+  // 질문명이 잘리지도 않는다 — 열 폭이 헤더 텍스트 폭 이상으로 잡힌다.
+  const clipped = await header.locator('> *').evaluateAll((cells) =>
+    cells.filter((cell) => cell.scrollWidth > cell.clientWidth + 1).length,
+  )
+  expect(clipped).toBe(0)
+})
+
+test('S12: 값 셀을 클릭하면 전체 값 팝오버가 열린다', async ({ page }) => {
+  await page.goto('/work-logs/1')
+
+  await rows(page).first().locator('> div').nth(2).locator('button').click()
+
+  const popover = page.getByTestId('work-log-sheet-popover')
+  await expect(popover).toBeVisible()
+  // 어느 질문의 값인지 함께 보여준다.
+  await expect(popover).toContainText('청소방법이 뭔가요?')
+
+  // 크기는 내용이 정한다 — 짧은 값은 작게, 긴 값은 최대 폭 안에서 줄바꿈한다.
+  const longBox = await popover.boundingBox()
+  expect(longBox?.width ?? 0).toBeLessThanOrEqual(560)
+
+  await page.keyboard.press('Escape')
+  await rows(page).first().locator('> div').nth(1).locator('button').click()
+  const shortBox = await popover.boundingBox()
+  expect(shortBox?.width ?? 0).toBeLessThan(longBox?.width ?? 0)
+  await page.keyboard.press('Escape')
+
+  await rows(page).first().locator('> div').nth(2).locator('button').click()
+  await expect(popover).toBeVisible()
+
+  // 스크롤해도 닫히지 않고 셀을 따라간다.
+  await page.mouse.wheel(0, 120)
+  await expect(popover).toBeVisible()
+
+  await page.keyboard.press('Escape')
+  await expect(popover).toHaveCount(0)
+})
+
+test('S14: 같은 셀을 다시 클릭하면 팝오버가 닫힌다', async ({ page }) => {
+  await page.goto('/work-logs/1')
+
+  const cell = rows(page).first().locator('> div').nth(2).locator('button')
+  const popover = page.getByTestId('work-log-sheet-popover')
+
+  await cell.click()
+  await expect(popover).toBeVisible()
+
+  await cell.click()
+  await expect(popover).toHaveCount(0)
+})
+
+test('S13: 질문이 많으면 시트만 가로 스크롤하고 구역 열은 고정된다', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/work-logs/1')
+  await expect(rows(page)).toHaveCount(3)
+
+  const sheet = page.getByTestId('work-log-sheet')
+  const metrics = await sheet.evaluate((element) => ({
+    scrollWidth: element.scrollWidth,
+    clientWidth: element.clientWidth,
+  }))
+  expect(metrics.scrollWidth).toBeGreaterThan(metrics.clientWidth)
+
+  // 페이지 본문은 가로로 스크롤되지 않는다.
+  expect(
+    await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth <=
+        document.documentElement.clientWidth,
+    ),
+  ).toBe(true)
+
+  const zoneCell = rows(page).first().locator('> div').first()
+  const before = await zoneCell.boundingBox()
+  await sheet.evaluate((element) =>
+    element.scrollTo({ left: element.scrollWidth }),
+  )
+  const after = await zoneCell.boundingBox()
+
+  expect(Math.round(after?.x ?? 0)).toBe(Math.round(before?.x ?? 0))
+})
+
 test('S10: 없는 일지로 진입', async ({ page }) => {
   await page.goto('/work-logs/999')
 
@@ -153,7 +281,8 @@ function rows(page: Page) {
 }
 
 function chips(page: Page, rowIndex: number) {
-  return rows(page).nth(rowIndex).locator('> div').nth(4).locator('span')
+  // 접힌 chip 도 DOM 에 남는다. `+N` 배지는 chip 이 아니므로 제외한다.
+  return rows(page).nth(rowIndex).locator('> div').nth(4).locator('[data-chip]')
 }
 
 function columnWidths(row: Locator) {
