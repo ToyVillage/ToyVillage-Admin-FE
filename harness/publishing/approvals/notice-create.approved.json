@@ -1,0 +1,28 @@
+{
+  "feature": "notice-create",
+  "approvedAt": "2026-09-17T13:07:36.592Z",
+  "approvedBy": "claude (yunho09 위임)",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S17",
+    "S18",
+    "S19"
+  ],
+  "scenarioHash": "9bbfffa76deaf752895b53fa6ceadacb914d4fbf41a8d3b27323e10971d7e374",
+  "e2eHash": null
+}
