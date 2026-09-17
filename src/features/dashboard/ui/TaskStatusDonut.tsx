@@ -93,6 +93,7 @@ export function TaskStatusDonut({ counts }: TaskStatusDonutProps) {
 const Body = styled.div`
   display: flex;
   flex: 1;
+  flex-wrap: wrap;
   align-items: center;
   gap: 32px;
 `
@@ -119,9 +120,10 @@ const Total = styled.span`
   transform: translate(-50%, -50%);
 `
 
+// 1920 카드에서 도넛 옆 남는 폭(176)보다 작게 두고, 이보다 좁으면 도넛 아래로 내려간다.
 const Legend = styled.ul`
   min-width: 0;
-  flex: 1;
+  flex: 1 1 160px;
   margin: 0;
   padding: 0;
   list-style: none;
