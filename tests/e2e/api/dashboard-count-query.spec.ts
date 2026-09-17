@@ -189,3 +189,62 @@ for (const endpoint of ['closeDays', 'workReports', 'workLogs'] as const) {
     ).toBeVisible()
   })
 }
+
+const detailData = {
+  closeDays: [
+    {
+      id: 1,
+      title: '추석 휴관',
+      startCloseTime: '2026-09-24',
+      endCloseTime: '2026-09-26',
+    },
+  ],
+  workReports: [
+    {
+      id: 7,
+      taskId: 70,
+      name: '이승현',
+      title: '9월 정기 안전점검',
+      status: 'APPROVED' as const,
+      priority: 'HIGH' as const,
+      finishDate: '2026-09-05',
+    },
+  ],
+  workLogs: [
+    {
+      workLogId: 9,
+      writer: '박도윤',
+      writeAt: '2026-09-03',
+      templateTitle: '사육장점검일지',
+    },
+  ],
+}
+
+for (const { title, text, url } of [
+  { title: '휴관일 관리', text: '추석 휴관', url: /\/notices\/guide\/1$/ },
+  {
+    title: '업무보고',
+    text: '9월 정기 안전점검',
+    url: /\/task-reports\/7$/,
+  },
+  { title: '업무일지관리', text: '사육장점검일지', url: /\/work-logs\/9$/ },
+]) {
+  test(`S10: ${title} 행을 누르면 상세로 이동한다`, async ({ page }) => {
+    await mockDashboardApi(page, { data: detailData })
+    await page.goto('/')
+
+    await section(page, title).getByText(text, { exact: true }).click()
+    await expect(page).toHaveURL(url)
+  })
+}
+
+test('S11: 먹이 급여·개체관리 행은 링크가 아니다', async ({ page }) => {
+  await mockDashboardApi(page)
+  await page.goto('/')
+
+  for (const title of ['먹이 급여 관리', '개체관리']) {
+    const rows = section(page, title).getByRole('listitem')
+    await expect(rows).toHaveCount(3)
+    await expect(rows.getByRole('link')).toHaveCount(0)
+  }
+})
