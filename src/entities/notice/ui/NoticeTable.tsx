@@ -6,6 +6,7 @@ import {
   type DataTableSort,
   type DataTablePagination,
 } from '@/shared/ui'
+import { formatIsoDate } from '@/shared/lib'
 import type { NoticeListItem } from '../model/types'
 
 interface NoticeTableProps {
@@ -70,7 +71,7 @@ export function NoticeTable({
         id: n.id,
         pill: n.category,
         title: n.title,
-        date: n.date,
+        date: formatIsoDate(n.date),
       }))}
       columns={columns}
       onRowClick={onRowClick}

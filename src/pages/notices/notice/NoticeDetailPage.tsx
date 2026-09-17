@@ -2,6 +2,7 @@ import { useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
+import { formatIsoDate } from '@/shared/lib'
 import {
   getNotice,
   isNoticeNotFoundError,
@@ -96,7 +97,7 @@ export function NoticeDetailPage() {
           </MetaItem>
           <MetaItem>
             <MetaLabel>날짜</MetaLabel>
-            <MetaDate>{notice.date}</MetaDate>
+            <MetaDate>{formatIsoDate(notice.date)}</MetaDate>
           </MetaItem>
         </MetaCard>
 
@@ -330,5 +331,4 @@ const StateLink = styled(Link)`
   color: ${({ theme }) => theme.colors.surface};
   font-size: 18px;
   text-decoration: none;
-
 `

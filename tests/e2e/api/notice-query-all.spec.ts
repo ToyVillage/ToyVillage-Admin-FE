@@ -28,7 +28,7 @@ test('S1: page=1, size=10으로 조회하고 목록을 표시한다', async ({ p
   await expect(page.getByTestId('notice-row')).toHaveCount(1)
   await expect(page.getByTestId('notice-row')).toContainText('API 연동 공지')
   await expect(page.getByTestId('notice-row')).toContainText('공지사항 분류')
-  await expect(page.getByTestId('notice-row')).toContainText('2026-07-27')
+  await expect(page.getByTestId('notice-row')).toContainText('2026.07.27')
   expect(requestURLs).toHaveLength(1)
 
   const requestURL = new URL(requestURLs[0])

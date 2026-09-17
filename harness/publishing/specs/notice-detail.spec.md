@@ -46,7 +46,7 @@ paths: src/pages/notices/notice/NoticeDetailPage.tsx, src/entities/notice
 ## 동작
 
 - 파일 chip의 다운로드 control 클릭 → 해당 첨부를 내려받는다(`shared/ui/fileAttachment`의 `downloadStoredFile` 재사용).
-- 날짜는 목록 행과 같은 값(서버 응답 날짜)을 그대로 표시한다.
+- 날짜는 목록 행과 같은 값(서버 응답 날짜)을 `YYYY.MM.DD` 로 표시한다(2026-09-17 yot `219:11825` 반영).
 
 ## 접근성
 

@@ -17,7 +17,7 @@ test('S1: route ID로 상세 조회하고 읽기 전용 상세에 표시한다',
     page.getByText('API에서 조회한 공지사항 내용입니다.'),
   ).toBeVisible()
   await expect(page.getByText('공지사항 분류', { exact: true })).toBeVisible()
-  await expect(page.getByText('2026-07-28')).toBeVisible()
+  await expect(page.getByText('2026.07.28')).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'notice.pdf 다운로드' }),
   ).toBeVisible()

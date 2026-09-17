@@ -73,7 +73,7 @@ export const DateField = forwardRef<HTMLInputElement, DateFieldProps>(
 
 function formatDate(value: string) {
   const [year, month, day] = value.split('-')
-  return `${year}. ${month}. ${day}`
+  return `${year}.${month}.${day}`
 }
 
 const Card = styled.div`

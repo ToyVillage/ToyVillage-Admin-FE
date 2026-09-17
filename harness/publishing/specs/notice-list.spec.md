@@ -42,6 +42,7 @@ paths: src/pages/notices/notice, src/features/create-notice, src/entities/notice
 - `NoticeListPage` (pages/notice) — 헤더 + 탭 + 테이블 조합
 - `CreateNoticeButton` (features/create-notice) — `/notices/list/create`로 이동하는 버튼
 - `NoticeTable` (entities/notice) — rows: `{ id, category, title, date }[]`
+  - 날짜 열은 서버 날짜를 `YYYY.MM.DD` 로 표시한다(2026-09-17 yot `1:2721` 반영).
 - `CategoryTabs` — `categories: string[]`, `active`, `onSelect`
 
 ## 비고
