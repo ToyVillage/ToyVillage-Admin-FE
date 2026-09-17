@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { uploadFile } from '@/entities/file'
 import {
   createNotice,
@@ -8,12 +8,8 @@ import {
   type UpdateNoticeInput,
   updateNotice,
 } from '@/entities/notice'
-import {
-  AttachmentField,
-  RemoveIconButton,
-  ValidationDialog,
-} from '@/shared/ui'
-import { TeamAddDialog } from './TeamAddDialog'
+import { getTeams } from '@/entities/team'
+import { AttachmentField, ValidationDialog } from '@/shared/ui'
 
 type FieldName = 'title' | 'content'
 
@@ -37,7 +33,6 @@ export function NoticeForm({
 }: NoticeFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
-  const teamAddButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
   const initialCategory = initialNotice?.category ?? defaultCategory
@@ -47,13 +42,17 @@ export function NoticeForm({
   )
   // 저장소 키까지 온 첨부만 파일 서버에서 원본을 받는다. mock 첨부는 이름뿐이다.
   const initialAttachmentFiles = initialNotice?.attachmentFiles
-  const formInitialCategories = useMemo(
-    () => [initialCategory],
-    [initialCategory],
-  )
+  // 팀 설정과 같은 캐시를 쓴다. 분류는 `전체` 와 팀 조회 API 가 준 팀 중에서만 고른다.
+  const teamsQuery = useQuery({
+    queryKey: ['teams', 'list'],
+    queryFn: getTeams,
+  })
+  const categories = useMemo(() => {
+    const teamNames = teamsQuery.data?.map((team) => team.name) ?? []
+    // 수정 화면의 기존 분류가 팀 목록에 없더라도 선택 상태는 보여준다.
+    return [...new Set([defaultCategory, initialCategory, ...teamNames])]
+  }, [initialCategory, teamsQuery.data])
   const [category, setCategory] = useState(initialCategory)
-  const [categories, setCategories] = useState(formInitialCategories)
-  const [teamDialogOpen, setTeamDialogOpen] = useState(false)
   const [title, setTitle] = useState(initialNotice?.title ?? '')
   const [content, setContent] = useState(initialNotice?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
@@ -91,14 +90,10 @@ export function NoticeForm({
   const isEditing = Boolean(initialNotice)
 
   useEffect(() => {
-    const categoriesChanged =
-      categories.length !== formInitialCategories.length ||
-      categories.some((item, index) => item !== formInitialCategories[index])
     const isDirty = Boolean(
       title !== (initialNotice?.title ?? '') ||
       content !== (initialNotice?.content ?? '') ||
       category !== initialCategory ||
-      categoriesChanged ||
       (isEditing
         ? !sameStringArray(attachmentNames, initialAttachmentNames)
         : hasAttachments),
@@ -108,7 +103,6 @@ export function NoticeForm({
   }, [
     attachmentNames,
     category,
-    categories,
     content,
     hasAttachments,
     initialAttachmentNames,
@@ -116,7 +110,6 @@ export function NoticeForm({
     initialNotice,
     isEditing,
     onDirtyChange,
-    formInitialCategories,
     title,
   ])
 
@@ -199,39 +192,22 @@ export function NoticeForm({
                 />
                 <CategoryPill>{categoryDisplayName(option)}</CategoryPill>
               </CategorySelectLabel>
-              {option !== '전체' && (
-                <CategoryRemove
-                  type="button"
-                  aria-label={`${categoryDisplayName(option)} 삭제`}
-                  onClick={() => {
-                    const nextCategories = categories.filter(
-                      (item) => item !== option,
-                    )
-                    const normalizedCategories =
-                      nextCategories.length > 0
-                        ? nextCategories
-                        : [defaultCategory]
-
-                    setCategories(normalizedCategories)
-                    if (category === option) {
-                      setCategory(normalizedCategories[0])
-                    }
-                  }}
-                />
-              )}
             </CategoryOption>
           ))}
-          <TeamAddButton
-            ref={teamAddButtonRef}
-            type="button"
-            onClick={() => setTeamDialogOpen(true)}
-          >
-            <PlusIcon viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </PlusIcon>
-            팀 추가
-          </TeamAddButton>
         </CategoryOptions>
+        {teamsQuery.isPending && (
+          <CategoryStatus role="status">
+            팀 목록을 불러오는 중입니다.
+          </CategoryStatus>
+        )}
+        {teamsQuery.isError && (
+          <CategoryStatus role="status">
+            팀 목록을 불러오지 못했습니다.
+            <RetryButton type="button" onClick={() => teamsQuery.refetch()}>
+              다시 시도
+            </RetryButton>
+          </CategoryStatus>
+        )}
       </CategoryCard>
 
       <ContentCard>
@@ -285,28 +261,6 @@ export function NoticeForm({
         <ValidationDialog
           message={validationMessages[validationError]}
           onConfirm={handleConfirm}
-        />
-      )}
-
-      {teamDialogOpen && (
-        <TeamAddDialog
-          onCancel={() => {
-            setTeamDialogOpen(false)
-            requestAnimationFrame(() => teamAddButtonRef.current?.focus())
-          }}
-          onAdd={(teamName) => {
-            setCategories((current) => {
-              const teamCategories = current.filter(
-                (item) => item !== defaultCategory,
-              )
-              return teamCategories.includes(teamName)
-                ? teamCategories
-                : [...teamCategories, teamName]
-            })
-            setCategory(teamName)
-            setTeamDialogOpen(false)
-            requestAnimationFrame(() => teamAddButtonRef.current?.focus())
-          }}
         />
       )}
     </Form>
@@ -492,6 +446,13 @@ const CategoryRadio = styled.input`
   height: 100%;
   margin: 0;
   opacity: 0;
+  cursor: pointer;
+
+  // 자원 폼 분류 pill 과 같은 선택 표시다.
+  &:checked + span {
+    background: ${({ theme }) => theme.colors.textStrong};
+    color: ${({ theme }) => theme.colors.surface};
+  }
 
   &:focus-visible + span {
     outline: 2px solid ${({ theme }) => theme.colors.textGuide};
@@ -520,62 +481,34 @@ const CategoryPill = styled.span`
     color: #434343;
     font-size: 22px;
   }
-`
 
-const CategoryRemove = styled(RemoveIconButton)`
-  z-index: 2;
-  margin-right: 18px;
-
-  form & {
-    width: 24px;
-    height: 24px;
-    margin: 0 20px 0 -12px;
-
-    svg {
-      width: 20px;
-      height: 20px;
-    }
+  form input:checked + & {
+    color: ${({ theme }) => theme.colors.surface};
   }
 `
 
-const TeamAddButton = styled.button`
-  min-height: 44px;
-  padding: 8px 18px;
-  border: 1px solid ${({ theme }) => theme.colors.textGuide};
-  border-radius: 999px;
-  background: ${({ theme }) => theme.colors.surface};
+const CategoryStatus = styled.p`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 0;
   color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 18px;
+`
+
+const RetryButton = styled.button`
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
   font: inherit;
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.2;
+  text-decoration: underline;
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.textGuide};
     outline-offset: 3px;
   }
-
-  form & {
-    display: inline-flex;
-    height: 46px;
-    min-height: 0;
-    align-items: center;
-    gap: 4px;
-    padding: 0 16px;
-    border-radius: 42px;
-    background: transparent;
-    font-size: 22px;
-  }
-`
-
-const PlusIcon = styled.svg`
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-width: 2;
 `
 
 const ContentCard = styled(FieldCard)`

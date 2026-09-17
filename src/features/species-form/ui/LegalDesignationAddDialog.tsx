@@ -14,7 +14,7 @@ interface LegalDesignationAddDialogProps {
 }
 
 // Figma `species new (add legal)` 모달(959:26348). 구조·포커스 트랩·inert 처리는
-// `TeamAddDialog` 를 따른다. 닫힌 뒤 포커스 복귀는 호출부(`+ 법정분류 추가`)가 맡는다.
+// 팀 설정 `AddTeamDialog` 와 같다. 닫힌 뒤 포커스 복귀는 호출부(`+ 법정분류 추가`)가 맡는다.
 export function LegalDesignationAddDialog({
   existingNames,
   pending,

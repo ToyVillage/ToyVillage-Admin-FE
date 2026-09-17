@@ -1,9 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mockNoticeApi } from './support/notice-api'
+import { mockTeamList, teamListPattern } from './support/team-api'
 
 const noticeApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
+  await mockTeamList(page)
   await page.goto('/notices/list/create')
 })
 
@@ -14,7 +16,7 @@ test('S2: 생성 폼 표시', async ({ page }) => {
   await expect(page.getByRole('group', { name: /분류/ })).toBeVisible()
   await expect(page.getByLabel(/내용/)).toBeVisible()
   await expect(page.getByRole('radio', { name: '전체' })).toBeChecked()
-  await expect(page.getByRole('radio')).toHaveCount(1)
+  await expect(page.getByRole('radio')).toHaveCount(3)
   await expect(attachmentGroup(page)).toBeVisible()
   await expect(page.getByTestId('notice-attachment-card')).toHaveText(
     '첨부자료',
@@ -230,12 +232,12 @@ test('S9: API 저장 실패 시 입력을 보존하고 다시 제출할 수 있�
 }) => {
   await mockFailedNoticeCreate(page)
 
-  await addTeam(page, '팀 이름1')
+  await page.getByRole('radio', { name: '창고팀' }).check()
   await fillValidNotice(page, '보존할 공지')
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/list\/create$/)
-  await expect(page.getByRole('radio', { name: /팀 이름1/ })).toBeChecked()
+  await expect(page.getByRole('radio', { name: '창고팀' })).toBeChecked()
   await expect(page.getByLabel(/제목/)).toHaveValue('보존할 공지')
   await expect(page.getByLabel(/내용/)).toHaveValue('공지 내용입니다.')
   await expect(
@@ -254,8 +256,6 @@ test('S10: 키보드 순서와 오류 포커스 이동', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(page.getByRole('radio', { name: '전체' })).toBeFocused()
   await page.keyboard.press('Tab')
-  await expect(page.getByRole('button', { name: '팀 추가' })).toBeFocused()
-  await page.keyboard.press('Tab')
   await expect(page.getByLabel(/내용/)).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(uploadControl(page)).toBeFocused()
@@ -267,108 +267,53 @@ test('S10: 키보드 순서와 오류 포커스 이동', async ({ page }) => {
   await expect(page.getByLabel(/제목/)).toBeFocused()
 })
 
-test('팀을 선택해도 핑크로 강조하지 않는다', async ({ page }) => {
-  await addTeam(page, '팀 이름1')
-  const team = page.getByRole('radio', { name: '팀 이름1' })
+test('선택한 팀은 진하게 표시하고 핑크로 강조하지 않는다', async ({ page }) => {
+  const team = page.getByRole('radio', { name: '동물 관리팀' })
+  await team.check()
 
   await expect(team).toBeChecked()
+  await expect(team.locator('+ span')).toHaveCSS('color', 'rgb(255, 255, 255)')
   await expect(team.locator('..').locator('..')).toHaveCSS(
     'background-color',
     'rgb(245, 245, 247)',
   )
 })
 
-test('선택한 팀을 삭제하면 전체 분류로 돌아간다', async ({ page }) => {
-  const getCreateRequestCount = await mockSuccessfulNoticeCreate(
-    page,
-    '제목 입력',
-  )
-  await page.getByLabel(/제목/).fill('제목 입력')
-  await page.getByLabel(/내용/).fill('공지 내용')
-  await addTeam(page, '팀 이름1')
-
-  const removeButton = page.getByRole('button', { name: '팀 이름1 삭제' })
-  await removeButton.locator('..').hover()
-  await removeButton.click()
-
-  await expect(page.getByRole('radio', { name: '팀 이름1' })).toHaveCount(0)
-  await expect(page.getByRole('radio', { name: '전체' })).toBeChecked()
-  await page.getByRole('button', { name: '생성하기' }).click()
-  await expect(page).toHaveURL(/\/notices\/list$/)
-  await expect(page.getByText('제목 입력')).toHaveCount(1)
-  expect(getCreateRequestCount()).toBe(1)
-})
-
-test('팀 추가 버튼을 누르면 팀 이름 입력 모달을 표시하고 취소할 수 있다', async ({
+test('팀 조회 API의 팀만 분류로 표시하고 팀을 추가·삭제할 수 없다', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1651, height: 1248 })
-  const addButton = page.getByRole('button', { name: '팀 추가' })
-  await addButton.click()
+  await expect(
+    page.getByRole('radio', { name: '동물 관리팀' }),
+  ).not.toBeChecked()
+  await expect(page.getByRole('radio', { name: '창고팀' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '팀 추가' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /팀 삭제$/ })).toHaveCount(0)
 
-  const dialog = page.getByRole('dialog', { name: '팀 추가하기' })
-  const teamNameInput = dialog.getByRole('textbox', { name: '팀 이름' })
-  await expect(dialog).toBeVisible()
-  await expect(dialog).toHaveCSS('width', '600px')
-  await expect(dialog).toHaveCSS('min-height', '370px')
-  await expect(dialog).toBeFocused()
-  await expect(dialog).toHaveCSS('outline-style', 'none')
-  await expect(teamNameInput).not.toBeFocused()
-  await teamNameInput.focus()
-  await expect(teamNameInput).toHaveCSS('outline-style', 'none')
-  await expect(dialog.getByRole('button', { name: '취소' })).toBeVisible()
-  await expect(dialog.getByRole('button', { name: '다음' })).toBeVisible()
-
-  if (process.env.CAPTURE_VISUAL_ARTIFACT === '1') {
-    await page.screenshot({
-      path: '.omx/artifacts/visual-ralph/team-add-dialog/actual.png',
-    })
-  }
-
-  await dialog.getByRole('button', { name: '취소' }).click()
-
-  await expect(dialog).toBeHidden()
-  await expect(addButton).toBeFocused()
+  await page.getByRole('radio', { name: '창고팀' }).check()
+  await expect(page.getByRole('radio', { name: '전체' })).not.toBeChecked()
+  await page.getByRole('radio', { name: '전체' }).check()
+  await expect(page.getByRole('radio', { name: '창고팀' })).not.toBeChecked()
 })
 
-test('모달에 입력한 이름으로 팀을 추가한다', async ({ page }) => {
-  await page.getByRole('button', { name: '팀 추가' }).click()
-  const dialog = page.getByRole('dialog', { name: '팀 추가하기' })
-  await dialog.getByRole('textbox', { name: '팀 이름' }).fill('새 팀')
-  await dialog.getByRole('button', { name: '다음' }).click()
-
-  await expect(page.getByRole('dialog', { name: '팀 추가하기' })).toBeHidden()
-  await expect(page.getByRole('radio', { name: '새 팀' })).toBeChecked()
-  await expect(page.getByRole('button', { name: '새 팀 삭제' })).toBeVisible()
-})
-
-test('팀을 처음 추가하면 전체가 사라지고 팀을 여러 번 추가할 수 있다', async ({
+test('팀 목록 조회에 실패하면 전체만 두고 다시 시도할 수 있다', async ({
   page,
 }) => {
-  await addTeam(page, '기획팀')
+  let failed = true
+  await page.route(teamListPattern, async (route) => {
+    if (!failed) return route.fallback()
+    await route.fulfill({ status: 500, json: { message: 'error' } })
+  })
+  await page.reload()
 
-  await expect(page.getByRole('radio', { name: '전체' })).toHaveCount(0)
-  await expect(page.getByRole('radio', { name: '기획팀' })).toBeChecked()
+  await expect(page.getByText('팀 목록을 불러오지 못했습니다.')).toBeVisible({
+    timeout: 15_000,
+  })
+  await expect(page.getByRole('radio')).toHaveCount(1)
 
-  await addTeam(page, '운영팀')
-
-  await expect(page.getByRole('radio', { name: '전체' })).toHaveCount(0)
-  await expect(page.getByRole('radio', { name: '기획팀' })).toBeVisible()
-  await expect(page.getByRole('radio', { name: '운영팀' })).toBeChecked()
-  await expect(page.getByRole('button', { name: '팀 추가' })).toBeVisible()
-})
-
-test('여러 팀 중 선택한 팀을 삭제하면 남은 팀을 선택한다', async ({ page }) => {
-  await addTeam(page, '기획팀')
-  await addTeam(page, '운영팀')
-
-  const removeButton = page.getByRole('button', { name: '운영팀 삭제' })
-  await removeButton.locator('..').hover()
-  await removeButton.click()
-
-  await expect(page.getByRole('radio', { name: '운영팀' })).toHaveCount(0)
-  await expect(page.getByRole('radio', { name: '기획팀' })).toBeChecked()
-  await expect(page.getByRole('radio', { name: '전체' })).toHaveCount(0)
+  failed = false
+  await page.getByRole('button', { name: '다시 시도' }).click()
+  await expect(page.getByRole('radio', { name: '창고팀' })).toBeVisible()
+  await expect(page.getByText('팀 목록을 불러오지 못했습니다.')).toHaveCount(0)
 })
 
 test('S11: 첨부파일 영역은 첨부자료 카드와 업로드 dropzone을 표시한다', async ({
@@ -396,7 +341,7 @@ test('S11: 첨부파일 영역은 첨부자료 카드와 업로드 dropzone을 �
   expect(emptyCardBounds!.y).toBeLessThan(uploadBounds!.y)
 })
 
-test('S12: 분류와 첨부파일 삭제 control은 항상 표시한다', async ({ page }) => {
+test('S12: 첨부파일 삭제 control은 항상 표시한다', async ({ page }) => {
   await uploadInput(page).setInputFiles([
     filePayload('운영 안내.pdf', 'application/pdf'),
     filePayload('행사 이미지.png', 'image/png'),
@@ -404,21 +349,17 @@ test('S12: 분류와 첨부파일 삭제 control은 항상 표시한다', async 
 
   await expect(attachmentGroup(page).getByText('운영 안내.pdf')).toBeVisible()
   await expect(attachmentGroup(page).getByText('행사 이미지.png')).toBeVisible()
-  await addTeam(page, '팀 이름1')
-  const categoryRemove = page.getByRole('button', { name: '팀 이름1 삭제' })
-  const attachmentRemove = page.getByRole('button', {
+  const removeButton = page.getByRole('button', {
     name: '운영 안내.pdf 삭제',
   })
 
-  for (const removeButton of [categoryRemove, attachmentRemove]) {
-    await expect(removeButton).toBeVisible()
-    await expect(removeButton).toHaveCSS('opacity', '1')
-    await expect(removeButton).toHaveCSS('color', 'rgb(132, 132, 145)')
-    await expect(removeButton).toHaveCSS('border-style', 'none')
+  await expect(removeButton).toBeVisible()
+  await expect(removeButton).toHaveCSS('opacity', '1')
+  await expect(removeButton).toHaveCSS('color', 'rgb(132, 132, 145)')
+  await expect(removeButton).toHaveCSS('border-style', 'none')
 
-    await removeButton.hover()
-    await expect(removeButton).toHaveCSS('color', 'rgb(255, 49, 49)')
-  }
+  await removeButton.hover()
+  await expect(removeButton).toHaveCSS('color', 'rgb(255, 49, 49)')
 })
 
 test('용량 초과 파일만 제외하고 함께 선택한 정상 파일은 첨부한다', async ({
@@ -474,13 +415,6 @@ test('S13: 첨부 파일을 제거하면 첨부자료 라벨만 남은 카드로
 async function fillValidNotice(page: Page, title: string) {
   await page.getByLabel(/제목/).fill(title)
   await page.getByLabel(/내용/).fill('공지 내용입니다.')
-}
-
-async function addTeam(page: Page, teamName: string) {
-  await page.getByRole('button', { name: '팀 추가' }).click()
-  const dialog = page.getByRole('dialog', { name: '팀 추가하기' })
-  await dialog.getByRole('textbox', { name: '팀 이름' }).fill(teamName)
-  await dialog.getByRole('button', { name: '다음' }).click()
 }
 
 function attachmentGroup(page: Page) {
