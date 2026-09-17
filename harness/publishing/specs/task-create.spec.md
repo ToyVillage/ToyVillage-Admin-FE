@@ -170,9 +170,10 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
      값 22px Medium + 캘린더 아이콘 28px 우측.
 4. `title section`(1320×164 @y=226): 단독 카드. 라벨 `제목 *` 20px Medium(별표는 `colors.danger`)
    @40,40(높이 26), 입력 32px SemiBold @40,76(높이 48, placeholder `colors.textGuide`).
-5. `body text section`(1320×137 @y=422): 단독 카드. 라벨 `상세 업무 내용 *` 20px Medium @40,40,
-   입력 20px Medium @40,76(placeholder `colors.textGuide`).
-   Figma 는 한 줄 높이지만 입력이 길어지면 카드가 함께 늘어난다(아래 결정 사항).
+5. `body text section`(1320×276): 단독 카드. 라벨 `상세 업무 내용 *` 20px Medium @40,40,
+   입력은 회색 박스(`colors.background`, radius 8, padding 20/24, 최소 높이 160) 안에 20px Medium(placeholder `colors.textGuide`).
+   (2026-09-17 yot `task / 업무 폼` 반영 — 공지 작성 본문 박스와 같다.)
+   입력이 최소 높이를 넘으면 박스와 카드가 함께 늘어난다(아래 결정 사항).
 6. `assignee section`(1320×가변 @y=591, 기본 5행): 라벨 `담당자를 선택해주세요` 20px Medium @40,40(높이 26).
    행 영역 @40,98 폭 1240.
    - 행 높이 56px, **pitch 72px**.
