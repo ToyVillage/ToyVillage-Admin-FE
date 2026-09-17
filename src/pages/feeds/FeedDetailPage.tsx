@@ -52,8 +52,9 @@ export function FeedDetailPage() {
   // 404(없는 기록)만 목록으로 되돌린다. 500·네트워크 실패까지 되돌리면
   // 조회 실패가 '없는 기록'으로 오인된다.
   if (!isPending && !feed) {
+    // 목록에서 넘어왔다면 그때의 조회 조건으로 되돌린다(뒤로가기와 같은 곳).
     if (isFeedNotFoundError(error)) {
-      return <Navigate to={listPath} replace />
+      return <Navigate to={backPath} replace />
     }
     return (
       <StatePage>
