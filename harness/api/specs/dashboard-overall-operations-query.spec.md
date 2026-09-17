@@ -1,0 +1,87 @@
+---
+feature: dashboard-overall-operations-query
+api_id: DASHBOARD_OVERALL_OPERATIONS_QUERY
+target_page: src/pages/dashboard/DashboardPage.tsx
+notion_page: https://app.notion.com/p/69f7a4d6147483a7a0af016398c9189d
+requires_functional_test: true
+real_server:
+  enabled: false
+  environment: none
+  base_url:
+  allowed_methods: []
+---
+
+# 목적
+
+대시보드 `전체 업무` 도넛을 이번 주 업무지시 상태별 건수(`GET /dashboard/overall-operations`)로 표시한다.
+
+# 대상 페이지 또는 컴포넌트
+
+- `src/pages/dashboard/DashboardPage.tsx`
+- `src/features/dashboard` (api·model)
+- `src/features/dashboard/ui` (행 링크)
+- `src/pages/species/ObservationRedirectPage.tsx` (신규), `src/app/App.tsx` (경로 추가)
+
+# 연동할 API
+
+- API ID: `DASHBOARD_OVERALL_OPERATIONS_QUERY`
+- Notion 데이터베이스 `API 명세서 토이빌리지`
+  (`https://app.notion.com/p/3de7a4d6147480e18466e66547493b25`,
+  `collection://9717a4d6-1474-822a-8703-074d4cfad636`, 2026-09-17 개발자가 새로 옮긴 DB)에서
+  API ID exact match로 식별한 단일 상세 페이지를 기준으로 한다.
+- staging Swagger(`dash-board-controller`)의 Method·Path·응답 필드와 일치함을 확인했다.
+
+# 기대 성공 동작
+
+- 진입 시 `GET /dashboard/overall-operations`를 1회 호출한다.
+- `COMPLETED`·`IN_PROGRESS`·`EXPIRED`를 도넛 세그먼트·범례에 쓴다.
+- 도넛 합계는 기존처럼 세 상태의 합으로 그린다. 명세상 `TOTAL`과 같으므로 `TOTAL`은 형식 검증만 한다.
+
+# 대시보드 공통 동작 (4개 dashboard spec 공통)
+
+- 대시보드 mock(localStorage `toyvillage:dashboard*`)을 제거하고 7개 조회를 각각 `useQuery`로 호출한다.
+  - dashboard API 4개: `DASHBOARD_COUNT_QUERY`, `DASHBOARD_OVERALL_OPERATIONS_QUERY`, `DASHBOARD_FEED_LOG_QUERY_ALL`, `DASHBOARD_ANIMAL_OBSERVATION_QUERY_ALL`
+  - 기존 승인 API 재사용 3개(개발자 결정, 2026-09-17):
+    - 휴관일 관리 — `CLOSE_DAT_QUERY_ALL`(`getCloseSchedules`) 결과에서 이번 달만 표시(기존 로직)
+    - 업무보고 — `APP_WORK_REPORT_QUERY_ALL`(`getTaskReports`) `page=1&size=3`, `status` 없이 조회. 제목은 응답 `reports[].title`
+    - 업무일지관리 — `WORK_LOG_QUERY_ALL`(`getWorkLogs`) `date=오늘&page=0&size=3`
+- 로딩·오류 표시는 퍼블리싱 동작을 유지한다. 7개 중 하나라도 최초 로딩 중이면 `대시보드를 불러오는 중입니다.`, 하나라도 실패하면 `대시보드를 불러오지 못했습니다.`
+- 카드 이동 링크, 레이아웃, 빈 상태 문구는 바꾸지 않는다.
+
+# 기대 오류 동작
+
+- 400/403/405/500/네트워크 실패/응답 형식 오류는 mock이나 빈 값으로 숨기지 않고 대시보드 오류 상태를 표시한다.
+- 401은 공통 인터셉터(재발급 1회 후 재시도)를 따른다.
+
+# 캐시 갱신 기대
+
+- query key: `['dashboard', '<section>']` (`dashboardQueryKeys`). 재사용 API도 대시보드 전용 key를 써서 각 목록 화면 캐시와 섞지 않는다.
+- 다른 화면의 등록·수정·삭제에서 대시보드 invalidate는 하지 않는다(화면 진입 시 재조회).
+
+# 페이지 이동 또는 사용자 알림
+
+- 행 클릭 시 상세로 이동한다(개발자 결정, 2026-09-17). 행 링크는 카드 전체 링크(`자세히 보기`)보다 위에 놓인다.
+  - 휴관일 관리 행 → `/notices/guide/{id}` (`CLOSE_DAT_QUERY_ALL` `id`)
+  - 업무보고 행 → `/task-reports/{id}` (`APP_WORK_REPORT_QUERY_ALL` `reports[].id`)
+  - 업무일지관리 행 → `/work-logs/{id}` (`WORK_LOG_QUERY_ALL` `content[].workLogId`)
+  - 먹이 급여 관리 행 → `/feeds/{feedLogId}` (`DASHBOARD_FEED_LOG_QUERY_ALL` `content[].feedLogId`)
+  - 개체관리 행 → `/individuals/{animalId}/observations/{animalObservationId}`
+    (`DASHBOARD_ANIMAL_OBSERVATION_QUERY_ALL` `content[].animalId`·`animalObservationId`)
+- 대시보드 관찰 응답에는 종 ID가 없고 관찰 상세 화면 경로는 `/species/:speciesId/individuals/:individualId/observations/:observationId`다.
+  종 ID 없는 경로 `/individuals/:individualId/observations/:observationId`를 추가하고, 이 화면이 기존 승인 API
+  `ANIMAL_MANAGE_QUERY`(`getIndividual`)로 개체의 `animalKindId`를 얻어 관찰 상세로 `replace` 이동한다(개발자 결정, 2026-09-17).
+  - 조회 중: `관찰 기록을 불러오는 중입니다.` / 404: `관찰 기록을 찾을 수 없습니다.` / 그 외 실패: `관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요.`
+  - `individualId`·`observationId`가 양의 정수가 아니면 요청하지 않고 찾을 수 없음 상태를 표시한다.
+- 먹이 급여·관찰 id(`feedLogId`·`animalObservationId`·`animalId`)는 Notion 명세에 아직 없다. 백엔드 PR #172와 develop `1247f43`,
+  staging Swagger를 근거로 계약에 추가했다(개발자 결정: Notion 반영 전 진행).
+- 디자인에 없는 토스트를 만들지 않는다.
+
+# 비고 및 제약
+
+- 네 dashboard spec은 같은 파일을 공유하므로 모두 승인된 뒤 함께 구현한다.
+- 퍼블리싱 동결 테스트 `tests/e2e/dashboard.spec.ts`는 localStorage mock 기반이라 `page.route()` 가짜 서버 기반으로 전환한다(S1–S12 기대값 유지, 선례 `ede2088`).
+- 실제 서버 테스트는 비활성화한다.
+
+# 확인이 필요한 명세 항목
+
+1. 필드별 required·nullable 표기가 없다. 200 예시 근거로 required·non-null로 기록했다.

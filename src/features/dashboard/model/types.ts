@@ -1,5 +1,4 @@
 import type { TaskStatus } from '@/entities/task'
-import type { TaskReportReviewStatus } from '@/entities/task-report'
 
 export interface DashboardKpi {
   feeds: number
@@ -23,35 +22,14 @@ export interface DashboardFeed {
   id: string
   species: string
   animalName: string
-  /** YYYY-MM-DDTHH:mm */
+  /** YYYY-MM-DDTHH:mm[:ss] */
   fedAt: string
 }
 
 export interface DashboardObservation {
   id: string
+  individualId: string
   content: string
-  /** YYYY-MM-DDTHH:mm */
+  /** YYYY-MM-DDTHH:mm[:ss] */
   recordedAt: string
-}
-
-export interface DashboardTaskReport {
-  id: string
-  title: string
-  reviewStatus: TaskReportReviewStatus
-}
-
-export interface DashboardWorkLog {
-  id: string
-  formName: string
-  authorName: string
-}
-
-export interface DashboardSummary {
-  kpi: DashboardKpi
-  closeSchedules: DashboardCloseSchedule[]
-  taskStatusCounts: DashboardTaskStatusCounts
-  feeds: DashboardFeed[]
-  observations: DashboardObservation[]
-  taskReports: DashboardTaskReport[]
-  workLogs: DashboardWorkLog[]
 }

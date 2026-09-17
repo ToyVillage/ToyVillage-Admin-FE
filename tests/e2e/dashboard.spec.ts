@@ -1,8 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
+import {
+  mockDashboardApi,
+  type DashboardApiOptions,
+} from './support/dashboard-api'
 
 // 승인된 시나리오(dashboard.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 대시보드 mock 은 localStorage 제어 키(`toyvillage:dashboard`, `:fail`, `:delay`)를 쓴다.
+// 대시보드 조회는 page.route() 가짜 서버(`support/dashboard-api`)로 막는다(API 연동 #107).
 
 const NOW = new Date('2026-09-03T12:30:00')
 
@@ -10,12 +14,9 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(NOW)
 })
 
-async function seed(page: Page, entries: Record<string, string>) {
-  await page.addInitScript((values) => {
-    for (const [key, value] of Object.entries(values)) {
-      localStorage.setItem(key, value)
-    }
-  }, entries)
+async function open(page: Page, options?: DashboardApiOptions) {
+  await mockDashboardApi(page, options)
+  await page.goto('/')
 }
 
 const section = (page: Page, title: string) =>
@@ -38,7 +39,7 @@ const sections = [
 ]
 
 test('S1: 대시보드 기본 렌더', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
 
   await expect(
     page.getByRole('heading', { level: 1, name: '대시보드' }),
@@ -54,13 +55,13 @@ test('S1: 대시보드 기본 렌더', async ({ page }) => {
 })
 
 test('S2: 이번주 chip', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
   await expect(page.getByText('이번주 · 2026.08.30 ~ 09.05')).toBeVisible()
 })
 
 for (const { label, value, url } of kpiCards) {
   test(`S3: KPI 카드 이동 — ${label}`, async ({ page }) => {
-    await page.goto('/')
+    await open(page)
     await page
       .getByRole('link', { name: `${value} ${label}`, exact: true })
       .click()
@@ -70,7 +71,7 @@ for (const { label, value, url } of kpiCards) {
 
 for (const { title, url } of sections) {
   test(`S4: 섹션 카드 이동 — ${title}`, async ({ page }) => {
-    await page.goto('/')
+    await open(page)
     await page
       .getByRole('link', { name: `${title} 자세히 보기`, exact: true })
       .click()
@@ -79,7 +80,7 @@ for (const { title, url } of sections) {
 }
 
 test('S5: 키보드로 카드 이동', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
   const card = page.getByRole('link', {
     name: '12 개체 관리',
     exact: true,
@@ -90,7 +91,7 @@ test('S5: 키보드로 카드 이동', async ({ page }) => {
 })
 
 test('S6: 전체 업무 집계', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
   const card = section(page, '전체 업무')
 
   await expect(
@@ -106,7 +107,7 @@ test('S6: 전체 업무 집계', async ({ page }) => {
 })
 
 test('S7: 휴관일 표시', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
   const card = section(page, '휴관일 관리')
 
   await expect(card.getByRole('table', { name: '2026년 09월' })).toBeVisible()
@@ -128,7 +129,7 @@ test('S7: 휴관일 표시', async ({ page }) => {
 })
 
 test('S8: 최근 목록 카드 내용', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
 
   const feeds = section(page, '먹이 급여 관리').getByRole('listitem')
   await expect(feeds.nth(0)).toContainText('표범 · 레오')
@@ -150,29 +151,26 @@ test('S8: 최근 목록 카드 내용', async ({ page }) => {
 })
 
 test('S9: 로딩', async ({ page }) => {
-  await seed(page, { 'toyvillage:dashboard:delay': '3000' })
-  await page.goto('/')
+  await open(page, { delayMs: { count: 3000 } })
   await expect(page.getByText('대시보드를 불러오는 중입니다.')).toBeVisible()
 })
 
 test('S10: 조회 실패', async ({ page }) => {
-  await seed(page, { 'toyvillage:dashboard:fail': '1' })
-  await page.goto('/')
+  await open(page, { status: { count: 500 } })
   await expect(page.getByText('대시보드를 불러오지 못했습니다.')).toBeVisible()
 })
 
 test('S11: 빈 데이터', async ({ page }) => {
-  await seed(page, {
-    'toyvillage:dashboard': JSON.stringify({
-      closeSchedules: [],
-      taskStatusCounts: { COMPLETED: 0, IN_PROGRESS: 0, EXPIRED: 0 },
-      feeds: [],
-      observations: [],
-      taskReports: [],
+  await open(page, {
+    data: {
+      closeDays: [],
+      overallOperations: { TOTAL: 0, IN_PROGRESS: 0, COMPLETED: 0, EXPIRED: 0 },
+      feedLogs: [],
+      animalObservations: [],
+      workReports: [],
       workLogs: [],
-    }),
+    },
   })
-  await page.goto('/')
 
   for (const text of [
     '이번 달 휴관일이 없습니다.',
@@ -193,12 +191,21 @@ test('S11: 빈 데이터', async ({ page }) => {
 
 test('S12: 긴 텍스트 말줄임', async ({ page }) => {
   const longTitle = '아주 긴 업무보고 제목 '.repeat(12).trim()
-  await seed(page, {
-    'toyvillage:dashboard': JSON.stringify({
-      taskReports: [{ id: 'long', title: longTitle, reviewStatus: 'PENDING' }],
-    }),
+  await open(page, {
+    data: {
+      workReports: [
+        {
+          id: 1,
+          taskId: 101,
+          name: '김수인',
+          title: longTitle,
+          status: 'PENDING',
+          priority: 'MEDIUM',
+          finishDate: '2026-09-10',
+        },
+      ],
+    },
   })
-  await page.goto('/')
 
   const card = section(page, '업무보고')
   const row = card.getByRole('listitem').first()

@@ -51,6 +51,7 @@ import {
   EditSpeciesPage,
   IndividualDetailPage,
   ObservationDetailPage,
+  ObservationRedirectPage,
   SpeciesDetailPage,
   SpeciesListPage,
 } from '@/pages/species'
@@ -165,6 +166,11 @@ const router = createBrowserRouter([
           {
             path: '/species/:speciesId/individuals/:individualId/observations/:observationId/edit',
             element: <EditObservationPage />,
+          },
+          // 종 ID 를 모르는 곳(대시보드)에서 여는 관찰 경로. 개체 조회 후 위 상세 경로로 옮긴다.
+          {
+            path: '/individuals/:individualId/observations/:observationId',
+            element: <ObservationRedirectPage />,
           },
           { path: '/settings/teams', element: <TeamSettingsPage /> },
           {

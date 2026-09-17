@@ -1,6 +1,8 @@
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { TaskReportReviewBadge } from '@/entities/task-report'
+import { getCloseSchedules } from '@/entities/close-schedule'
+import { getTaskReports, TaskReportReviewBadge } from '@/entities/task-report'
+import { getWorkLogs } from '@/entities/work-log'
 import {
   closeSchedulesInMonth,
   dashboardIcons,
@@ -11,25 +13,79 @@ import {
   DashboardWeekChip,
   formatDateTime,
   formatRecentDate,
-  getDashboardSummary,
+  getDashboardCounts,
+  getDashboardFeeds,
+  getDashboardObservations,
+  getDashboardTaskStatusCounts,
   HolidayList,
   HolidayMiniCalendar,
   TaskStatusDonut,
+  toIsoDay,
 } from '@/features/dashboard'
 
 const LIST_LIMIT = 3
+// 대시보드 목록 API 와 업무보고 목록은 page 가 1부터, 업무일지 목록은 0부터다.
+const FIRST_PAGE = 1
+const WORK_LOG_FIRST_PAGE = 0
 
 // Figma `dashboard`(1385:15048).
 export function DashboardPage() {
-  const summaryQuery = useQuery({
-    queryKey: dashboardQueryKeys.summary(),
-    queryFn: getDashboardSummary,
-  })
-
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth() + 1
-  const summary = summaryQuery.data
+  const today = toIsoDay(now)
+
+  const countsQuery = useQuery({
+    queryKey: dashboardQueryKeys.counts(),
+    queryFn: getDashboardCounts,
+  })
+  const taskStatusQuery = useQuery({
+    queryKey: dashboardQueryKeys.taskStatus(),
+    queryFn: getDashboardTaskStatusCounts,
+  })
+  const feedsQuery = useQuery({
+    queryKey: dashboardQueryKeys.feeds(FIRST_PAGE, LIST_LIMIT),
+    queryFn: () => getDashboardFeeds({ page: FIRST_PAGE, size: LIST_LIMIT }),
+  })
+  const observationsQuery = useQuery({
+    queryKey: dashboardQueryKeys.observations(FIRST_PAGE, LIST_LIMIT),
+    queryFn: () =>
+      getDashboardObservations({ page: FIRST_PAGE, size: LIST_LIMIT }),
+  })
+  const closeSchedulesQuery = useQuery({
+    queryKey: dashboardQueryKeys.closeSchedules(),
+    queryFn: getCloseSchedules,
+  })
+  const taskReportsQuery = useQuery({
+    queryKey: dashboardQueryKeys.taskReports(FIRST_PAGE, LIST_LIMIT),
+    queryFn: () => getTaskReports({ page: FIRST_PAGE, size: LIST_LIMIT }),
+  })
+  const workLogsQuery = useQuery({
+    queryKey: dashboardQueryKeys.workLogs(
+      today,
+      WORK_LOG_FIRST_PAGE,
+      LIST_LIMIT,
+    ),
+    queryFn: () =>
+      getWorkLogs({ date: today, page: WORK_LOG_FIRST_PAGE, size: LIST_LIMIT }),
+  })
+
+  const queries = [
+    countsQuery,
+    taskStatusQuery,
+    feedsQuery,
+    observationsQuery,
+    closeSchedulesQuery,
+    taskReportsQuery,
+    workLogsQuery,
+  ]
+  const kpi = countsQuery.data
+  const taskStatusCounts = taskStatusQuery.data
+  const feeds = feedsQuery.data
+  const observations = observationsQuery.data
+  const closeSchedules = closeSchedulesQuery.data
+  const taskReports = taskReportsQuery.data?.items
+  const workLogs = workLogsQuery.data?.items
 
   return (
     <Page>
@@ -41,38 +97,44 @@ export function DashboardPage() {
           </ChipSlot>
         </Header>
 
-        {summaryQuery.isPending ? (
-          <StateMessage role="status">
-            대시보드를 불러오는 중입니다.
-          </StateMessage>
-        ) : summaryQuery.isError || !summary ? (
+        {queries.some((query) => query.isError) ? (
           <StateMessage role="alert">
             대시보드를 불러오지 못했습니다.
+          </StateMessage>
+        ) : !kpi ||
+          !taskStatusCounts ||
+          !feeds ||
+          !observations ||
+          !closeSchedules ||
+          !taskReports ||
+          !workLogs ? (
+          <StateMessage role="status">
+            대시보드를 불러오는 중입니다.
           </StateMessage>
         ) : (
           <>
             <KpiGrid>
               <DashboardKpiCard
                 label="먹이 급여 기록"
-                value={summary.kpi.feeds}
+                value={kpi.feeds}
                 icon={dashboardIcons.kpi.feed}
                 to="/feeds"
               />
               <DashboardKpiCard
                 label="개체 관리"
-                value={summary.kpi.individuals}
+                value={kpi.individuals}
                 icon={dashboardIcons.kpi.animal}
                 to="/species"
               />
               <DashboardKpiCard
                 label="업무보고"
-                value={summary.kpi.taskReports}
+                value={kpi.taskReports}
                 icon={dashboardIcons.kpi.report}
                 to="/task-reports"
               />
               <DashboardKpiCard
                 label="작성된 일지"
-                value={summary.kpi.workLogs}
+                value={kpi.workLogs}
                 icon={dashboardIcons.kpi.workLog}
                 to="/work-logs"
               />
@@ -88,14 +150,17 @@ export function DashboardPage() {
                   <HolidayMiniCalendar
                     year={year}
                     month={month}
-                    schedules={summary.closeSchedules}
+                    schedules={closeSchedules}
                   />
                   <HolidayList
                     schedules={closeSchedulesInMonth(
-                      summary.closeSchedules,
+                      closeSchedules,
                       year,
                       month,
                     ).slice(0, LIST_LIMIT)}
+                    getScheduleHref={(schedule) =>
+                      `/notices/guide/${schedule.id}`
+                    }
                   />
                 </HolidayBody>
               </TallCard>
@@ -104,7 +169,7 @@ export function DashboardPage() {
                 icon={dashboardIcons.title.task}
                 to="/tasks"
               >
-                <TaskStatusDonut counts={summary.taskStatusCounts} />
+                <TaskStatusDonut counts={taskStatusCounts} />
               </TallCard>
             </WideRow>
 
@@ -116,10 +181,11 @@ export function DashboardPage() {
               >
                 <DashboardListRows
                   emptyText="최근 먹이 급여 기록이 없습니다."
-                  rows={summary.feeds.slice(0, LIST_LIMIT).map((feed) => ({
+                  rows={feeds.slice(0, LIST_LIMIT).map((feed) => ({
                     key: feed.id,
                     primary: `${feed.species} · ${feed.animalName}`,
                     secondary: formatDateTime(feed.fedAt),
+                    to: `/feeds/${feed.id}`,
                   }))}
                 />
               </ListCard>
@@ -130,12 +196,14 @@ export function DashboardPage() {
               >
                 <DashboardListRows
                   emptyText="최근 관찰 기록이 없습니다."
-                  rows={summary.observations
+                  rows={observations
                     .slice(0, LIST_LIMIT)
                     .map((observation) => ({
                       key: observation.id,
                       primary: observation.content,
                       secondary: formatRecentDate(observation.recordedAt, now),
+                      // 응답에 종 ID 가 없어 종 ID 없는 경로에서 개체를 조회한 뒤 관찰 상세로 옮긴다.
+                      to: `/individuals/${observation.individualId}/observations/${observation.id}`,
                     }))}
                 />
               </ListCard>
@@ -146,15 +214,14 @@ export function DashboardPage() {
               >
                 <DashboardListRows
                   emptyText="최근 업무보고가 없습니다."
-                  rows={summary.taskReports
-                    .slice(0, LIST_LIMIT)
-                    .map((report) => ({
-                      key: report.id,
-                      primary: report.title,
-                      secondary: (
-                        <TaskReportReviewBadge status={report.reviewStatus} />
-                      ),
-                    }))}
+                  rows={taskReports.slice(0, LIST_LIMIT).map((report) => ({
+                    key: report.id,
+                    to: `/task-reports/${report.id}`,
+                    primary: report.title,
+                    secondary: (
+                      <TaskReportReviewBadge status={report.reviewStatus} />
+                    ),
+                  }))}
                 />
               </ListCard>
               <ListCard
@@ -164,13 +231,12 @@ export function DashboardPage() {
               >
                 <DashboardListRows
                   emptyText="최근 업무일지가 없습니다."
-                  rows={summary.workLogs
-                    .slice(0, LIST_LIMIT)
-                    .map((workLog) => ({
-                      key: workLog.id,
-                      primary: workLog.formName,
-                      secondary: workLog.authorName,
-                    }))}
+                  rows={workLogs.slice(0, LIST_LIMIT).map((workLog) => ({
+                    key: workLog.id,
+                    to: `/work-logs/${workLog.id}`,
+                    primary: workLog.formName,
+                    secondary: workLog.authorName,
+                  }))}
                 />
               </ListCard>
             </HalfRow>

@@ -55,6 +55,7 @@ export async function getTaskReports({
     items: data.reports.map((report) => ({
       id: String(report.id),
       assigneeName: report.name,
+      title: report.title,
       reviewStatus: report.status,
       priority: report.priority,
       dueDate: report.finishDate,

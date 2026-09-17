@@ -1,6 +1,8 @@
 export type {
   DashboardCloseSchedule,
-  DashboardSummary,
+  DashboardFeed,
+  DashboardKpi,
+  DashboardObservation,
   DashboardTaskStatusCounts,
 } from './model/types'
 export { dashboardQueryKeys } from './model/queryKeys'
@@ -8,8 +10,14 @@ export {
   closeSchedulesInMonth,
   formatDateTime,
   formatRecentDate,
+  toIsoDay,
 } from './model/format'
-export { getDashboardSummary } from './api/dashboardApi'
+export {
+  getDashboardCounts,
+  getDashboardFeeds,
+  getDashboardObservations,
+  getDashboardTaskStatusCounts,
+} from './api/dashboardApi'
 export { DashboardKpiCard } from './ui/DashboardKpiCard'
 export { DashboardListRows } from './ui/DashboardListRows'
 export type { DashboardListRow } from './ui/DashboardListRows'
