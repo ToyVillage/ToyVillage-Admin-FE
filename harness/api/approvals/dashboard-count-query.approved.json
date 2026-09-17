@@ -1,0 +1,15 @@
+{
+  "feature": "dashboard-count-query",
+  "apiId": "DASHBOARD_COUNT_QUERY",
+  "approvedAt": "2026-09-17T11:53:07.008Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "3ee8259451b4da7863ca21c42367610ea0b324b5b30c63cce8c45d702cd746e0",
+  "contractHash": "ae4eeb1e65c799f4c74018ee136d1097d26a0cee361f7950aff055c9165df328",
+  "contractMarkdownHash": "54ae2fdd88f4ac609b674fb93b9da94bf3aaf6d9d6d39e5df4eced57e1cbee4d",
+  "planHash": "9f75f375a1fc8fdbfef35e62c04a9a4e80d4742970e7aa1162ff12d41219795a",
+  "scenarioHash": "9e5da0ff1ad7da1b451f4ec40303055b4e741befa9aedc9da78466fcec7914d2",
+  "testHash": "0305a66e263bc7650214f9fd1d727d76cdffa11cc1c623d689727a2586b406fd",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T12:00:30.838Z"
+}
