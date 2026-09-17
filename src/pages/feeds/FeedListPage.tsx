@@ -12,7 +12,12 @@ import {
   type AnimalSpecies,
 } from '@/entities/feed'
 import { CategoryTabs, DateFilter } from '@/shared/ui'
-import { todayCalendarDate, toIsoDate, type CalendarDate } from '@/shared/lib'
+import {
+  daysInMonth,
+  todayCalendarDate,
+  toIsoDate,
+  type CalendarDate,
+} from '@/shared/lib'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 4
@@ -130,11 +135,18 @@ export function FeedListPage() {
   )
 }
 
+// 형식만 보면 `2026-02-31`·`2026-13-01` 같은 없는 날짜가 통과해 서버로 나간다.
+// 실제 달력에 있는 날인지까지 확인하고, 아니면 오늘로 둔다.
 function readIsoDate(params: URLSearchParams): string {
   const value = params.get('date')
-  return value && /^\d{4}-\d{2}-\d{2}$/.test(value)
-    ? value
-    : toIsoDate(todayCalendarDate())
+  return value && isCalendarIsoDate(value) ? value : toIsoDate(todayCalendarDate())
+}
+
+function isCalendarIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+
+  const [year, month, day] = value.split('-').map(Number)
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month)
 }
 
 function toCalendarDate(isoDate: string): CalendarDate {
