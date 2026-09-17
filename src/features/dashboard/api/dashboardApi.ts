@@ -1,4 +1,12 @@
-import type { DashboardSummary } from '../model/types'
+import { taskReportReviewStatuses } from '@/entities/task-report'
+import type {
+  DashboardCloseSchedule,
+  DashboardFeed,
+  DashboardObservation,
+  DashboardSummary,
+  DashboardTaskReport,
+  DashboardWorkLog,
+} from '../model/types'
 
 // 퍼블리싱 단계의 API 교체 경계. 실제 대시보드 API 연동은 `/api` 스킬이 이 함수를 바꾼다.
 // 테스트 제어 키: 데이터 덮어쓰기 / 실패('1') / 지연(ms).
@@ -90,13 +98,92 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
   const stored = readStorage(dashboardStorageKey)
   if (!stored) return mockDashboardSummary
   try {
-    return {
-      ...mockDashboardSummary,
-      ...(JSON.parse(stored) as Partial<DashboardSummary>),
-    }
+    return mergeStoredSummary(JSON.parse(stored))
   } catch {
     return mockDashboardSummary
   }
+}
+
+// 저장된 값은 필드별로 형상을 검사하고, 어긋난 필드는 mock 기본값을 쓴다.
+function mergeStoredSummary(value: unknown): DashboardSummary {
+  if (!isRecord(value)) return mockDashboardSummary
+  const base = mockDashboardSummary
+
+  return {
+    kpi: mergeNumbers(value.kpi, base.kpi),
+    closeSchedules: listOr(
+      value.closeSchedules,
+      isCloseSchedule,
+      base.closeSchedules,
+    ),
+    taskStatusCounts: mergeNumbers(
+      value.taskStatusCounts,
+      base.taskStatusCounts,
+    ),
+    feeds: listOr(value.feeds, isFeed, base.feeds),
+    observations: listOr(value.observations, isObservation, base.observations),
+    taskReports: listOr(value.taskReports, isTaskReport, base.taskReports),
+    workLogs: listOr(value.workLogs, isWorkLog, base.workLogs),
+  }
+}
+
+function mergeNumbers<K extends string>(
+  value: unknown,
+  fallback: Record<K, number>,
+): Record<K, number> {
+  if (!isRecord(value)) return fallback
+  const merged = { ...fallback }
+  for (const key of Object.keys(fallback) as K[]) {
+    const field = value[key]
+    if (typeof field === 'number' && Number.isFinite(field) && field >= 0) {
+      merged[key] = field
+    }
+  }
+  return merged
+}
+
+function listOr<T>(
+  value: unknown,
+  isItem: (item: unknown) => item is T,
+  fallback: T[],
+): T[] {
+  return Array.isArray(value) && value.every(isItem) ? value : fallback
+}
+
+function isCloseSchedule(value: unknown): value is DashboardCloseSchedule {
+  return hasStrings(value, ['id', 'startDate', 'endDate', 'title'])
+}
+
+function isFeed(value: unknown): value is DashboardFeed {
+  return hasStrings(value, ['id', 'species', 'animalName', 'fedAt'])
+}
+
+function isObservation(value: unknown): value is DashboardObservation {
+  return hasStrings(value, ['id', 'content', 'recordedAt'])
+}
+
+function isTaskReport(value: unknown): value is DashboardTaskReport {
+  return (
+    hasStrings(value, ['id', 'title']) &&
+    (taskReportReviewStatuses as readonly unknown[]).includes(
+      value.reviewStatus,
+    )
+  )
+}
+
+function isWorkLog(value: unknown): value is DashboardWorkLog {
+  return hasStrings(value, ['id', 'formName', 'authorName'])
+}
+
+function hasStrings(
+  value: unknown,
+  keys: string[],
+): value is Record<string, unknown> {
+  return isRecord(value) && keys.every((key) => typeof value[key] === 'string')
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function readStorage(key: string): string | null {
