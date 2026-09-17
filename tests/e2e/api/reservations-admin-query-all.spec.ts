@@ -95,7 +95,7 @@ test('S1: 초기 진입 시 status/sort/page/size로 조회하고 목록·카운
   const first = new URL(requestURLs[0])
   expect(first.searchParams.get('status')).toBe('BEFORE_SITE_VISIT')
   expect(first.searchParams.get('sort')).toBe('COUNSEL_DATE')
-  expect(first.searchParams.get('page')).toBe('0')
+  expect(first.searchParams.get('page')).toBe('1')
   expect(first.searchParams.get('size')).toBe('10')
 })
 
