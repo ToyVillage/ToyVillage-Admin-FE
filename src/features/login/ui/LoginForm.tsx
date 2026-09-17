@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import styled from '@emotion/styled'
-import type { LoginSubmit } from '../model/types'
+import { Toast } from '@/shared/ui'
+import { LoginSubmitError, type LoginSubmit } from '../model/types'
 import { PasswordVisibilityButton } from './PasswordVisibilityButton'
 
 interface LoginFormProps {
@@ -17,6 +18,8 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isPending, setIsPending] = useState(false)
   const [errorField, setErrorField] = useState<FieldName | null>(null)
+  const [isCredentialError, setIsCredentialError] = useState(false)
+  const [isFailureToastOpen, setIsFailureToastOpen] = useState(false)
   const usernameRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
   const submittingRef = useRef(false)
@@ -24,6 +27,9 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submittingRef.current) return
+
+    setIsCredentialError(false)
+    setIsFailureToastOpen(false)
 
     const normalizedUsername = username.trim()
 
@@ -46,7 +52,12 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
     try {
       await onSubmit({ username: normalizedUsername, password })
       onSuccess()
-    } catch {
+    } catch (error) {
+      if (error instanceof LoginSubmitError && error.reason === 'credential') {
+        setIsCredentialError(true)
+      } else {
+        setIsFailureToastOpen(true)
+      }
       setPassword('')
       setErrorField(null)
       requestAnimationFrame(() => passwordRef.current?.focus())
@@ -55,6 +66,17 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
       setIsPending(false)
     }
   }
+
+  const dismissFailureToast = useCallback(() => {
+    setIsFailureToastOpen(false)
+  }, [])
+
+  const passwordErrorId =
+    errorField === 'password'
+      ? 'login-password-error'
+      : isCredentialError
+        ? 'login-credential-error'
+        : undefined
 
   function handlePasswordToggle() {
     setIsPasswordVisible((current) => !current)
@@ -80,6 +102,7 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
             }
             onChange={(event) => {
               setUsername(event.target.value)
+              setIsCredentialError(false)
               if (errorField === 'username') setErrorField(null)
             }}
           />
@@ -104,11 +127,10 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
               value={password}
               required
               aria-invalid={errorField === 'password'}
-              aria-describedby={
-                errorField === 'password' ? 'login-password-error' : undefined
-              }
+              aria-describedby={passwordErrorId}
               onChange={(event) => {
                 setPassword(event.target.value)
+                setIsCredentialError(false)
                 if (errorField === 'password') setErrorField(null)
               }}
             />
@@ -123,12 +145,26 @@ export function LoginForm({ onSubmit, onSuccess }: LoginFormProps) {
               비밀번호를 입력해주세요!
             </ErrorMessage>
           )}
+          {isCredentialError && (
+            <ErrorMessage id="login-credential-error" role="alert">
+              <ErrorBadge aria-hidden="true">!</ErrorBadge>
+              아이디 또는 비밀번호를 확인해주세요
+            </ErrorMessage>
+          )}
         </Field>
       </Fields>
 
       <SubmitButton type="submit" disabled={isPending}>
         {isPending ? '로그인 중' : '로그인'}
       </SubmitButton>
+
+      {isFailureToastOpen && (
+        <Toast
+          variant="error"
+          message="로그인에 실패했습니다"
+          onDismiss={dismissFailureToast}
+        />
+      )}
     </Form>
   )
 }
