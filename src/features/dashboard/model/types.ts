@@ -28,6 +28,7 @@ export interface DashboardFeed {
 
 export interface DashboardObservation {
   id: string
+  individualId: string
   content: string
   /** YYYY-MM-DDTHH:mm[:ss] */
   recordedAt: string

@@ -46,7 +46,6 @@ export async function getDashboardTaskStatusCounts(): Promise<DashboardTaskStatu
 }
 
 // DASHBOARD_FEED_LOG_QUERY_ALL — 정렬은 서버 기본값(feedDateTime,desc)을 쓴다.
-// 항목에 식별자가 없어 순번을 key 로 쓴다.
 export async function getDashboardFeeds({
   page,
   size,
@@ -61,8 +60,8 @@ export async function getDashboardFeeds({
     throw new Error('대시보드 급여일지 응답 형식이 올바르지 않습니다.')
   }
 
-  return data.content.map((item, index) => ({
-    id: String(index),
+  return data.content.map((item) => ({
+    id: String(item.feedLogId),
     species: item.animalKind,
     animalName: item.animalName,
     fedAt: item.feedDateTime,
@@ -84,8 +83,9 @@ export async function getDashboardObservations({
     throw new Error('대시보드 관찰 기록 응답 형식이 올바르지 않습니다.')
   }
 
-  return data.content.map((item, index) => ({
-    id: String(index),
+  return data.content.map((item) => ({
+    id: String(item.animalObservationId),
+    individualId: String(item.animalId),
     content: item.title,
     recordedAt: item.createdAt,
   }))
@@ -141,6 +141,7 @@ function isPageResponse<T>(
 function isFeedLogItem(value: unknown): value is DashboardFeedLogItemResponse {
   return (
     isRecord(value) &&
+    isPositiveId(value.feedLogId) &&
     typeof value.animalKind === 'string' &&
     typeof value.animalName === 'string' &&
     typeof value.feedDateTime === 'string'
@@ -152,6 +153,8 @@ function isAnimalObservationItem(
 ): value is DashboardAnimalObservationItemResponse {
   return (
     isRecord(value) &&
+    isPositiveId(value.animalObservationId) &&
+    isPositiveId(value.animalId) &&
     typeof value.title === 'string' &&
     typeof value.createdAt === 'string'
   )
@@ -165,6 +168,10 @@ function hasCounts(value: unknown, keys: string[]): boolean {
       return Number.isSafeInteger(count) && (count as number) >= 0
     })
   )
+}
+
+function isPositiveId(value: unknown): boolean {
+  return Number.isSafeInteger(value) && (value as number) > 0
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

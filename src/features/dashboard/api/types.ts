@@ -15,6 +15,7 @@ export interface DashboardOverallOperationsQueryResponse {
 }
 
 export interface DashboardFeedLogItemResponse {
+  feedLogId: number
   animalKind: string
   animalName: string
   /** YYYY-MM-DDTHH:mm:ss */
@@ -22,6 +23,9 @@ export interface DashboardFeedLogItemResponse {
 }
 
 export interface DashboardAnimalObservationItemResponse {
+  animalObservationId: number
+  /** 관찰 대상 개체 ID(animalManageId). 종 ID 는 내려오지 않는다. */
+  animalId: number
   title: string
   /** YYYY-MM-DDTHH:mm:ss */
   createdAt: string
