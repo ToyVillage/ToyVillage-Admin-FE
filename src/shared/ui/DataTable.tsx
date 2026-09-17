@@ -121,6 +121,32 @@ export interface DataTableSelection {
   allLabel?: string
 }
 
+/** 페이지 번호 한 칸. `gap` 은 생략(…) 표시다. */
+type PageItem = number | 'gap-start' | 'gap-end'
+
+// 번호를 전부 그리면 페이지가 많을 때 줄이 넘친다(#먹이급여 18페이지).
+// 처음·끝과 현재 앞뒤 한 칸만 두고 사이를 생략해 항상 최대 7칸으로 묶는다.
+const maxPageSlots = 7
+
+function pageRange(from: number, to: number): number[] {
+  return Array.from({ length: to - from + 1 }, (_, i) => from + i)
+}
+
+function buildPageItems(page: number, pageCount: number): PageItem[] {
+  if (pageCount <= maxPageSlots) return pageRange(1, pageCount)
+
+  const left = Math.max(2, page - 1)
+  const right = Math.min(pageCount - 1, page + 1)
+  const hasLeftGap = left > 2
+  const hasRightGap = right < pageCount - 1
+
+  // 한쪽 끝에 붙어 있으면 그쪽은 생략 없이 이어 보여준다.
+  if (!hasLeftGap) return [...pageRange(1, 5), 'gap-end', pageCount]
+  if (!hasRightGap) return [1, 'gap-start', ...pageRange(pageCount - 4, pageCount)]
+
+  return [1, 'gap-start', ...pageRange(left, right), 'gap-end', pageCount]
+}
+
 // 카드 하단 페이지네이션. 실제 슬라이싱은 페이지가 담당하고 여기서는 표현/이동만.
 export interface DataTablePagination {
   page: number
@@ -172,8 +198,8 @@ export function DataTable({
   const [sortOpen, setSortOpen] = useState(false)
   const sortControlRef = useRef<HTMLDivElement>(null)
   const sortOptions = sort?.options ?? defaultSortOptions
-  const pageNumbers = pagination
-    ? Array.from({ length: pagination.pageCount }, (_, i) => i + 1)
+  const pageItems = pagination
+    ? buildPageItems(pagination.page, pagination.pageCount)
     : []
   const allSelected =
     selection != null &&
@@ -214,18 +240,24 @@ export function DataTable({
           <ChevronIcon src={chevronIcon} alt="" />
         </PageNav>
         <PageList>
-          {pageNumbers.map((n) => (
-            <PageButton
-              key={n}
-              type="button"
-              $active={n === pagination.page}
-              aria-label={`${n} 페이지`}
-              aria-current={n === pagination.page ? 'page' : undefined}
-              onClick={() => pagination.onChange(n)}
-            >
-              {n}
-            </PageButton>
-          ))}
+          {pageItems.map((item) =>
+            typeof item === 'number' ? (
+              <PageButton
+                key={item}
+                type="button"
+                $active={item === pagination.page}
+                aria-label={`${item} 페이지`}
+                aria-current={item === pagination.page ? 'page' : undefined}
+                onClick={() => pagination.onChange(item)}
+              >
+                {item}
+              </PageButton>
+            ) : (
+              <PageGap key={item} aria-hidden="true">
+                …
+              </PageGap>
+            ),
+          )}
         </PageList>
         <PageNav
           type="button"
@@ -751,4 +783,17 @@ const PageButton = styled.button<{ $active: boolean }>`
   font-weight: 500;
   line-height: 1.2;
   cursor: pointer;
+`
+
+// 번호 버튼과 같은 자리를 차지하되 누를 수 없다.
+const PageGap = styled.span`
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.colors.pageMuted};
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.2;
 `
