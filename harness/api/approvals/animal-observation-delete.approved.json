@@ -1,0 +1,15 @@
+{
+  "feature": "animal-observation-delete",
+  "apiId": "ANIMAL_OBSERVATION_DELETE",
+  "approvedAt": "2026-09-16T15:20:15.515Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "26376b71fe612bbb683466d21351d85f832f30d9b1f43b17c48de29a96b9532f",
+  "contractHash": "1d239756aa9f375f1cb139dee98acc8fec412e564e54f18df6c49cf91865ba44",
+  "contractMarkdownHash": "2774c0f4ac27470189a0f89f904cf230b0aa7555fa0c412b5b5f23981304d863",
+  "planHash": "35fc8b93afaca0df0cbac5ba80e1ecf6f89b81638362496eee65f0200e84d830",
+  "scenarioHash": "ec69e9103a2959248eacc99be8c2bb38ec592a711730f29aa0787eb4cfe8367f",
+  "testHash": "693930ae7d017bbdb2d1d92cb21bf6ade51d0d103971f8607d17b432df4041bb",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T00:47:13.131Z"
+}

@@ -1,13 +1,16 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import {
+  mockAnimalManageApi,
+  type AnimalManageApiHandle,
+} from './support/animal-manage-api'
 
 // 승인된 시나리오(species-form.approved.json: S1~S32, S23·S29 삭제)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 종 mock 은 localStorage(`toyvillage:species`, 실패 주입 `toyvillage:species:fail`)를 쓴다.
+// 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 // 사진 업로드는 드롭존의 숨긴 file input 에 파일을 넣는다(파일 선택 창 대체).
 
 const createUrl = '/species/create'
 const editUrl = '/species/1/edit'
-const speciesStorageKey = 'toyvillage:species'
 const legalPresets = [
   '지정관리 야생동물',
   '멸종위기 야생생물 I급',
@@ -15,13 +18,15 @@ const legalPresets = [
 ]
 const taxonGroups = ['포유류', '파충류', '조류', '어류']
 
+let api: AnimalManageApiHandle
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear()
-    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. mock 상태만 비우고
-    // 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
+    // clear() 는 인증 가드가 보는 세션 토큰까지 지운다. 보호 경로에 들어갈 수 있도록 토큰을 다시 심는다.
     localStorage.setItem('accessToken', 'species-form-test-token')
   })
+  api = await mockAnimalManageApi(page)
 })
 
 test('S1: 등록 화면 진입 기본 상태', async ({ page }) => {
@@ -411,8 +416,12 @@ test('S21: 직접 추가한 법정분류 제거', async ({ page }) => {
   await expect(legalPill(page, '해양보호생물')).toBeVisible()
 
   await removeButton(page, '해양보호생물').click()
+  await legalDeleteDialog(page).getByRole('button', { name: '확인' }).click()
 
   await expect(legalPill(page, '해양보호생물')).toHaveCount(0)
+  expect(api.legalStatuses.map(({ kind }) => kind)).not.toContain(
+    '해양보호생물',
+  )
   for (const name of legalPresets) {
     await expect(legalPill(page, name)).toBeVisible()
     await expect(removeButton(page, name)).toHaveCount(0)
@@ -517,9 +526,7 @@ test('S28: 수정 화면 무변경 이탈', async ({ page }) => {
 test('S30: 저장 실패 시 입력 보존', async ({ page }) => {
   await page.goto(editUrl)
   await koreanNameInput(page).fill('카피바라(실패)')
-  await page.evaluate(() =>
-    localStorage.setItem('toyvillage:species:fail', 'update'),
-  )
+  api.failNext('kind.update')
   await page.getByRole('button', { name: '저장하기' }).click()
 
   await expect(
@@ -599,10 +606,15 @@ test('S32: 키보드 조작', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(removeButton(page, '해양보호생물')).toBeFocused()
   await page.keyboard.press('Enter')
+  await expect(legalDeleteDialog(page)).toBeVisible()
+  await page.keyboard.press('Tab')
+  await expect(
+    legalDeleteDialog(page).getByRole('button', { name: '확인' }),
+  ).toBeFocused()
+  await page.keyboard.press('Enter')
   await expect(legalPill(page, '해양보호생물')).toHaveCount(0)
 
   // 사진 업로드 컨트롤 접근(파일 선택 창은 file input 으로 대체)
-  await page.keyboard.press('Tab')
   await expect(addLegalButton(page)).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(uploadButton(page)).toBeFocused()
@@ -687,6 +699,10 @@ function photoDownloadButtons(page: Page) {
   return page.getByRole('button', { name: /다운로드$/ })
 }
 
+function legalDeleteDialog(page: Page) {
+  return page.getByRole('alertdialog', { name: '정말 삭제하시겠습니까?' })
+}
+
 function imageFile(name: string, mimeType: string) {
   return { name, mimeType, buffer: Buffer.from(`${name} content`) }
 }
@@ -702,14 +718,10 @@ function errorRow(page: Page, message: string) {
   return page.getByRole('alert').filter({ hasText: message })
 }
 
-// 생성 요청이 가지 않았다 — mock 저장소가 비어 있고 화면에 머문다.
+// 생성 요청이 가지 않았다 — 가짜 서버가 생성 요청을 받지 않았고 화면에 머문다.
 async function expectNoCreateRequest(page: Page) {
   await expect(page).toHaveURL(/\/species\/create$/)
-  const stored = await page.evaluate(
-    (key) => localStorage.getItem(key),
-    speciesStorageKey,
-  )
-  expect(stored).toBeNull()
+  expect(api.count('kind.create')).toBe(0)
 }
 
 // 첫 오류로 부드럽게 스크롤하는 중에도 비교가 맞도록 위치를 한 번에 읽는다.

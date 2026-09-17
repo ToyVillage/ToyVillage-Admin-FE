@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
+import { ProfilePhoto } from '@/shared/ui'
 import { IndividualSexBadge } from './IndividualSexBadge'
 import type { Individual } from '../model/types'
 
@@ -73,7 +74,7 @@ const Card = styled.section`
   }
 `
 
-const Photo = styled.img`
+const Photo = styled(ProfilePhoto)`
   grid-area: photo;
   width: 180px;
   height: 180px;

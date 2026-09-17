@@ -51,11 +51,11 @@ export function IndividualSexField({
 const SexSymbol = styled.span`
   color: ${({ theme }) => theme.colors.textGuide};
 
-  &[data-sex='FEMALE'] {
+  &[data-sex='WOMAN'] {
     color: ${({ theme }) => theme.colors.danger};
   }
 
-  &[data-sex='MALE'] {
+  &[data-sex='MAN'] {
     color: ${({ theme }) => theme.colors.accent};
   }
 `

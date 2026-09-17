@@ -9,7 +9,7 @@
 데이터 전제(spec 데이터 절): 종 `1` 카피바라 — 개체 `1` 동식이(수컷, 2019, 기타정보 있음, 관찰 11건),
 `2` 미미(암컷, 기타정보 없음, 관찰 1건), `3` 두리(관찰 0건). 종 `2` 플라밍고 — 개체 `7` 체리(미상, species-detail mock).
 관찰 id 1 은 첨부 3개(`상처사진.jpg`, `상처사진_측면.jpg`, `처치기록.pdf`), id 2 는 1개, id 3 은 없음.
-삭제 실패는 mock 실패 주입 키(`toyvillage:observations:fail` = `delete` / 개체 mock 의 `toyvillage:individuals:fail` = `delete`)로 만든다.
+데이터는 e2e 가짜 서버(`tests/e2e/support/animal-manage-api.ts`)가 옛 mock 과 같게 주고, 삭제 실패는 `failNext('observation.delete')` / `failNext('animal.delete')` 로 만든다(API 연동 2026-09-17).
 
 ## 핵심 시나리오
 

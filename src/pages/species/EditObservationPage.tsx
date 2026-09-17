@@ -2,12 +2,13 @@ import { useCallback } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getMockIndividual, individualQueryKeys } from '@/entities/individual'
+import { getIndividual, individualQueryKeys } from '@/entities/individual'
+import { getObservation, observationQueryKeys } from '@/entities/observation'
 import {
-  getMockObservation,
-  observationQueryKeys,
-} from '@/entities/observation'
-import { getMockSpecies, speciesQueryKeys } from '@/entities/species'
+  getSpecies,
+  isNotFoundError,
+  speciesQueryKeys,
+} from '@/entities/species'
 import { ObservationForm } from '@/features/observation-form'
 import { BackLink, LeaveConfirmationDialog } from '@/shared/ui'
 import { PageStatus } from './ui/PageStatus'
@@ -22,18 +23,22 @@ export function EditObservationPage() {
 
   const observationQuery = useQuery({
     queryKey: observationQueryKeys.detail(observationId),
-    queryFn: () => getMockObservation(observationId),
+    queryFn: () =>
+      getObservation({
+        animalManageId: Number(individualId),
+        animalObservationId: Number(observationId),
+      }),
     enabled: Boolean(observationId),
   })
   // 경로 체인 검증과 부제(`{종 국명} · {개체명}`)에 쓴다.
   const individualQuery = useQuery({
     queryKey: individualQueryKeys.detail(individualId),
-    queryFn: () => getMockIndividual(individualId),
+    queryFn: () => getIndividual({ animalManageId: Number(individualId) }),
     enabled: Boolean(individualId),
   })
   const speciesQuery = useQuery({
     queryKey: speciesQueryKeys.detail(speciesId),
-    queryFn: () => getMockSpecies(speciesId),
+    queryFn: () => getSpecies({ animalKindId: Number(speciesId) }),
     enabled: Boolean(speciesId),
   })
 
@@ -53,6 +58,19 @@ export function EditObservationPage() {
   ) {
     return (
       <PageStatus state="loading" message="관찰 기록을 불러오는 중입니다." />
+    )
+  }
+
+  if (
+    [observationQuery, individualQuery, speciesQuery].some(
+      (query) => query.isError && !isNotFoundError(query.error),
+    )
+  ) {
+    return (
+      <PageStatus
+        state="error"
+        message="관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요."
+      />
     )
   }
 

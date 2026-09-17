@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import styled from '@emotion/styled'
 import { AttachmentChip } from './AttachmentChip'
 import { FileDropZone } from './FileDropZone'
@@ -81,7 +81,8 @@ export function AttachmentField({
   )
   const [errorMessage, setErrorMessage] = useState('')
 
-  useEffect(() => {
+  // 부모 상태를 그리기 전에 맞춘다. 제거 직후 바로 제출해도 이전 첨부 목록이 가지 않게 한다.
+  useLayoutEffect(() => {
     onFilesChange?.(files.length > 0)
     onFileNamesChange?.(files.map(({ name }) => name))
     onFileObjectsChange?.(files.flatMap(({ file }) => (file ? [file] : [])))

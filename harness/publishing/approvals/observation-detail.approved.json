@@ -1,6 +1,6 @@
 {
   "feature": "observation-detail",
-  "approvedAt": "2026-09-15T01:23:23.099Z",
+  "approvedAt": "2026-09-17T00:44:48.185Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -19,6 +19,6 @@
     "S15",
     "S16"
   ],
-  "scenarioHash": "56a71e8d4509b0d9563a8448f4b61fb51ef3736c62415a117ed6bbec06d815a4",
-  "e2eHash": "8c78362356792eb4561cfb02d5e10a9b6f2b6a994a294706f14754c0eb119772"
+  "scenarioHash": "092eb6a3662e2733a114e33fc9d60f599712d3bc63744b4fe518ff02cdeb63e9",
+  "e2eHash": "5b67a892e63db94678c0903a9e2e96efbf9fdb516b7e1336fbcbf836c0b694ee"
 }

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { uploadFile } from '@/entities/file'
 import {
   formatObservationDate,
   observationQueryKeys,
-  updateMockObservation,
+  updateObservation,
   type Observation,
   type UpdateObservationInput,
 } from '@/entities/observation'
@@ -51,11 +52,25 @@ export function ObservationForm({
   const [errors, setErrors] = useState<ObservationFormErrors>({})
 
   const mutation = useMutation({
-    mutationFn: (values: ObservationFormValues) =>
-      updateMockObservation({
-        id: observation.id,
-        input: toUpdateObservationInput(values),
-      }),
+    mutationFn: async (values: ObservationFormValues) => {
+      const input = toUpdateObservationInput(values)
+      // 남긴 첨부는 키 그대로, 새 첨부는 업로드해 받은 키로 화면 순서대로 보낸다.
+      const fileKeys: string[] = []
+      for (const attachment of input.attachments) {
+        if (attachment.fileKey) {
+          fileKeys.push(attachment.fileKey)
+        } else if (attachment.file) {
+          const { fileKey } = await uploadFile({ files: attachment.file })
+          fileKeys.push(fileKey)
+        }
+      }
+
+      return updateObservation({
+        animalManageId: Number(observation.individualId),
+        animalObservationId: Number(observation.id),
+        request: { title: input.title, content: input.content, fileKeys },
+      })
+    },
   })
 
   // 원래 값으로 되돌리면 바뀌지 않은 것으로 본다.
@@ -121,6 +136,7 @@ export function ObservationForm({
           <TextInput
             id="observation-title"
             aria-required="true"
+            maxLength={100}
             aria-describedby={errors.title ? titleErrorId : undefined}
             value={title}
             autoComplete="off"
@@ -159,6 +175,7 @@ export function ObservationForm({
             ref={contentRef}
             id="observation-content"
             aria-required="true"
+            maxLength={2000}
             aria-describedby={errors.content ? contentErrorId : undefined}
             value={content}
             onChange={(event) => setContent(event.target.value)}
@@ -195,9 +212,10 @@ function toUpdateObservationInput(
   return {
     title: values.title.trim(),
     content: values.content.trim(),
-    attachments: values.attachments.map(({ name, fileKey }) => ({
+    attachments: values.attachments.map(({ name, fileKey, file }) => ({
       fileName: name,
       ...(fileKey ? { fileKey } : {}),
+      ...(file ? { file } : {}),
     })),
   }
 }

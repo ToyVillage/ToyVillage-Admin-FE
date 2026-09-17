@@ -5,7 +5,7 @@ export interface SpeciesFormValues {
   koreanName: string
   englishName: string
   scientificName: string
-  /** 진입 기본값 `MAMMAL`(포유류) */
+  /** 진입 기본값 `MAMMALS`(포유류) */
   taxonGroup: TaxonGroup
   subClassification: string
   /** 선택된 법정지정분류, 화면 순서(기본 선택지 → 직접 추가 항목) */

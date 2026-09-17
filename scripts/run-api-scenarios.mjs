@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
-import { apiPaths, repositoryRoot } from './api-harness-lib.mjs'
+import {
+  apiPaths,
+  repositoryRoot,
+  usesPageRouteMock,
+} from './api-harness-lib.mjs'
 import { checkApiGate } from './api-gate-check.mjs'
 
 const feature = process.argv[2]
@@ -27,7 +31,7 @@ if (!existsSync(testPath)) {
   console.error(`[api-scenarios] test 없음: ${testPath}`)
   process.exit(1)
 }
-if (!readFileSync(testPath, 'utf8').includes('page.route(')) {
+if (!usesPageRouteMock(testPath)) {
   console.error(
     '[api-scenarios] page.route() 기반 mock이 없는 테스트는 실행하지 않음',
   )

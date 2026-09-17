@@ -7,21 +7,19 @@ import {
   type DataTablePagination,
   type DataTableRow,
   type DataTableSearch,
-  type DataTableSort,
 } from '@/shared/ui'
 import { taxonGroupLabels } from '../model/labels'
-import type { Species } from '../model/types'
+import type { SpeciesListItem } from '../model/types'
 
 interface SpeciesTableProps {
-  species: Species[]
+  species: SpeciesListItem[]
   onRowClick: (id: string) => void
   search: DataTableSearch
-  sort: DataTableSort
   pagination: DataTablePagination
   /** 빈 상태 문구. 로딩 중에는 생략해 문구를 띄우지 않는다. */
   emptyLabel?: ReactNode
   /** 행 우측 케밥 메뉴. 메뉴 동작(이동·삭제)은 페이지가 소유한다. */
-  renderRowAction: (species: Species) => ReactNode
+  renderRowAction: (species: SpeciesListItem) => ReactNode
 }
 
 // Figma `species list`(127:9099) — 탭바 하단 32, 헤더 `#DDDDE3`, 행 구분선 `#848491`.
@@ -71,7 +69,6 @@ export function SpeciesTable({
   species,
   onRowClick,
   search,
-  sort,
   pagination,
   emptyLabel,
   renderRowAction,
@@ -109,7 +106,6 @@ export function SpeciesTable({
           onRowClick={onRowClick}
           rowTestId="species-row"
           search={search}
-          sort={sort}
           pagination={pagination}
           emptyLabel={emptyLabel}
           appearance={appearance}

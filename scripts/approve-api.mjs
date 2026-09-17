@@ -11,6 +11,7 @@ import {
   readJson,
   repositoryRoot,
   sha256File,
+  usesPageRouteMock,
   validateApiContract,
   validateRealServerConfig,
   writeJson,
@@ -80,8 +81,7 @@ export function approveApi({
 
     if (!existsSync(paths.test))
       throw new Error(`API e2e 테스트 없음: ${paths.test}`)
-    const testSource = readFileSync(paths.test, 'utf8')
-    if (!testSource.includes('page.route(')) {
+    if (!usesPageRouteMock(paths.test)) {
       throw new Error('API e2e 테스트는 page.route() 기반 mock을 사용해야 함')
     }
     approval.testHash = sha256File(paths.test)

@@ -1,0 +1,15 @@
+{
+  "feature": "animal-legal-status-query-all",
+  "apiId": "ANIMAL_LEGAL_STATUS_QUERY_ALL",
+  "approvedAt": "2026-09-16T15:59:59.272Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "8d6d1d992c94739ccf021d8063845b303673b6c0af5b0acc41358e8eb0fbfe5b",
+  "contractHash": "ffc4d621e8f11f7e1286d4fdc28743ffd458493efb39d44d796529c25f5a8aa7",
+  "contractMarkdownHash": "ebd3dbc4d4c4c6a930094ffe4e4e68d8ad6b3a94c1e1dd596271e3906582835e",
+  "planHash": "f3793650d0377a33ca90ed825dad2d4dc8c2890e0cb26339ecabc80d8acfecfa",
+  "scenarioHash": "bda6dd8e7fb7feaeab6c3eb732d0c5b83f3993bc4b86b8cf7a8cbe08eac9edf3",
+  "testHash": "d54dcf2fcd7bedcbdcae50f279242b2fc065b50baa06a41eba44ee206e108469",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T00:45:03.529Z"
+}

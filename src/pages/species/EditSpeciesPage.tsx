@@ -1,7 +1,11 @@
 import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getMockSpecies, speciesQueryKeys } from '@/entities/species'
+import {
+  getSpecies,
+  isNotFoundError,
+  speciesQueryKeys,
+} from '@/entities/species'
 import { SpeciesForm } from '@/features/species-form'
 import { LeaveConfirmationDialog } from '@/shared/ui'
 import { FormPageLayout } from './ui/FormPageLayout'
@@ -18,9 +22,10 @@ export function EditSpeciesPage() {
     data: species,
     isPending,
     isError,
+    error,
   } = useQuery({
     queryKey: speciesQueryKeys.detail(speciesId),
-    queryFn: () => getMockSpecies(speciesId),
+    queryFn: () => getSpecies({ animalKindId: Number(speciesId) }),
     enabled: Boolean(speciesId),
   })
 
@@ -32,6 +37,15 @@ export function EditSpeciesPage() {
 
   if (isPending) {
     return <PageStatus state="loading" message="종 정보를 불러오는 중입니다." />
+  }
+
+  if (isError && !isNotFoundError(error)) {
+    return (
+      <PageStatus
+        state="error"
+        message="종 정보를 불러오지 못했습니다. 다시 시도해 주세요."
+      />
+    )
   }
 
   if (isError || !species) {

@@ -3,19 +3,19 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  deleteMockIndividual,
-  getMockIndividual,
+  deleteIndividual,
+  getIndividual,
   individualQueryKeys,
   IndividualProfileCard,
 } from '@/entities/individual'
 import {
-  deleteMockObservation,
-  getMockObservations,
+  deleteObservation,
+  getObservations,
   ObservationAttachmentCell,
   observationQueryKeys,
   ObservationTable,
 } from '@/entities/observation'
-import { speciesQueryKeys } from '@/entities/species'
+import { isNotFoundError, speciesQueryKeys } from '@/entities/species'
 import {
   BackLink,
   DeleteConfirmationDialog,
@@ -26,7 +26,7 @@ import {
 } from '@/shared/ui'
 import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
-import { tablePage } from './ui/tablePage'
+import { TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
 
 // 카드 케밥의 메뉴 id. 행 케밥은 관찰 id 를 쓴다(관찰 id 는 숫자 문자열).
@@ -55,26 +55,37 @@ export function IndividualDetailPage() {
 
   const individualQuery = useQuery({
     queryKey: individualQueryKeys.detail(individualId),
-    queryFn: () => getMockIndividual(individualId),
+    queryFn: () => getIndividual({ animalManageId: Number(individualId) }),
     enabled: Boolean(individualId),
   })
+  // 페이지는 서버가 자른다(`ANIMAL_OBSERVATION_QUERY_ALL`, 1부터).
   const observationsQuery = useQuery({
-    queryKey: observationQueryKeys.list(individualId),
-    queryFn: () => getMockObservations(individualId),
+    queryKey: observationQueryKeys.list(individualId, page),
+    queryFn: () =>
+      getObservations({
+        animalManageId: Number(individualId),
+        page,
+        size: TABLE_PAGE_SIZE,
+      }),
     enabled: Boolean(individualId),
+    placeholderData: (previousData) => previousData,
   })
 
   const deleteIndividualMutation = useMutation({
-    mutationFn: () => deleteMockIndividual(individualId),
+    mutationFn: () =>
+      deleteIndividual({ animalManageId: Number(individualId) }),
   })
   const deleteObservationMutation = useMutation({
-    mutationFn: (observationId: string) => deleteMockObservation(observationId),
+    mutationFn: (observationId: string) =>
+      deleteObservation({
+        animalManageId: Number(individualId),
+        animalObservationId: Number(observationId),
+      }),
   })
 
-  const observations = observationsQuery.data ?? []
-  const { pageCount, currentPage, pageRows } = tablePage(observations, page)
+  const pageCount = Math.max(1, observationsQuery.data?.totalPages ?? 1)
   // 삭제로 마지막 페이지가 사라지면 마지막 페이지로 당긴다. 렌더 중 상태 보정(effect 불필요).
-  if (page > pageCount) setPage(pageCount)
+  if (observationsQuery.data && page > pageCount) setPage(pageCount)
 
   const focusMenuTrigger = useCallback(
     (menuId: string) => {
@@ -173,13 +184,27 @@ export function IndividualDetailPage() {
     })
   }
 
-  if (individualQuery.isPending || observationsQuery.isPending) {
+  if (
+    individualQuery.isPending ||
+    (observationsQuery.isPending && !observationsQuery.isError)
+  ) {
     return <PageStatus state="loading" message="개체를 불러오는 중입니다." />
   }
 
+  if (individualQuery.isError && !isNotFoundError(individualQuery.error)) {
+    return (
+      <PageStatus
+        state="error"
+        message="개체를 불러오지 못했습니다. 다시 시도해 주세요."
+      />
+    )
+  }
+
   const individual = individualQuery.data
+  // 관찰 목록 404 는 개체가 없어진 것이다.
   if (
     individualQuery.isError ||
+    (observationsQuery.isError && isNotFoundError(observationsQuery.error)) ||
     !individual ||
     individual.speciesId !== speciesId
   ) {
@@ -194,6 +219,7 @@ export function IndividualDetailPage() {
   }
 
   const detailPath = `/species/${speciesId}/individuals/${individualId}`
+  const observationPage = observationsQuery.data
 
   return (
     <Page>
@@ -242,22 +268,34 @@ export function IndividualDetailPage() {
         </ProfileSection>
 
         <ObservationSection>
-          <SectionHeader title="관찰 및 특이사항" count={observations.length} />
+          <SectionHeader
+            title="관찰 및 특이사항"
+            count={observationPage?.totalElements ?? 0}
+          />
           <ObservationTable
-            rows={pageRows}
-            page={currentPage}
+            rows={observationPage?.items ?? []}
+            page={Math.min(page, pageCount)}
             pageCount={pageCount}
             onPageChange={setPage}
             onRowClick={(observationId) =>
               navigate(`${detailPath}/observations/${observationId}`)
             }
-            emptyLabel="등록된 관찰 기록이 없습니다"
+            emptyLabel={
+              observationsQuery.isError ? (
+                <span role="alert">
+                  관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요.
+                </span>
+              ) : (
+                '등록된 관찰 기록이 없습니다'
+              )
+            }
             renderAttachments={(observation) => (
               <ObservationAttachmentCell
                 attachments={observation.attachments}
                 observationTitle={observation.title}
                 open={openPopoverId === observation.id}
                 onOpenChange={(open) => changePopover(observation.id, open)}
+                onDownloadError={() => showToast('download-error')}
               />
             )}
             renderRowAction={(observation) => (

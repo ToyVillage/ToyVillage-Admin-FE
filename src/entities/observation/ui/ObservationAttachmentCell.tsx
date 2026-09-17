@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { AttachmentChip, downloadFile } from '@/shared/ui'
+import { AttachmentChip, downloadStoredFile } from '@/shared/ui'
 import type { ObservationAttachment } from '../model/types'
 
 interface ObservationAttachmentCellProps {
@@ -9,6 +9,8 @@ interface ObservationAttachmentCellProps {
   /** 첨부 팝오버 열림. 한 번에 하나만 열리도록 목록(페이지)이 소유한다. */
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** 파일 서버에서 받지 못했다. 알림은 페이지가 띄운다. */
+  onDownloadError: () => void
 }
 
 type PopoverPlacement = 'below' | 'above'
@@ -30,6 +32,7 @@ export function ObservationAttachmentCell({
   observationTitle,
   open,
   onOpenChange,
+  onDownloadError,
 }: ObservationAttachmentCellProps) {
   const popoverId = useId()
   const moreRef = useRef<HTMLDivElement>(null)
@@ -107,7 +110,9 @@ export function ObservationAttachmentCell({
     <Cell>
       <FirstChip
         fileName={firstAttachment.fileName}
-        onDownload={() => downloadFile(firstAttachment.fileName)}
+        onDownload={() =>
+          downloadStoredFile(firstAttachment).catch(onDownloadError)
+        }
       />
       {restCount > 0 && (
         <More
@@ -138,7 +143,9 @@ export function ObservationAttachmentCell({
                   <AttachmentChip
                     key={attachment.fileKey}
                     fileName={attachment.fileName}
-                    onDownload={() => downloadFile(attachment.fileName)}
+                    onDownload={() =>
+                      downloadStoredFile(attachment).catch(onDownloadError)
+                    }
                   />
                 ))}
               </Popover>

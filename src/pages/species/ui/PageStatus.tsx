@@ -3,15 +3,24 @@ import { Link } from 'react-router-dom'
 
 type PageStatusProps =
   | { state: 'loading'; message: string }
+  | { state: 'error'; message: string }
   | { state: 'not-found'; message: string; linkTo: string; linkLabel: string }
 
-// 개체관리 화면의 조회 중·없는 대상 상태(EditTaskPage 패턴). 상세는 본문 대신,
+// 개체관리 화면의 조회 중·조회 실패·없는 대상 상태(EditTaskPage 패턴). 상세는 본문 대신,
 // 등록·수정은 폼·이탈 보호 없이 이 카드만 그린다.
 export function PageStatus(props: PageStatusProps) {
   if (props.state === 'loading') {
     return (
       <StatePage>
         <StateCard role="status">{props.message}</StateCard>
+      </StatePage>
+    )
+  }
+
+  if (props.state === 'error') {
+    return (
+      <StatePage>
+        <StateCard role="alert">{props.message}</StateCard>
       </StatePage>
     )
   }

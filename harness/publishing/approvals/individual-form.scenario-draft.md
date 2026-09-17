@@ -137,7 +137,7 @@
 - Then: 이탈 확인 모달이 뜨고 `취소` 시 수정 화면과 바꾼 성별이 유지된다
 
 ### S26: 저장 실패 시 입력 보존
-- Given: localStorage `toyvillage:individuals:fail` 에 `update` 를 넣어 다음 저장이 실패하도록 한 `/species/1/individuals/1/edit` 화면에서 개체명을 바꾼 상태
+- Given: e2e 가짜 서버가 다음 개체 수정 요청에 500 을 주도록 한 `/species/1/individuals/1/edit` 화면에서 개체명을 바꾼 상태
 - When: `저장하기` 를 클릭한다
 - Then: URL 이 `/species/1/individuals/1/edit` 로 유지되고 바꾼 입력이 그대로 있으며 `저장하지 못했습니다. 다시 시도해 주세요.` 가 보이고 버튼이 다시 활성화된다
 
@@ -171,7 +171,7 @@
 - S19~S21 거부 문구는 `species-form` S24~S26 과 같은 `PhotoUploadField` 문구다.
 - S24 는 `sidebar.spec.md` 메뉴 절의 `개체관리 > 개체 카드` → `/species` 연결을 전제로 한다.
   develop 병합(2026-09-15)으로 사이드바가 아코디언이 되어 평면 메뉴 `개체관리 바로가기` 를 이 하위 항목으로 옮겼다(개발자 결정).
-- S26 실패 주입 키 `toyvillage:individuals:fail` = `update` 는 `species-detail` 개체 mock 명세 키다.
+- S26 실패 주입은 e2e 가짜 서버(`tests/e2e/support/animal-manage-api.ts`)의 `failNext('animal.update')` 다(API 연동 2026-09-17).
 - S29 의 파일 선택 창은 Playwright 에서 `setInputFiles` 로 대체한다.
 
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.

@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  createMockSpecies,
+  createSpecies,
+  getLegalStatuses,
   legalDesignationPresets,
+  legalStatusQueryKeys,
+  resolvePhotoFileKey,
   speciesQueryKeys,
-  updateMockSpecies,
+  updateSpecies,
   type Species,
 } from '@/entities/species'
 import {
@@ -19,6 +22,7 @@ import {
   toSpeciesFormValues,
   toSpeciesInput,
 } from '../model/formValues'
+import { resolveLegalStatusIds } from '../model/legalStatusIds'
 import type { SpeciesFormErrors, SpeciesFormValues } from '../model/types'
 import { validateSpeciesForm } from '../model/validation'
 import { LegalDesignationField } from './LegalDesignationField'
@@ -53,12 +57,49 @@ export function SpeciesForm({
 
   const isEditing = mode === 'edit'
 
+  const legalStatusesQuery = useQuery({
+    queryKey: legalStatusQueryKeys.all,
+    queryFn: getLegalStatuses,
+  })
+
   const mutation = useMutation({
-    mutationFn: (submitValues: SpeciesFormValues) => {
+    mutationFn: async (submitValues: SpeciesFormValues) => {
       const input = toSpeciesInput(submitValues, initialSpecies?.photo)
-      return initialSpecies
-        ? updateMockSpecies({ id: initialSpecies.id, input })
-        : createMockSpecies(input)
+      // 사진 업로드 → 법정지정분류 id 변환(없는 이름은 생성) → 종 저장 순서다.
+      const fileKey = await resolvePhotoFileKey(input.photo)
+      const legalStatusIds = await resolveLegalStatusIds(
+        queryClient,
+        input.legalDesignations,
+      )
+      const common = {
+        animalName: input.koreanName,
+        animalEngName: input.englishName,
+        animalScientificName: input.scientificName,
+        animalTaxonomic: input.taxonGroup,
+        fileKey,
+      }
+
+      if (initialSpecies) {
+        // 수정은 전체를 다시 보낸다. 비운 값은 null·[] 로 명시해 지운다.
+        return updateSpecies({
+          animalKindId: Number(initialSpecies.id),
+          request: {
+            ...common,
+            animalDetailKind: input.subClassification ?? null,
+            animalLegalDesignation: legalStatusIds,
+          },
+        })
+      }
+
+      return createSpecies({
+        ...common,
+        ...(input.subClassification
+          ? { animalDetailKind: input.subClassification }
+          : {}),
+        ...(legalStatusIds.length > 0
+          ? { animalLegalDesignation: legalStatusIds }
+          : {}),
+      })
     },
   })
 
@@ -76,6 +117,8 @@ export function SpeciesForm({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submittingRef.current || mutation.isPending) return
+    // 법정지정분류 목록 없이는 저장할 id 를 만들 수 없다(필드에 실패 안내가 보인다).
+    if (legalStatusesQuery.isError) return
 
     const nextErrors = validateSpeciesForm(values)
     setErrors(nextErrors)
@@ -87,9 +130,10 @@ export function SpeciesForm({
     submittingRef.current = true
     mutation.mutate(values, {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: speciesQueryKeys.all,
-        })
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: speciesQueryKeys.all }),
+          queryClient.invalidateQueries({ queryKey: legalStatusQueryKeys.all }),
+        ])
         onCompleted()
       },
       onError: () => {
@@ -190,6 +234,8 @@ export function SpeciesForm({
 
         <LegalDesignationField
           presets={legalDesignationPresets}
+          statuses={legalStatusesQuery.data}
+          loadFailed={legalStatusesQuery.isError}
           value={values.legalDesignations}
           onChange={(legalDesignations) =>
             setField('legalDesignations', legalDesignations)
@@ -215,7 +261,10 @@ export function SpeciesForm({
       )}
 
       <Actions>
-        <SubmitButton type="submit" disabled={mutation.isPending}>
+        <SubmitButton
+          type="submit"
+          disabled={mutation.isPending || legalStatusesQuery.isError}
+        >
           {mutation.isPending
             ? isEditing
               ? '저장 중'

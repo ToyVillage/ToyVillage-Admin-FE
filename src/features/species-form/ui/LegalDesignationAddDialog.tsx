@@ -3,8 +3,12 @@ import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
 
 interface LegalDesignationAddDialogProps {
-  /** 현재 목록(기본 선택지 + 직접 추가 항목). 같은 이름은 추가하지 않는다. */
+  /** 현재 목록(기본 선택지 + 서버 공용 목록). 같은 이름은 추가하지 않는다. */
   existingNames: string[]
+  /** 추가 요청 중 — `추가하기` 를 막아 중복 제출하지 않는다. */
+  pending: boolean
+  /** 직전 추가 요청이 실패했다. 입력을 바꾸면 오류 줄을 숨긴다. */
+  failed: boolean
   onCancel: () => void
   onAdd: (name: string) => void
 }
@@ -13,6 +17,8 @@ interface LegalDesignationAddDialogProps {
 // `TeamAddDialog` 를 따른다. 닫힌 뒤 포커스 복귀는 호출부(`+ 법정분류 추가`)가 맡는다.
 export function LegalDesignationAddDialog({
   existingNames,
+  pending,
+  failed,
   onCancel,
   onAdd,
 }: LegalDesignationAddDialogProps) {
@@ -22,6 +28,7 @@ export function LegalDesignationAddDialog({
   const inputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState('')
   const [isDuplicate, setIsDuplicate] = useState(false)
+  const [failedName, setFailedName] = useState<string | null>(null)
 
   const trimmedName = name.trim()
 
@@ -77,7 +84,7 @@ export function LegalDesignationAddDialog({
     event.preventDefault()
     // 포털이어도 React 트리로는 종 폼 안이라 제출 이벤트가 폼까지 올라가지 않게 막는다.
     event.stopPropagation()
-    if (!trimmedName) return
+    if (!trimmedName || pending) return
 
     // 중복 오류는 다음 `추가하기` 때 다시 판정한다(입력 중에는 그대로 둔다).
     if (existingNames.includes(trimmedName)) {
@@ -85,8 +92,11 @@ export function LegalDesignationAddDialog({
       return
     }
 
+    setFailedName(trimmedName)
     onAdd(trimmedName)
   }
+
+  const showFailure = failed && !pending && failedName === trimmedName
 
   return createPortal(
     <Overlay
@@ -112,6 +122,12 @@ export function LegalDesignationAddDialog({
           autoComplete="off"
           onChange={(event) => setName(event.target.value)}
         />
+        {showFailure && (
+          <ErrorRow role="alert">
+            <ErrorMark aria-hidden="true">!</ErrorMark>
+            추가하지 못했습니다. 다시 시도해 주세요.
+          </ErrorRow>
+        )}
         {isDuplicate && (
           <ErrorRow role="alert" id={errorId}>
             <ErrorMark aria-hidden="true">!</ErrorMark>
@@ -122,7 +138,7 @@ export function LegalDesignationAddDialog({
           <CancelButton type="button" onClick={onCancel}>
             취소
           </CancelButton>
-          <AddButton type="submit" disabled={!trimmedName}>
+          <AddButton type="submit" disabled={!trimmedName || pending}>
             추가하기
           </AddButton>
         </Actions>

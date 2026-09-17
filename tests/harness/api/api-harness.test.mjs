@@ -9,6 +9,7 @@ import { checkApiGate } from '../../../scripts/api-gate-check.mjs'
 import {
   parseTaskSpec,
   sha256File,
+  usesPageRouteMock,
   validateApiContract,
   validateRealServerConfig,
 } from '../../../scripts/api-harness-lib.mjs'
@@ -445,6 +446,28 @@ test('real server config allows only approved staging HTTPS contract method', ()
     validateRealServerConfig(unsafe, contract).join('\n'),
     /staging 환경|HTTPS|Contract method POST/,
   )
+})
+
+test('route mock may come from a relatively imported support module', () => {
+  const root = mkdtempSync(join(tmpdir(), 'api-route-mock-'))
+  const testPath = join(root, 'api', 'feature.spec.ts')
+  const supportPath = join(root, 'support', 'fake-api.ts')
+
+  write(testPath, "page.route('**/*', () => {})\n")
+  assert.equal(usesPageRouteMock(testPath), true)
+
+  write(testPath, "import { mockApi } from '../support/fake-api'\n")
+  write(supportPath, 'export const mockApi = () => {}\n')
+  assert.equal(usesPageRouteMock(testPath), false)
+
+  write(
+    supportPath,
+    "export const mockApi = (page) => page.route('**/*', () => {})\n",
+  )
+  assert.equal(usesPageRouteMock(testPath), true)
+
+  write(testPath, "import { test } from '@playwright/test'\n")
+  assert.equal(usesPageRouteMock(testPath), false)
 })
 
 test('real API source requires guard fixture and rejects response mocks', () => {

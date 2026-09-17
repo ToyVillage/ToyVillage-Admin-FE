@@ -15,7 +15,7 @@ export function toSpeciesFormValues(species?: Species): SpeciesFormValues {
       koreanName: '',
       englishName: '',
       scientificName: '',
-      taxonGroup: 'MAMMAL',
+      taxonGroup: 'MAMMALS',
       subClassification: '',
       legalDesignations: [],
       photo: null,
