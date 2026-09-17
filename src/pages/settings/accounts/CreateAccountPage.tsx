@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react'
 import styled from '@emotion/styled'
+import { useMutation } from '@tanstack/react-query'
 import {
   CreateAccountForm,
-  submitCreateAccount,
+  createEmployee,
+  isUsernameConflictError,
+  type CreateAccountSubmit,
 } from '@/features/create-account'
 import toyVillageLogo from '@/shared/assets/toyvillage-logo.png'
 import { Toast, type ToastVariant } from '@/shared/ui'
@@ -13,6 +16,11 @@ export function CreateAccountPage() {
     message: string
   } | null>(null)
   const dismissToast = useCallback(() => setToast(null), [])
+  const { mutateAsync } = useMutation({ mutationFn: createEmployee })
+
+  const submit: CreateAccountSubmit = async ({ name, username }) => {
+    await mutateAsync({ username, name })
+  }
 
   return (
     <Page>
@@ -25,12 +33,17 @@ export function CreateAccountPage() {
           </HeadingGroup>
         </Brand>
         <CreateAccountForm
-          onSubmit={submitCreateAccount}
+          onSubmit={submit}
           onSuccess={() =>
             setToast({ variant: 'success', message: '계정이 생성되었습니다' })
           }
-          onError={() =>
-            setToast({ variant: 'error', message: '계정 생성에 실패했습니다' })
+          onError={(error) =>
+            setToast({
+              variant: 'error',
+              message: isUsernameConflictError(error)
+                ? '이미 사용 중인 아이디입니다'
+                : '계정 생성에 실패했습니다',
+            })
           }
         />
       </Card>
