@@ -7,7 +7,8 @@ import type { Page, Route } from '@playwright/test'
 
 export const teamListPattern = /^https:\/\/[^/]+\/team(?:\?.*)?$/
 export const teamItemPattern = /^https:\/\/[^/]+\/team\/\d+(?:\?.*)?$/
-export const teamMembersPattern = /^https:\/\/[^/]+\/team\/\d+\/members(?:\?.*)?$/
+export const teamMembersPattern =
+  /^https:\/\/[^/]+\/team\/\d+\/members(?:\?.*)?$/
 export const joinTeamPattern = /^https:\/\/[^/]+\/join-team\/\d+(?:\?.*)?$/
 export const employeesPattern =
   /^https:\/\/[^/]+\/app\/admin\/employees(?:\?.*)?$/
@@ -179,7 +180,8 @@ export async function mockTeamApi(
       200,
       team.memberIds.map((id) => ({
         id,
-        name: state.employees.find((employee) => employee.id === id)?.name ?? '',
+        name:
+          state.employees.find((employee) => employee.id === id)?.name ?? '',
       })),
     )
   })
@@ -210,4 +212,22 @@ export async function mockTeamApi(
   })
 
   return state
+}
+
+// 공지사항 폼의 분류 선택지. 팀 목록 조회(GET /team)만 응답한다.
+export async function mockTeamList(
+  page: Page,
+  teamNames: string[] = ['동물 관리팀', '창고팀'],
+) {
+  await page.route(teamListPattern, async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback()
+
+    await route.fulfill({
+      json: teamNames.map((name, index) => ({
+        id: index + 1,
+        name,
+        teamMemberCount: 0,
+      })),
+    })
+  })
 }
