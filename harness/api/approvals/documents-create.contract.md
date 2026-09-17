@@ -3,10 +3,10 @@
 ## Source
 
 - API ID 검색 결과: exact match 1건
-- Notion database/data source: `e58e8d82-a450-822f-885e-01958a22bd25` / `a34e8d82-a450-82f4-8abe-07079f4f2841` ("API 명세서 (1)")
-- Resolved page: https://app.notion.com/p/bede8d82a450839b98d4816cd1afbdf5
+- Notion database/data source: `ed4e8d82-a450-830a-afc9-812bfcd1234a` / `b53e8d82-a450-8355-b0f9-8702915ee325` ("API 명세서")
+- Resolved page: https://app.notion.com/p/ed8e8d82a45083309f2101ed66dda5be
 - Requested page: 없음 (제공 URL은 데이터베이스 인덱스 뷰였으며 API ID 검색으로 상세 페이지 해석)
-- Checked at: 2026-07-28
+- Checked at: 2026-09-17
 - Exact match count: 1
 
 ## Basic Information
@@ -42,7 +42,7 @@ required: true
 | Name  | Type          | Required | Nullable | Allowed Values                     | Example              | Description               |
 | ----- | ------------- | -------- | -------- | ---------------------------------- | -------------------- | ------------------------- |
 | title | string        | true     | false    | —                                  | `자료 제목`          | 자료 제목 (비어 있을 수 없음) |
-| type  | enum          | true     | false    | `PDF`, `JPEG/JPG`, `PNG`, `OTHER`  | `PDF`                | 자료 저장 타입. 직접 지정   |
+| type  | enum          | true     | false    | `PDF`, `JPG`, `PNG`, `OTHER`  | `PDF`                | 자료 저장 타입. 직접 지정   |
 | files | array<string> | true     | false    | —                                  | `["file key1", ...]` | 파일 키 목록 (최소 1개)    |
 
 ## Request Example
@@ -83,7 +83,7 @@ required: true
 ## Notes
 
 - `files` 항목은 파일 업로드(FILE_CREATE, `uploadFile` → `POST /file`) 응답의 `fileKey`이다(파일 이름 아님). 폼은 파일 첨부 즉시 업로드해 얻은 `fileKey`를 보관했다가 생성 요청에 그 키 목록을 전송한다.
-- `type` enum(`PDF`/`JPEG/JPG`/`PNG`/`OTHER`) ↔ 프론트 `FileType`(`pdf`/`jpg`/`png`/`etc`) 매핑 확정.
+- `type` enum(`PDF`/`JPG`/`PNG`/`OTHER`) ↔ 프론트 `FileType`(`pdf`/`jpg`/`png`/`etc`) 매핑 확정.
 
 ## Backend Questions
 

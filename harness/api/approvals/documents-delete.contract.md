@@ -1,8 +1,8 @@
 # API Contract — DOCUMENTS_DELETE
 
 ## Source
-- Exact match 1건 / DB `e58e8d82-...` / DS `a34e8d82-...`
-- Resolved: https://app.notion.com/p/88ee8d82a45083d0ba5b812c40c1eece / Checked at 2026-07-29
+- Exact match 1건 / DB `ed4e8d82-...` / DS `b53e8d82-...`
+- Resolved: https://app.notion.com/p/3b3e8d82a4508383b00e013e561e1e58 / Checked at 2026-09-17
 
 ## Basic Information
 

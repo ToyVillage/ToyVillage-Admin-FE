@@ -5,14 +5,15 @@
 ## 결정 (확정됨)
 
 - **D1. file key 확보 방식**: develop에 머지된 FILE_CREATE(`uploadFile`, `POST /file`)를 사용한다. 파일을 **첨부하는 즉시** 업로드해 `fileKey`를 확보해 두고, **생성하기** 클릭 시 그 key 목록을 DOCUMENTS_CREATE `files`로 전달한다.
-- **D2. type enum 매핑 확정**: `pdf→PDF`, `jpg→JPEG/JPG`, `png→PNG`, `etc→OTHER`.
+- **D2. type enum 매핑 확정**: `pdf→PDF`, `jpg→JPG`, `png→PNG`, `etc→OTHER`.
+  (2026-09-17 명세 갱신: `JPEG/JPG` → `JPG`.)
 
 ## 변경/생성 파일 (D1=(a) 기준)
 
 1. `src/entities/resource/api/createDocument.ts` (신규)
    - `import { api } from '@/shared/api/axios'`
    - request 타입: `interface CreateDocumentRequest { title: string; type: DocumentType; files: string[] }`
-   - `type DocumentType = 'PDF' | 'JPEG/JPG' | 'PNG' | 'OTHER'`
+   - `type DocumentType = 'PDF' | 'JPG' | 'PNG' | 'OTHER'`
    - response 타입: `interface CreateDocumentResponse { message: string }` (request/response 분리)
    - `export async function createDocument(body: CreateDocumentRequest): Promise<CreateDocumentResponse>` → `const { data } = await api.post<CreateDocumentResponse>('/documents', body); return data`
    - Contract에 없는 필드는 추가하지 않는다.

@@ -4,7 +4,13 @@
   "description": "자료실의 자료를 수정하는 기능",
   "method": "PUT",
   "path": "/documents/{id}",
-  "authentication": { "required": true, "type": "Bearer", "roles": ["ADMIN"] },
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
   "contentType": "application/json",
   "headers": [
     {
@@ -16,7 +22,9 @@
       "default": null,
       "example": "Bearer <access-token>",
       "description": "액세스 토큰",
-      "constraints": ["Bearer 스킴"]
+      "constraints": [
+        "Bearer 스킴"
+      ]
     }
   ],
   "pathParameters": [
@@ -29,7 +37,9 @@
       "default": null,
       "example": 1,
       "description": "자료 id",
-      "constraints": ["정수"]
+      "constraints": [
+        "정수"
+      ]
     }
   ],
   "queryParameters": [],
@@ -45,19 +55,28 @@
         "default": null,
         "example": "자료 제목",
         "description": "자료 제목",
-        "constraints": ["비어 있을 수 없음"]
+        "constraints": [
+          "비어 있을 수 없음"
+        ]
       },
       {
         "name": "type",
         "location": "body",
         "type": "enum",
-        "allowedValues": ["PDF", "JPEG/JPG", "PNG", "OTHER"],
+        "allowedValues": [
+          "PDF",
+          "JPG",
+          "PNG",
+          "OTHER"
+        ],
         "required": true,
         "nullable": false,
         "default": null,
         "example": "PDF",
         "description": "자료 저장 타입. 직접 지정해야 함",
-        "constraints": ["4개 enum 중 하나 선택 필수"]
+        "constraints": [
+          "4개 enum 중 하나 선택 필수"
+        ]
       },
       {
         "name": "files",
@@ -66,12 +85,24 @@
         "required": true,
         "nullable": false,
         "default": null,
-        "example": ["file key1", "file key2"],
+        "example": [
+          "file key1",
+          "file key2"
+        ],
         "description": "파일 키(file key) 목록",
-        "constraints": ["최소 1개 이상"]
+        "constraints": [
+          "최소 1개 이상"
+        ]
       }
     ],
-    "example": { "title": "자료 제목", "type": "PDF", "files": ["file key1", "file key2"] }
+    "example": {
+      "title": "자료 제목",
+      "type": "PDF",
+      "files": [
+        "file key1",
+        "file key2"
+      ]
+    }
   },
   "responses": {
     "success": [
@@ -327,23 +358,35 @@
     ]
   },
   "source": {
-    "notionDatabase": "e58e8d82-a450-822f-885e-01958a22bd25",
-    "notionDataSource": "a34e8d82-a450-82f4-8abe-07079f4f2841",
-    "resolvedNotionPage": "https://app.notion.com/p/10ce8d82a45082e482df8153ce781768",
+    "notionDatabase": "ed4e8d82-a450-830a-afc9-812bfcd1234a",
+    "notionDataSource": "b53e8d82-a450-8355-b0f9-8702915ee325",
+    "resolvedNotionPage": "https://app.notion.com/p/690e8d82a45082b79e2b01696dabf1d4",
     "requestedNotionPage": null,
-    "checkedAt": "2026-07-29T00:00:00.000Z",
+    "checkedAt": "2026-09-17T12:00:00.000Z",
     "apiIdMatchCount": 1,
     "databaseValues": {
       "apiId": "DOCUMENTS_UPDATE",
       "method": "PUT",
       "path": "/documents/{id}",
-      "authentication": { "required": true, "type": "Bearer", "roles": ["ADMIN"] }
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
     },
     "detailValues": {
       "apiId": "DOCUMENTS_UPDATE",
       "method": "PUT",
       "path": "/documents/{id}",
-      "authentication": { "required": true, "type": "Bearer", "roles": ["ADMIN"] }
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
     }
   }
 }
