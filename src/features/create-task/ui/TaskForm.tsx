@@ -414,16 +414,20 @@ const Required = styled.span`
   color: ${({ theme }) => theme.colors.danger};
 `
 
+// 공지 작성 제목과 같은 회색 입력 박스(높이 66, padding 0/24, radius 8).
 const TitleInput = styled.input`
   width: 100%;
+  height: 66px;
+  padding: 0 24px;
   border: 0;
+  border-radius: 8px;
   outline: 0;
-  background: transparent;
+  background: ${({ theme }) => theme.colors.background};
   color: ${({ theme }) => theme.colors.text};
   font-family: inherit;
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textGuide};

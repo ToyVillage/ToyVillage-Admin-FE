@@ -169,7 +169,8 @@ paths: src/pages/tasks, src/features/create-task, src/entities/task
      입력 340×68 @40,86, radius 8px, 배경 `colors.background`, padding 20/24px,
      값 22px Medium + 캘린더 아이콘 28px 우측.
 4. `title section`(1320×164 @y=226): 단독 카드. 라벨 `제목 *` 20px Medium(별표는 `colors.danger`)
-   @40,40(높이 26), 입력 32px SemiBold @40,76(높이 48, placeholder `colors.textGuide`).
+   @40,40(높이 26), 입력은 회색 박스(`colors.background`, 높이 66, radius 8, padding 0/24) 안에 24px Medium(placeholder `colors.textGuide`).
+   (2026-09-17 개발자 결정 — 공지 작성 제목 박스와 맞춘다. yot 는 박스 없음.)
 5. `body text section`(1320×276): 단독 카드. 라벨 `상세 업무 내용 *` 20px Medium @40,40,
    입력은 회색 박스(`colors.background`, radius 8, padding 20/24, 최소 높이 160) 안에 20px Medium(placeholder `colors.textGuide`).
    (2026-09-17 yot `task / 업무 폼` 반영 — 공지 작성 본문 박스와 같다.)
