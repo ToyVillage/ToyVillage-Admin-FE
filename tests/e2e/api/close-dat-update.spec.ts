@@ -42,7 +42,7 @@ test('S1: Contract body로 휴관일을 한 번 수정하고 갱신된 목록으
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', ' 수정된 휴관일 ')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
   await expect(page.getByText('수정된 휴관일')).toBeVisible()
@@ -67,7 +67,7 @@ test('S2: HTTP 400이면 입력을 유지하고 다시 제출할 수 있다', as
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '검증 오류 휴관일')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
   await expectUpdateFailure(
     page,
     7,
@@ -76,7 +76,7 @@ test('S2: HTTP 400이면 입력을 유지하고 다시 제출할 수 있다', as
     '검증 오류 휴관일',
   )
 
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
   await expect.poll(() => updateRequestCount).toBe(2)
 })
 
@@ -85,7 +85,7 @@ test('S3: HTTP 401이면 입력과 수정 화면을 유지한다', async ({ page
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '인증 오류 휴관일')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
 
   await expectUpdateFailure(
     page,
@@ -107,7 +107,7 @@ test('S4: HTTP 404이면 수정 성공으로 처리하지 않는다', async ({ p
 
   await openUpdateTarget(page, 999)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '없는 휴관일')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
 
   await expectUpdateFailure(
     page,
@@ -125,7 +125,7 @@ test('S5: HTTP 500이면 입력을 유지하고 다시 제출할 수 있다', as
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '서버 오류 휴관일')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
 
   await expectUpdateFailure(
     page,
@@ -156,7 +156,7 @@ test('S6: pending 중 중복 제출을 막고 수정 상태를 표시한다', as
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '중복 방지 휴관일')
-  await page.getByRole('button', { name: '수정하기' }).evaluate((button) => {
+  await page.getByRole('button', { name: '저장하기' }).evaluate((button) => {
     const form = button.closest('form')
     form?.dispatchEvent(
       new Event('submit', { bubbles: true, cancelable: true }),
@@ -167,7 +167,7 @@ test('S6: pending 중 중복 제출을 막고 수정 상태를 표시한다', as
   })
 
   await expect.poll(() => updateRequestCount).toBe(1)
-  await expect(page.getByRole('button', { name: '수정 중' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: '저장 중' })).toBeDisabled()
   releaseResponse?.()
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
@@ -181,7 +181,7 @@ test('S7: HTTP 201 body가 Contract와 다르면 성공 처리하지 않는다',
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '응답 오류 휴관일')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
 
   await expectUpdateFailure(
     page,
@@ -201,7 +201,7 @@ test('S8: HTTP 202는 승인된 성공 Status가 아니므로 거부한다', asy
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '상태 오류 휴관일')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
 
   await expectUpdateFailure(
     page,
@@ -225,14 +225,14 @@ test('S9: 잘못된 입력은 API 호출 전에 차단한다', async ({ page }) 
 
   await openUpdateTarget(page)
   await page.getByLabel('시작일').fill('')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
   await expect(page.getByRole('alertdialog')).toContainText(
     '휴관일을 입력해 주세요',
   )
   await page.getByRole('button', { name: '확인' }).click()
 
   await fillCloseSchedule(page, '2026-07-13', '2026-07-12', '날짜 순서 오류')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
   await expect(page.getByRole('alertdialog')).toContainText(
     '종료일은 시작일과 같거나 이후여야 합니다',
   )
@@ -240,7 +240,7 @@ test('S9: 잘못된 입력은 API 호출 전에 차단한다', async ({ page }) 
 
   await page.getByLabel('종료일').fill('2026-07-13')
   await page.getByLabel(/제목/).fill('   ')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
   await expect(page.getByRole('alertdialog')).toContainText(
     '제목을 입력해 주세요',
   )
@@ -288,7 +288,7 @@ test('S10: 새 URL 새로고침은 실제 목록 조회 값으로 수정한다',
   await expect(page.getByLabel('시작일')).toHaveValue('2026-08-01')
   await expect(page.getByLabel('종료일')).toHaveValue('2026-08-02')
   await expect(page.getByLabel(/제목/)).toHaveValue('API 상세 휴관일')
-  await page.getByRole('button', { name: '수정하기' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
   expect(updateRequestBody).toEqual({
@@ -301,9 +301,8 @@ test('S10: 새 URL 새로고침은 실제 목록 조회 값으로 수정한다',
 
 async function openUpdateTarget(page: Page, id = 7) {
   await page.goto('/notices/guide')
-  await page
-    .getByRole('link', { name: '수정 전 휴관일 휴관 일정 수정' })
-    .click()
+  await page.getByRole('button', { name: '수정 전 휴관일 메뉴' }).click()
+  await page.getByRole('menuitem', { name: '수정' }).click()
   await expect(page).toHaveURL(new RegExp(`/notices/guide/${id}/edit$`))
 }
 
@@ -332,7 +331,7 @@ async function expectUpdateFailure(
   await expect(
     page.getByText('수정하지 못했습니다. 다시 시도해 주세요.'),
   ).toBeVisible()
-  await expect(page.getByRole('button', { name: '수정하기' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: '저장하기' })).toBeEnabled()
 }
 
 async function mockUpdateError(

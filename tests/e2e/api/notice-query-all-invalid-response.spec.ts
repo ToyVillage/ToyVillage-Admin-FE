@@ -7,13 +7,16 @@ test('날짜가 없는 응답도 공지 목록을 표시한다', async ({ page }
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          id: '7',
-          title: '날짜 없는 공지',
-          kind: 'GENERAL',
-        },
-      ]),
+      body: JSON.stringify({
+        notices: [
+          {
+            id: '7',
+            title: '날짜 없는 공지',
+            kind: 'GENERAL',
+          },
+        ],
+        totalPageSize: 1,
+      }),
     })
   })
 

@@ -10,9 +10,9 @@
 - Request body:
   `{"title":"API 수정 공지","kind":"ALL","content":"API 수정 내용"}`
 - Mock response: HTTP 200, `{"message":"공지 수정 성공"}`
-- 후속 Mock request: `GET /api/notice?page=0&size=10`
+- 후속 Mock request: `GET /api/notice?page=1&size=10`
 - 후속 Mock response: 수정된 공지를 포함한 HTTP 200 목록
-- 사용자 동작: `/notices/list/7`에서 제목과 내용을 수정하고 `저장하기` 클릭
+- 사용자 동작: `/notices/list/7/edit`에서 제목과 내용을 수정하고 `저장하기` 클릭
 - 기대 결과: PUT이 정확히 한 번 호출되고 request에 `category`나 `attachments`가
   없으며, `/notices/list`로 이동해 갱신된 목록을 표시
 
@@ -41,7 +41,7 @@
 - 목적: HTTP 404를 수정 성공으로 처리하거나 localStorage에 저장하지 않는다.
 - Mock request: `PUT /api/notice/999`
 - Mock response: HTTP 404 Contract 오류 body
-- 사용자 동작: `/notices/list/999`에서 수정 submit
+- 사용자 동작: `/notices/list/999/edit`에서 수정 submit
 - 기대 결과: 수정 페이지와 입력을 유지하고 오류 상태를 표시하며 mock 저장 없음
 
 ## Mock S5 — 서버 오류

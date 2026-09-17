@@ -21,6 +21,7 @@ test('S1: 날짜별 운영시간을 영업 시작과 종료 초기값으로 표�
   const requests: string[] = []
   page.on('request', (request) => requests.push(request.url()))
 
+  await mockCloseDays(page)
   await page.route(openTimeApiPath, async (route) => {
     await route.fulfill({
       status: 200,

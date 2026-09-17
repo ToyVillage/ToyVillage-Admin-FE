@@ -28,11 +28,11 @@
 
 ## Mock S4 — 카드 이동
 
-- 목적: 기존 탐색 동작을 유지한다.
+- 목적: 카드 탐색 경로를 확인한다(2026-09-17: 카드 클릭은 상세).
 - Mock request: `GET /api/close-day`
 - Mock response: HTTP 200, 휴관일 1건
 - 사용자 동작: 일정 카드 클릭
-- 기대 결과: `/notices/guide/:id/edit`로 이동
+- 기대 결과: 카드 링크가 `/notices/guide/:id` 상세를 가리킨다
 
 ## Mock S5 — 잘못된 성공 응답
 

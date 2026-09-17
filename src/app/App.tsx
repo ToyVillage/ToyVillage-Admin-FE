@@ -8,6 +8,7 @@ import { DashboardPage } from '@/pages/dashboard'
 import { LoginPage } from '@/pages/login'
 import {
   CreateNoticePage,
+  EditNoticePage,
   NoticeDetailPage,
   NoticeListPage,
 } from '@/pages/notices/notice'
@@ -17,6 +18,7 @@ import {
   ResourceListPage,
 } from '@/pages/notices/resources'
 import {
+  CloseScheduleDetailPage,
   CreateCloseSchedulePage,
   EditCloseSchedulePage,
   NoticeGuidePage,
@@ -83,10 +85,15 @@ const router = createBrowserRouter([
           { path: '/notices/list', element: <NoticeListPage /> },
           { path: '/notices/list/create', element: <CreateNoticePage /> },
           { path: '/notices/list/:id', element: <NoticeDetailPage /> },
+          { path: '/notices/list/:id/edit', element: <EditNoticePage /> },
           { path: '/notices/guide', element: <NoticeGuidePage /> },
           {
             path: '/notices/guide/create',
             element: <CreateCloseSchedulePage />,
+          },
+          {
+            path: '/notices/guide/:id',
+            element: <CloseScheduleDetailPage />,
           },
           {
             path: '/notices/guide/:id/edit',

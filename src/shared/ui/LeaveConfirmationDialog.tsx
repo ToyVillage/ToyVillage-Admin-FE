@@ -150,11 +150,6 @@ const DialogButton = styled.button`
   font: inherit;
   font-size: 20px;
   font-weight: 500;
-
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 3px;
-  }
 `
 
 const CancelButton = styled(DialogButton)`

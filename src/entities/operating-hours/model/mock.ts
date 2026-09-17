@@ -4,6 +4,7 @@ export const operatingHoursStorageKey = 'toyvillage:operating-hours'
 
 export function getDefaultOperatingHours(date: string): OperatingHours {
   return {
+    id: null,
     date,
     opensAt: '07:40',
     closesAt: '19:40',

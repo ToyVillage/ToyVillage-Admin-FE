@@ -1,40 +1,27 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
 
-test('S1: route ID로 상세 조회하고 기존 폼에 표시한다', async ({ page }) => {
+test('S1: route ID로 상세 조회하고 읽기 전용 상세에 표시한다', async ({
+  page,
+}) => {
   const requestURLs: string[] = []
-  await page.route(detailApiPath, async (route) => {
-    requestURLs.push(route.request().url())
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        id: 7,
-        title: 'API 상세 공지',
-        kind: '공지사항 분류',
-        content: 'API에서 조회한 공지사항 내용입니다.',
-        createdAt: '2026-07-28',
-        files: [
-          {
-            fileName: 'notice.pdf',
-            fileKey: 'notice-key.pdf',
-          },
-        ],
-      }),
-    })
-  })
+  await mockNoticeDetail(page, requestURLs)
 
   await page.goto('/notices/list/7')
 
-  await expect(page.getByLabel('제목')).toHaveValue('API 상세 공지')
-  await expect(page.getByLabel('내용')).toHaveValue(
-    'API에서 조회한 공지사항 내용입니다.',
-  )
-  await expect(page.getByRole('radio', { name: '공지사항 분류' })).toBeChecked()
   await expect(
-    page.getByRole('group', { name: '첨부파일' }).getByText('notice.pdf'),
+    page.getByRole('heading', { name: 'API 상세 공지' }),
   ).toBeVisible()
+  await expect(
+    page.getByText('API에서 조회한 공지사항 내용입니다.'),
+  ).toBeVisible()
+  await expect(page.getByText('공지사항 분류', { exact: true })).toBeVisible()
+  await expect(page.getByText('2026-07-28')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'notice.pdf 다운로드' }),
+  ).toBeVisible()
+  await expect(page.getByRole('textbox')).toHaveCount(0)
   expect(requestURLs).toHaveLength(1)
   expect(new URL(requestURLs[0]).pathname).toBe('/notice/7')
 })
@@ -102,3 +89,40 @@ test('S4: 잘못된 route ID는 API를 호출하지 않는다', async ({ page })
   ).toBeVisible()
   expect(requestCount).toBe(0)
 })
+
+test('S5: 같은 조회 결과를 수정 폼 초기값으로 쓴다', async ({ page }) => {
+  await mockNoticeDetail(page, [])
+
+  await page.goto('/notices/list/7/edit')
+
+  await expect(page.getByLabel('제목')).toHaveValue('API 상세 공지')
+  await expect(page.getByLabel('내용')).toHaveValue(
+    'API에서 조회한 공지사항 내용입니다.',
+  )
+  await expect(
+    page.getByRole('group', { name: '첨부파일' }).getByText('notice.pdf'),
+  ).toBeVisible()
+})
+
+async function mockNoticeDetail(page: Page, requestURLs: string[]) {
+  await page.route(detailApiPath, async (route) => {
+    requestURLs.push(route.request().url())
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 7,
+        title: 'API 상세 공지',
+        kind: '공지사항 분류',
+        content: 'API에서 조회한 공지사항 내용입니다.',
+        createdAt: '2026-07-28',
+        files: [
+          {
+            fileName: 'notice.pdf',
+            fileKey: 'notice-key.pdf',
+          },
+        ],
+      }),
+    })
+  })
+}

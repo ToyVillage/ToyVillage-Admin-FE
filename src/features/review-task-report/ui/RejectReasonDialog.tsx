@@ -205,11 +205,6 @@ const ConfirmButton = styled.button`
     cursor: not-allowed;
     opacity: 0.6;
   }
-
-  &:focus-visible {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 4px;
-  }
 `
 
 function focusableElements(container: HTMLElement | null): HTMLElement[] {

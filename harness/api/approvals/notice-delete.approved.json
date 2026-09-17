@@ -1,15 +1,15 @@
 {
   "feature": "notice-delete",
   "apiId": "NOTICE_DELETE",
-  "approvedAt": "2026-09-10T13:08:27.730Z",
-  "approvedBy": "kimjihwan8",
+  "approvedAt": "2026-09-17T05:05:27.734Z",
+  "approvedBy": "yunho09",
   "taskSpecHash": "2b79deaf54f3baa271f3d6fc6f7b714f7b31a4ed9f67e1e12138f46e6e58d232",
   "contractHash": "6d850a0c9ef53c7c274bce7d6ac2abb60f209a9fa26c6127964706376978c6b7",
   "contractMarkdownHash": "674bdef13f8ebf16b2ce5e66f5026de999b805593ba4fe25c8d7079537eb2157",
-  "planHash": "0c396bb2c728e0aa0f110ab2457722b5ca3e0b69d63ecb05a44f4f0e8d2fe082",
-  "scenarioHash": "b38433e9cb9628dea48d544bc48902a15a48cc33a775c8ceb670a01f68787b22",
-  "testHash": "0edd23cd162db87f1bbba1e6da8744933136f2a83abf6bd5a2874efaf1d030ce",
+  "planHash": "c64fb0955381f4adae4b26ec8629279a06a87ff55d6f4ddc634260bf3bdf357b",
+  "scenarioHash": "d7bbeebc83f0034f84b90be2ddb152cabf385b12bb84ecc6943a621a79d90633",
+  "testHash": "f755fcc5bb72d8ba0ef3b249cce622fc66348f37ac1f39a1f413d01713ceac6a",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-10T13:08:28.172Z"
+  "testApprovedAt": "2026-09-17T05:09:27.330Z"
 }

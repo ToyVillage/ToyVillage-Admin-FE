@@ -60,10 +60,13 @@ export interface NoticeQueryAllResponseItem {
   id: number
   title: string
   kind: NoticeKind
-  createAt: string
+  createdAt: string
 }
 
-export type NoticeQueryAllResponse = NoticeQueryAllResponseItem[]
+export interface NoticeQueryAllResponse {
+  notices: NoticeQueryAllResponseItem[]
+  totalPageSize: number
+}
 
 export interface NoticeQueryAllErrorResponse {
   message: string

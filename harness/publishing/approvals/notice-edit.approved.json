@@ -1,7 +1,7 @@
 {
   "feature": "notice-edit",
-  "approvedAt": "2026-07-21T05:42:08.274Z",
-  "approvedBy": "user",
+  "approvedAt": "2026-09-17T04:01:29.480Z",
+  "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
     "S2",
@@ -13,9 +13,8 @@
     "S8",
     "S9",
     "S10",
-    "S11",
-    "S12"
+    "S11"
   ],
-  "scenarioHash": "79a4c5e93337eceed7a55920b5652b4dc0429f4e2fa003c4cc84936dc6800eab",
-  "e2eHash": "1fe26cfbea6d993d26815240d37a1d57691309a5b83062351449fe0ea7cf120d"
+  "scenarioHash": "71a3913b28c4165bd629ed9f289ea86993664cca12472d129a949db5c294d9d3",
+  "e2eHash": "d1d6048e0dd46f788eff16b186f1bc7e8316a970d7c49c9ef28b85260c5d887a"
 }

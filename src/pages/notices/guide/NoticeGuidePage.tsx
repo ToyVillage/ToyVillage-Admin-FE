@@ -1,15 +1,21 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from 'react-router-dom'
 import {
+  deleteCloseSchedule,
   getCloseSchedules,
   type CloseSchedule,
 } from '@/entities/close-schedule'
 import { CreateCloseScheduleButton } from '@/features/create-close-schedule'
+import {
+  DeleteConfirmationDialog,
+  KebabMenu,
+  Toast,
+  useFocusFrame,
+  type ToastVariant,
+} from '@/shared/ui'
 import arrowIcon from './ui/assets/arrow.svg'
-import filterIcon from '@/shared/ui/assets/filter.svg'
-import searchIcon from '@/shared/ui/assets/search.svg'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -22,8 +28,20 @@ interface CalendarDay {
 
 export function NoticeGuidePage() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
-  const [query, setQuery] = useState('')
-  const [filterOpen, setFilterOpen] = useState(false)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  // 케밥 메뉴는 동시에 하나만 열린다. 열린 카드 id 를 목록이 소유한다.
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [toast, setToast] = useState<{
+    variant: ToastVariant
+    message: string
+  } | null>(null)
+  const deletingRef = useRef(false)
+  // 카드별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
+  const kebabTriggersRef = useRef(new Map<string, HTMLButtonElement>())
+  const focusFrame = useFocusFrame()
+  const deleteMutation = useMutation({ mutationFn: deleteCloseSchedule })
   const {
     data: schedules = [],
     isError,
@@ -37,14 +55,56 @@ export function NoticeGuidePage() {
     () => filterSchedulesByMonth(schedules, month),
     [month, schedules],
   )
-  const filteredSchedules = useMemo(
-    () => filterSchedulesByQuery(monthSchedules, query),
-    [monthSchedules, query],
-  )
   const calendarDays = useMemo(
     () => createCalendarDays(month, monthSchedules),
     [month, monthSchedules],
   )
+
+  function focusKebabTrigger(id: string) {
+    // 삭제된 카드의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
+    focusFrame(() => kebabTriggersRef.current.get(id))
+  }
+
+  function handleDelete() {
+    if (!deleteTargetId || deletingRef.current || deleteMutation.isPending) {
+      return
+    }
+
+    deletingRef.current = true
+    const targetId = deleteTargetId
+    deleteMutation.mutate(
+      { id: Number(targetId) },
+      {
+        onSuccess: async () => {
+          queryClient.removeQueries({
+            queryKey: ['close-schedules', targetId],
+          })
+          await queryClient.invalidateQueries({
+            queryKey: ['close-schedules'],
+          })
+          deletingRef.current = false
+          setDeleteTargetId(null)
+          setToast({
+            variant: 'success',
+            message: '데이터 삭제에 성공했습니다',
+          })
+        },
+        onError: () => {
+          deletingRef.current = false
+          setDeleteTargetId(null)
+          setToast({ variant: 'error', message: '데이터 삭제에 실패했습니다' })
+          focusKebabTrigger(targetId)
+        },
+      },
+    )
+  }
+
+  function handleCancelDelete() {
+    if (!deleteTargetId) return
+    const targetId = deleteTargetId
+    setDeleteTargetId(null)
+    focusKebabTrigger(targetId)
+  }
 
   return (
     <Page>
@@ -104,29 +164,6 @@ export function NoticeGuidePage() {
           </CalendarSection>
 
           <Aside>
-            <SearchBar>
-              <SearchIcon src={searchIcon} alt="" />
-              <SearchInput
-                aria-label="휴관 일정 검색"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-              <FilterButton
-                type="button"
-                aria-label="휴관 일정 필터"
-                aria-expanded={filterOpen}
-                onClick={() => setFilterOpen((open) => !open)}
-              >
-                <FilterIcon src={filterIcon} alt="" />
-              </FilterButton>
-            </SearchBar>
-
-            {filterOpen && (
-              <FilterNotice role="status">
-                필터 옵션은 준비 중입니다
-              </FilterNotice>
-            )}
-
             {isPending ? (
               <QueryStatus role="status">
                 휴관일을 불러오는 중입니다.
@@ -135,17 +172,47 @@ export function NoticeGuidePage() {
               <QueryStatus role="alert">
                 휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
               </QueryStatus>
-            ) : filteredSchedules.length > 0 ? (
+            ) : monthSchedules.length > 0 ? (
               <CardList aria-label="휴관 일정 목록">
-                {filteredSchedules.map((schedule) => (
-                  <ScheduleCard
-                    key={schedule.id}
-                    to={`/notices/guide/${schedule.id}/edit`}
-                    aria-label={`${schedule.title} 휴관 일정 수정`}
-                  >
-                    <CardDate>{formatScheduleRange(schedule)}</CardDate>
-                    <CardTitle>{schedule.title}</CardTitle>
-                  </ScheduleCard>
+                {monthSchedules.map((schedule) => (
+                  <CardItem key={schedule.id}>
+                    <ScheduleCard
+                      to={`/notices/guide/${schedule.id}`}
+                      aria-label={`${schedule.title} 휴관 일정 상세`}
+                    >
+                      <CardDate>{formatScheduleRange(schedule)}</CardDate>
+                      <CardTitle>{schedule.title}</CardTitle>
+                    </ScheduleCard>
+                    <CardKebab>
+                      <KebabMenu
+                        placement="below-trigger"
+                        ariaLabel={`${schedule.title} 메뉴`}
+                        open={openKebabId === schedule.id}
+                        onOpenChange={(open) =>
+                          setOpenKebabId(open ? schedule.id : null)
+                        }
+                        onTriggerRef={(node) => {
+                          if (node) {
+                            kebabTriggersRef.current.set(schedule.id, node)
+                          } else {
+                            kebabTriggersRef.current.delete(schedule.id)
+                          }
+                        }}
+                        items={[
+                          {
+                            label: '수정',
+                            onSelect: () =>
+                              navigate(`/notices/guide/${schedule.id}/edit`),
+                          },
+                          {
+                            label: '삭제',
+                            tone: 'danger',
+                            onSelect: () => setDeleteTargetId(schedule.id),
+                          },
+                        ]}
+                      />
+                    </CardKebab>
+                  </CardItem>
                 ))}
               </CardList>
             ) : (
@@ -154,6 +221,22 @@ export function NoticeGuidePage() {
           </Aside>
         </MainGrid>
       </Content>
+
+      {deleteTargetId && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={handleCancelDelete}
+          onConfirm={handleDelete}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          variant={toast.variant}
+          message={toast.message}
+          onDismiss={() => setToast(null)}
+        />
+      )}
     </Page>
   )
 }
@@ -186,16 +269,6 @@ function filterSchedulesByMonth(schedules: CloseSchedule[], month: Date) {
     const scheduleStart = parseDate(schedule.startDate)
     const scheduleEnd = parseDate(schedule.endDate)
     return scheduleStart <= end && scheduleEnd >= start
-  })
-}
-
-function filterSchedulesByQuery(schedules: CloseSchedule[], query: string) {
-  const normalizedQuery = query.trim().toLowerCase()
-  if (!normalizedQuery) return schedules
-
-  return schedules.filter((schedule) => {
-    const label = `${formatScheduleRange(schedule)} ${schedule.title}`
-    return label.toLowerCase().includes(normalizedQuery)
   })
 }
 
@@ -374,11 +447,6 @@ const DayCell = styled(Link)`
   cursor: pointer;
   text-decoration: none;
 
-  &:focus-visible {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: calc(-1 * 4px);
-  }
-
   @media (min-width: 1280px) {
     min-height: 152px;
   }
@@ -410,59 +478,8 @@ const Aside = styled.aside`
   min-height: 360px;
 `
 
-const SearchBar = styled.div`
-  display: flex;
-  height: 50px;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 44px;
-  background: ${({ theme }) => theme.colors.surface};
-`
-
-const SearchInput = styled.input`
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #36363f;
-  font: inherit;
-`
-
-const SearchIcon = styled.img`
-  width: 20px;
-  height: 20px;
-  flex: 0 0 20px;
-`
-
-const FilterButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #848491;
-  cursor: pointer;
-`
-
-const FilterIcon = styled.img`
-  width: 22px;
-  height: 20px;
-  flex: 0 0 22px;
-`
-
-const FilterNotice = styled.p`
-  margin: 8px 0 0;
-  padding: 0 16px;
-  color: #848491;
-  font-size: 18px;
-  font-weight: 500;
-`
-
 const QueryStatus = styled.p`
-  margin: 24px 0 0;
+  margin: 0;
   padding: 24px 40px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
@@ -472,11 +489,24 @@ const QueryStatus = styled.p`
   line-height: 1.4;
 `
 
+// Figma: 카드는 캘린더와 같은 높이(top 278)에서 시작하고 카드 간 간격은 16이다.
 const CardList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 24px;
+  gap: 16px;
+`
+
+const CardItem = styled.div`
+  position: relative;
+`
+
+// 케밥은 카드 오른쪽 40px, 세로 중앙(Figma 246:12915). 메뉴가 뒤따르는 카드 위에 그려지도록
+// transform 대신 음수 margin 으로 가운데를 맞춘다(쌓임 맥락을 만들지 않는다).
+const CardKebab = styled.div`
+  position: absolute;
+  top: 50%;
+  right: 40px;
+  margin-top: -26px;
 `
 
 const ScheduleCard = styled(Link)`
@@ -485,16 +515,11 @@ const ScheduleCard = styled(Link)`
   flex-direction: column;
   justify-content: center;
   gap: 10px;
-  padding: 18px 40px;
+  padding: 18px 124px 18px 40px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
   color: #36363f;
   text-decoration: none;
-
-  &:focus-visible {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 4px;
-  }
 `
 
 const CardDate = styled.strong`

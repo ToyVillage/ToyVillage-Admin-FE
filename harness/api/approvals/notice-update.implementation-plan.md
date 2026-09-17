@@ -51,12 +51,11 @@
 
 ## UI 연결
 
+- 진입 경로는 목록 케밥 `수정` → `/notices/list/:id/edit`이다.
 - 입력 검증과 오류 문구를 변경하지 않는다.
 - 중복 submit은 기존 `submittingRef`와 mutation pending 상태로 한 번만 요청한다.
-- 성공 시 `NoticeDetailPage`의 기존 완료 callback을 재사용한다.
+- 성공 시 `EditNoticePage`의 완료 callback으로 목록 이동한다.
 - 실패 시 `저장하지 못했습니다. 다시 시도해 주세요.`를 유지한다.
-- 팀 추가와 첨부 UI는 유지하지만 이번 Contract request에는 포함하지 않는다.
-- 생성 API 분기와 삭제 mock 분기는 변경하지 않는다.
 
 ## 검증 순서
 
@@ -77,3 +76,7 @@
 - 첨부파일 수정은 별도 API ID와 Contract 없이는 연결하지 않는다.
 - 구현 중 승인 Contract 밖의 request 또는 response 필드가 필요하면 중단하고
   ⑧ 승인 단계로 돌아간다.
+
+## 2026-09-17 변경 (#93·#95 퍼블리싱, #112)
+
+- API Contract는 바뀌지 않았다. 수정 화면 경로만 `/notices/list/:id/edit`로 옮겨 시나리오 진입 경로를 갱신한다.

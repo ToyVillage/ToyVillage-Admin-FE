@@ -4,12 +4,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   createCloseSchedule,
-  deleteCloseSchedule,
   updateCloseSchedule,
   type CloseSchedule,
   type CreateCloseScheduleInput,
 } from '@/entities/close-schedule'
-import { DeleteConfirmationDialog, ValidationDialog } from '@/shared/ui'
+import { ValidationDialog } from '@/shared/ui'
 import { DateField } from '@/shared/ui'
 
 type ValidationError = 'date' | 'title' | 'range'
@@ -28,11 +27,9 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
-  const deletingRef = useRef(false)
   const startDateRef = useRef<HTMLInputElement>(null)
   const endDateRef = useRef<HTMLInputElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
-  const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const [startDate, setStartDate] = useState(
     () => initialSchedule?.startDate ?? '',
   )
@@ -40,8 +37,6 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
   const [title, setTitle] = useState(() => initialSchedule?.title ?? '')
   const [validationError, setValidationError] =
     useState<ValidationError | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteError, setDeleteError] = useState(false)
   const mutation = useMutation({
     mutationFn: async (input: CreateCloseScheduleInput) => {
       if (initialSchedule) {
@@ -56,8 +51,6 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
     },
   })
   const isEditing = Boolean(initialSchedule)
-  const deleteMutation = useMutation({ mutationFn: deleteCloseSchedule })
-  const isPending = mutation.isPending || deleteMutation.isPending
 
   const handleConfirm = useCallback(() => {
     const error = validationError
@@ -78,47 +71,9 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
     })
   }, [startDate, validationError])
 
-  const handleDeleteCancel = useCallback(() => {
-    setDeleteDialogOpen(false)
-    requestAnimationFrame(() => deleteButtonRef.current?.focus())
-  }, [])
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (!initialSchedule || deletingRef.current) return
-
-    deletingRef.current = true
-    deleteMutation.mutate(
-      { id: Number(initialSchedule.id) },
-      {
-        onSuccess: async () => {
-          queryClient.setQueryData<CloseSchedule[]>(
-            ['close-schedules'],
-            (schedules) =>
-              schedules?.filter(
-                (schedule) => schedule.id !== initialSchedule.id,
-              ),
-          )
-          queryClient.removeQueries({
-            queryKey: ['close-schedules', initialSchedule.id],
-            exact: true,
-          })
-          await queryClient.invalidateQueries({ queryKey: ['close-schedules'] })
-          navigate('/notices/guide')
-        },
-        onError: () => {
-          deletingRef.current = false
-          setDeleteError(true)
-          setDeleteDialogOpen(false)
-          requestAnimationFrame(() => deleteButtonRef.current?.focus())
-        },
-      },
-    )
-  }, [deleteMutation, initialSchedule, navigate, queryClient])
-
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submittingRef.current) return
-    setDeleteError(false)
 
     if (!startDate || !endDate) {
       setValidationError('date')
@@ -160,6 +115,7 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
           ref={startDateRef}
           id="close-schedule-start-date"
           label="시작일"
+          size="sm"
           value={startDate}
           onChange={setStartDate}
           onTabForward={() => endDateRef.current?.focus()}
@@ -168,6 +124,7 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
           ref={endDateRef}
           id="close-schedule-end-date"
           label="종료일"
+          size="sm"
           value={endDate}
           onChange={setEndDate}
           onTabForward={() => titleRef.current?.focus()}
@@ -190,27 +147,13 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
       </TitleCard>
 
       <Actions>
-        {isEditing && (
-          <DeleteButton
-            ref={deleteButtonRef}
-            type="button"
-            disabled={isPending}
-            onClick={() => {
-              mutation.reset()
-              setDeleteError(false)
-              setDeleteDialogOpen(true)
-            }}
-          >
-            삭제하기
-          </DeleteButton>
-        )}
-        <SubmitButton type="submit" disabled={isPending}>
+        <SubmitButton type="submit" disabled={mutation.isPending}>
           {mutation.isPending
             ? isEditing
-              ? '수정 중'
+              ? '저장 중'
               : '생성 중'
             : isEditing
-              ? '수정하기'
+              ? '저장하기'
               : '생성하기'}
         </SubmitButton>
       </Actions>
@@ -223,22 +166,10 @@ export function CloseScheduleForm({ initialSchedule }: CloseScheduleFormProps) {
         </Status>
       )}
 
-      {deleteError && (
-        <Status role="status">삭제하지 못했습니다. 다시 시도해 주세요.</Status>
-      )}
-
       {validationError && (
         <ValidationDialog
           message={validationMessages[validationError]}
           onConfirm={handleConfirm}
-        />
-      )}
-
-      {deleteDialogOpen && (
-        <DeleteConfirmationDialog
-          pending={deleteMutation.isPending}
-          onCancel={handleDeleteCancel}
-          onConfirm={handleDeleteConfirm}
         />
       )}
     </Form>
@@ -249,9 +180,10 @@ const Form = styled.form`
   width: 100%;
 `
 
+// Figma yot `holiday correction`(1:7062): 날짜 카드 426 두 개(간격 21) → 32 → 제목 카드 → 14 → 저장하기.
 const DateFields = styled.div`
   display: flex;
-  gap: 20px;
+  gap: 21px;
 
   @media (max-width: 980px) {
     flex-direction: column;
@@ -260,23 +192,17 @@ const DateFields = styled.div`
 
 const TitleCard = styled.div`
   display: flex;
-  min-height: 164px;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-top: 32px;
   padding: 40px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
-
-  &:focus-within {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 4px;
-  }
 `
 
 const TitleLabel = styled.label`
   color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 500;
   line-height: 1.2;
 `
@@ -286,14 +212,17 @@ const Required = styled.span`
 `
 
 const TitleInput = styled.input`
+  box-sizing: border-box;
   width: 100%;
-  padding: 0;
+  height: 66px;
+  padding: 0 24px;
   border: 0;
+  border-radius: 8px;
   outline: 0;
-  background: transparent;
+  background: ${({ theme }) => theme.colors.background};
   color: ${({ theme }) => theme.colors.textStrong};
   font: inherit;
-  font-size: 40px;
+  font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
 
@@ -307,7 +236,7 @@ const Actions = styled.div`
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  margin-top: 29px;
+  margin-top: 14px;
 `
 
 const SubmitButton = styled.button`
@@ -328,17 +257,6 @@ const SubmitButton = styled.button`
     cursor: wait;
     opacity: 0.6;
   }
-
-  &:focus-visible {
-    outline: 4px solid ${({ theme }) => theme.colors.primary};
-    outline-offset: 4px;
-  }
-`
-
-const DeleteButton = styled(SubmitButton)`
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.danger};
-  border: 1px solid ${({ theme }) => theme.colors.danger};
 `
 
 const Status = styled.p`

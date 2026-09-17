@@ -72,7 +72,7 @@ test('S3: 서버 오류를 mock 또는 빈 배열로 숨기지 않는다', async
   await expect(page.getByText('아직 추가된 휴관일이 없습니다')).toHaveCount(0)
 })
 
-test('S4: 휴관 일정 카드의 기존 수정 경로를 유지한다', async ({ page }) => {
+test('S4: 휴관 일정 카드는 상세 경로를 가리킨다', async ({ page }) => {
   await page.route(apiPath, async (route) => {
     await route.fulfill({
       status: 200,
@@ -91,8 +91,8 @@ test('S4: 휴관 일정 카드의 기존 수정 경로를 유지한다', async (
   await page.goto('/notices/guide')
 
   await expect(
-    page.getByRole('link', { name: '이동할 휴관일 휴관 일정 수정' }),
-  ).toHaveAttribute('href', '/notices/guide/7/edit')
+    page.getByRole('link', { name: '이동할 휴관일 휴관 일정 상세' }),
+  ).toHaveAttribute('href', '/notices/guide/7')
 })
 
 test('S5: Contract 필수 필드가 누락된 응답을 거부한다', async ({ page }) => {

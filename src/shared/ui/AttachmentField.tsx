@@ -34,8 +34,12 @@ interface AttachmentFieldProps {
    * 보이고, 라벨이 20px 이며 드롭존 배경이 gray/10 이다. 공지·자료 화면은 `default` 다.
    * `observation` 은 관찰 수정의 `첨부` 카드(yot 1284:15032)다 — 라벨 `첨부` 32px,
    * 카드 padding 28/32, 칩은 `AttachmentChip`, 카드↔드롭존 16px, 안내 18px 이다.
+   * `notice` 는 공지 수정(yot 1:6711)이다 — 첨부가 없으면 카드 없이 드롭존만 20px 아래에 두고,
+   * 드롭존은 gray/20 배경·gray/80 점선, 안내 18px 이다.
+   * `notice-create` 는 공지 생성(yot 1:6919)이다 — 빈 카드에도 `첨부자료`(22px gray/100)를 보이고,
+   * 카드↔드롭존 32px, 드롭존은 `notice` 와 같다.
    */
-  variant?: 'default' | 'task' | 'observation'
+  variant?: 'default' | 'task' | 'observation' | 'notice' | 'notice-create'
   initialFileNames?: string[]
   /**
    * 이름과 저장소 키를 함께 가진 기존 첨부. 수정 화면에서 쓴다.
@@ -98,8 +102,12 @@ export function AttachmentField({
   ])
 
   const isObservation = variant === 'observation'
-  // `task`·`observation` 은 첨부가 없어도 라벨을 보인다.
-  const showsTitle = files.length > 0 || variant !== 'default'
+  const isNotice = variant === 'notice' || variant === 'notice-create'
+  // `task`·`observation`·`notice-create` 는 첨부가 없어도 라벨을 보인다.
+  const showsTitle =
+    files.length > 0 || (variant !== 'default' && variant !== 'notice')
+  // `notice` 는 첨부가 없으면 빈 카드를 그리지 않는다.
+  const showsCard = variant !== 'notice' || files.length > 0
 
   function addFiles(incomingFiles: File[]) {
     const oversizedFile = incomingFiles.find((file) => file.size > maxFileSize)
@@ -168,51 +176,62 @@ export function AttachmentField({
   }
 
   return (
-    <AttachmentSection role="group" aria-label="첨부파일" data-variant={variant}>
-      <AttachmentCard data-testid="notice-attachment-card">
-        {showsTitle && (
-          <>
-            <AttachmentTitle>{isObservation ? '첨부' : '첨부자료'}</AttachmentTitle>
-            <FileList>
-              {files.map((attachedFile) => {
-                if (isObservation) {
+    <AttachmentSection
+      role="group"
+      aria-label="첨부파일"
+      data-variant={variant}
+      data-card={showsCard}
+    >
+      {showsCard && (
+        <AttachmentCard data-testid="notice-attachment-card">
+          {showsTitle && (
+            <>
+              <AttachmentTitle>
+                {isObservation ? '첨부' : '첨부자료'}
+              </AttachmentTitle>
+              <FileList>
+                {files.map((attachedFile) => {
+                  if (isObservation) {
+                    return (
+                      <AttachmentChip
+                        key={attachedFile.id}
+                        fileName={attachedFile.name}
+                        onDownload={() => handleDownload(attachedFile)}
+                        onRemove={() => handleRemove(attachedFile.id)}
+                      />
+                    )
+                  }
+
+                  const kind = fileKind(attachedFile.name)
+
                   return (
-                    <AttachmentChip
-                      key={attachedFile.id}
-                      fileName={attachedFile.name}
-                      onDownload={() => handleDownload(attachedFile)}
-                      onRemove={() => handleRemove(attachedFile.id)}
-                    />
+                    <FileChip key={attachedFile.id}>
+                      <FileBadge data-kind={kind}>
+                        {kind.toUpperCase()}
+                      </FileBadge>
+                      <FileName>{attachedFile.name}</FileName>
+                      <IconButton
+                        type="button"
+                        aria-label={`${attachedFile.name} 다운로드`}
+                        onClick={() => handleDownload(attachedFile)}
+                      >
+                        <DownloadIcon viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14" />
+                        </DownloadIcon>
+                      </IconButton>
+                      <RemoveIconButton
+                        type="button"
+                        aria-label={`${attachedFile.name} 삭제`}
+                        onClick={() => handleRemove(attachedFile.id)}
+                      />
+                    </FileChip>
                   )
-                }
-
-                const kind = fileKind(attachedFile.name)
-
-                return (
-                  <FileChip key={attachedFile.id}>
-                    <FileBadge data-kind={kind}>{kind.toUpperCase()}</FileBadge>
-                    <FileName>{attachedFile.name}</FileName>
-                    <IconButton
-                      type="button"
-                      aria-label={`${attachedFile.name} 다운로드`}
-                      onClick={() => handleDownload(attachedFile)}
-                    >
-                      <DownloadIcon viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14" />
-                      </DownloadIcon>
-                    </IconButton>
-                    <RemoveIconButton
-                      type="button"
-                      aria-label={`${attachedFile.name} 삭제`}
-                      onClick={() => handleRemove(attachedFile.id)}
-                    />
-                  </FileChip>
-                )
-              })}
-            </FileList>
-          </>
-        )}
-      </AttachmentCard>
+                })}
+              </FileList>
+            </>
+          )}
+        </AttachmentCard>
+      )}
 
       <DropZone
         ariaLabel="파일 업로드"
@@ -220,7 +239,7 @@ export function AttachmentField({
         inputId="notice-attachments"
         multiple
         appearance={variant === 'default' ? 'default' : 'strong'}
-        textSize={isObservation ? 18 : 16}
+        textSize={isObservation || isNotice ? 18 : 16}
         onFiles={addFiles}
       />
       {errorMessage && <ErrorMessage role="alert">{errorMessage}</ErrorMessage>}
@@ -246,6 +265,10 @@ const AttachmentSection = styled.section`
   &[data-variant='task'],
   &[data-variant='observation'] {
     margin-top: 0;
+  }
+
+  &[data-variant='notice'] {
+    margin-top: 20px;
   }
 `
 
@@ -275,6 +298,13 @@ const AttachmentTitle = styled.h2`
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+
+  [data-variant='notice'] &,
+  [data-variant='notice-create'] & {
+    color: ${({ theme }) => theme.colors.textStrong};
+    font-size: 22px;
+    line-height: normal;
+  }
 
   [data-variant='task'] & {
     font-size: 20px;
@@ -391,6 +421,19 @@ const DropZone = styled(FileDropZone)`
 
   [data-variant='observation'] & {
     margin-top: 16px;
+  }
+
+  [data-variant='notice'] &,
+  [data-variant='notice-create'] & {
+    border-color: ${({ theme }) => theme.colors.textValue};
+  }
+
+  [data-variant='notice'] & {
+    margin-top: 20px;
+  }
+
+  [data-variant='notice'][data-card='false'] & {
+    margin-top: 0;
   }
 `
 

@@ -1,11 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useRef, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { getAllNotices, NoticeTable } from '@/entities/notice'
+import { deleteNotice, getAllNotices, NoticeTable } from '@/entities/notice'
 import { CreateNoticeButton } from '@/features/create-notice'
 
-import { CategoryTabs, type DataTableSortValue } from '@/shared/ui'
+import {
+  CategoryTabs,
+  DeleteConfirmationDialog,
+  Toast,
+  useFocusFrame,
+  type DataTableSortValue,
+  type ToastVariant,
+} from '@/shared/ui'
 
 const API_PAGE_SIZE = 10
 const TABLE_PAGE_SIZE = 4
@@ -16,6 +23,19 @@ export function NoticeListPage() {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<DataTableSortValue>('newest')
   const [page, setPage] = useState(1)
+  // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [toast, setToast] = useState<{
+    variant: ToastVariant
+    message: string
+  } | null>(null)
+  const queryClient = useQueryClient()
+  const deletingRef = useRef(false)
+  // 행별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
+  const kebabTriggersRef = useRef(new Map<string, HTMLButtonElement>())
+  const focusFrame = useFocusFrame()
+  const deleteMutation = useMutation({ mutationFn: deleteNotice })
   const {
     data: queryNotices,
     isPending,
@@ -75,6 +95,48 @@ export function NoticeListPage() {
     [filtered, currentPage],
   )
 
+  function focusKebabTrigger(id: string) {
+    // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
+    focusFrame(() => kebabTriggersRef.current.get(id))
+  }
+
+  function handleDelete() {
+    if (!deleteTargetId || deletingRef.current || deleteMutation.isPending) {
+      return
+    }
+
+    deletingRef.current = true
+    const targetId = deleteTargetId
+    deleteMutation.mutate(
+      { id: Number(targetId) },
+      {
+        onSuccess: async () => {
+          queryClient.removeQueries({ queryKey: ['notices', targetId] })
+          await queryClient.invalidateQueries({ queryKey: ['notices', 'all'] })
+          deletingRef.current = false
+          setDeleteTargetId(null)
+          setToast({
+            variant: 'success',
+            message: '데이터 삭제에 성공했습니다',
+          })
+        },
+        onError: () => {
+          deletingRef.current = false
+          setDeleteTargetId(null)
+          setToast({ variant: 'error', message: '데이터 삭제에 실패했습니다' })
+          focusKebabTrigger(targetId)
+        },
+      },
+    )
+  }
+
+  function handleCancelDelete() {
+    if (!deleteTargetId) return
+    const targetId = deleteTargetId
+    setDeleteTargetId(null)
+    focusKebabTrigger(targetId)
+  }
+
   if (isPending) {
     return (
       <StatePage>
@@ -113,6 +175,14 @@ export function NoticeListPage() {
         <NoticeTable
           notices={notices}
           onRowClick={(id) => navigate(`/notices/list/${id}`)}
+          onEdit={(id) => navigate(`/notices/list/${id}/edit`)}
+          onDelete={setDeleteTargetId}
+          openKebabId={openKebabId}
+          onOpenKebabChange={setOpenKebabId}
+          onKebabTriggerRef={(id, node) => {
+            if (node) kebabTriggersRef.current.set(id, node)
+            else kebabTriggersRef.current.delete(id)
+          }}
           search={{
             value: query,
             onChange: setQuery,
@@ -130,6 +200,22 @@ export function NoticeListPage() {
           }
         />
       </Content>
+
+      {deleteTargetId && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={handleCancelDelete}
+          onConfirm={handleDelete}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          variant={toast.variant}
+          message={toast.message}
+          onDismiss={() => setToast(null)}
+        />
+      )}
     </Page>
   )
 }

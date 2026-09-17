@@ -1,7 +1,9 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
 const closeScheduleApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
-const closeScheduleDetailApiPath = /^https:\/\/[^/]+\/close-day\/[^/?]+(?:\?.*)?$/
+const closeScheduleDetailApiPath =
+  /^https:\/\/[^/]+\/close-day\/[^/?]+(?:\?.*)?$/
+const targetTitle = '삭제 대상 휴관일'
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -9,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test('S1: route ID로 휴관일을 한 번 삭제하고 갱신된 목록으로 이동한다', async ({
+test('S1: 카드 케밥에서 휴관일을 한 번 삭제하고 목록을 갱신한다', async ({
   page,
 }) => {
   let listRequestCount = 0
@@ -17,6 +19,7 @@ test('S1: route ID로 휴관일을 한 번 삭제하고 갱신된 목록으로 �
   let deleteRequestBody: string | null = 'not-checked'
   let deleteRequestHeaders: Record<string, string> = {}
   let deleteRequestSearch = 'not-checked'
+  let deleteRequestPath = 'not-checked'
 
   await page.route(closeScheduleApiPath, async (route) => {
     listRequestCount += 1
@@ -31,43 +34,49 @@ test('S1: route ID로 휴관일을 한 번 삭제하고 갱신된 목록으로 �
     deleteRequestBody = request.postData()
     deleteRequestHeaders = request.headers()
     deleteRequestSearch = new URL(request.url()).search
+    deleteRequestPath = new URL(request.url()).pathname
     await fulfillDeleteSuccess(route)
   })
 
-  await openDeleteTarget(page)
+  await page.goto('/notices/guide')
   await confirmDelete(page)
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
-  await expect(page.getByText('삭제 대상 휴관일')).toHaveCount(0)
+  await expect(page.getByText('데이터 삭제에 성공했습니다')).toBeVisible()
+  await expect(page.getByText(targetTitle)).toHaveCount(0)
   expect(deleteRequestCount).toBe(1)
+  expect(deleteRequestPath).toBe('/close-day/7')
   expect(deleteRequestBody).toBeNull()
   expect(deleteRequestSearch).toBe('')
   expect(deleteRequestHeaders.authorization).toMatch(/^Bearer /)
   await expect.poll(() => listRequestCount).toBeGreaterThanOrEqual(2)
 })
 
-test('S2: HTTP 400이면 현재 화면에서 다시 삭제할 수 있다', async ({ page }) => {
+test('S2: HTTP 400이면 목록에서 다시 삭제할 수 있다', async ({ page }) => {
   let deleteRequestCount = 0
   await mockDeleteError(page, 400, '요청이 유효하지 않습니다.', () => {
     deleteRequestCount += 1
   })
 
-  await openDeleteTarget(page)
+  await page.goto('/notices/guide')
   await confirmDelete(page)
-  await expectDeleteFailure(page, 7)
+  await expectDeleteFailure(page)
 
   await confirmDelete(page)
   await expect.poll(() => deleteRequestCount).toBe(2)
 })
 
-test('S3: HTTP 401이면 수정 화면과 입력값을 유지한다', async ({ page }) => {
+test('S3: HTTP 401이면 세션을 비우고 로그인으로 보낸다', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.removeItem('refreshToken')
+  })
   await mockDeleteError(page, 401, '만료된 토큰입니다.')
 
-  await openDeleteTarget(page)
+  await page.goto('/notices/guide')
   await confirmDelete(page)
 
-  await expectDeleteFailure(page, 7)
-  await expect(page.getByLabel(/제목/)).toHaveValue('삭제 대상 휴관일')
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByText('데이터 삭제에 성공했습니다')).toHaveCount(0)
 })
 
 test('S4: HTTP 404이면 삭제 성공으로 처리하지 않는다', async ({ page }) => {
@@ -79,21 +88,19 @@ test('S4: HTTP 404이면 삭제 성공으로 처리하지 않는다', async ({ p
     999,
   )
 
-  await openDeleteTarget(page, 999)
+  await page.goto('/notices/guide')
   await confirmDelete(page)
 
-  await expectDeleteFailure(page, 999)
+  await expectDeleteFailure(page)
 })
 
-test('S5: HTTP 500이면 수정 화면에서 삭제를 재시도할 수 있다', async ({
-  page,
-}) => {
+test('S5: HTTP 500이면 목록에서 삭제를 재시도할 수 있다', async ({ page }) => {
   await mockDeleteError(page, 500, '예상하지 못한 에러가 발생했습니다.')
 
-  await openDeleteTarget(page)
+  await page.goto('/notices/guide')
   await confirmDelete(page)
 
-  await expectDeleteFailure(page, 7)
+  await expectDeleteFailure(page)
 })
 
 test('S6: 연속 확인에도 삭제 요청은 한 번만 전송한다', async ({ page }) => {
@@ -102,9 +109,14 @@ test('S6: 연속 확인에도 삭제 요청은 한 번만 전송한다', async (
   const responseGate = new Promise<void>((resolve) => {
     releaseResponse = resolve
   })
+  let listRequestCount = 0
 
   await page.route(closeScheduleApiPath, async (route) => {
-    await fulfillCloseScheduleList(route, [createCloseSchedule()])
+    listRequestCount += 1
+    await fulfillCloseScheduleList(
+      route,
+      listRequestCount === 1 ? [createCloseSchedule()] : [],
+    )
   })
   await page.route(closeScheduleDetailApiPath, async (route) => {
     deleteRequestCount += 1
@@ -112,8 +124,8 @@ test('S6: 연속 확인에도 삭제 요청은 한 번만 전송한다', async (
     await fulfillDeleteSuccess(route)
   })
 
-  await openDeleteTarget(page)
-  await page.getByRole('button', { name: '삭제하기' }).click()
+  await page.goto('/notices/guide')
+  await openDeleteDialog(page)
   await page
     .getByRole('alertdialog')
     .getByRole('button', { name: '확인', exact: true })
@@ -125,7 +137,7 @@ test('S6: 연속 확인에도 삭제 요청은 한 번만 전송한다', async (
   await expect.poll(() => deleteRequestCount).toBe(1)
   releaseResponse?.()
 
-  await expect(page).toHaveURL(/\/notices\/guide$/)
+  await expect(page.getByText(targetTitle)).toHaveCount(0)
   expect(deleteRequestCount).toBe(1)
 })
 
@@ -134,10 +146,10 @@ test('S7: HTTP 201 body가 Contract와 다르면 성공 처리하지 않는다',
 }) => {
   await mockDeleteResponse(page, 201, { result: 'ok' })
 
-  await openDeleteTarget(page)
+  await page.goto('/notices/guide')
   await confirmDelete(page)
 
-  await expectDeleteFailure(page, 7)
+  await expectDeleteFailure(page)
 })
 
 test('S8: HTTP 200은 승인된 성공 Status가 아니므로 거부한다', async ({
@@ -147,81 +159,63 @@ test('S8: HTTP 200은 승인된 성공 Status가 아니므로 거부한다', asy
     message: '휴관일이 삭제되었습니다.',
   })
 
-  await openDeleteTarget(page)
+  await page.goto('/notices/guide')
   await confirmDelete(page)
 
-  await expectDeleteFailure(page, 7)
+  await expectDeleteFailure(page)
 })
 
-test('S9: 새 URL 새로고침은 실제 목록 조회 값을 삭제한다', async ({ page }) => {
-  let listRequestCount = 0
-  let deleteRequestCount = 0
+test('S9: 새로고침 후 실제 목록 조회 값을 카드에서 삭제한다', async ({
+  page,
+}) => {
+  let deleteRequestPath = ''
+  let deleted = false
 
-  await page.addInitScript(() => {
-    window.localStorage.setItem(
-      'toyvillage:close-schedules',
-      JSON.stringify([
-        {
-          id: '7',
-          title: 'localStorage mock 삭제 대상',
-          startDate: '2026-01-01',
-          endDate: '2026-01-02',
-        },
-      ]),
+  await page.route(closeScheduleApiPath, async (route) => {
+    await fulfillCloseScheduleList(
+      route,
+      deleted ? [] : [{ ...createCloseSchedule(), title: 'API 삭제 대상' }],
     )
   })
-  await page.route(closeScheduleApiPath, async (route) => {
-    listRequestCount += 1
-    await fulfillCloseScheduleList(route, [
-      {
-        ...createCloseSchedule(),
-        title: 'API 삭제 대상',
-        startCloseTime: '2026-08-01',
-        endCloseTime: '2026-08-02',
-      },
-    ])
-  })
   await page.route(closeScheduleDetailApiPath, async (route) => {
-    deleteRequestCount += 1
+    deleteRequestPath = new URL(route.request().url()).pathname
+    deleted = true
     await fulfillDeleteSuccess(route)
   })
 
-  await page.goto('/notices/guide/7/edit')
-  await expect(page.getByLabel(/제목/)).toHaveValue('API 삭제 대상')
+  await page.goto('/notices/guide')
+  await expect(page.getByText('API 삭제 대상')).toBeVisible()
   await page.reload()
 
-  await expect(page.getByLabel('시작일')).toHaveValue('2026-08-01')
-  await expect(page.getByLabel('종료일')).toHaveValue('2026-08-02')
-  await expect(page.getByLabel(/제목/)).toHaveValue('API 삭제 대상')
-  await confirmDelete(page)
+  await page.getByRole('button', { name: 'API 삭제 대상 메뉴' }).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
+  await page
+    .getByRole('alertdialog')
+    .getByRole('button', { name: '확인', exact: true })
+    .click()
 
-  await expect(page).toHaveURL(/\/notices\/guide$/)
-  expect(deleteRequestCount).toBe(1)
-  await expect.poll(() => listRequestCount).toBeGreaterThanOrEqual(3)
+  await expect(page.getByText('API 삭제 대상')).toHaveCount(0)
+  expect(deleteRequestPath).toBe('/close-day/7')
 })
 
-async function openDeleteTarget(page: Page, id = 7) {
-  await page.goto('/notices/guide')
-  await page
-    .getByRole('link', { name: '삭제 대상 휴관일 휴관 일정 수정' })
-    .click()
-  await expect(page).toHaveURL(new RegExp(`/notices/guide/${id}/edit$`))
+async function openDeleteDialog(page: Page) {
+  await page.getByRole('button', { name: `${targetTitle} 메뉴` }).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
 }
 
 async function confirmDelete(page: Page) {
-  await page.getByRole('button', { name: '삭제하기' }).click()
+  await openDeleteDialog(page)
   await page
     .getByRole('alertdialog')
     .getByRole('button', { name: '확인', exact: true })
     .click()
 }
 
-async function expectDeleteFailure(page: Page, id: number) {
-  await expect(page).toHaveURL(new RegExp(`/notices/guide/${id}/edit$`))
-  await expect(
-    page.getByText('삭제하지 못했습니다. 다시 시도해 주세요.'),
-  ).toBeVisible()
-  await expect(page.getByRole('button', { name: '삭제하기' })).toBeEnabled()
+async function expectDeleteFailure(page: Page) {
+  await expect(page).toHaveURL(/\/notices\/guide$/)
+  await expect(page.getByText('데이터 삭제에 실패했습니다')).toBeVisible()
+  await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  await expect(page.getByText(targetTitle)).toBeVisible()
 }
 
 async function mockDeleteError(
@@ -266,12 +260,19 @@ async function mockDeleteResponse(
   })
 }
 
+// 휴관일 관리는 오늘이 속한 달의 카드를 보여 주므로 이번 달 날짜로 만든다.
+function thisMonthDate(day: number) {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${String(day).padStart(2, '0')}`
+}
+
 function createCloseSchedule(id = 7) {
   return {
     id,
-    title: '삭제 대상 휴관일',
-    startCloseTime: '2026-07-28',
-    endCloseTime: '2026-07-28',
+    title: targetTitle,
+    startCloseTime: thisMonthDate(10),
+    endCloseTime: thisMonthDate(10),
   }
 }
 

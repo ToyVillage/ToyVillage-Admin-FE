@@ -19,11 +19,16 @@ function OperatingHoursDetail({ date }: { date: string }) {
     data: schedules = [],
     isError,
     isPending,
+    isSuccess,
   } = useQuery({
     queryKey: ['close-schedules', 'by-date', date],
     queryFn: () => getCloseSchedulesByDate({ date }),
   })
-  const firstSchedule = schedules[0]
+  // 스테이징은 date 파라미터를 무시하고 전체 휴관일을 돌려준다(2026-09-17 확인).
+  // 그대로 첫 항목을 쓰면 날짜와 무관한 일정이 보이므로 이 날짜를 포함하는 일정만 고른다.
+  const firstSchedule = schedules.find(
+    (schedule) => schedule.startDate <= date && date <= schedule.endDate,
+  )
 
   return (
     <Page>
@@ -33,9 +38,7 @@ function OperatingHoursDetail({ date }: { date: string }) {
         </BackRow>
         <Title>{formatTitle(date)}</Title>
         {isPending ? (
-          <QueryStatus role="status">
-            휴관일을 조회하는 중입니다.
-          </QueryStatus>
+          <QueryStatus role="status">휴관일을 조회하는 중입니다.</QueryStatus>
         ) : isError ? (
           <QueryStatus role="alert">
             휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
@@ -45,7 +48,8 @@ function OperatingHoursDetail({ date }: { date: string }) {
             <ScheduleSummary>휴관 일정: {firstSchedule.title}</ScheduleSummary>
           )
         )}
-        <OperatingHoursForm date={date} />
+        {/* 영업시간은 휴관일 조회와 독립적으로 보이고, 저장은 휴관일 조회가 성공했을 때만 연다(CLOSE_DAT_QUERY_BY_DATE S3·S4·S6). */}
+        <OperatingHoursForm date={date} canSave={isSuccess} />
       </Content>
     </Page>
   )

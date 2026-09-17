@@ -20,9 +20,7 @@ async function mockOperatingHours(page: Page, date: string) {
   })
 }
 
-test('S1: 날짜별 정상 조회 결과를 상세 화면에 표시한다', async ({
-  page,
-}) => {
+test('S1: 날짜별 정상 조회 결과를 상세 화면에 표시한다', async ({ page }) => {
   const requests: string[] = []
   await mockOperatingHours(page, '2026-07-13')
 
@@ -73,9 +71,7 @@ test('S2: 빈 결과는 오류 없이 기존 상세 UI를 표시한다', async (
     page.getByRole('heading', { name: '7월 14일 영업시간' }),
   ).toBeVisible()
   await expect(page.getByText('휴관 일정:')).toHaveCount(0)
-  await expect(
-    page.getByText('운영시간 수정은 현재 지원되지 않습니다.'),
-  ).toBeVisible()
+  await expect(page.getByRole('button', { name: '저장하기' })).toBeVisible()
 })
 
 test('S3: HTTP 404를 빈 결과로 해석하지 않는다', async ({ page }) => {
@@ -139,9 +135,7 @@ test('S5: 잘못된 route date는 API를 호출하지 않는다', async ({ page 
   expect(requestCount).toBe(0)
 })
 
-test('S6: Contract 필수 필드가 누락된 응답을 거부한다', async ({
-  page,
-}) => {
+test('S6: Contract 필수 필드가 누락된 응답을 거부한다', async ({ page }) => {
   await mockOperatingHours(page, '2026-07-13')
 
   await page.route(apiPath, async (route) => {

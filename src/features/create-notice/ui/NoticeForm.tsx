@@ -4,14 +4,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { uploadFile } from '@/entities/file'
 import {
   createNotice,
-  deleteNotice,
   type Notice,
   type UpdateNoticeInput,
   updateNotice,
 } from '@/entities/notice'
 import {
   AttachmentField,
-  DeleteConfirmationDialog,
   RemoveIconButton,
   ValidationDialog,
 } from '@/shared/ui'
@@ -39,8 +37,6 @@ export function NoticeForm({
 }: NoticeFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
-  const deletingRef = useRef(false)
-  const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const teamAddButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
@@ -58,7 +54,6 @@ export function NoticeForm({
   const [category, setCategory] = useState(initialCategory)
   const [categories, setCategories] = useState(formInitialCategories)
   const [teamDialogOpen, setTeamDialogOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [title, setTitle] = useState(initialNotice?.title ?? '')
   const [content, setContent] = useState(initialNotice?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
@@ -91,12 +86,6 @@ export function NoticeForm({
         content: input.content,
         files,
       })
-    },
-  })
-  const deleteMutation = useMutation({
-    mutationFn: () => {
-      if (!initialNotice) throw new Error('Notice not found')
-      return deleteNotice({ id: Number(initialNotice.id) })
     },
   })
   const isEditing = Boolean(initialNotice)
@@ -178,32 +167,12 @@ export function NoticeForm({
     })
   }
 
-  function handleDelete() {
-    if (deletingRef.current || deleteMutation.isPending) return
-
-    deletingRef.current = true
-    deleteMutation.mutate(undefined, {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['notices'] })
-        if (initialNotice) {
-          queryClient.removeQueries({ queryKey: ['notices', initialNotice.id] })
-        }
-        onCompleted()
-      },
-      onError: () => {
-        deletingRef.current = false
-        setDeleteDialogOpen(false)
-        requestAnimationFrame(() => deleteButtonRef.current?.focus())
-      },
-    })
-  }
-
   return (
     <Form data-editing={isEditing} onSubmit={handleSubmit} noValidate>
       <TitleCard>
-        <Label htmlFor="notice-title">
+        <TitleLabel htmlFor="notice-title">
           제목 {!isEditing && <Required aria-hidden="true">*</Required>}
-        </Label>
+        </TitleLabel>
         <TitleInput
           ref={titleRef}
           id="notice-title"
@@ -257,27 +226,24 @@ export function NoticeForm({
             type="button"
             onClick={() => setTeamDialogOpen(true)}
           >
-            + 팀 추가
+            <PlusIcon viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </PlusIcon>
+            팀 추가
           </TeamAddButton>
         </CategoryOptions>
       </CategoryCard>
 
       <ContentCard>
-        {isEditing ? (
-          <Label htmlFor="notice-content">
-            상세 업무 내용 <Required aria-hidden="true">*</Required>
-          </Label>
-        ) : (
-          <VisuallyHiddenLabel htmlFor="notice-content">
-            내용 <Required aria-hidden="true">*</Required>
-          </VisuallyHiddenLabel>
-        )}
+        <Label htmlFor="notice-content">
+          상세 업무 내용 <Required aria-hidden="true">*</Required>
+        </Label>
         <ContentInput
           ref={contentRef}
           id="notice-content"
           required
           value={content}
-          placeholder="여기에 내용을 입력하세요"
+          placeholder="상세 업무 내용을 입력해주세요"
           onChange={(event) => {
             setContent(event.target.value)
             resizeTextarea(event.currentTarget)
@@ -286,6 +252,7 @@ export function NoticeForm({
       </ContentCard>
 
       <AttachmentField
+        variant={isEditing ? 'notice' : 'notice-create'}
         initialFileNames={initialAttachmentNames}
         initialFiles={initialAttachmentFiles}
         storedFiles={Boolean(initialAttachmentFiles)}
@@ -302,27 +269,8 @@ export function NoticeForm({
         </SubmitStatus>
       )}
 
-      {deleteMutation.isError && (
-        <SubmitStatus role="status">
-          삭제하지 못했습니다. 다시 시도해 주세요.
-        </SubmitStatus>
-      )}
-
       <Actions>
-        {isEditing && (
-          <DeleteButton
-            ref={deleteButtonRef}
-            type="button"
-            disabled={mutation.isPending || deleteMutation.isPending}
-            onClick={() => setDeleteDialogOpen(true)}
-          >
-            삭제하기
-          </DeleteButton>
-        )}
-        <SubmitButton
-          type="submit"
-          disabled={mutation.isPending || deleteMutation.isPending}
-        >
+        <SubmitButton type="submit" disabled={mutation.isPending}>
           {mutation.isPending
             ? isEditing
               ? '저장 중'
@@ -361,17 +309,6 @@ export function NoticeForm({
           }}
         />
       )}
-
-      {deleteDialogOpen && (
-        <DeleteConfirmationDialog
-          pending={deleteMutation.isPending}
-          onCancel={() => {
-            setDeleteDialogOpen(false)
-            requestAnimationFrame(() => deleteButtonRef.current?.focus())
-          }}
-          onConfirm={handleDelete}
-        />
-      )}
     </Form>
   )
 }
@@ -398,17 +335,9 @@ function resizeTextarea(textarea: HTMLTextAreaElement) {
   textarea.style.height = `${textarea.scrollHeight}px`
 }
 
+// yot `make notification`(1:6919)·`remake notification`(1:6711) 공통 배치.
 const Form = styled.form`
   width: 100%;
-  margin-top: 60px;
-
-  &[data-editing='true'] {
-    margin-top: 0;
-  }
-
-  @media (max-width: 980px) {
-    margin-top: 40px;
-  }
 `
 
 const FieldCard = styled.div`
@@ -425,9 +354,15 @@ const FieldCard = styled.div`
   }
 `
 
+// 수정 화면은 yot `1:6711` 을 따른다: 카드 padding 40·gap 10, 입력은 gray/10 배경 박스.
 const TitleCard = styled(FieldCard)`
   min-height: 164px;
   margin-top: 0;
+
+  form & {
+    min-height: 0;
+    gap: 10px;
+  }
 `
 
 const Label = styled.label`
@@ -435,6 +370,17 @@ const Label = styled.label`
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+
+  form & {
+    font-size: 22px;
+  }
+`
+
+const TitleLabel = styled(Label)`
+  [data-editing='true'] & {
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 20px;
+  }
 `
 
 const Required = styled.span`
@@ -462,11 +408,30 @@ const TitleInput = styled.input`
   @media (max-width: 980px) {
     font-size: 28px;
   }
+
+  form & {
+    height: 66px;
+    min-height: 0;
+    padding: 0 24px;
+    border-radius: 8px;
+    background: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 24px;
+  }
 `
 
 const CategoryCard = styled.fieldset`
   min-height: 170px;
   margin: 32px 0 0;
+
+  form & {
+    margin-top: 12px;
+  }
+
+  [data-editing='true'] & {
+    margin-top: 14px;
+  }
+
   padding: 40px;
   border: 0;
   border-radius: 20px;
@@ -485,6 +450,11 @@ const CategoryLegend = styled.legend`
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
+
+  form & {
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 22px;
+  }
 `
 
 const CategoryOptions = styled.div`
@@ -494,6 +464,11 @@ const CategoryOptions = styled.div`
   align-items: center;
   gap: 16px;
   padding-top: 16px;
+
+  form & {
+    gap: 12px;
+    padding-top: 18px;
+  }
 `
 
 const CategoryOption = styled.div`
@@ -537,11 +512,30 @@ const CategoryPill = styled.span`
   font-size: 20px;
   font-weight: 500;
   line-height: 1.2;
+
+  form & {
+    height: 46px;
+    min-height: 0;
+    padding: 0 20px;
+    color: #434343;
+    font-size: 22px;
+  }
 `
 
 const CategoryRemove = styled(RemoveIconButton)`
   z-index: 2;
   margin-right: 18px;
+
+  form & {
+    width: 24px;
+    height: 24px;
+    margin: 0 20px 0 -12px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
 `
 
 const TeamAddButton = styled.button`
@@ -561,20 +555,36 @@ const TeamAddButton = styled.button`
     outline: 2px solid ${({ theme }) => theme.colors.textGuide};
     outline-offset: 3px;
   }
+
+  form & {
+    display: inline-flex;
+    height: 46px;
+    min-height: 0;
+    align-items: center;
+    gap: 4px;
+    padding: 0 16px;
+    border-radius: 42px;
+    background: transparent;
+    font-size: 22px;
+  }
+`
+
+const PlusIcon = styled.svg`
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2;
 `
 
 const ContentCard = styled(FieldCard)`
   min-height: 240px;
-`
 
-const VisuallyHiddenLabel = styled.label`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
+  form & {
+    min-height: 0;
+    gap: 10px;
+  }
 `
 
 const ContentInput = styled.textarea`
@@ -590,6 +600,14 @@ const ContentInput = styled.textarea`
   line-height: 1.5;
   overflow: hidden;
   resize: none;
+
+  form & {
+    min-height: 160px;
+    padding: 20px 24px;
+    border-radius: 8px;
+    background: ${({ theme }) => theme.colors.background};
+    line-height: normal;
+  }
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textGuide};
@@ -609,30 +627,13 @@ const Actions = styled.div`
   justify-content: flex-end;
   gap: 24px;
   margin-top: 32px;
-`
 
-const DeleteButton = styled.button`
-  min-width: 123px;
-  height: 61px;
-  padding: 0 16px;
-  border: 2px solid ${({ theme }) => theme.colors.danger};
-  border-radius: 8px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.danger};
-  cursor: pointer;
-  font: inherit;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.2;
-
-  &:disabled {
-    cursor: wait;
-    opacity: 0.6;
+  form & {
+    margin-top: 135px;
   }
 
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.danger};
-    outline-offset: 3px;
+  [data-editing='true'] & {
+    margin-top: 180px;
   }
 `
 

@@ -1,7 +1,7 @@
 {
   "feature": "close-schedule-edit",
-  "approvedAt": "2026-07-17T08:14:24.962Z",
-  "approvedBy": "user",
+  "approvedAt": "2026-09-17T11:18:08.428Z",
+  "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
     "S2",
@@ -9,8 +9,9 @@
     "S4",
     "S5",
     "S6",
-    "S7"
+    "S7",
+    "S8"
   ],
-  "scenarioHash": "3cbc4e1a5d64c03fd0ca17ada2d863ec0d57fa795a4fb0c673d1ca480afc5125",
-  "e2eHash": "652d61c474c5b2f867f8464d31a108933989c81ebcdee61353af25eb28ffc5ce"
+  "scenarioHash": "be9e5cfddaa7fb5c9fb5aadd9659919689cf552703d95d101b2b8a54c7f8a134",
+  "e2eHash": "9503e10dc7717e1d184a201823bc789d017e5172493b47fb261d8cd7351a43f6"
 }

@@ -3,11 +3,11 @@
 ## Source
 
 - API ID 검색 결과: exact match 1건
-- Notion database: `https://app.notion.com/p/392bfdfeff94801597c3e8a1d2173825`
-- Notion data source: `collection://392bfdfe-ff94-8042-bc6e-000bcd5da71f`
-- Resolved page: `https://app.notion.com/p/392bfdfeff94803692deef24a3408890`
-- Requested page: `https://app.notion.com/p/392bfdfeff94803692deef24a3408890`
-- Checked at: `2026-07-27`
+- Notion database: `https://app.notion.com/p/3dd7a4d6147480feb564ce3b172329f5`
+- Notion data source: `collection://4817a4d6-1474-820e-ace3-072e3d0100a7`
+- Resolved page: `https://app.notion.com/p/2637a4d614748217a4c00116ddf381f5`
+- Requested page: `https://app.notion.com/p/2637a4d614748217a4c00116ddf381f5`
+- Checked at: `2026-09-17`
 
 ## Basic Information
 
@@ -35,7 +35,7 @@
 
 | Name | Type | Required | Nullable | Default | Constraints |
 | --- | --- | --- | --- | --- | --- |
-| `page` | integer | true | false | `0` | minimum 0 |
+| `page` | integer | true | false | `1` | minimum 1 |
 | `size` | integer | true | false | `10` | positive integer |
 
 ## Request Body
@@ -44,25 +44,28 @@
 
 ## Request Example
 
-`GET /notice?page=0&size=10`
+`GET /notice?page=1&size=10`
 
 ## Success Responses
 
 ### HTTP 200
 
 ```json
-[
-  {
-    "id": 1,
-    "title": "공지사항 제목",
-    "kind": "공지사항 분류",
-    "createAt": "2026-07-04"
-  }
-]
+{
+  "notices": [
+    {
+      "id": 1,
+      "title": "공지사항 제목",
+      "kind": "공지사항 분류",
+      "createdAt": "2026-07-04"
+    }
+  ],
+  "totalPageSize": 2
+}
 ```
 
-- 빈 결과는 `[]`
-- 배열과 모든 필드는 required, nullable false
+- 빈 결과는 `{ "notices": [], "totalPageSize": <number> }`
+- `notices`, `totalPageSize`와 항목의 모든 필드는 required, nullable false
 - `kind` Allowed Values는 사용자 결정에 따라 임시로 `공지사항 분류` 하나만 고정
 
 ## Error Responses
@@ -75,9 +78,9 @@
 
 ## Validation and Constraints
 
-- `page`는 0부터 시작한다.
+- `page`는 1부터 시작한다(명세 본문. 기본값 `0` 표기와 충돌 → 2026-09-17 사용자 결정).
 - `size`는 양의 정수이다.
-- `createAt`은 현재 명세 예시의 `YYYY-MM-DD` 문자열을 사용한다.
+- `createdAt`은 `YYYY-MM-DD` 문자열이다(스테이징 응답 키. 명세 예시 `createAt`과 충돌 → 2026-09-17 사용자 결정).
 
 ## Notes
 
@@ -88,6 +91,6 @@
 
 1. `kind`의 실제 전체 enum 값
 2. `id`가 `number`인지 `integer`인지
-3. `createAt` 키와 날짜 형식이 맞는지
-4. `page`, `size`의 최대값 및 생략 시 서버 기본값
+3. 명세 예시 `createAt`을 실제 응답 `createdAt`으로 고칠지
+4. `page` 기본값 `0` 표기를 1부터 시작 설명과 맞출지, `size` 최대값
 5. HTTP 500 예시의 잘못된 backtick 수정
