@@ -19,6 +19,8 @@ interface ReservationFormProps {
     query: string
     onQueryChange: (value: string) => void
     assigned: Staff[]
+    /** 검색으로 걸러지기 전 배정 인원 수. 완료 배지는 이 값으로 판정한다. */
+    assignedCount: number
     available: Staff[]
     onAdd: (staffId: string) => void
     onCancel: (staffId: string) => void
@@ -215,7 +217,7 @@ export function ReservationForm({
 
       <ReservationFormSection
         title="페이지 권한"
-        complete={permission.assigned.length > 0}
+        complete={permission.assignedCount > 0}
         collapsed={collapsed.permission}
         onToggle={() => toggle('permission')}
       >

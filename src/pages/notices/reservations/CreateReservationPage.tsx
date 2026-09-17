@@ -126,6 +126,7 @@ export function CreateReservationPage() {
             query: permissionQuery,
             onQueryChange: setPermissionQuery,
             assigned: assignedStaff,
+            assignedCount: assignedIds.length,
             available: availableStaff,
             onAdd: addStaff,
             onCancel: cancelStaff,
