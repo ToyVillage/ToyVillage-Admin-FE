@@ -90,9 +90,11 @@ function dayTone(
   return date.getDay() === 0 ? 'sunday' : 'default'
 }
 
+// 406px 까지 쓰고 좁은 카드에서는 컨테이너 폭에 맞춰 줄어든다.
 const Calendar = styled.table`
-  width: 406px;
-  flex-shrink: 0;
+  width: 100%;
+  max-width: 406px;
+  min-width: 0;
   border-collapse: collapse;
   table-layout: fixed;
 `
@@ -128,7 +130,8 @@ const Day = styled.span<{
 }>`
   position: relative;
   display: inline-flex;
-  width: 54px;
+  /* 칸 사이 4px(range bridge 폭)는 칸이 좁아져도 유지한다. */
+  width: min(54px, calc(100% - 4px));
   height: 40px;
   align-items: center;
   justify-content: center;
