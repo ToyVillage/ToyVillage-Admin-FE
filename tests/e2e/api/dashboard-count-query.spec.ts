@@ -238,13 +238,14 @@ for (const { title, text, url } of [
   })
 }
 
-test('S11: 먹이 급여·개체관리 행은 링크가 아니다', async ({ page }) => {
+test('S11: 먹이 급여·개체관리 행은 링크다', async ({ page }) => {
   await mockDashboardApi(page)
   await page.goto('/')
 
-  for (const title of ['먹이 급여 관리', '개체관리']) {
-    const rows = section(page, title).getByRole('listitem')
-    await expect(rows).toHaveCount(3)
-    await expect(rows.getByRole('link')).toHaveCount(0)
-  }
+  await expect(
+    section(page, '먹이 급여 관리').getByRole('link', { name: /레오/ }),
+  ).toHaveAttribute('href', '/feeds/1')
+  await expect(
+    section(page, '개체관리').getByRole('link', { name: /콧잔등/ }),
+  ).toHaveAttribute('href', '/individuals/5/observations/1')
 })
