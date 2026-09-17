@@ -5,7 +5,7 @@ import {
 } from './support/animal-manage-api'
 import { feedHistoryPattern, mockFeedApi } from './support/feed-api'
 
-// 승인된 시나리오(individual-detail.approved.json, S1~S31)를 변환한 것.
+// 승인된 시나리오(individual-detail.approved.json, S1~S32)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 // 급여 이력은 `support/feed-api` 가짜 서버가 준다(개체 1 은 급여 기록 1·7·8, 최신은 1).
@@ -241,7 +241,6 @@ test('S17: 먹이 급여 기록 확인하기 이동', async ({ page }) => {
   const feedingButton = page.getByRole('button', {
     name: '먹이 급여 기록 확인하기',
   })
-  await expect(feedingButton).not.toHaveAttribute('aria-disabled', 'true')
   await feedingButton.click()
 
   await expect(page).toHaveURL(/\/feeds\/1$/)
@@ -249,24 +248,35 @@ test('S17: 먹이 급여 기록 확인하기 이동', async ({ page }) => {
   await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
 })
 
-test('S31: 급여 이력이 없으면 먹이 급여 기록 확인하기 비활성', async ({
-  page,
-}) => {
+test('S31: 급여 이력이 없으면 토스트', async ({ page }) => {
   await page.route(feedHistoryPattern, (route) =>
     route.fulfill({
-      status: 200,
+      status: 404,
       contentType: 'application/json',
-      body: JSON.stringify({ feedLogs: [] }),
+      body: JSON.stringify({ message: '급여 이력이 없습니다.' }),
     }),
   )
   await page.goto(detailUrl)
-  const feedingButton = page.getByRole('button', {
-    name: '먹이 급여 기록 확인하기',
-  })
-  // aria-disabled 버튼은 Playwright 가 비활성으로 보고 클릭을 기다리므로 force 로 누른다.
-  await feedingButton.click({ force: true })
+  await page.getByRole('button', { name: '먹이 급여 기록 확인하기' }).click()
 
-  await expect(feedingButton).toHaveAttribute('aria-disabled', 'true')
+  await expect(page.getByRole('alert')).toContainText('급여 기록이 없습니다')
+  await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
+})
+
+test('S32: 급여 이력 조회 실패 토스트', async ({ page }) => {
+  await page.route(feedHistoryPattern, (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: '서버 오류' }),
+    }),
+  )
+  await page.goto(detailUrl)
+  await page.getByRole('button', { name: '먹이 급여 기록 확인하기' }).click()
+
+  await expect(page.getByRole('alert')).toContainText(
+    '급여 기록을 불러오지 못했습니다',
+  )
   await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
 })
 
