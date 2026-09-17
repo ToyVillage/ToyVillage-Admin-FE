@@ -1,7 +1,15 @@
 import { test, expect } from '@playwright/test'
+import { mockDocumentApi, type DocumentApiHandle } from './support/document-api'
 
 // 승인된 시나리오(resource-edit.approved.json: S1~S11)를 변환한 것.
 // 승인 후에는 시나리오를 재도출하지 않고 실패 시 프로덕션 코드를 수정한다.
+// 자료실 API 는 page.route mock(`support/document-api`)을 쓴다. 실제 서버는 호출하지 않는다.
+
+let api: DocumentApiHandle
+
+test.beforeEach(async ({ page }) => {
+  api = await mockDocumentApi(page)
+})
 
 test('S1: 자료 행 클릭 → 수정 URL 이동', async ({ page }) => {
   await page.goto('/notices/resources')
@@ -81,20 +89,18 @@ test('S7: 삭제 확인 → 목록·직접 URL에서 제거', async ({ page }) =
     page.getByTestId('resource-row').filter({ hasText: '근무지침요령 1' }),
   ).toHaveCount(0)
 
+  // 조회 실패(404)면 별도 안내 화면 없이 목록으로 되돌린다.
   await page.goto('/notices/resources/1')
-  await expect(
-    page.getByRole('heading', { name: '자료를 찾을 수 없습니다.' }),
-  ).toBeVisible()
+  await expect(page).toHaveURL(/\/notices\/resources$/)
+  expect(api.deleteRequests).toEqual([1])
 })
 
-test('S8: 존재하지 않는 자료 → 복구 UI', async ({ page }) => {
+test('S8: 존재하지 않는 자료 → 목록으로 복귀', async ({ page }) => {
   await page.goto('/notices/resources/missing')
+  await expect(page).toHaveURL(/\/notices\/resources$/)
   await expect(
-    page.getByRole('heading', { name: '자료를 찾을 수 없습니다.' }),
+    page.getByRole('heading', { name: '자료실', exact: true }),
   ).toBeVisible()
-  await expect(
-    page.getByRole('link', { name: '자료실 목록으로 돌아가기' }),
-  ).toHaveAttribute('href', '/notices/resources')
 })
 
 test('S9: 수정 중 사이드바 이동 → 이탈 확인', async ({ page }) => {
@@ -116,22 +122,14 @@ test('S10: 저장 더블클릭 → 동일 ID 한 건만 저장', async ({ page }
   await page.getByRole('button', { name: '저장하기' }).dblclick()
   await expect(page).toHaveURL(/\/notices\/resources$/)
 
-  const savedCount = await page.evaluate(() => {
-    const raw = localStorage.getItem('toyvillage:resources')
-    if (!raw) return 0
-    const resources = JSON.parse(raw) as Array<{ id?: string }>
-    return resources.filter((resource) => resource.id === '1').length
-  })
-  expect(savedCount).toBe(1)
+  expect(api.updateRequests.map(({ id }) => id)).toEqual([1])
 })
 
 test('S11: 저장·삭제 실패 → 예외 모달 표시 후 화면 유지', async ({ page }) => {
+  // 저장·삭제 실패 주입. 나중에 등록한 route 가 먼저 매칭된다.
+  await mockDocumentApi(page, { updateStatus: 500, deleteStatus: 500 })
   await page.goto('/notices/resources/1')
 
-  // 저장 실패 주입
-  await page.evaluate(() =>
-    localStorage.setItem('toyvillage:resources:fail', 'update'),
-  )
   await page.getByLabel(/제목/).fill('실패할 수정')
   await page.getByRole('button', { name: '저장하기' }).click()
 
@@ -144,10 +142,6 @@ test('S11: 저장·삭제 실패 → 예외 모달 표시 후 화면 유지', as
   await expect(page).toHaveURL(/\/notices\/resources\/1$/)
   await expect(page.getByLabel(/제목/)).toHaveValue('실패할 수정')
 
-  // 삭제 실패 주입
-  await page.evaluate(() =>
-    localStorage.setItem('toyvillage:resources:fail', 'delete'),
-  )
   await page.getByRole('button', { name: '삭제하기' }).click()
   await page.getByRole('button', { name: '확인', exact: true }).click()
 
