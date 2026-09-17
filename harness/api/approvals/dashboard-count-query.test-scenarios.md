@@ -50,9 +50,11 @@ route 패턴은 `^https://[^/]+/dashboard/<path>(?:\?.*)?$`.
 - 업무보고 행(id 7) → `/task-reports/7`
 - 업무일지 행(workLogId 9) → `/work-logs/9`
 
-### S11: 먹이 급여·개체관리 행은 링크가 아니다
+### S11: 먹이 급여·개체관리 행은 링크다
 
-- 두 카드의 행 안에 link 역할 요소가 없다
+- 먹이 급여 행(feedLogId 1) href `/feeds/1`
+- 개체관리 행(animalObservationId 1, animalId 5) href `/individuals/5/observations/1`
+- 이동 결과는 `dashboard-feed-log-query-all` S8, `dashboard-animal-observation-query-all` S8에서 검증한다.
 
 ## 범위 밖
 

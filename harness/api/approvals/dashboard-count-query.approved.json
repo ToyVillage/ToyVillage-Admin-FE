@@ -1,15 +1,15 @@
 {
   "feature": "dashboard-count-query",
   "apiId": "DASHBOARD_COUNT_QUERY",
-  "approvedAt": "2026-09-17T12:31:55.303Z",
+  "approvedAt": "2026-09-17T13:24:57.730Z",
   "approvedBy": "yunho09",
-  "taskSpecHash": "eb9d12dd0cb7a69235044740551071412c885c7282f5e715d842b3091195616d",
+  "taskSpecHash": "344800e9c94a85e5430325c6a3606ea16f58a8c2e4465d81e45517a8765cf423",
   "contractHash": "ae4eeb1e65c799f4c74018ee136d1097d26a0cee361f7950aff055c9165df328",
   "contractMarkdownHash": "54ae2fdd88f4ac609b674fb93b9da94bf3aaf6d9d6d39e5df4eced57e1cbee4d",
-  "planHash": "8226466b1f9b39b4452e19a9d2c15cf413550f842d78807998e336eaed0da740",
-  "scenarioHash": "2006475d374be0cd014cfd4d48a310b2e78c9c41cc27c88022b38ec4f0b8e076",
-  "testHash": "488ed6e03d5488dfe59c90a38ae768643aeecf8bcd04b66062921d0820e8598e",
+  "planHash": "7db59e127ee3c181e3386dc6bbcc2eee520b90ae10464eda3d630977d63e7035",
+  "scenarioHash": "3523d2f8dcdcb71949d88eb241f9f71c176004cd8a58f4bc1d19c9df9180dca1",
+  "testHash": "9a70c60a20c98b44353bdb8b3b12d38b981f23f5f1dfdfabf1a5e171de308732",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T12:32:58.996Z"
+  "testApprovedAt": "2026-09-17T13:28:58.521Z"
 }

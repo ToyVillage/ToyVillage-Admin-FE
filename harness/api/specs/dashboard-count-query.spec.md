@@ -19,6 +19,8 @@ real_server:
 
 - `src/pages/dashboard/DashboardPage.tsx`
 - `src/features/dashboard` (api·model)
+- `src/features/dashboard/ui` (행 링크)
+- `src/pages/species/ObservationRedirectPage.tsx` (신규), `src/app/App.tsx` (경로 추가)
 
 # 연동할 API
 
@@ -61,7 +63,16 @@ real_server:
   - 휴관일 관리 행 → `/notices/guide/{id}` (`CLOSE_DAT_QUERY_ALL` `id`)
   - 업무보고 행 → `/task-reports/{id}` (`APP_WORK_REPORT_QUERY_ALL` `reports[].id`)
   - 업무일지관리 행 → `/work-logs/{id}` (`WORK_LOG_QUERY_ALL` `content[].workLogId`)
-- 먹이 급여 관리·개체관리 행은 응답에 식별자가 없어 행 이동이 없다. 카드 전체 링크만 유지한다(백엔드에 id 추가 요청 대상).
+  - 먹이 급여 관리 행 → `/feeds/{feedLogId}` (`DASHBOARD_FEED_LOG_QUERY_ALL` `content[].feedLogId`)
+  - 개체관리 행 → `/individuals/{animalId}/observations/{animalObservationId}`
+    (`DASHBOARD_ANIMAL_OBSERVATION_QUERY_ALL` `content[].animalId`·`animalObservationId`)
+- 대시보드 관찰 응답에는 종 ID가 없고 관찰 상세 화면 경로는 `/species/:speciesId/individuals/:individualId/observations/:observationId`다.
+  종 ID 없는 경로 `/individuals/:individualId/observations/:observationId`를 추가하고, 이 화면이 기존 승인 API
+  `ANIMAL_MANAGE_QUERY`(`getIndividual`)로 개체의 `animalKindId`를 얻어 관찰 상세로 `replace` 이동한다(개발자 결정, 2026-09-17).
+  - 조회 중: `관찰 기록을 불러오는 중입니다.` / 404: `관찰 기록을 찾을 수 없습니다.` / 그 외 실패: `관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요.`
+  - `individualId`·`observationId`가 양의 정수가 아니면 요청하지 않고 찾을 수 없음 상태를 표시한다.
+- 먹이 급여·관찰 id(`feedLogId`·`animalObservationId`·`animalId`)는 Notion 명세에 아직 없다. 백엔드 PR #172와 develop `1247f43`,
+  staging Swagger를 근거로 계약에 추가했다(개발자 결정: Notion 반영 전 진행).
 - 디자인에 없는 토스트를 만들지 않는다.
 
 # 비고 및 제약

@@ -11,8 +11,8 @@
 ```ts
 export interface DashboardCountQueryResponse { feedLogCount: number; animalCount: number; workReportCount: number; workLogCount: number }
 export interface DashboardOverallOperationsQueryResponse { TOTAL: number; IN_PROGRESS: number; COMPLETED: number; EXPIRED: number }
-export interface DashboardFeedLogItem { animalKind: string; animalName: string; feedDateTime: string }
-export interface DashboardAnimalObservationItem { title: string; createdAt: string }
+export interface DashboardFeedLogItem { feedLogId: number; animalKind: string; animalName: string; feedDateTime: string }
+export interface DashboardAnimalObservationItem { animalObservationId: number; animalId: number; title: string; createdAt: string }
 export interface DashboardPageRequest { page: number; size: number }  // page 1부터
 export interface DashboardPageResponse<T> { content: T[]; totalPages: number; totalElements: number; size: number; number: number; numberOfElements: number; first: boolean; last: boolean; empty: boolean }
 ```
@@ -29,17 +29,17 @@ export async function getDashboardObservations(req: DashboardPageRequest): Promi
 ```
 
 - `api.get<unknown>(path, { params: { page, size } })` — `sort` 미전송(서버 기본 최신순). `page` 1 미만·`size` 0 이하는 호출 전 throw.
-- 런타임 가드: 숫자 필드 0 이상 safe integer, 문자열 필드 string, Page는 `content` 배열 + 페이지 숫자/불리언 필드. 불일치 시 throw.
+- 런타임 가드: 숫자 필드 0 이상 safe integer, id 필드(`feedLogId`·`animalObservationId`·`animalId`) 양의 safe integer, 문자열 필드 string, Page는 `content` 배열 + 페이지 숫자/불리언 필드. 불일치 시 throw.
 - 매핑
   - count → `{ feeds: feedLogCount, individuals: animalCount, taskReports: workReportCount, workLogs: workLogCount }`
   - overall → `{ COMPLETED, IN_PROGRESS, EXPIRED }` (`TOTAL`은 가드만)
-  - feed → `{ id: String(index), species: animalKind, animalName, fedAt: feedDateTime }`
-  - observation → `{ id: String(index), content: title, recordedAt: createdAt }`
+  - feed → `{ id: String(feedLogId), species: animalKind, animalName, fedAt: feedDateTime }`
+  - observation → `{ id: String(animalObservationId), individualId: String(animalId), content: title, recordedAt: createdAt }`
 - 제거: `mockDashboardSummary`, `getDashboardSummary`, localStorage 제어 키 3개.
 
 ## 3. 뷰 모델·key — `src/features/dashboard/model`
 
-- `types.ts`: `DashboardSummary`·`DashboardTaskReport`·`DashboardWorkLog` 제거(재사용 엔티티 타입 사용). 나머지 섹션 타입 유지.
+- `types.ts`: `DashboardSummary`·`DashboardTaskReport`·`DashboardWorkLog` 제거(재사용 엔티티 타입 사용). `DashboardObservation`에 `individualId` 추가. 나머지 섹션 타입 유지.
 - `queryKeys.ts`: `counts`, `taskStatus`, `feeds`, `observations`, `closeSchedules`, `taskReports`, `workLogs(date)` — 모두 `['dashboard', …]` prefix.
 - `index.ts` export 갱신.
 
@@ -60,11 +60,21 @@ export async function getDashboardObservations(req: DashboardPageRequest): Promi
 - 행 상세 이동: `DashboardListRow`에 선택 `to`, `HolidayList`에 선택 `getScheduleHref`를 추가해 행을 `Link`로 렌더한다.
   행 링크는 `position: relative; z-index: 1`로 카드 전체 링크(`::after`) 위에 둔다.
   - 휴관일 `/notices/guide/{id}`, 업무보고 `/task-reports/{id}`, 업무일지 `/work-logs/{id}`
-  - 먹이 급여·관찰 행은 `to` 없음(응답에 id 없음).
+  - 먹이 급여 `/feeds/{feedLogId}`, 관찰 `/individuals/{animalId}/observations/{animalObservationId}`
+
+## 5-1. 종 ID 없는 관찰 경로 — `src/pages/species/ObservationRedirectPage.tsx` (신규)
+
+- `src/app/App.tsx`에 `{ path: '/individuals/:individualId/observations/:observationId', element: <ObservationRedirectPage /> }` 추가, `src/pages/species/index.ts` export.
+- `individualId`·`observationId`가 양의 정수가 아니면 요청하지 않고 `PageStatus state="not-found"`(`관찰 기록을 찾을 수 없습니다.`, 링크 `/species` `종 목록으로 돌아가기`).
+- `useQuery({ queryKey: individualQueryKeys.detail(individualId), queryFn: () => getIndividual({ animalManageId }) })` — 관찰 상세 화면과 같은 key라 이동 후 재요청하지 않는다.
+  - pending → `PageStatus state="loading"` `관찰 기록을 불러오는 중입니다.`
+  - 404(`isNotFoundError`) → not-found 상태, 그 외 오류 → `PageStatus state="error"` `관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요.`
+  - 성공 → `<Navigate replace to={`/species/${individual.speciesId}/individuals/${individualId}/observations/${observationId}`} />`
+- 관찰 존재 여부·개체-관찰 조합 검증은 이동한 관찰 상세 화면이 기존대로 맡는다.
 
 ## 6. 테스트
 
-- `tests/e2e/support/dashboard-api.ts`(신규): 7개 route 기본 응답 + 개별 덮어쓰기.
+- `tests/e2e/support/dashboard-api.ts`(신규): 7개 route 기본 응답 + 개별 덮어쓰기. 급여·관찰 mock 항목에 id 추가.
 - `tests/e2e/api/{dashboard-count-query,dashboard-overall-operations-query,dashboard-feed-log-query-all,dashboard-animal-observation-query-all}.spec.ts`
 - `tests/e2e/dashboard.spec.ts`: localStorage seed → route mock 전환. S1–S12 기대값 유지(S9 로딩=route 지연, S10 실패=500).
 
@@ -73,7 +83,7 @@ export async function getDashboardObservations(req: DashboardPageRequest): Promi
 - `yarn harness:api:policy <feature> <changed src files>` (4개)
 - `yarn lint && yarn typecheck && yarn build`
 - `yarn verify:api <feature>` (4개)
-- 회귀: `tests/e2e/dashboard.spec.ts`, `tests/e2e/api/app-work-report-query-all.spec.ts`, `work-log-query-all.spec.ts`, `close-dat-query-all.spec.ts`
+- 회귀: `tests/e2e/dashboard.spec.ts`, `tests/e2e/api/animal-observation-query.spec.ts`, `tests/e2e/api/app-work-report-query-all.spec.ts`, `work-log-query-all.spec.ts`, `close-dat-query-all.spec.ts`
 
 ## 8. 잔여 위험
 
