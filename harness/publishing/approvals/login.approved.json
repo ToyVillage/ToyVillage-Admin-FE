@@ -1,6 +1,6 @@
 {
   "feature": "login",
-  "approvedAt": "2026-08-08T15:08:32.144Z",
+  "approvedAt": "2026-09-17T14:16:20.526Z",
   "approvedBy": "yunho",
   "scenarioIds": [
     "S1",
@@ -13,8 +13,10 @@
     "S8",
     "S9",
     "S10",
-    "S11"
+    "S11",
+    "S12",
+    "S13"
   ],
-  "scenarioHash": "8b0216625b8cb8f9cfbd5c64a53b23d1bd81c12832891d4b316bc9ee0e3b4a12",
-  "e2eHash": "fca68ec59f45908e0186ac6dff4961d7ac83d9236dec4841daa213836fcf7990"
+  "scenarioHash": "5ce8b15cbb42851e07a010456ed2f286c66c60172a68f0872e1a668523202a8f",
+  "e2eHash": "fce5d49d12f3781b34c71f40151550f848c372d2a74dc79c616c2df798414745"
 }
