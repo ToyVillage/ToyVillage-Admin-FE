@@ -7,9 +7,11 @@ import {
   mockSidebarGroups,
   mockSidebarUser,
 } from '../model/mock'
+import { logout } from '../model/logout'
 import { useSidebarStore } from '../model/useSidebarStore'
 import { SidebarGroupSection } from './SidebarGroupSection'
 import { SidebarItem } from './SidebarItem'
+import { SidebarLogoutButton } from './SidebarLogoutButton'
 
 export function Sidebar() {
   const { pathname } = useLocation()
@@ -92,6 +94,11 @@ export function Sidebar() {
             />
           ))}
         </Nav>
+
+        <Footer>
+          <Divider />
+          <SidebarLogoutButton onClick={logout} />
+        </Footer>
       </Panel>
     </Layer>
   )
@@ -202,10 +209,11 @@ const UserName = styled.span`
 
 // Figma 는 메뉴 묶음을 패널 기준 절대 위치(20, 222)에 둔다.
 // 아코디언이 펼쳐져 패널 높이를 넘으면 이 영역만 세로로 스크롤한다.
+// 아래쪽은 하단 로그아웃 영역(divider 포함 94px) 위에서 끝난다.
 const Nav = styled.nav`
   position: absolute;
   top: 222px;
-  bottom: 0;
+  bottom: 94px;
   left: 20px;
   display: flex;
   /* 패널 폭 400 에서는 360 이고, 폭이 좁아지면 좌우 20px 여백을 지키며 함께 줄어든다. */
@@ -215,4 +223,20 @@ const Nav = styled.nav`
   gap: 8px;
   padding-bottom: 32px;
   overscroll-behavior: contain;
+`
+
+// Figma: divider (40, 986) 320×1, 로그아웃 항목 (20, 1000) 360×56 — 패널 하단 기준으로 고정한다.
+const Footer = styled.div`
+  position: absolute;
+  bottom: 24px;
+  left: 20px;
+  width: calc(100% - 40px);
+`
+
+const Divider = styled.hr`
+  width: calc(100% - 40px);
+  height: 1px;
+  margin: 0 20px 13px;
+  border: 0;
+  background: ${({ theme }) => theme.colors.tableHeaderStrong};
 `
