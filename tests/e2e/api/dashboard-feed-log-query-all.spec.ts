@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mockDashboardApi } from '../support/dashboard-api'
+import { mockFeedApi } from '../support/feed-api'
 
 // 대상: DASHBOARD_FEED_LOG_QUERY_ALL (GET /dashboard/feed-logs).
 // 승인 시나리오: harness/api/approvals/dashboard-feed-log-query-all.test-scenarios.md
@@ -33,11 +34,13 @@ test('S2: content 를 카드 행으로 표시한다', async ({ page }) => {
     data: {
       feedLogs: [
         {
+          feedLogId: 31,
           animalKind: '사자',
           animalName: '라이언',
           feedDateTime: '2026-09-03T09:30:00',
         },
         {
+          feedLogId: 30,
           animalKind: '호랑이',
           animalName: '타이거',
           feedDateTime: '2026-09-02T16:10:00',
@@ -58,6 +61,7 @@ test('S3: 4건 이상 내려와도 3행만 표시한다', async ({ page }) => {
   await mockDashboardApi(page, {
     data: {
       feedLogs: Array.from({ length: 5 }, (_, index) => ({
+        feedLogId: index + 1,
         animalKind: '사자',
         animalName: `개체 ${index}`,
         feedDateTime: '2026-09-03T09:30:00',
@@ -110,8 +114,29 @@ for (const [name, body] of [
     {
       content: [
         {
+          feedLogId: 1,
           animalKind: '사자',
           animalName: 7,
+          feedDateTime: '2026-09-03T09:30:00',
+        },
+      ],
+      totalPages: 1,
+      totalElements: 1,
+      size: 3,
+      number: 0,
+      numberOfElements: 1,
+      first: true,
+      last: true,
+      empty: false,
+    },
+  ],
+  [
+    'feedLogId 누락',
+    {
+      content: [
+        {
+          animalKind: '사자',
+          animalName: '라이언',
           feedDateTime: '2026-09-03T09:30:00',
         },
       ],
@@ -135,3 +160,23 @@ for (const [name, body] of [
     ).toBeVisible()
   })
 }
+
+test('S8: 행을 누르면 급여 상세로 이동한다', async ({ page }) => {
+  await mockFeedApi(page)
+  await mockDashboardApi(page, {
+    data: {
+      feedLogs: [
+        {
+          feedLogId: 2,
+          animalKind: '사자',
+          animalName: '심바',
+          feedDateTime: '2026-09-03T09:10:00',
+        },
+      ],
+    },
+  })
+  await page.goto('/')
+
+  await rows(page).getByText('사자 · 심바', { exact: true }).click()
+  await expect(page).toHaveURL(/\/feeds\/2$/)
+})
