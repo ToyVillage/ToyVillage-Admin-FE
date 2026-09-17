@@ -1,5 +1,6 @@
 import styled from '@emotion/styled'
 import { Link } from 'react-router-dom'
+import { ProfilePhoto } from '@/shared/ui'
 import { formatFedDate } from '../model/format'
 import type { FeedRecordDetail } from '../model/types'
 import { AnimalSpeciesBadge } from './AnimalSpeciesBadge'
@@ -20,10 +21,10 @@ export function FeedRecordCard({
 }: FeedRecordCardProps) {
   return (
     <Card>
+      {/* 개체 상세 카드와 같은 사진 컴포넌트를 쓴다. 못 불러오면 `사진 없음` 이 대신 온다. */}
       <Photo
-        $src={feed.animalPhotoUrl}
-        role="img"
-        aria-label={`${feed.animalName} 사진`}
+        src={feed.animalPhotoUrl ?? ''}
+        alt={`${feed.animalName} 사진`}
       />
       <Info>
         <Titles>
@@ -84,13 +85,12 @@ const Card = styled.div`
   background: ${({ theme }) => theme.colors.surface};
 `
 
-const Photo = styled.div<{ $src?: string }>`
+const Photo = styled(ProfilePhoto)`
   width: 180px;
   height: 180px;
   flex: 0 0 180px;
   border-radius: 20px;
-  background: ${({ theme, $src }) =>
-    $src ? `url("${$src}") center / cover no-repeat` : theme.colors.avatar};
+  object-fit: cover;
 `
 
 const Info = styled.div`
