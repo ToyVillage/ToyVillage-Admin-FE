@@ -5,4 +5,7 @@ export const individualQueryKeys = {
   list: (speciesId: string, params: { page: number; keyword: string }) =>
     ['individuals', 'list', { speciesId }, params] as const,
   detail: (individualId: string) => ['individuals', individualId] as const,
+  // 종 id 만 쓰는 조회. 상세와 응답 모양이 달라 키를 분리한다.
+  speciesId: (individualId: string) =>
+    ['individuals', individualId, 'species-id'] as const,
 }
