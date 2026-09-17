@@ -1,13 +1,14 @@
 ---
 feature: reservation-create
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 4520:9075
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:7667
   relatedNodeIds:
-    - 4899:8525
-    - 4927:9326
-    - 5190:7575
-    - 4660:7623
+    - 1:5926
+    - 1:5968
+    - 1:8610
+    - 1:8403
+    - 1:8206
 requires_functional_test: true
 paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/reservation-form, src/entities/reservation
 ---
@@ -17,8 +18,9 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 ## 상태와 근거
 
 - Status: Draft (게이트 승인 대기)
-- 생성 화면(플레이스홀더): Figma `4520:9075`
-- 전체 펼침: `4899:8525` / 섹션 접힘·상태 배지: `4927:9326` / 검증 에러(인라인): `5190:7575` / 참고(am·pm 드롭다운, 배정): `4660:7623`
+- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). 차이 반영은 #94에서 한다.
+- 생성 화면(플레이스홀더): yot Figma `1:7667` (섹션 `단체예약 · 폼` `311:12769`)
+- 전체 펼침: `1:7667` / 섹션 접힘·상태 배지: `1:5926`(미완료), `1:5968`(완료) / 검증 에러(인라인): `1:8610` / 날짜 선택: `1:8403` / 참고(am·pm 드롭다운, 배정): `1:8206`
 - 진입: 리스트(`/notices/reservations`)의 `단체예약 생성하기` → `/notices/reservations/create` (신규 라우트·페이지)
 - 생성/수정 페이지는 레이아웃이 동일하며, 수정은 `reservation-edit` spec으로 분리한다.
 - API 미연동(publishing) — 제출은 mock 경계로 둔다. 실제 연동은 별도 `/api` 슬라이스.

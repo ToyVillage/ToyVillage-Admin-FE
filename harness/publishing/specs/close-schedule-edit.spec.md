@@ -4,12 +4,11 @@ figma:
   fileKey: P7Jhnu8qV5m9q2QJNzkwAN
   nodeId: 1:7062
   relatedNodeIds:
-    - 2114:1329
-    - 1596:450
-    - 2375:1860
-    - 2375:1957
-    - 2413:2955
-    - 2413:3046
+    - 1:7011
+    - 1:6148
+    - 1:7085
+    - 1:7034
+    - 1:7048
 requires_functional_test: true
 paths: src/pages/notices/guide/EditCloseSchedulePage.tsx, src/features/create-close-schedule, src/entities/close-schedule
 ---
@@ -20,11 +19,12 @@ paths: src/pages/notices/guide/EditCloseSchedulePage.tsx, src/features/create-cl
 
 - Status: Active
 - Last refreshed: 2026-09-17
+- 2026-09-17: 구 파일 노드로 남아 있던 참조를 yot 노드로 바꿨다(#80). `1:7085`(삭제 실패 모달)는 삭제가 목록 케밥으로 옮겨져 쓰지 않는다.
 - 2026-09-17 변경: yot `1:7062` 기준으로 `삭제하기`를 제거한다. 삭제는 목록 카드 케밥으로 이동했다(`close-schedule.spec.md`).
-- 목록 진입점: Figma `1596:450`
+- 목록 진입점: Figma `1:6148`
 - 수정 화면 기준: yot Figma `1:7062` (섹션 `휴관일 관리 · 수정` `311:12760`)
-- 공통 폼 배치 기준: Figma `2114:1329`의 휴관일 생성 화면
-- 날짜·제목 오류 상태: Figma `2413:2955`, `2413:3046`
+- 공통 폼 배치 기준: Figma `1:7011`의 휴관일 생성 화면
+- 날짜·제목 오류 상태: Figma `1:7034`, `1:7048`
 - 수정 화면은 생성 화면의 입력 구조와 시각값을 재사용하고 저장 액션 하나만 제공한다.
 - 공통 UI 원칙은 `DESIGN.md`, 목록 행동은 `close-schedule.spec.md`, 공통 입력·검증 규칙은 `close-schedule-create.spec.md`를 따른다.
 

@@ -1,12 +1,15 @@
 ---
 feature: close-schedule-create
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 2114:1329
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:7011
   relatedNodeIds:
-    - 2413:2955
-    - 2413:3046
-    - 1596:450
+    - 1:7034
+    - 1:7048
+    - 1:7020
+    - 1:6148
+    - 1:6158
+    - 1:6180
 requires_functional_test: true
 paths: src/pages/notices/guide/CreateCloseSchedulePage.tsx, src/features/create-close-schedule, src/entities/close-schedule
 ---
@@ -16,11 +19,13 @@ paths: src/pages/notices/guide/CreateCloseSchedulePage.tsx, src/features/create-
 ## 상태와 근거
 
 - Status: Active
-- Last refreshed: 2026-07-16
-- 기본 화면: Figma `2114:1329`
-- 날짜 누락 오류: Figma `2413:2955`
-- 제목 누락 오류: Figma `2413:3046`
-- 생성 진입점과 목록 복귀 화면: Figma `1596:450`
+- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80).
+  - yot에는 생성 실패 모달(`1:7020` `데이터 생성에 실패했습니다`)과 목록 토스트(`1:6158` 성공, `1:6180` 실패)가 있다. 아래 "Figma에 정의되어 있지 않다"는 서술은 구 파일 기준이며, 반영은 별도 이슈로 다룬다.
+- Last refreshed: 2026-09-17
+- 기본 화면: yot Figma `1:7011` (섹션 `휴관일 관리 · 작성` `311:12759`)
+- 날짜 누락 오류: Figma `1:7034`
+- 제목 누락 오류: Figma `1:7048`
+- 생성 진입점과 목록 복귀 화면: Figma `1:6148`
 - 공통 UI 원칙과 구현 제약은 `DESIGN.md`, 목록 행동은 `harness/publishing/specs/close-schedule.spec.md`를 따른다.
 
 ## 목적
@@ -108,11 +113,11 @@ Figma 관찰값:
 - 시작일 또는 종료일이 비어 있음 → 날짜 누락 모달을 표시한다.
   - 메시지: `휴관일을 입력해 주세요`
   - 버튼: `확인`
-  - 근거: Figma `2413:2955`
+  - 근거: Figma `1:7034`
 - 두 날짜가 있고 제목이 비어 있음 → 제목 누락 모달을 표시한다.
   - 메시지: `제목을 입력해 주세요`
   - 버튼: `확인`
-  - 근거: Figma `2413:3046`
+  - 근거: Figma `1:7048`
 - `확인` 클릭 → 모달을 닫고 해당 입력으로 포커스를 이동한다.
 - 모달 바깥 클릭이나 Escape로 닫을 수 있는지는 Figma에 정의되어 있지 않다. 접근성과 예측 가능성을 위해 Escape는 `확인`과 동일하게 닫되, 바깥 클릭으로는 닫지 않는다.
 

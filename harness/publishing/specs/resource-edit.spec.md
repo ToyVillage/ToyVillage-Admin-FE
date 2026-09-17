@@ -1,12 +1,12 @@
 ---
 feature: resource-edit
 figma:
-  fileKey: fkbMQaiPeIufKzjXXoWAPS
-  nodeId: 2114:1704
+  fileKey: P7Jhnu8qV5m9q2QJNzkwAN
+  nodeId: 1:6226
   relatedNodeIds:
-    - 2125:1778
-    - 2052:1802
-    - 2114:1206
+    - 1:6253
+    - 1:7414
+    - 1:7388
 requires_functional_test: true
 paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-resource, src/entities/resource
 ---
@@ -16,11 +16,12 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 ## 상태와 근거
 
 - Status: Draft
-- 수정 화면 기준: Figma `2114:1704` ("remake resource")
-- 첨부자료 칩(유형 배지·다운로드·삭제): Figma `2125:1778`
-- 업로드 드롭존: Figma `2052:1802`
-- 제목/분류 폼: Figma `2114:1206`, `2114:1686`
-- 예외(에러) 모달: Figma `1039:50` — ⚠️ Figma API rate limit(Starter 플랜)으로 라이브 추출 보류. 해제 후 정확한 시각 디테일 반영.
+- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). yot 수정 화면에는 `뒤로가기`·`삭제하기`가 없고 `저장하기`만 있다. 반영은 #92에서 한다.
+- 수정 화면 기준: yot Figma `1:6226` ("remake resource", 섹션 `자료실 · 수정` `311:12765`) / 저장 실패 `1:6253` / 첨부 등록 실패 `1:7414`
+- 첨부자료 칩(유형 배지·다운로드·삭제): Figma `1:6226`
+- 업로드 드롭존: Figma `1:6226`
+- 제목/분류 폼: Figma `1:6226`, `1:7388`
+- 예외(에러) 모달: Figma `1:6253`(구 `1039:50`)
 - 생성 필드·검증·업로드 계약: `harness/publishing/specs/resource-create.spec.md` (생성 폼과 동일 컴포넌트를 mode로 재사용)
 - 공통 이탈/삭제/검증 모달은 공지와 동일 컴포넌트(`LeaveConfirmationDialog`, `DeleteConfirmationDialog`, `ValidationDialog`) 재사용
 - 예외 모달은 신규 공용 컴포넌트 `ErrorDialog`(shared/ui)로 두어 notice/resource/schedule 수정에서 공통 사용. 시각 언어는 기존 `LeaveConfirmationDialog`(제목 `정말 나가시겠습니까?` + 설명 `저장하지 않고 돌아갈 시 / 입력된 정보가 삭제됩니다`)를 참고한다.
@@ -42,7 +43,7 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - 저장 또는 삭제 성공 → `/notices/resources`로 이동한다.
 - 존재하지 않는 ID → 입력 폼 대신 `자료를 찾을 수 없습니다.`와 목록 복귀 링크를 표시한다.
 
-## 화면 구조 (Figma 2114:1704)
+## 화면 구조 (Figma 1:6226)
 
 1920px 데스크톱 기준. 좌측 상단 전역 메뉴 버튼은 기존 사이드바 기능을 재사용한다. 본문은 너비 1320px, 좌우 중앙 정렬이다. 생성 폼과 동일한 카드·필드·첨부·업로드 컴포넌트를 mode로 재사용하며 별도 복제하지 않는다.
 
