@@ -8,7 +8,8 @@
   "contractMarkdownHash": "2774c0f4ac27470189a0f89f904cf230b0aa7555fa0c412b5b5f23981304d863",
   "planHash": "35fc8b93afaca0df0cbac5ba80e1ecf6f89b81638362496eee65f0200e84d830",
   "scenarioHash": "ec69e9103a2959248eacc99be8c2bb38ec592a711730f29aa0787eb4cfe8367f",
-  "testHash": null,
+  "testHash": "693930ae7d017bbdb2d1d92cb21bf6ade51d0d103971f8607d17b432df4041bb",
   "realTestHash": null,
-  "realFixtureHash": null
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T00:47:13.131Z"
 }
