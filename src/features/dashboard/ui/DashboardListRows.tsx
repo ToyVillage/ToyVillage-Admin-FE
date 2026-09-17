@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
+import { Link } from 'react-router-dom'
 
 export interface DashboardListRow {
   key: string
   primary: string
   secondary: ReactNode
+  /** 있으면 행 전체가 상세 링크가 된다. */
+  to?: string
 }
 
 interface DashboardListRowsProps {
@@ -18,12 +21,20 @@ export function DashboardListRows({ rows, emptyText }: DashboardListRowsProps) {
 
   return (
     <List>
-      {rows.map(({ key, primary, secondary }) => (
-        <Row key={key}>
-          <Primary title={primary}>{primary}</Primary>
-          <Secondary>{secondary}</Secondary>
-        </Row>
-      ))}
+      {rows.map(({ key, primary, secondary, to }) => {
+        const content = (
+          <>
+            <Primary title={primary}>{primary}</Primary>
+            <Secondary>{secondary}</Secondary>
+          </>
+        )
+
+        return (
+          <Row key={key}>
+            {to ? <RowLink to={to}>{content}</RowLink> : content}
+          </Row>
+        )
+      })}
     </List>
   )
 }
@@ -42,6 +53,26 @@ const Row = styled.li`
 
   & + & {
     border-top: 1px solid ${({ theme }) => theme.colors.tableHeaderStrong};
+  }
+`
+
+// 카드 전체를 덮는 `자세히 보기` 링크(::after) 위에 올려 행 클릭이 상세로 가게 한다.
+const RowLink = styled(Link)`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    border-radius: 8px;
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 2px;
   }
 `
 
