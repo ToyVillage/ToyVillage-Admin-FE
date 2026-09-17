@@ -1,12 +1,12 @@
 export type FileType = 'pdf' | 'jpg' | 'png' | 'etc'
 
 // DOCUMENTS_CREATE request `type` enum (Contract 값).
-export type DocumentType = 'PDF' | 'JPEG/JPG' | 'PNG' | 'OTHER'
+export type DocumentType = 'PDF' | 'JPG' | 'PNG' | 'OTHER'
 
 // 프론트 FileType → Contract DocumentType 매핑.
 export const fileTypeToDocumentType: Record<FileType, DocumentType> = {
   pdf: 'PDF',
-  jpg: 'JPEG/JPG',
+  jpg: 'JPG',
   png: 'PNG',
   etc: 'OTHER',
 }
@@ -14,7 +14,7 @@ export const fileTypeToDocumentType: Record<FileType, DocumentType> = {
 // Contract DocumentType → 프론트 FileType 매핑(조회 응답용).
 export const documentTypeToFileType: Record<DocumentType, FileType> = {
   PDF: 'pdf',
-  'JPEG/JPG': 'jpg',
+  JPG: 'jpg',
   PNG: 'png',
   OTHER: 'etc',
 }
