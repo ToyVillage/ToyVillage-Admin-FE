@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useLocation } from 'react-router-dom'
+import { readSessionUser } from '@/shared/api/session'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
-import {
-  mockSidebarDashboardItem,
-  mockSidebarGroups,
-  mockSidebarUser,
-} from '../model/mock'
+import { mockSidebarDashboardItem, mockSidebarGroups } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
 import { SidebarGroupSection } from './SidebarGroupSection'
 import { SidebarItem } from './SidebarItem'
@@ -52,6 +49,11 @@ export function Sidebar() {
 
   if (!isOpen) return null
 
+  // 사용자 조회 API가 없어 로그인 응답으로 저장한 세션 사용자를 쓴다.
+  // 열 때마다 읽으므로 다른 계정으로 다시 로그인해도 바로 반영된다.
+  // 토큰만 남고 사용자 정보가 없는 세션(이전 로그인)은 이름 대신 기본 문구를 보인다.
+  const userName = readSessionUser()?.name ?? '사용자'
+
   return (
     <Layer>
       <Overlay type="button" aria-label="사이드바 닫기" onClick={close} />
@@ -67,8 +69,8 @@ export function Sidebar() {
         </CloseButton>
 
         <Profile>
-          <Avatar role="img" aria-label={mockSidebarUser.avatarLabel} />
-          <UserName>{mockSidebarUser.name}</UserName>
+          <Avatar role="img" aria-label={`${userName} 프로필`} />
+          <UserName>{userName}</UserName>
         </Profile>
 
         <Nav aria-label="주요 메뉴">
@@ -108,8 +110,7 @@ function findActiveMenu(pathname: string): {
   for (const group of mockSidebarGroups) {
     for (const item of group.items) {
       if (!item.to) continue
-      const matched =
-        pathname === item.to || pathname.startsWith(`${item.to}/`)
+      const matched = pathname === item.to || pathname.startsWith(`${item.to}/`)
       if (!matched) continue
       if (!best || item.to.length > best.length) {
         best = { groupId: group.id, itemId: item.id, length: item.to.length }
