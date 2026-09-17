@@ -4,7 +4,7 @@ figma:
   fileKey: P7Jhnu8qV5m9q2QJNzkwAN
   nodeId: 1830:17307
 requires_functional_test: true
-paths: src/pages/settings/accounts, src/features/create-account, src/shared/assets, src/pages/login, src/app
+paths: src/pages/settings/accounts, src/features/create-account, src/shared/assets, src/pages/login, src/app, src/features/sidebar
 ---
 
 # 계정 생성 행동명세
@@ -28,13 +28,13 @@ paths: src/pages/settings/accounts, src/features/create-account, src/shared/asse
 ## 범위
 
 - 포함: `/settings/accounts/create` 라우트, 이름·아이디 입력, 필수값 검증과 인라인 오류, 초기 비밀번호 안내 문구, 제출 중 중복 방지, 성공·실패 결과 표시, 교체 가능한 mock 제출 경계
-- 제외: 실제 계정 생성 API, 아이디 중복 확인, 권한·팀 지정, 직원 계정 목록(`직원 계정 관리`), 사이드바 메뉴 연결
+- 제외: 실제 계정 생성 API, 아이디 중복 확인, 권한·팀 지정, 직원 계정 목록 화면
 
 ## 라우트와 진입
 
 - `/settings/accounts/create` 직접 진입 → 계정 생성 화면을 표시한다.
 - 인증이 필요한 관리자 화면이므로 `RequireAuth` 와 전역 레이아웃(사이드바 토글 버튼) 안에 둔다. Figma 좌상단 `ic:twotone-menu` 는 기존 `SidebarToggleButton` 이다.
-- 사이드바 `직원 계정 관리` 는 목록 화면 몫이라 이 작업에서 연결하지 않는다(위임 결정).
+- 사이드바 `설정 > 직원 계정 관리` 를 이 화면(`/settings/accounts/create`)에 연결한다. 이 경로에서는 해당 메뉴가 활성으로 표시된다. 직원 계정 목록 화면이 생기면 목록으로 옮긴다.
 
 ## 화면 구조
 
@@ -145,7 +145,6 @@ type CreateAccountSubmit = (input: CreateAccountInput) => Promise<void>
 
 - 실제 계정 생성 API 와 아이디 중복·형식 오류 처리
 - 성공·실패 결과의 제품 문구와 성공 후 이동 목적지(직원 계정 목록 화면 생기면 재검토)
-- 사이드바 `직원 계정 관리` 와의 연결
 - 권한(운영 관리자만 접근) 정책
 
 ## 비고 / 제약

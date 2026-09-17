@@ -75,7 +75,7 @@ paths: src/app, src/features/sidebar, src/shared/ui
 | 개체관리 | paw | 개체 카드 → `/species` · 먹이 급여 관리 → `/feeds` |
 | 시설관리 | 계단 | 점검 · 보수요청 / 공통 · 3층 / 4층 / 5층 / 6층 → 모두 화면 미구현 |
 | 재고관리 | 상자 | 식음료 / 동물 먹이 / 사육용품 / 비품 / 소모품 / 기타 → 모두 화면 미구현 |
-| 설정 | `mdi:cog` | 팀 설정 / 직원 계정 관리 / 권한 관리 → 모두 화면 미구현 |
+| 설정 | `mdi:cog` | 팀 설정 → `/settings/teams` / 직원 계정 관리 → `/settings/accounts/create` / 권한 관리 → 화면 미구현 |
 
 ## 치수 (Figma)
 
