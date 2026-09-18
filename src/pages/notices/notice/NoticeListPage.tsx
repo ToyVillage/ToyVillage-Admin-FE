@@ -3,6 +3,7 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { deleteNotice, getAllNotices, NoticeTable } from '@/entities/notice'
+import { getTeams } from '@/entities/team'
 import { CreateNoticeButton } from '@/features/create-notice'
 
 import {
@@ -45,12 +46,18 @@ export function NoticeListPage() {
     queryFn: () => getAllNotices({ size: API_PAGE_SIZE }),
   })
   const allNotices = useMemo(() => queryNotices ?? [], [queryNotices])
+  // 분류 탭은 공지에 붙은 분류가 아니라 팀 목록이 기준이다(yot `1:2721`).
+  // 생성·수정 폼과 같은 캐시를 써서 같은 팀 이름을 보여준다.
+  const teamsQuery = useQuery({ queryKey: ['teams', 'list'], queryFn: getTeams })
 
   const categories = useMemo(
     () => [
-      ...new Set(['전체', ...allNotices.map((notice) => notice.category)]),
+      ...new Set([
+        '전체',
+        ...(teamsQuery.data?.map((team) => team.name) ?? []),
+      ]),
     ],
-    [allNotices],
+    [teamsQuery.data],
   )
 
   const filtered = useMemo(() => {

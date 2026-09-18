@@ -1,9 +1,16 @@
 import { test, expect } from '@playwright/test'
 import { mockNoticeApi } from './support/notice-api'
+import { mockTeamList } from './support/team-api'
 
 // 승인된 시나리오(notice-list.approved.json: S1~S12)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 공지 API 는 page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
+
+// 분류 탭은 팀 목록이 기준이라 모든 시나리오가 팀 조회 응답을 필요로 한다.
+// 공지 mock 의 분류(`팀이름 1`·`팀이름 2`)와 같은 이름을 준다.
+test.beforeEach(async ({ page }) => {
+  await mockTeamList(page, ['팀이름 1', '팀이름 2'])
+})
 
 test('S1: "공지 생성하기" 클릭 → /notices/list/create 이동', async ({
   page,
