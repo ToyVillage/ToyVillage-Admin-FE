@@ -73,6 +73,9 @@ export function FeedListPage() {
       }),
     // 급여 내역은 다른 직원이 계속 추가하므로 전역 staleTime(60초) 캐시를 쓰지 않는다.
     staleTime: 0,
+    // 페이지를 넘기는 동안 직전 응답을 유지한다. 없으면 `totalPageSize` 가 잠시
+    // 사라져 총 페이지 수가 현재 페이지로 줄었다가 되돌아온다.
+    placeholderData: (previousData) => previousData,
   })
 
   const feeds = useMemo(() => feedsQuery.data?.items ?? [], [feedsQuery.data])
