@@ -230,13 +230,21 @@ test('S13: 열 폭보다 긴 값은 한 줄로 말줄임한다', async ({ page }
 
   await page.goto('/feeds')
 
-  const cell = rows(page).first().getByTitle(longKind)
+  const cell = rows(page).first().getByText(longKind)
   await expect(cell).toHaveCSS('text-overflow', 'ellipsis')
   await expect(cell).toHaveCSS('white-space', 'nowrap')
 
   // 한 줄 행 높이(92px)에서 늘지 않는다.
   const box = await rows(page).first().boundingBox()
   expect(box?.height).toBeLessThanOrEqual(93)
+
+  // 잘린 값은 hover 하면 전체가 말풍선으로 뜬다.
+  await cell.hover()
+  await expect(page.getByRole('tooltip')).toHaveText(longKind)
+
+  // 잘리지 않은 값에는 말풍선을 띄우지 않는다.
+  await rows(page).first().getByText('관리자').hover()
+  await expect(page.getByRole('tooltip')).toHaveCount(0)
 })
 
 test('S12: 조회날짜 목록을 펼치면 선택된 항목이 보이게 스크롤된다', async ({
