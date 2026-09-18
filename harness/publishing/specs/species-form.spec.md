@@ -52,7 +52,7 @@ paths: src/pages/species, src/features/species-form, src/entities/species
 
 ## 범위
 
-- 포함: 빈 폼 진입(생성), 기존 값 복원(수정), 텍스트 입력 4종, 분류군 단일 선택, 법정지정분류 기본 목록 선택·직접 추가·직접 추가 항목 제거,
+- 포함: 빈 폼 진입(생성), 기존 값 복원(수정), 텍스트 입력 4종, 분류군 단일 선택, 법정지정분류 공용 목록 선택·직접 추가·항목 제거,
   법정분류 추가 모달, 대표 사진 1장 등록·교체·제거, 필수값 인라인 검증, 생성·저장, 중복 제출 방지, 이탈 보호, 없는 종 처리
 - 제외: 실제 API 연동(`/api` 스킬 담당 — 개체·종 API 명세 없음), 종 목록·생성 성공 토스트 표시(`species-list`),
   종 상세·삭제(`species-detail`), 개체 등록·수정(`individual-form`), 사진 서버 업로드 본문, 사이드바 메뉴(`species-list`·`sidebar.spec.md`)
@@ -87,15 +87,16 @@ paths: src/pages/species, src/features/species-form, src/entities/species
 - 국명·영문명·학명·세부 분류 입력은 비어 있고 각각 `국명을 입력해주세요` / `영문명을 입력해주세요` /
   `학명을 입력해주세요` / `세부 분류를 입력해주세요` placeholder 를 보여준다.
 - 분류군 pill 4개(`포유류` `파충류` `조류` `어류`) 중 **`포유류` 가 선택**돼 있다 (2026-09-15 Figma·저장소 근거 판단: Figma 모든 프레임(빈 생성 폼 포함)에 `포유류` 선택).
-- 법정지정분류는 기본 선택지 pill 3개(`지정관리 야생동물` `멸종위기 야생생물 I급` `천연기념물`)가 모두 미선택으로 보이고,
-  그 뒤에 `+ 법정분류 추가` pill 이 있다. 기본 선택지에는 X(제거) 버튼이 없다.
+- 법정지정분류는 서버 공용 목록 pill 이 받은 순서대로 모두 미선택으로 보이고, 그 뒤에 `+ 법정분류 추가` pill 이 있다.
+  모든 pill 에 X(제거) 버튼이 있다. 화면이 고정으로 들고 있는 기본 선택지는 없다 (2026-09-18 개발자 결정, 이슈 #149).
 - 사진 카드에는 라벨과 안내 `대표 사진 1장만 등록할 수 있습니다.` 만 있고 파일 chip 은 없다. 아래에 업로드 드롭존이 있다.
 
 ### 복원 (수정)
 
 - 진입 시 저장된 값이 채워진다 — 국명·영문명·학명·세부 분류 텍스트, 분류군 pill 선택, 법정지정분류, 사진 chip.
-- 법정지정분류: 기본 선택지 3개는 항상 그 순서로 보이고, 저장값에 든 기본 선택지는 선택 상태다.
-  저장값 중 기본 선택지에 없는 항목(직접 추가 항목)은 기본 선택지 뒤에 저장 순서대로 **선택 상태·X 버튼이 있는** pill 로 붙는다 (2026-09-15 개발자 결정).
+- 법정지정분류: 서버 공용 목록이 받은 순서로 보이고, 저장값에 든 항목은 선택 상태다.
+  저장값 중 공용 목록에 없는 이름(다른 곳에서 삭제된 항목)은 그 뒤에 저장 순서대로 **선택 상태**인 pill 로 붙고,
+  저장할 때 다시 만든다 (2026-09-17 개발자 결정).
 - 사진 chip 에는 저장된 사진의 `photo.fileName` 이 보인다.
 - 예: 종 `1` 카피바라 → `카피바라` / `Capybara` / `Hydrochoerus hydrochaeris` / `포유류` 선택 / 세부 분류 `설치목 - 천축서과` /
   `지정관리 야생동물` 만 선택 / 사진 chip `카피바라_2026.jpg`. 부제 `카피바라의 종 정보를 수정합니다`.
@@ -112,15 +113,15 @@ paths: src/pages/species, src/features/species-form, src/entities/species
 - pill 하나를 클릭 → 그 pill 만 선택 상태가 된다. 다른 pill 을 클릭하면 선택이 옮겨 간다.
 - 선택된 pill 을 다시 클릭해도 해제되지 않는다(`task-create` 우선순위 규칙 승계). 기본값이 있어 분류군 오류는 없다.
 
-### 법정지정분류 (기본 목록에서 선택 + 직접 추가) (2026-09-15 개발자 결정)
+### 법정지정분류 (공용 목록에서 선택 + 직접 추가) (2026-09-15 개발자 결정)
 
 Figma 근거: 안내 `해당하는 항목을 모두 선택해주세요. 목록에 없으면 직접 추가할 수 있습니다.`, 컴포넌트 설명
 `다중 선택 pill + 직접 추가`, 생성·수정 프레임에 같은 pill 3개, 추가 모달 `959:26335`.
 
 - pill 본문 클릭 → 선택을 토글한다. 여러 개를 동시에 선택할 수 있고 아무것도 선택하지 않아도 된다.
 - 선택된 pill 은 기존 `accent` 계열로 표시한다 — 배경 `colors.accentBg`, 테두리 1px `colors.accent`, 글자 `colors.accent`(Figma 에 선택 variant 없음).
-- X(제거) 버튼은 **직접 추가한 항목에만** 있다. X 클릭 → 그 pill 을 목록에서 뺀다(선택도 해제). 기본 선택지 3개에는 X 가 없다.
-  (Figma 는 기본 선택지 pill 에도 X 를 그렸다 — 차이로 기록한다.)
+- X(제거) 버튼은 **공용 목록 pill 모두에** 있다(Figma 와 같다). X 클릭 → 삭제 확인 모달을 거쳐 서버 공용 목록에서 지운다(선택도 해제)
+  (2026-09-18 개발자 결정, 이슈 #149 — 지울 수 없는 기본 선택지를 없앴다).
 - 직접 추가한 항목도 본문 클릭으로 선택을 해제할 수 있다. 저장은 선택된 항목만 담으므로, 해제한 직접 추가 항목은 다시 들어오면 목록에 없다.
 - `+ 법정분류 추가` 클릭 → 법정분류 추가 모달이 열린다.
 
@@ -142,7 +143,8 @@ Figma 근거: 안내 `해당하는 항목을 모두 선택해주세요. 목록�
 - 드롭존 클릭 → 파일 선택 창이 열린다(한 개만 고를 수 있다). 파일을 드롭존에 끌어다 놓아도 된다.
 - 이미지 파일(MIME `image/*`) 하나를 올리면 → 사진 카드에 chip(유형 아이콘 → 다운로드 → 파일명, Figma `1057:14773` 순서)이 나타난다. 드롭존은 계속 보인다.
 - 사진이 이미 있는 상태에서 새 이미지를 올리면 → 기존 사진을 **교체**한다. chip 은 항상 최대 1개다.
-- chip 에는 제거(✕) 버튼이 있다. 아이콘은 평소 `colors.textGuide`(회색)이고 hover·focus 에서 `colors.danger`(빨강)다(법정지정분류 pill 의 `RemoveIconButton` 과 같은 규칙). 지우면 사진이 없는 상태가 되고, 사진은 필수라 그대로 제출하면 `사진을 등록해주세요!` 오류 줄이 보인다 (2026-09-18 개발자 결정, 이슈 #149: 잘못 올린 파일을 지울 수 없었다).
+- chip 에는 제거(✕) 버튼이 있다. 아이콘은 평소 `colors.textGuide`(회색)이고 hover·focus 에서 `colors.danger`(빨강)다(법정지정분류 pill 의 `RemoveIconButton` 과 같은 규칙). 지우면 사진이 없는 상태가 되고, 사진은 필수라 그대로 제출하면 `사진을 등록해주세요!` 오류 줄이 보인다
+  (2026-09-18 개발자 결정, 이슈 #149 — 잘못 올린 파일을 지울 수 없었다).
 - chip 의 다운로드 컨트롤 클릭 → 그 파일을 내려받는다(mock: 새 파일은 원본, 기존 사진은 파일명을 담은 임시 Blob — `AttachmentList` 규칙 승계).
 - 거부하면 기존 사진을 그대로 두고 드롭존 아래에 오류 문구를 인라인 `role="alert"` 로 보인다 (2026-09-15 Figma·저장소 근거 판단: `AttachmentField` 오류 문구 위치·문구 계열).
   여러 조건에 걸리면 아래 순서의 첫 문구 하나만 보인다.
@@ -212,8 +214,7 @@ Figma 근거: 안내 `해당하는 항목을 모두 선택해주세요. 목록�
 7. `field / 법정지정분류`(1320×182.75 @y=640), 카드 내부 gap 20px:
    - 라벨 그룹(높이 52): 라벨 `법정지정분류`(별표 없음) → gap 6 → 안내 18px Medium `colors.optionMuted`(`#9999A5`).
    - pill 행 gap 10px. **Figma 는 한 줄 overflow-clip 이지만 항목이 늘면 줄바꿈한다**(flex-wrap, 행 간격 10px — 직접 추가로 항목이 늘어난다).
-   - 기본 선택지 pill(X 없음): radius 100px, padding 14px 32px, 테두리 1px `colors.dialogBorder`, 22px Medium `#70707D`(`color.choiceMuted`).
-   - 직접 추가 pill(X 있음): radius 100px, padding 14px 24px 14px 32px, 글자-아이콘 gap 8px, 같은 테두리·글자, 제거 아이콘은 기존 `RemoveIconButton`
+   - pill(X 있음): radius 100px, padding 14px 24px 14px 32px, 글자-아이콘 gap 8px, 같은 테두리·글자, 제거 아이콘은 기존 `RemoveIconButton`
      (Figma 24px 프레임·글리프 20px `inset 8.33%`, 스크린샷상 빨강 — 크기·색 차이는 ⑦ 육안 확인).
    - 선택 상태: 배경 `colors.accentBg`, 테두리 1px `colors.accent`, 글자 `colors.accent`(X 아이콘 색은 기존 `RemoveIconButton` 그대로).
    - `+ 법정분류 추가` pill: radius 100px, padding 14px 32px 14px 24px, gap 6px, 테두리 1px `colors.textGuide`,
@@ -278,7 +279,7 @@ interface Species {
   scientificName: string
   taxonGroup: TaxonGroup
   subClassification?: string // `{목} - {과}` 예: `설치목 - 천축서과`
-  legalDesignations: string[] // 선택된 기본 선택지 + 직접 추가 항목
+  legalDesignations: string[] // 선택된 법정지정분류 이름
   photo: { fileName: string; fileKey: string; url: string }
   individualCount: number
 }
@@ -314,8 +315,8 @@ interface SpeciesFormValues {
 type SpeciesFormErrors = Partial<Record<'koreanName' | 'englishScientificName' | 'photo', string>> // 오류 줄 문구
 ```
 
-- 상수: `entities/species/model/labels.ts` 의 `taxonGroupLabels`(species-list 명세 — `MAMMAL: '포유류'` …, 순서 포유류 → 파충류 → 조류 → 어류),
-  같은 파일에 `legalDesignationPresets = ['지정관리 야생동물', '멸종위기 야생생물 I급', '천연기념물'] as const`(기본 선택지, 개발자 결정).
+- 상수: `entities/species/model/labels.ts` 의 `taxonGroupLabels`(species-list 명세 — `MAMMAL: '포유류'` …, 순서 포유류 → 파충류 → 조류 → 어류).
+  법정지정분류 기본 선택지 상수는 두지 않는다 — 선택지는 서버 공용 목록이 전부다 (2026-09-18 개발자 결정, 이슈 #149).
 - 직접 추가한 법정분류는 **그 종의 `legalDesignations` 값으로만** 저장한다. 다른 종 화면의 선택지에는 나타나지 않는다(개발자 결정).
 - 검증은 `features/species-form/model/validation.ts` 의 순수 함수(`validateSpeciesForm(values): SpeciesFormErrors`)로 둔다(`reservation-form` `validateReservationForm` 선례).
 - 수정 복원 시 `photo` 는 `{ fileName: photo.fileName, url: photo.url }` 로 `PhotoValue` 를 만든다. 요청은 새 파일이면 `{ kind: 'new' }`, 아니면 `{ kind: 'existing', photo }` 다.
@@ -348,9 +349,8 @@ type SpeciesFormErrors = Partial<Record<'koreanName' | 'englishScientificName' |
   — `features/species-form/ui`. 필드 조합·인라인 검증(오류 상태 소유)·mutation·실패 문구·제출 버튼. `TaskForm` 과 같은 props 규약.
 - `TaxonGroupField { value: TaxonGroup; onChange }` — `features/species-form/ui`.
   시각은 신규 공용 `PillRadioGroup` 을 쓴다(아래).
-- `LegalDesignationField { presets: readonly string[]; value: string[]; onChange: (value: string[]) => void }` — `features/species-form/ui`.
-  표시 목록(기본 선택지 + 직접 추가 항목)은 내부 상태다. 수정 진입 시 `value` 중 기본 선택지에 없는 항목으로 직접 추가 목록을 초기화하고,
-  선택값만 밖으로 올린다. X 는 직접 추가 항목에만 렌더한다(`RemoveIconButton`).
+- `LegalDesignationField { statuses: LegalStatus[] | undefined; loadFailed: boolean; value: string[]; onChange: (value: string[]) => void }` — `features/species-form/ui`.
+  표시 목록은 서버 공용 목록 + 목록에 없는 저장값이다. 선택값만 밖으로 올리고, X 는 공용 목록 항목마다 렌더한다(`RemoveIconButton`).
 - `LegalDesignationAddDialog { existingNames: string[]; onCancel: () => void; onAdd: (name: string) => void }` — 빈 값 비활성·중복 인라인 오류(`이미 있는 분류입니다!`) 소유.
   `features/species-form/ui`. 구조·포커스 트랩·`inert` 처리는 `features/create-notice/ui/TeamAddDialog.tsx` 를 따른다
   (그 파일은 문구·규격이 달라 직접 재사용하지 않는다).
@@ -408,10 +408,10 @@ Figma 에 근거가 없어 기존 폼의 980px 규칙을 승계한다(결정 사
 
 ## 기능 테스트 수용 기준 (게이트 ② 결정 반영 — 시나리오 승인 대기)
 
-- S1: `/species/create` 진입 → 제목 `종 등록`, 네 입력의 placeholder, 분류군 `포유류` 선택, 기본 선택지 3개 미선택(X 없음), 사진 chip 없음,
+- S1: `/species/create` 진입 → 제목 `종 등록`, 네 입력의 placeholder, 분류군 `포유류` 선택, 공용 목록 pill 미선택(각 X 있음), 사진 chip 없음,
   버튼 `생성하기` 가 보인다.
 - S2: 분류군 `조류` 클릭 → `조류` 만 선택된다. 이어서 `어류` 클릭 → 선택이 `어류` 로 옮겨 간다.
-- S3: 기본 선택지 `지정관리 야생동물`·`천연기념물` 클릭 → 둘 다 선택된다. `천연기념물` 을 다시 클릭 → 그것만 해제된다.
+- S3: 공용 목록 pill `지정관리 야생동물`·`천연기념물` 클릭 → 둘 다 선택된다. `천연기념물` 을 다시 클릭 → 그것만 해제된다.
 - S4: `+ 법정분류 추가` 클릭 → 모달이 열리고 제목·placeholder·`취소`/`추가하기`(비활성) 가 보이며 입력에 포커스가 있다.
 - S5: 모달에 새 이름을 입력하고 `추가하기` → 모달이 닫히고 `+ 법정분류 추가` 앞에 X 버튼이 있는 선택된 pill 이 추가된다.
 - S6: 이미지 파일 1개 업로드 → 사진 카드에 그 파일명의 chip 이 나타난다.
@@ -429,7 +429,7 @@ Figma 에 근거가 없어 기존 폼의 980px 규칙을 승계한다(결정 사
 - S18: 모달 입력이 비었거나 공백만 있음 → `추가하기` 가 비활성이고 `Enter` 를 눌러도 pill 이 추가되지 않는다.
 - S19: 모달에 `천연기념물` 입력 후 `추가하기` → 새 pill 없이 모달이 유지되고 `이미 있는 분류입니다!` 가 보인다.
 - S20: 모달에서 `취소`(또는 `Esc`) → 아무것도 추가되지 않고 모달이 닫히며 `+ 법정분류 추가` 에 포커스가 돌아온다.
-- S21: 직접 추가한 pill 의 X 클릭 → 그 pill 이 목록에서 사라진다. 기본 선택지 pill 에는 X 가 없다.
+- S21: 직접 추가한 pill 의 X 클릭 → 그 pill 이 목록에서 사라진다. 남은 공용 목록 pill 에도 각각 X 가 있다.
 - S22: 사진이 있는 상태에서 다른 이미지 업로드 → chip 은 1개이고 새 파일명으로 바뀐다.
 - S24: 이미지가 아닌 파일 업로드 → chip 이 생기지 않고 `이미지 파일만 등록할 수 있습니다.` 가 보인다.
 - S25: 50MB 를 넘는 이미지 업로드 → chip 이 생기지 않고 50MB 초과 문구가 보인다.
@@ -439,7 +439,7 @@ Figma 에 근거가 없어 기존 폼의 980px 규칙을 승계한다(결정 사
 - S30: 저장 요청 실패 → URL 이 `/species/1/edit` 로 유지되고 입력이 보존되며 `저장하지 못했습니다. 다시 시도해 주세요.` 가 보인다.
 - S31: 없는 id 로 `/species/999/edit` 진입 → `종을 찾을 수 없습니다.` 와 `목록으로 돌아가기` 링크가 보인다.
 - S23: 사진 chip 의 ✕ 클릭 → chip 이 사라지고, 그대로 `생성하기` 를 누르면 `사진을 등록해주세요!` 줄이 보인다.
-- S32: 키보드만으로 입력·분류군 선택·법정분류 선택/추가/직접 추가 항목 제거·사진 업로드 컨트롤·생성을 수행할 수 있다.
+- S32: 키보드만으로 입력·분류군 선택·법정분류 선택/추가/제거·사진 업로드 컨트롤·생성을 수행할 수 있다.
 - S33: `/species/1/edit` 에서 사진 chip 의 ✕ 클릭 → 저장하면 `사진을 등록해주세요!` 줄이 보이고, 다시 올리면 저장된다.
 
 (S29 생성 중복 제출은 삭제 — 번호 공백 유지. 사유는 결정 사항과 시나리오 초안 승인 메모.
@@ -452,7 +452,7 @@ Figma 에 근거가 없어 기존 폼의 980px 규칙을 승계한다(결정 사
 - **필수값 오류는 인라인이다.** `ValidationDialog` 는 쓰지 않고 Figma `107:8905` 모달안은 폐기한다. 동작은 `reservation-form` 패턴(제출 시 전체 검증 · 모든 오류 줄 동시 표시 · 다음 제출 때 갱신 · 첫 오류로 스크롤, 포커스 이동 없음 · `role="alert"` + `aria-describedby`), 외형은 Figma `107:8777` 실측이다. 문구는 `국명을 입력해주세요!` · `영문명과 학명을 모두 입력해주세요!` · `사진을 등록해주세요!` (2026-09-15 개발자 결정).
 - 세부 분류는 선택 입력(별표 없음, 오류 없음)이고 형식은 `{목} - {과}`(Figma 수정 프레임 `설치목 - 천축서과`)다 (2026-09-15 개발자 결정).
 - 분류군은 진입 시 `포유류` 가 선택돼 있고 분류군 오류는 없다 (2026-09-15 Figma·저장소 근거 판단: Figma 모든 프레임(빈 생성 폼 포함)에 `포유류` 선택).
-- 법정지정분류는 기본 선택지 3개(`legalDesignationPresets`)를 눌러 선택/해제하고, `+ 법정분류 추가` 모달로 추가한 이름은 목록 끝에 즉시 선택 상태로 붙는다. X 는 직접 추가 항목에만 있고 누르면 삭제 확인 모달을 거쳐 서버 공용 목록에서 삭제한다(API 연동 2026-09-16 개발자 결정. Figma 는 기본 선택지에도 X 를 그렸다 — 차이). 선택 표시는 `accent`/`accentBg`. 직접 추가 항목은 그 종에만 저장한다. 수정 화면은 기본 선택지 + 저장된 직접 추가 항목(선택·X)으로 복원한다 (2026-09-15 개발자 결정).
+- 법정지정분류 선택지는 서버 공용 목록이 전부다 — 화면이 들고 있는 기본 선택지는 없다 (2026-09-18 개발자 결정, 이슈 #149: 지울 수 없는 항목이 박혀 있었다). pill 을 눌러 선택/해제하고, `+ 법정분류 추가` 모달로 추가한 이름은 목록 끝에 즉시 선택 상태로 붙는다. X 는 공용 목록 pill 모두에 있고 누르면 삭제 확인 모달을 거쳐 서버 공용 목록에서 삭제한다(API 연동 2026-09-16 개발자 결정). 선택 표시는 `accent`/`accentBg`. 수정 화면은 공용 목록 + 목록에 없는 저장값(선택 상태)으로 복원한다.
 - 법정분류 추가 모달은 빈 값·공백만이면 `추가하기` 를 비활성으로 두고, 이미 목록에 있는 이름이면 모달 안 인라인 `이미 있는 분류입니다!` 를 보인다 (2026-09-15 개발자 결정). 모달은 `features/species-form` 전용이다 (2026-09-15 Figma·저장소 근거 판단: `TeamAddDialog` 구조 승계, 문구·규격이 달라 공용화하지 않는다).
 - 사진은 1장만 둔다 — chip 은 유형 아이콘 → 다운로드 → 파일명 → ✕(제거)이고, 새 업로드로 교체하거나 ✕ 로 지운다 (2026-09-18 개발자 결정, 이슈 #149: 잘못 올린 파일을 지울 수 없었다). 여러 파일·이미지 외·50MB 초과는 드롭존 아래 인라인 `role="alert"` 3종 문구로 거부한다 (2026-09-15 Figma·저장소 근거 판단: Figma `84:8781`·`84:8848`·`127:9358` chip, `AttachmentField` 오류 위치).
 - 저장 실패는 버튼 위 문구(`role="status"`)로 알린다. `ErrorDialog` 는 쓰지 않는다 (2026-09-15 Figma·저장소 근거 판단: `TaskForm` `SubmitStatus` 선례).

@@ -12,7 +12,7 @@
 - `src/entities/species/api/legalStatusApi.ts` — `createLegalStatus({ kind })`
 - `src/features/species-form/ui/LegalDesignationField.tsx` — 추가 mutation
 - `src/features/species-form/ui/LegalDesignationAddDialog.tsx` — `pending`·`failed` props
-- `src/features/species-form/model/legalStatusIds.ts` — 기본 항목 생성 호출
+- `src/features/species-form/model/legalStatusIds.ts` — 목록에 없는 이름 생성 호출
 - `tests/e2e/support/animal-manage-api.ts`, 신규 `tests/e2e/api/animal-legal-status-create.spec.ts`
 
 ## API 함수
@@ -22,12 +22,12 @@
 
 ## UI 연결
 
-- 다이얼로그: 중복 검사(기본 3개 + 서버 목록 이름) 통과 시 `onAdd(name)`(Promise). 요청 중
+- 다이얼로그: 중복 검사(서버 목록·저장값 이름) 통과 시 `onAdd(name)`(Promise). 요청 중
   `추가하기` 비활성으로 중복 제출 방지. 실패 시 모달 유지·입력 보존·오류 행
   `추가하지 못했습니다. 다시 시도해 주세요.`(입력을 바꾸면 사라진다).
 - 필드: 성공 → `legalStatusQueryKeys.all` 무효화 후 재조회 완료를 기다림 → 새 이름을 선택값
   끝에 추가 → 모달 닫기 → `+ 법정분류 추가` 포커스.
-- 저장 직전 기본 항목 생성 실패 → `SpeciesForm` mutation 오류 → 기존
+- 저장 직전 이 생성이 실패 → `SpeciesForm` mutation 오류 → 기존
   `생성하지 못했습니다.`/`저장하지 못했습니다.` 상태, 종 요청 없음.
 
 ## 검증 순서

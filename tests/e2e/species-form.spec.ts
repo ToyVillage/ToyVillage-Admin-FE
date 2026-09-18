@@ -11,7 +11,8 @@ import {
 
 const createUrl = '/species/create'
 const editUrl = '/species/1/edit'
-const legalPresets = [
+// 가짜 서버 공용 목록 기본값. 기본 선택지는 없고 이 셋도 ✕ 로 지울 수 있다.
+const legalStatusNames = [
   '지정관리 야생동물',
   '멸종위기 야생생물 I급',
   '천연기념물',
@@ -47,11 +48,11 @@ test('S1: 등록 화면 진입 기본 상태', async ({ page }) => {
   await expectOnlyTaxonGroupChecked(page, '포유류')
 
   await expect(legalGroup(page).locator('button[aria-pressed]')).toHaveCount(
-    legalPresets.length,
+    legalStatusNames.length,
   )
-  for (const name of legalPresets) {
+  for (const name of legalStatusNames) {
     await expect(legalPill(page, name)).toHaveAttribute('aria-pressed', 'false')
-    await expect(removeButton(page, name)).toHaveCount(0)
+    await expect(removeButton(page, name)).toHaveCount(1)
   }
   await expect(addLegalButton(page)).toBeVisible()
 
@@ -70,7 +71,7 @@ test('S2: 분류군 단일 선택', async ({ page }) => {
   await expectOnlyTaxonGroupChecked(page, '어류')
 })
 
-test('S3: 법정지정분류 기본 선택지 토글', async ({ page }) => {
+test('S3: 법정지정분류 pill 토글', async ({ page }) => {
   await page.goto(createUrl)
 
   await legalPill(page, '지정관리 야생동물').click()
@@ -358,9 +359,9 @@ test('S18: 모달 빈 이름', async ({ page }) => {
   // 모달이 열린 동안 폼은 aria-hidden 이라 숨은 요소까지 센다.
   await expect(
     page.getByRole('button', { name: /삭제$/, includeHidden: true }),
-  ).toHaveCount(0)
+  ).toHaveCount(legalStatusNames.length)
   await expect(page.locator('button[aria-pressed]')).toHaveCount(
-    legalPresets.length,
+    legalStatusNames.length,
   )
 })
 
@@ -422,9 +423,9 @@ test('S21: 직접 추가한 법정분류 제거', async ({ page }) => {
   expect(api.legalStatuses.map(({ kind }) => kind)).not.toContain(
     '해양보호생물',
   )
-  for (const name of legalPresets) {
+  for (const name of legalStatusNames) {
     await expect(legalPill(page, name)).toBeVisible()
-    await expect(removeButton(page, name)).toHaveCount(0)
+    await expect(removeButton(page, name)).toHaveCount(1)
   }
 })
 
@@ -609,7 +610,7 @@ test('S32: 키보드 조작', async ({ page }) => {
   await expect(page.getByRole('radio', { name: '파충류' })).toBeFocused()
   await expectOnlyTaxonGroupChecked(page, '파충류')
 
-  // 세부 분류 → 법정지정분류 기본 선택지
+  // 세부 분류 → 법정지정분류. pill 마다 본문 → 삭제 순서로 들어간다.
   await page.keyboard.press('Tab')
   await expect(subClassificationInput(page)).toBeFocused()
   await page.keyboard.press('Tab')
@@ -620,9 +621,15 @@ test('S32: 키보드 조작', async ({ page }) => {
     'true',
   )
   await page.keyboard.press('Tab')
+  await expect(removeButton(page, '지정관리 야생동물')).toBeFocused()
+  await page.keyboard.press('Tab')
   await expect(legalPill(page, '멸종위기 야생생물 I급')).toBeFocused()
   await page.keyboard.press('Tab')
+  await expect(removeButton(page, '멸종위기 야생생물 I급')).toBeFocused()
+  await page.keyboard.press('Tab')
   await expect(legalPill(page, '천연기념물')).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(removeButton(page, '천연기념물')).toBeFocused()
 
   // 법정분류 추가 → 모달 입력 → Enter 로 추가
   await page.keyboard.press('Tab')

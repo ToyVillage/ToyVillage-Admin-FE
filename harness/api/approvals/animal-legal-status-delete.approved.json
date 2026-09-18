@@ -1,15 +1,15 @@
 {
   "feature": "animal-legal-status-delete",
   "apiId": "ANIMAL_LEGAL_STATUS_DELETE",
-  "approvedAt": "2026-09-16T15:59:59.662Z",
+  "approvedAt": "2026-09-18T02:48:20.870Z",
   "approvedBy": "yunho09",
-  "taskSpecHash": "41eef32279f74935c1819a6a476369e749a6177b5a20d072c3a96a68e7a39ed4",
+  "taskSpecHash": "e3aeb17289ca305f1b200091769ec41d77711b72e2ed11ff1f851f98bb7795e9",
   "contractHash": "4d8d0b3877fceb7fcadb3867febcad0558a5cfa9e0b34b43eeddf6dfa74bf951",
   "contractMarkdownHash": "7ae7ecef629bdf789136fb95569d3d46e6894fa6f6be356eaa6d1a633691772e",
   "planHash": "9558a986faa3a7c61b651a1cca72d628e9c3935349789d2e07a5d00c31ec7bff",
-  "scenarioHash": "298a57af0b73e3fd265757cbe2d56cbeb5256556f1d496174f219752e24f9dc7",
-  "testHash": "13d19606cf043b9463dbebf46ef984b902c91b8dbf94c5635a30ff8d7ffb12d6",
+  "scenarioHash": "437c770eefea35e46b4b969ce6f203ebd91eaf07777b816812b69f7997573b93",
+  "testHash": "e0681f4e6853a2754c188d4aa51d6c91b5feb31c7f55ea4fce8e9f812441b047",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T00:47:12.775Z"
+  "testApprovedAt": "2026-09-18T02:48:21.046Z"
 }

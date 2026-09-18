@@ -17,8 +17,6 @@ import {
 import { LegalDesignationAddDialog } from './LegalDesignationAddDialog'
 
 interface LegalDesignationFieldProps {
-  /** 기본 선택지. 항상 이 순서로 먼저 보이고 제거 버튼이 없다. */
-  presets: readonly string[]
   /** 서버 공용 목록. 조회 중이거나 실패하면 undefined. */
   statuses: LegalStatus[] | undefined
   loadFailed: boolean
@@ -28,10 +26,9 @@ interface LegalDesignationFieldProps {
 }
 
 // Figma `field / 법정지정분류`(127:9354) — 다중 선택 pill + 직접 추가.
-// 표시 목록 = 기본 선택지 → 서버 공용 목록(✕ 로 서버에서 삭제) → 저장값 중 목록에 없는 이름.
+// 표시 목록 = 서버 공용 목록(✕ 로 서버에서 삭제) → 저장값 중 목록에 없는 이름.
 // 목록에 없는 저장값(공용 목록에서 삭제된 분류)은 선택된 채 보이고 저장할 때 다시 만든다.
 export function LegalDesignationField({
-  presets,
   statuses,
   loadFailed,
   value,
@@ -72,10 +69,8 @@ export function LegalDesignationField({
     },
   })
 
-  const serverStatuses = (statuses ?? []).filter(
-    (status) => !presets.includes(status.name),
-  )
-  const knownNames = [...presets, ...serverStatuses.map(({ name }) => name)]
+  const serverStatuses = statuses ?? []
+  const knownNames = serverStatuses.map(({ name }) => name)
   const orphanNames = value.filter((name) => !knownNames.includes(name))
   const names = [...knownNames, ...orphanNames]
   const selectedNames = new Set(value)
