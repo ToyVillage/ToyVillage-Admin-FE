@@ -27,8 +27,8 @@ test('S2: 기존 제목·내용·첨부 복원', async ({ page }) => {
 
   await expect(page.getByLabel('제목')).toHaveValue('7월 13일 휴관안내')
   await expect(page.getByLabel('내용')).toContainText('그냥 더미 텍스트')
-  await expect(page.getByRole('radio', { name: '전체' })).toBeChecked()
-  await expect(page.getByRole('radio')).toHaveCount(3)
+  await expect(page.getByRole('checkbox', { name: '전체' })).toBeChecked()
+  await expect(page.getByRole('checkbox')).toHaveCount(3)
   await expect(page.getByRole('button', { name: '팀 추가' })).toHaveCount(0)
   await expect(page.getByText('당일 지침.pdf')).toBeVisible()
   await expect(page.getByText('휴관안내.png')).toBeVisible()
@@ -163,10 +163,10 @@ test('수정에서 팀 목록에 없는 기존 분류도 선택 상태로 표시
 }) => {
   await page.goto('/notices/list/2/edit')
 
-  await expect(page.getByRole('radio', { name: '팀 이름1' })).toBeChecked()
-  await expect(page.getByRole('radio')).toHaveCount(4)
+  await expect(page.getByRole('checkbox', { name: '팀 이름1' })).toBeChecked()
+  await expect(page.getByRole('checkbox')).toHaveCount(4)
 
-  await page.getByRole('radio', { name: '창고팀' }).check()
+  await page.getByRole('checkbox', { name: '창고팀' }).check()
   await page.getByRole('button', { name: '저장하기' }).click()
   await expect(page).toHaveURL(/\/notices\/list$/)
 })

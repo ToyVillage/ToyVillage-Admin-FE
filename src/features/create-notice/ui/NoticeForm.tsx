@@ -52,7 +52,24 @@ export function NoticeForm({
     // 수정 화면의 기존 분류가 팀 목록에 없더라도 선택 상태는 보여준다.
     return [...new Set([defaultCategory, initialCategory, ...teamNames])]
   }, [initialCategory, teamsQuery.data])
-  const [category, setCategory] = useState(initialCategory)
+  // 분류는 여러 팀을 고를 수 있다. `전체` 와 팀은 함께 고를 수 없고,
+  // 모두 해제하면 `전체` 로 돌아간다(선택 없는 상태를 두지 않는다).
+  const [selectedCategories, setSelectedCategories] = useState([
+    initialCategory,
+  ])
+
+  function toggleCategory(option: string) {
+    setSelectedCategories((previous) => {
+      if (option === defaultCategory) return [defaultCategory]
+
+      const withoutAll = previous.filter((name) => name !== defaultCategory)
+      const next = withoutAll.includes(option)
+        ? withoutAll.filter((name) => name !== option)
+        : [...withoutAll, option]
+
+      return next.length > 0 ? next : [defaultCategory]
+    })
+  }
   const [title, setTitle] = useState(initialNotice?.title ?? '')
   const [content, setContent] = useState(initialNotice?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
@@ -93,7 +110,7 @@ export function NoticeForm({
     const isDirty = Boolean(
       title !== (initialNotice?.title ?? '') ||
       content !== (initialNotice?.content ?? '') ||
-      category !== initialCategory ||
+      !sameStringArray(selectedCategories, [initialCategory]) ||
       (isEditing
         ? !sameStringArray(attachmentNames, initialAttachmentNames)
         : hasAttachments),
@@ -102,7 +119,7 @@ export function NoticeForm({
     onDirtyChange(isDirty)
   }, [
     attachmentNames,
-    category,
+    selectedCategories,
     content,
     hasAttachments,
     initialAttachmentNames,
@@ -132,7 +149,9 @@ export function NoticeForm({
     if (submittingRef.current) return
 
     const input: UpdateNoticeInput = {
-      category,
+      // 서버는 아직 분류를 하나만 받아 `kind: 'ALL'` 로 보낸다(#147).
+      // 화면이 고른 팀은 여기에 모아만 둔다.
+      category: selectedCategories.join(', '),
       title: title.trim(),
       content: content.trim(),
       attachments: attachmentNames,
@@ -182,13 +201,12 @@ export function NoticeForm({
           {categories.map((option) => (
             <CategoryOption key={option}>
               <CategorySelectLabel>
-                <CategoryRadio
-                  type="radio"
+                <CategoryCheckbox
+                  type="checkbox"
                   name="notice-category"
                   value={option}
-                  required
-                  checked={category === option}
-                  onChange={(event) => setCategory(event.target.value)}
+                  checked={selectedCategories.includes(option)}
+                  onChange={(event) => toggleCategory(event.target.value)}
                 />
                 <CategoryPill>{categoryDisplayName(option)}</CategoryPill>
               </CategorySelectLabel>
@@ -438,7 +456,7 @@ const CategorySelectLabel = styled.label`
   display: inline-flex;
 `
 
-const CategoryRadio = styled.input`
+const CategoryCheckbox = styled.input`
   position: absolute;
   inset: 0;
   z-index: 1;

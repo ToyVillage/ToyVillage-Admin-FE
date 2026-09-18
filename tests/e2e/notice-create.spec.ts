@@ -15,8 +15,8 @@ test('S2: 생성 폼 표시', async ({ page }) => {
   await expect(page.getByLabel(/제목/)).toBeVisible()
   await expect(page.getByRole('group', { name: /분류/ })).toBeVisible()
   await expect(page.getByLabel(/내용/)).toBeVisible()
-  await expect(page.getByRole('radio', { name: '전체' })).toBeChecked()
-  await expect(page.getByRole('radio')).toHaveCount(3)
+  await expect(page.getByRole('checkbox', { name: '전체' })).toBeChecked()
+  await expect(page.getByRole('checkbox')).toHaveCount(3)
   await expect(attachmentGroup(page)).toBeVisible()
   await expect(page.getByTestId('notice-attachment-card')).toHaveText(
     '첨부자료',
@@ -232,12 +232,12 @@ test('S9: API 저장 실패 시 입력을 보존하고 다시 제출할 수 있�
 }) => {
   await mockFailedNoticeCreate(page)
 
-  await page.getByRole('radio', { name: '창고팀' }).check()
+  await page.getByRole('checkbox', { name: '창고팀' }).check()
   await fillValidNotice(page, '보존할 공지')
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/list\/create$/)
-  await expect(page.getByRole('radio', { name: '창고팀' })).toBeChecked()
+  await expect(page.getByRole('checkbox', { name: '창고팀' })).toBeChecked()
   await expect(page.getByLabel(/제목/)).toHaveValue('보존할 공지')
   await expect(page.getByLabel(/내용/)).toHaveValue('공지 내용입니다.')
   await expect(
@@ -254,7 +254,12 @@ test('S10: 키보드 순서와 오류 포커스 이동', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(page.getByLabel(/제목/)).toBeFocused()
   await page.keyboard.press('Tab')
-  await expect(page.getByRole('radio', { name: '전체' })).toBeFocused()
+  await expect(page.getByRole('checkbox', { name: '전체' })).toBeFocused()
+  // 분류는 체크박스라 팀마다 tab stop 이 하나씩 생긴다(#147 복수 선택).
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('checkbox', { name: '동물 관리팀' })).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('checkbox', { name: '창고팀' })).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(page.getByLabel(/내용/)).toBeFocused()
   await page.keyboard.press('Tab')
@@ -268,7 +273,7 @@ test('S10: 키보드 순서와 오류 포커스 이동', async ({ page }) => {
 })
 
 test('선택한 팀은 진하게 표시하고 핑크로 강조하지 않는다', async ({ page }) => {
-  const team = page.getByRole('radio', { name: '동물 관리팀' })
+  const team = page.getByRole('checkbox', { name: '동물 관리팀' })
   await team.check()
 
   await expect(team).toBeChecked()
@@ -283,16 +288,28 @@ test('팀 조회 API의 팀만 분류로 표시하고 팀을 추가·삭제할 �
   page,
 }) => {
   await expect(
-    page.getByRole('radio', { name: '동물 관리팀' }),
+    page.getByRole('checkbox', { name: '동물 관리팀' }),
   ).not.toBeChecked()
-  await expect(page.getByRole('radio', { name: '창고팀' })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: '창고팀' })).toBeVisible()
   await expect(page.getByRole('button', { name: '팀 추가' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /팀 삭제$/ })).toHaveCount(0)
 
-  await page.getByRole('radio', { name: '창고팀' }).check()
-  await expect(page.getByRole('radio', { name: '전체' })).not.toBeChecked()
-  await page.getByRole('radio', { name: '전체' }).check()
-  await expect(page.getByRole('radio', { name: '창고팀' })).not.toBeChecked()
+  await page.getByRole('checkbox', { name: '창고팀' }).check()
+  await expect(page.getByRole('checkbox', { name: '전체' })).not.toBeChecked()
+
+  // 팀은 여러 개를 함께 고를 수 있다(#147).
+  await page.getByRole('checkbox', { name: '동물 관리팀' }).check()
+  await expect(page.getByRole('checkbox', { name: '창고팀' })).toBeChecked()
+  await expect(page.getByRole('checkbox', { name: '동물 관리팀' })).toBeChecked()
+
+  // 고른 팀을 모두 해제하면 `전체` 로 돌아간다.
+  await page.getByRole('checkbox', { name: '창고팀' }).uncheck()
+  await page.getByRole('checkbox', { name: '동물 관리팀' }).uncheck()
+  await expect(page.getByRole('checkbox', { name: '전체' })).toBeChecked()
+
+  await page.getByRole('checkbox', { name: '창고팀' }).check()
+  await page.getByRole('checkbox', { name: '전체' }).check()
+  await expect(page.getByRole('checkbox', { name: '창고팀' })).not.toBeChecked()
 })
 
 test('팀 목록 조회에 실패하면 전체만 두고 다시 시도할 수 있다', async ({
@@ -308,11 +325,11 @@ test('팀 목록 조회에 실패하면 전체만 두고 다시 시도할 수 �
   await expect(page.getByText('팀 목록을 불러오지 못했습니다.')).toBeVisible({
     timeout: 15_000,
   })
-  await expect(page.getByRole('radio')).toHaveCount(1)
+  await expect(page.getByRole('checkbox')).toHaveCount(1)
 
   failed = false
   await page.getByRole('button', { name: '다시 시도' }).click()
-  await expect(page.getByRole('radio', { name: '창고팀' })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: '창고팀' })).toBeVisible()
   await expect(page.getByText('팀 목록을 불러오지 못했습니다.')).toHaveCount(0)
 })
 
