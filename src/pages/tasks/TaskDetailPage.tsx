@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { deleteTask, getTask, TaskInfoRow } from '@/entities/task'
 import {
   TaskProgressCard,
@@ -9,19 +9,25 @@ import {
   type TaskReportProgressCounts,
   type TaskReportSummaryItem,
 } from '@/entities/task-report'
-import { RowActionMenu } from '@/features/row-actions'
 import {
-  AttachmentList,
-  DeleteConfirmationDialog,
-  Toast,
-} from '@/shared/ui'
+  taskReportReviewToasts,
+  type TaskReportReviewResult,
+} from '@/features/review-task-report'
+import { RowActionMenu } from '@/features/row-actions'
+import { AttachmentList, DeleteConfirmationDialog, Toast } from '@/shared/ui'
 import { TaskBackLink } from './ui/TaskBackLink'
+
+// 여기서 연 업무보고를 심사하고 돌아오면 그 결과를 이동 state 로 받는다.
+interface TaskDetailLocationState {
+  toast?: TaskReportReviewResult
+}
 
 // `/tasks/:id` — 읽기 전용 업무 상세(Figma `task detail` yot 133:9725).
 // 편집은 `/tasks/:id/edit`, 삭제는 이 화면의 케밥이 맡는다.
 export function TaskDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const deletingRef = useRef(false)
   const menuTriggerRef = useRef<HTMLButtonElement | null>(null)
@@ -31,6 +37,17 @@ export function TaskDetailPage() {
   // 다운로드 실패가 연달아 나도 토스트를 새로 띄우도록 매번 값을 바꾼다. 0 이면 숨긴다.
   const [downloadErrorId, setDownloadErrorId] = useState(0)
   const dismissDownloadError = useCallback(() => setDownloadErrorId(0), [])
+
+  // 업무보고 상세에서 심사에 성공하면 여기로 돌아와 결과 토스트를 보인다.
+  const reviewToastKey = (location.state as TaskDetailLocationState | null)
+    ?.toast
+  const reviewToast = reviewToastKey
+    ? taskReportReviewToasts[reviewToastKey]
+    : undefined
+  // 닫을 때 이동 state 를 비워 재방문 시 다시 뜨지 않게 한다.
+  const dismissReviewToast = useCallback(() => {
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, navigate])
 
   const {
     data: task,
@@ -164,9 +181,14 @@ export function TaskDetailPage() {
 
         <BottomRow>
           {/* 제출된 줄만 누를 수 있다. id 는 `workReportId` 이고 업무보고 상세 조회가 같은 id 를 받는다. */}
+          {/* 심사 후 목록으로 튕기지 않게 돌아올 경로를 함께 넘긴다. */}
           <TaskReportSummaryCard
             items={reportItems}
-            onSelect={(reportId) => navigate(`/task-reports/${reportId}`)}
+            onSelect={(reportId) =>
+              navigate(`/task-reports/${reportId}`, {
+                state: { returnTo: location.pathname },
+              })
+            }
           />
           {reportItems.length > 0 && progress && (
             <TaskProgressCard counts={progress} />
@@ -182,6 +204,15 @@ export function TaskDetailPage() {
             focusMenuTrigger()
           }}
           onConfirm={handleDelete}
+        />
+      )}
+
+      {reviewToast && (
+        <Toast
+          key={reviewToastKey}
+          variant={reviewToast.variant}
+          message={reviewToast.message}
+          onDismiss={dismissReviewToast}
         />
       )}
 

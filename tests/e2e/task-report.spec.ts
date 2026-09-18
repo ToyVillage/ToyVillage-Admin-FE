@@ -352,6 +352,46 @@ test.describe('업무 상세에서 진입', () => {
     await expect(page).toHaveURL(/\/task-reports\/31$/)
     await expect(page.getByText('담당자: 이승현')).toBeVisible()
   })
+
+  test('S34: 업무 상세에서 들어와 심사하면 업무 상세로 복귀', async ({
+    page,
+  }) => {
+    await mockTaskApi(page)
+    await page.goto('/tasks/1')
+
+    await page
+      .locator('section')
+      .filter({ hasText: '업무 보고' })
+      .getByRole('button')
+      .first()
+      .click()
+    await expect(page).toHaveURL(/\/task-reports\/31$/)
+
+    await page.getByRole('button', { name: '승인하기' }).click()
+
+    // 업무보고 목록이 아니라 들어온 업무 상세로 돌아오고 결과 토스트도 거기서 보인다.
+    await expect(page).toHaveURL(/\/tasks\/1$/)
+    await expect(page.getByText('승인에 성공했습니다')).toBeVisible()
+  })
+
+  test('S35: 업무 상세에서 들어오면 뒤로가기도 업무 상세로', async ({
+    page,
+  }) => {
+    await mockTaskApi(page)
+    await page.goto('/tasks/1')
+
+    await page
+      .locator('section')
+      .filter({ hasText: '업무 보고' })
+      .getByRole('button')
+      .first()
+      .click()
+    await expect(page).toHaveURL(/\/task-reports\/31$/)
+
+    await page.getByRole('link', { name: '뒤로가기' }).click()
+
+    await expect(page).toHaveURL(/\/tasks\/1$/)
+  })
 })
 
 test('S17: 사이드바 업무보고 메뉴 이동', async ({ page }) => {
