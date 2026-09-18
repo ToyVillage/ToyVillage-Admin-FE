@@ -136,7 +136,7 @@ Figma 근거: 안내 `해당하는 항목을 모두 선택해주세요. 목록�
   - 새 이름 → 목록 끝(`+ 법정분류 추가` 바로 앞)에 X 버튼이 있는 pill 로 추가하고 **즉시 선택 상태**로 만든 뒤 모달을 닫는다.
 - `취소` / `Esc` / dim 클릭 → 아무것도 추가하지 않고 닫는다.
 - 닫히면 포커스가 `+ 법정분류 추가` 로 돌아간다.
-- 직접 추가한 이름은 **이 종의 `legalDesignations` 값으로만** 저장한다. 다른 종 화면의 선택지로 공유하지 않는다.
+- 직접 추가한 이름은 `createLegalStatus` 로 서버 공용 목록에 생성되어, 다른 종 화면에도 선택지로 나타난다(2026-09-16 API 연동 개발자 결정, `:455`).
 
 ### 사진 (대표 사진 1장)
 
@@ -317,7 +317,7 @@ type SpeciesFormErrors = Partial<Record<'koreanName' | 'englishScientificName' |
 
 - 상수: `entities/species/model/labels.ts` 의 `taxonGroupLabels`(species-list 명세 — `MAMMAL: '포유류'` …, 순서 포유류 → 파충류 → 조류 → 어류).
   법정지정분류 기본 선택지 상수는 두지 않는다 — 선택지는 서버 공용 목록이 전부다 (2026-09-18 개발자 결정, 이슈 #149).
-- 직접 추가한 법정분류는 **그 종의 `legalDesignations` 값으로만** 저장한다. 다른 종 화면의 선택지에는 나타나지 않는다(개발자 결정).
+- 직접 추가한 법정분류는 `createLegalStatus` 로 서버 공용 목록에 생성된다. 다른 종 화면의 선택지에도 나타난다(2026-09-16 API 연동 개발자 결정).
 - 검증은 `features/species-form/model/validation.ts` 의 순수 함수(`validateSpeciesForm(values): SpeciesFormErrors`)로 둔다(`reservation-form` `validateReservationForm` 선례).
 - 수정 복원 시 `photo` 는 `{ fileName: photo.fileName, url: photo.url }` 로 `PhotoValue` 를 만든다. 요청은 새 파일이면 `{ kind: 'new' }`, 아니면 `{ kind: 'existing', photo }` 다.
 - 호출 계층(퍼블리싱 단계, 개체관리 공통): 페이지·폼이 TanStack Query `queryFn` / `mutationFn` 에서 `@/entities/<entity>` 공개 index 가
