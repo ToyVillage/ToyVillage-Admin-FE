@@ -11,6 +11,8 @@ import type { FeedHistoryRecord } from '../model/types'
 interface FeedHistoryTableProps {
   records: FeedHistoryRecord[]
   emptyLabel: string
+  /** 이력 행을 누르면 그 급여 기록 상세로 간다. 행 id 가 `feedLogId` 다. */
+  onSelect: (feedLogId: string) => void
 }
 
 // Figma `1400:15136` (feed history table). 페이지네이션 없이 이력 전체를 보여준다.
@@ -57,6 +59,7 @@ const appearance = {
 export function FeedHistoryTable({
   records,
   emptyLabel,
+  onSelect,
 }: FeedHistoryTableProps) {
   return (
     <DataTable
@@ -72,6 +75,7 @@ export function FeedHistoryTable({
       )}
       columns={columns}
       rowTestId="feed-history-row"
+      onRowClick={onSelect}
       emptyLabel={emptyLabel}
       appearance={appearance}
     />
