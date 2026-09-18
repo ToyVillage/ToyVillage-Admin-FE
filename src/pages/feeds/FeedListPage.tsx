@@ -20,7 +20,7 @@ import {
 } from '@/shared/lib'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
-const TABLE_PAGE_SIZE = 4
+const TABLE_PAGE_SIZE = 10
 
 const allTabLabel = '전체'
 const tabs = [allTabLabel, ...animalSpeciesList]
