@@ -75,7 +75,7 @@ paths: src/pages/species, src/entities/species, src/features/sidebar
 | 관찰 수정 | `…/observations/:observationId/edit` | observation-edit |
 
 - `/species` → 종 목록을 표시한다.
-- `개체 등록하기` 클릭 → `/species/create`(종 등록)로 이동한다(문구는 Figma 그대로 — 결정 사항).
+- `종 등록하기` 클릭 → `/species/create`(종 등록)로 이동한다 (2026-09-18 개발자 결정, 이슈 #149: Figma 문구 `개체 등록하기` 는 종 상세의 개체 등록과 헷갈려 바꿨다. 화면 제목·빈 상태 문구는 Figma 의 `개체 카드` 를 그대로 둔다).
 - 행 본문 클릭 → `/species/:speciesId`(종 상세)로 이동한다.
 - 케밥 메뉴 `수정` → `/species/:speciesId/edit`(종 수정)로 이동한다.
 - 목록 진입 시 항상 `전체` 탭, 빈 검색어, 1페이지에서 시작한다.
@@ -115,7 +115,7 @@ paths: src/pages/species, src/entities/species, src/features/sidebar
 
 - 검색어가 있고 결과가 없으면 → 행 대신 `검색결과가 없습니다` 한 줄을 표시하고 페이지네이션을 숨긴다
   (2026-09-15 Figma·저장소 근거 판단: tokens.ts `textFaint` 주석의 기존 문구).
-- 검색어 없이 현재 탭의 종이 없으면 → 행 대신 `등록된 개체 카드가 없습니다` / `오른쪽 위 [개체 등록하기]로 첫 개체 카드를 추가해주세요`
+- 검색어 없이 현재 탭의 종이 없으면 → 행 대신 `등록된 개체 카드가 없습니다` / `오른쪽 위 [종 등록하기]로 첫 개체 카드를 추가해주세요`
   두 줄을 표시하고 페이지네이션을 숨긴다 (2026-09-15 Figma·저장소 근거 판단: 종 상세 빈 상태 `130:9533` 두 줄 형식 승계). 규격은 종 상세 빈 상태와 같다
   (22px Medium `colors.optionMuted` / 18px Medium `colors.textFaint`, 줄 간격 12px, 높이 240 영역 가운데).
 
@@ -160,7 +160,7 @@ paths: src/pages/species, src/entities/species, src/features/sidebar
 1. 헤더(`title` INSTANCE `39:8754`, `@300,124` 1320×122, 좌우 양끝·하단 정렬):
    제목 `개체 카드` 60px SemiBold `colors.text`(`#000000`), 부제 `토이빌리지의 등록된 개체 목록`
    32px Medium `colors.textGuide`(`#848491`, `y=84`). 텍스트 블록 376×122.
-   우측 `+ 개체 등록하기` 버튼 — 배경 `colors.textStrong`(`#36363F`), radius 53px, padding 12/16px,
+   우측 `+ 종 등록하기` 버튼 — 배경 `colors.textStrong`(`#36363F`), radius 53px, padding 12/16px,
    `ic:outline-plus` 32px + 라벨 24px SemiBold `colors.surface`, gap 8px. (크기 미검증 — `LinkButton` 규격과 같다.)
 2. 탭바(`individual / 분류군 탭바` INSTANCE `145:15965` → main `145:15964`, `@300,278` 1320×46):
    `전체` / `포유류` / `파충류` / `조류` / `어류` 다섯 개.
@@ -396,7 +396,7 @@ mock 은 위 13건 기준이다. 목록 기본 정렬은 최신순(id 큰 순)�
 - S21: 2페이지를 보는 중 탭을 바꾸거나 검색어를 입력하면 1페이지로 리셋된다.
 - S22: 결과가 없는 검색어 → `검색결과가 없습니다` 가 보이고 페이지네이션이 사라진다.
 - S23: 검색어를 둔 채 탭을 바꾸면 → 검색어가 유지되고 탭 AND 검색 결과만 보인다.
-- S24: 검색어 없이 종이 없는 탭 → `등록된 개체 카드가 없습니다` / `오른쪽 위 [개체 등록하기]로 첫 개체 카드를 추가해주세요` 가 보이고 페이지네이션이 사라진다.
+- S24: 검색어 없이 종이 없는 탭 → `등록된 개체 카드가 없습니다` / `오른쪽 위 [종 등록하기]로 첫 개체 카드를 추가해주세요` 가 보이고 페이지네이션이 사라진다.
 - S25: 삭제 실패 조건 → `데이터 삭제에 실패했습니다` 토스트가 뜨고 행이 남는다.
 - S26: 생성 성공으로 목록에 돌아오면 → `데이터 생성에 성공했습니다` 토스트가 보인다.
 - S27: 마지막 페이지의 유일한 행을 삭제하면 → 이전 페이지로 되돌아가 행이 보인다.
@@ -415,7 +415,7 @@ mock 은 위 13건 기준이다. 목록 기본 정렬은 최신순(id 큰 순)�
 - 마리수는 개체 수에서 파생한다. Figma 표본 마리수(카피바라 `4`)는 따르지 않는다 (2026-09-15 Figma·저장소 근거 판단: 종 상세 Figma `개체 3마리`(동식이·미미·두리)).
 - 정렬은 `DataTable.sort`(최신순/오래된순)이고 기본 최신순(최근 등록 = id 큰 순)이다 (2026-09-15 Figma·저장소 근거 판단: 같은 `filter.svg` 정렬 메뉴 — `NoticeListPage`·`NoticeReservationsPage` 선례).
 - 검색 placeholder 는 Figma 그대로이고, 검색은 국명 또는 소속 개체명 부분 일치로 탭과 AND 로 적용한다 (2026-09-15 Figma·저장소 근거 판단: placeholder `개체이름 또는 국명` 문구).
-- 빈 상태는 `검색결과가 없습니다`(검색 중) / `등록된 개체 카드가 없습니다` + `오른쪽 위 [개체 등록하기]로 첫 개체 카드를 추가해주세요`(그 외)다 (2026-09-15 Figma·저장소 근거 판단: tokens.ts `textFaint` 주석 문구, 종 상세 빈 상태 `130:9533` 형식). 두 줄은 `DataTable.emptyLabel: ReactNode` 로 넘긴다(게이트 ② 채택).
+- 빈 상태는 `검색결과가 없습니다`(검색 중) / `등록된 개체 카드가 없습니다` + `오른쪽 위 [종 등록하기]로 첫 개체 카드를 추가해주세요`(그 외)다 (2026-09-15 Figma·저장소 근거 판단: tokens.ts `textFaint` 주석 문구, 종 상세 빈 상태 `130:9533` 형식). 두 줄은 `DataTable.emptyLabel: ReactNode` 로 넘긴다(게이트 ② 채택).
 - 행은 92px 로 붙이고 구분선만 둔다 (2026-09-15 Figma·저장소 근거 판단: `DataTable` 기존 rowHeight 92, Figma 행 간격 8/16px 불규칙은 그리기 오차).
 - 삭제 확인 모달은 `DeleteConfirmationDialog` 에 `description?: ReactNode` 를 추가해 종 삭제 `등록된 개체와 관찰 기록도 함께 삭제되며` · 개체 삭제 `등록된 관찰 기록도 함께 삭제되며`(둘째 줄 `삭제 후에는 복구할 수 없습니다`)를 쓰고, 관찰 삭제는 기본 문구를 쓴다 (2026-09-15 Figma·저장소 근거 판단: Figma `609:14119`·`610:14119` 문구, 관찰 삭제 프레임 없음).
 - 케밥 메뉴는 `src/shared/ui/KebabMenu` 에 `Escape` 초점 복귀·트리거 ref 노출(`onTriggerRef`)·배치 옵션(트리거 하단 8px·우측 끝 정렬)을 보강해 쓴다 (2026-09-15 Figma·저장소 근거 판단: 케밥 메뉴 set `141:9597` 규격이 `KebabMenu` 와 일치, design-rules §1 같은 INSTANCE 2곳 이상 → 공용).

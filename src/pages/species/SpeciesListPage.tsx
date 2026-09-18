@@ -147,7 +147,7 @@ export function SpeciesListPage() {
   ) : (
     <SpeciesEmptyMessage
       title="등록된 개체 카드가 없습니다"
-      description="오른쪽 위 [개체 등록하기]로 첫 개체 카드를 추가해주세요"
+      description="오른쪽 위 [종 등록하기]로 첫 개체 카드를 추가해주세요"
     />
   )
 
@@ -157,7 +157,7 @@ export function SpeciesListPage() {
         <PageHeader
           title="개체 카드"
           subtitle="토이빌리지의 등록된 개체 목록"
-          action={<LinkButton to="/species/create">개체 등록하기</LinkButton>}
+          action={<LinkButton to="/species/create">종 등록하기</LinkButton>}
         />
 
         <TaxonGroupTabs value={taxonGroup} onChange={setTaxonGroup} />

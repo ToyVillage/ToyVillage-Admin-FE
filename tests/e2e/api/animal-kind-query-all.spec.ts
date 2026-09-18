@@ -169,7 +169,7 @@ test('S6: 빈 목록은 빈 상태 안내다', async ({ page }) => {
 
   await expect(page.getByText('등록된 개체 카드가 없습니다')).toBeVisible()
   await expect(
-    page.getByText('오른쪽 위 [개체 등록하기]로 첫 개체 카드를 추가해주세요'),
+    page.getByText('오른쪽 위 [종 등록하기]로 첫 개체 카드를 추가해주세요'),
   ).toBeVisible()
   await expect(page.getByRole('alert')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /페이지$/ })).toHaveCount(0)

@@ -5,7 +5,7 @@ import { LeaveConfirmationDialog } from '@/shared/ui'
 import { FormPageLayout } from './ui/FormPageLayout'
 import { useFormLeaveGuard } from './ui/useFormLeaveGuard'
 
-// `/species/create` — 종 등록. 종 목록 CTA `개체 등록하기` 에서 들어온다.
+// `/species/create` — 종 등록. 종 목록 CTA `종 등록하기` 에서 들어온다.
 export function CreateSpeciesPage() {
   const navigate = useNavigate()
   const { blocker, setIsDirty, allowNavigation } = useFormLeaveGuard()
