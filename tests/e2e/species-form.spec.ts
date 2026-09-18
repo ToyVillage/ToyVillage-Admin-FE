@@ -443,6 +443,46 @@ test('S22: 사진 교체', async ({ page }) => {
   await expect(page.getByText('capybara.jpg', { exact: true })).toHaveCount(0)
 })
 
+test('S23: 사진 제거', async ({ page }) => {
+  await page.goto(createUrl)
+  await uploadPhoto(page, imageFile('capybara.jpg', 'image/jpeg'))
+  await expect(photoDownloadButtons(page)).toHaveCount(1)
+
+  await removeButton(page, 'capybara.jpg').click()
+
+  await expect(photoDownloadButtons(page)).toHaveCount(0)
+  await expect(page.getByText('capybara.jpg', { exact: true })).toHaveCount(0)
+  await expect(uploadButton(page)).toBeVisible()
+
+  // 사진은 필수라 지운 채로는 생성되지 않는다.
+  await koreanNameInput(page).fill('카피바라')
+  await englishNameInput(page).fill('Capybara')
+  await scientificNameInput(page).fill('Hydrochoerus hydrochaeris')
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  await expect(errorRow(page, '사진을 등록해주세요!')).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`${createUrl}$`))
+})
+
+test('S33: 수정 화면 사진 제거', async ({ page }) => {
+  await page.goto(editUrl)
+  await expect(photoDownloadButtons(page)).toHaveCount(1)
+  const fileName = await photoDownloadButtons(page)
+    .getAttribute('aria-label')
+    .then((label) => label?.replace(' 다운로드', '') ?? '')
+
+  await removeButton(page, fileName).click()
+
+  await expect(photoDownloadButtons(page)).toHaveCount(0)
+  await page.getByRole('button', { name: '저장하기' }).click()
+  await expect(errorRow(page, '사진을 등록해주세요!')).toBeVisible()
+
+  // 다시 올리면 저장된다.
+  await uploadPhoto(page, imageFile('re-uploaded.png', 'image/png'))
+  await page.getByRole('button', { name: '저장하기' }).click()
+  await expect(page).toHaveURL(/\/species\/1$/)
+})
+
 test('S24: 이미지가 아닌 파일 거부', async ({ page }) => {
   await page.goto(createUrl)
   await uploadPhoto(page, imageFile('report.pdf', 'application/pdf'))
@@ -621,11 +661,15 @@ test('S32: 키보드 조작', async ({ page }) => {
   await uploadPhoto(page, imageFile('keyboard.jpg', 'image/jpeg'))
   await expect(page.getByText('keyboard.jpg', { exact: true })).toBeVisible()
 
-  // 사진 chip 다운로드 → 사진 업로드 → 생성하기
+  // 사진 chip 다운로드 → 삭제 → 사진 업로드 → 생성하기
+  await page.keyboard.press('Shift+Tab')
+  await expect(removeButton(page, 'keyboard.jpg')).toBeFocused()
   await page.keyboard.press('Shift+Tab')
   await expect(
     page.getByRole('button', { name: 'keyboard.jpg 다운로드' }),
   ).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(removeButton(page, 'keyboard.jpg')).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(uploadButton(page)).toBeFocused()
   await page.keyboard.press('Tab')

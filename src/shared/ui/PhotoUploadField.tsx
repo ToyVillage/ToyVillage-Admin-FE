@@ -21,14 +21,14 @@ interface PhotoUploadFieldProps {
   required?: boolean
   hint?: string
   value: PhotoValue | null
-  onChange: (value: PhotoValue) => void
+  onChange: (value: PhotoValue | null) => void
   /** 필수 오류 줄 문구(카드 아래, 드롭존 위). */
   error?: string
   maxFileSize?: number
 }
 
 // Figma `field / 사진`(127:9358) + `upload file`(1:10511). 대표 사진 1장만 두고
-// 새 업로드로 교체한다(제거 버튼 없음). 거부 문구는 드롭존 아래에 인라인으로 보인다.
+// 새 업로드로 교체하거나 칩의 ✕ 로 지운다. 거부 문구는 드롭존 아래에 인라인으로 보인다.
 export function PhotoUploadField({
   label,
   required,
@@ -81,6 +81,11 @@ export function PhotoUploadField({
             order="action-first"
             fileName={value.fileName}
             onDownload={() => downloadFile(value.fileName, value.file)}
+            removeTone="muted"
+            onRemove={() => {
+              setRejection('')
+              onChange(null)
+            }}
           />
         )}
       </FormFieldCard>

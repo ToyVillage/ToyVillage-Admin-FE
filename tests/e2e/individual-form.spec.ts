@@ -4,7 +4,7 @@ import {
   type AnimalManageApiHandle,
 } from './support/animal-manage-api'
 
-// 승인된 시나리오(individual-form.approved.json: S1~S29, S25 삭제)를 변환한 것.
+// 승인된 시나리오(individual-form.approved.json: S1~S30, S25 삭제)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 // 사진 업로드는 드롭존의 숨긴 file input 에 파일을 넣는다(파일 선택 창 대체 — 승인 메모 S29).
@@ -71,7 +71,9 @@ test('S4: 사진 등록', async ({ page }) => {
     page.getByRole('button', { name: 'dongsik-new.jpg 다운로드' }),
   ).toBeVisible()
   await expect(page.getByText('dongsik-new.jpg', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: /삭제$/ })).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'dongsik-new.jpg 삭제' }),
+  ).toBeVisible()
 })
 
 test('S5: 사진 교체', async ({ page }) => {
@@ -439,6 +441,23 @@ test('S29: 키보드만으로 등록', async ({ page }) => {
   await page.keyboard.press('Enter')
 
   await expect(page).toHaveURL(/\/species\/1$/)
+})
+
+test('S30: 수정 화면 사진 제거 후 저장', async ({ page }) => {
+  await page.goto(editUrl)
+  await expect(photoDownloadButtons(page)).toHaveCount(1)
+
+  await page.getByRole('button', { name: '동식이_2026.jpg 삭제' }).click()
+
+  await expect(photoDownloadButtons(page)).toHaveCount(0)
+  await page.getByRole('button', { name: '저장하기' }).click()
+  await expect(errorRow(page, '사진을 등록해주세요!')).toBeVisible()
+
+  // 다시 올리면 저장된다.
+  await uploadPhoto(page, imageFile('dongsik-2.png', 'image/png'))
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
 })
 
 function nameInput(page: Page) {

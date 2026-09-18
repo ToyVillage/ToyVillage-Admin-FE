@@ -53,7 +53,7 @@ paths: src/pages/species, src/features/species-form, src/entities/species
 ## 범위
 
 - 포함: 빈 폼 진입(생성), 기존 값 복원(수정), 텍스트 입력 4종, 분류군 단일 선택, 법정지정분류 기본 목록 선택·직접 추가·직접 추가 항목 제거,
-  법정분류 추가 모달, 대표 사진 1장 등록·교체, 필수값 인라인 검증, 생성·저장, 중복 제출 방지, 이탈 보호, 없는 종 처리
+  법정분류 추가 모달, 대표 사진 1장 등록·교체·제거, 필수값 인라인 검증, 생성·저장, 중복 제출 방지, 이탈 보호, 없는 종 처리
 - 제외: 실제 API 연동(`/api` 스킬 담당 — 개체·종 API 명세 없음), 종 목록·생성 성공 토스트 표시(`species-list`),
   종 상세·삭제(`species-detail`), 개체 등록·수정(`individual-form`), 사진 서버 업로드 본문, 사이드바 메뉴(`species-list`·`sidebar.spec.md`)
 
@@ -142,7 +142,7 @@ Figma 근거: 안내 `해당하는 항목을 모두 선택해주세요. 목록�
 - 드롭존 클릭 → 파일 선택 창이 열린다(한 개만 고를 수 있다). 파일을 드롭존에 끌어다 놓아도 된다.
 - 이미지 파일(MIME `image/*`) 하나를 올리면 → 사진 카드에 chip(유형 아이콘 → 다운로드 → 파일명, Figma `1057:14773` 순서)이 나타난다. 드롭존은 계속 보인다.
 - 사진이 이미 있는 상태에서 새 이미지를 올리면 → 기존 사진을 **교체**한다. chip 은 항상 최대 1개다.
-- chip 에는 제거 버튼이 없다. 사진은 새 업로드로만 바꾼다 (2026-09-15 Figma·저장소 근거 판단: Figma 수정 프레임 `84:8781`·`84:8848` 사진 chip 에 제거 컨트롤이 없고 사진이 필수).
+- chip 에는 제거(✕) 버튼이 있다. 아이콘은 평소 `colors.textGuide`(회색)이고 hover·focus 에서 `colors.danger`(빨강)다(법정지정분류 pill 의 `RemoveIconButton` 과 같은 규칙). 지우면 사진이 없는 상태가 되고, 사진은 필수라 그대로 제출하면 `사진을 등록해주세요!` 오류 줄이 보인다 (2026-09-18 개발자 결정, 이슈 #149: 잘못 올린 파일을 지울 수 없었다).
 - chip 의 다운로드 컨트롤 클릭 → 그 파일을 내려받는다(mock: 새 파일은 원본, 기존 사진은 파일명을 담은 임시 Blob — `AttachmentList` 규칙 승계).
 - 거부하면 기존 사진을 그대로 두고 드롭존 아래에 오류 문구를 인라인 `role="alert"` 로 보인다 (2026-09-15 Figma·저장소 근거 판단: `AttachmentField` 오류 문구 위치·문구 계열).
   여러 조건에 걸리면 아래 순서의 첫 문구 하나만 보인다.
@@ -354,7 +354,7 @@ type SpeciesFormErrors = Partial<Record<'koreanName' | 'englishScientificName' |
 - `LegalDesignationAddDialog { existingNames: string[]; onCancel: () => void; onAdd: (name: string) => void }` — 빈 값 비활성·중복 인라인 오류(`이미 있는 분류입니다!`) 소유.
   `features/species-form/ui`. 구조·포커스 트랩·`inert` 처리는 `features/create-notice/ui/TeamAddDialog.tsx` 를 따른다
   (그 파일은 문구·규격이 달라 직접 재사용하지 않는다).
-- `PhotoUploadField { label: string; required?: boolean; hint?: string; value: PhotoValue | null; onChange: (value: PhotoValue) => void; error?: string; maxFileSize?: number }`
+- `PhotoUploadField { label: string; required?: boolean; hint?: string; value: PhotoValue | null; onChange: (value: PhotoValue | null) => void; error?: string; maxFileSize?: number }`
   (`PhotoValue = { fileName: string; file?: File; url?: string }`) — **신규 공용**(`shared/ui`, 게이트 ② 채택).
   Figma `field / 사진`(`127:9358`) + `upload file`(`1:10511`). `species-form`·`individual-form` 이 같은 인스턴스라 한 컴포넌트·같은 동작으로 둔다.
   도메인 타입에 의존하지 않는다. 내부에서 `FormFieldCard`(`label`·`required`·`hint`)를 쓴다.
@@ -438,9 +438,12 @@ Figma 에 근거가 없어 기존 폼의 980px 규칙을 승계한다(결정 사
 - S28: 수정 화면에서 아무것도 바꾸지 않고 `뒤로가기` → 확인 없이 `/species/1` 로 이동한다.
 - S30: 저장 요청 실패 → URL 이 `/species/1/edit` 로 유지되고 입력이 보존되며 `저장하지 못했습니다. 다시 시도해 주세요.` 가 보인다.
 - S31: 없는 id 로 `/species/999/edit` 진입 → `종을 찾을 수 없습니다.` 와 `목록으로 돌아가기` 링크가 보인다.
+- S23: 사진 chip 의 ✕ 클릭 → chip 이 사라지고, 그대로 `생성하기` 를 누르면 `사진을 등록해주세요!` 줄이 보인다.
 - S32: 키보드만으로 입력·분류군 선택·법정분류 선택/추가/직접 추가 항목 제거·사진 업로드 컨트롤·생성을 수행할 수 있다.
+- S33: `/species/1/edit` 에서 사진 chip 의 ✕ 클릭 → 저장하면 `사진을 등록해주세요!` 줄이 보이고, 다시 올리면 저장된다.
 
-(S23 사진 제거·S29 생성 중복 제출은 삭제 — 번호 공백 유지. 사유는 결정 사항과 시나리오 초안 승인 메모.)
+(S29 생성 중복 제출은 삭제 — 번호 공백 유지. 사유는 결정 사항과 시나리오 초안 승인 메모.
+ S23·S33 은 사진 제거 버튼 채택으로 2026-09-18 복원·추가했다 — 이슈 #149.)
 
 ## 결정 사항
 
@@ -451,7 +454,7 @@ Figma 에 근거가 없어 기존 폼의 980px 규칙을 승계한다(결정 사
 - 분류군은 진입 시 `포유류` 가 선택돼 있고 분류군 오류는 없다 (2026-09-15 Figma·저장소 근거 판단: Figma 모든 프레임(빈 생성 폼 포함)에 `포유류` 선택).
 - 법정지정분류는 기본 선택지 3개(`legalDesignationPresets`)를 눌러 선택/해제하고, `+ 법정분류 추가` 모달로 추가한 이름은 목록 끝에 즉시 선택 상태로 붙는다. X 는 직접 추가 항목에만 있고 누르면 삭제 확인 모달을 거쳐 서버 공용 목록에서 삭제한다(API 연동 2026-09-16 개발자 결정. Figma 는 기본 선택지에도 X 를 그렸다 — 차이). 선택 표시는 `accent`/`accentBg`. 직접 추가 항목은 그 종에만 저장한다. 수정 화면은 기본 선택지 + 저장된 직접 추가 항목(선택·X)으로 복원한다 (2026-09-15 개발자 결정).
 - 법정분류 추가 모달은 빈 값·공백만이면 `추가하기` 를 비활성으로 두고, 이미 목록에 있는 이름이면 모달 안 인라인 `이미 있는 분류입니다!` 를 보인다 (2026-09-15 개발자 결정). 모달은 `features/species-form` 전용이다 (2026-09-15 Figma·저장소 근거 판단: `TeamAddDialog` 구조 승계, 문구·규격이 달라 공용화하지 않는다).
-- 사진은 1장만 둔다 — chip 은 유형 아이콘 → 다운로드 → 파일명이고 제거 버튼이 없으며 새 업로드로 교체한다. 여러 파일·이미지 외·50MB 초과는 드롭존 아래 인라인 `role="alert"` 3종 문구로 거부한다 (2026-09-15 Figma·저장소 근거 판단: Figma `84:8781`·`84:8848`·`127:9358` chip, `AttachmentField` 오류 위치).
+- 사진은 1장만 둔다 — chip 은 유형 아이콘 → 다운로드 → 파일명 → ✕(제거)이고, 새 업로드로 교체하거나 ✕ 로 지운다 (2026-09-18 개발자 결정, 이슈 #149: 잘못 올린 파일을 지울 수 없었다). 여러 파일·이미지 외·50MB 초과는 드롭존 아래 인라인 `role="alert"` 3종 문구로 거부한다 (2026-09-15 Figma·저장소 근거 판단: Figma `84:8781`·`84:8848`·`127:9358` chip, `AttachmentField` 오류 위치).
 - 저장 실패는 버튼 위 문구(`role="status"`)로 알린다. `ErrorDialog` 는 쓰지 않는다 (2026-09-15 Figma·저장소 근거 판단: `TaskForm` `SubmitStatus` 선례).
 - 이탈 확인은 `LeaveConfirmationDialog` 다 (2026-09-15 Figma·저장소 근거 판단: 같은 yot 파일 업무 수정 `really exit?` `1:3606` 선례).
 - 폼↔제출 버튼 간격은 22px 다 (2026-09-15 Figma·저장소 근거 판단: 생성 프레임 실측, 수정 프레임의 겹침은 그리기 오류).
