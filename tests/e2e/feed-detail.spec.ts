@@ -92,7 +92,7 @@ test('S2-1: 뒤로가기하면 목록의 조회 조건이 유지된다', async (
   await page.goto('/feeds')
 
   await page.getByRole('button', { name: '파충류' }).click()
-  await expect(page.getByTestId('feed-row')).toHaveCount(1)
+  await expect(page.getByTestId('feed-row')).toHaveCount(2)
 
   await page.getByTestId('feed-row').first().click()
   await expect(page).toHaveURL(/\/feeds\/5$/)
@@ -103,7 +103,7 @@ test('S2-1: 뒤로가기하면 목록의 조회 조건이 유지된다', async (
     'aria-pressed',
     'true',
   )
-  await expect(page.getByTestId('feed-row')).toHaveCount(1)
+  await expect(page.getByTestId('feed-row')).toHaveCount(2)
 })
 
 test('S3: 급여 이력 건수와 행 수가 일치한다', async ({ page }) => {

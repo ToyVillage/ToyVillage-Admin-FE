@@ -11,7 +11,7 @@ import {
 
 const rows = (page: Page) => page.getByTestId('feed-row')
 
-test('S1: 진입 시 date=오늘 · page=0 · size=4 로 한 번만 조회한다', async ({
+test('S1: 진입 시 date=오늘 · page=1 · size=10 으로 한 번만 조회한다', async ({
   page,
 }) => {
   const requests: { url: string; headers: Record<string, string> }[] = []
@@ -25,13 +25,13 @@ test('S1: 진입 시 date=오늘 · page=0 · size=4 로 한 번만 조회한다
   })
 
   await page.goto('/feeds')
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
 
   expect(requests).toHaveLength(1)
   const query = new URL(requests[0].url).searchParams
   expect(query.get('date')).toBe(todayIsoDate())
   expect(query.get('page')).toBe('1')
-  expect(query.get('size')).toBe('4')
+  expect(query.get('size')).toBe('10')
   // 전체 탭은 분류를 보내지 않는다.
   expect(query.get('animalTaxonomic')).toBeNull()
   expect(requests[0].headers.authorization).toBe('Bearer test-access-token')
@@ -52,16 +52,16 @@ test('S2: 분류 탭을 누르면 animalTaxonomic 으로 다시 조회한다', a
   })
 
   await page.goto('/feeds')
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
 
   await page.getByRole('button', { name: '파충류' }).click()
-  await expect(rows(page)).toHaveCount(1)
+  await expect(rows(page)).toHaveCount(2)
 
   await page.getByRole('button', { name: '조류' }).click()
-  await expect(rows(page)).toHaveCount(1)
+  await expect(rows(page)).toHaveCount(2)
 
   await page.getByRole('button', { name: '전체' }).click()
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
 
   // 요청은 화면 갱신보다 늦게 기록될 수 있어 개수가 찰 때까지 기다린다.
   await expect.poll(() => taxonomics).toEqual([null, 'REPTILES', 'BIRDS', null])
@@ -96,7 +96,7 @@ test('S4: 조회날짜를 바꾸면 그 날짜로 다시 조회한다', async ({
   })
 
   await page.goto('/feeds')
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
 
   const lastYear = String(new Date().getFullYear() - 1)
   await page.getByRole('button', { name: '조회 연도' }).click()

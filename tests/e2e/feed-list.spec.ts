@@ -45,7 +45,7 @@ test('S1: 목록 진입 기본 표시', async ({ page }) => {
   // 급여일시는 날짜·시간 두 열로 나뉜다.
   await expect(page.getByText('급여날짜')).toBeVisible()
   await expect(page.getByText('급여시간')).toBeVisible()
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
 })
 
 test('S2: 조회날짜 드롭다운 선택', async ({ page }) => {
@@ -87,11 +87,11 @@ test('S4: 분류 탭 전환', async ({ page }) => {
     'aria-pressed',
     'true',
   )
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(8)
   await expect(page.getByRole('button', { name: '2 페이지' })).toBeHidden()
 
   await page.getByRole('button', { name: '전체' }).click()
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
   await expect(page.getByRole('button', { name: '2 페이지' })).toBeVisible()
 })
 
@@ -187,7 +187,7 @@ test('S10: 말일 보정', async ({ page }) => {
 test('S14: 화면이 좁으면 표만 가로로 스크롤한다', async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 900 })
   await page.goto('/feeds')
-  await expect(rows(page)).toHaveCount(4)
+  await expect(rows(page)).toHaveCount(10)
 
   // 표는 가로로 스크롤되고, 페이지 자체는 가로로 넘치지 않는다.
   const area = page.getByTestId('feed-table-scroll')
