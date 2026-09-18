@@ -163,11 +163,17 @@ test('S6-1: 급여 이력의 급여날짜는 잘리지 않는다', async ({ page
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
 })
 
-test('S7: 급여 이력 행은 클릭 대상이 아니다', async ({ page }) => {
+// 개체 1(레오)의 이력은 급여 기록 1·7·8 이다. 최신(1)이 맨 위라 두 번째가 7 이다.
+test('S7: 급여 이력 행을 누르면 그 급여 기록 상세로 간다', async ({ page }) => {
   await page.goto('/feeds/1')
 
-  await historyRows(page).first().click()
-  await expect(page).toHaveURL(/\/feeds\/1$/)
+  await historyRows(page).nth(1).click()
+  await expect(page).toHaveURL(/\/feeds\/7$/)
+  await expect(historyRows(page)).toHaveCount(3)
+
+  // 보고 있던 기록을 다시 눌러도 그 자리에 머문다.
+  await historyRows(page).nth(1).click()
+  await expect(page).toHaveURL(/\/feeds\/7$/)
 })
 
 test('S8: 진입 시 스크롤은 맨 위다', async ({ page }) => {
