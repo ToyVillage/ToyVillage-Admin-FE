@@ -54,6 +54,13 @@ export const mockFeedLogs: MockFeedLog[] = [
   feedLog(4, 4, '곰', '우니', 'MAMMALS', '사료', 1.8, '이서준', `${todayIsoDate()}T08:20:00`, '정상'),
   feedLog(5, 5, '이구아나', '동식이', 'REPTILES', '채소', 0.3, '김수인', `${todayIsoDate()}T08:00:00`, '활동량이 많아 보임.'),
   feedLog(6, 6, '앵무', '초코', 'BIRDS', '견과', 0.1, '이서준', `${todayIsoDate()}T07:40:00`, '정상'),
+  // 페이지 크기가 10 이라 오늘치가 두 페이지에 걸치도록 6건을 더 둔다.
+  feedLog(20, 20, '치타', '바람', 'MAMMALS', '생닭', 1.1, '김수인', `${todayIsoDate()}T07:20:00`, '정상'),
+  feedLog(21, 21, '늑대', '달', 'MAMMALS', '소고기', 2.2, '박도현', `${todayIsoDate()}T07:10:00`, '정상'),
+  feedLog(22, 22, '여우', '노을', 'MAMMALS', '사료', 0.9, '이서준', `${todayIsoDate()}T07:00:00`, '정상'),
+  feedLog(23, 23, '너구리', '구름', 'MAMMALS', '사료', 0.7, '김수인', `${todayIsoDate()}T06:50:00`, '정상'),
+  feedLog(24, 24, '거북', '바위', 'REPTILES', '채소', 0.2, '박도현', `${todayIsoDate()}T06:40:00`, '정상'),
+  feedLog(25, 25, '올빼미', '밤', 'BIRDS', '견과', 0.1, '이서준', `${todayIsoDate()}T06:30:00`, '정상'),
   feedLog(7, 1, '표범', '레오', 'MAMMALS', '닭가슴살', 2.5, '김수인', `${shiftedIsoDate(-1)}T17:20:00`, '잔반 없음'),
   feedLog(8, 1, '표범', '레오', 'MAMMALS', '소고기', 3, '박도현', `${shiftedIsoDate(-2)}T09:15:00`, '정상'),
 ]
@@ -126,7 +133,7 @@ export async function mockFeedApi(
 
     const date = query.get('date')
     const taxonomic = query.get('animalTaxonomic')
-    const size = Number(query.get('size') ?? 4)
+    const size = Number(query.get('size') ?? 10)
     // 급여 목록은 1-based 로 요청한다.
     const number = Number(query.get('page') ?? 1)
 
