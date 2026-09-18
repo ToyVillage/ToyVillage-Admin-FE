@@ -164,6 +164,8 @@ export function DateField({
             value={value}
             placeholder={placeholder}
             inputMode="numeric"
+            // 브라우저 자동완성 목록이 달력 위에 겹쳐 뜬다. 달력이 입력 수단이므로 끈다.
+            autoComplete="off"
             aria-label={label}
             aria-describedby={error ? errorId : undefined}
             onFocus={() => setOpen(true)}
@@ -270,6 +272,7 @@ export function TimeAmPmField({
             value={hh}
             inputMode="numeric"
             maxLength={2}
+            autoComplete="off"
             aria-label={`${label} 시`}
             aria-describedby={error ? errorId : undefined}
             onKeyDown={handleTimeKey}
@@ -285,6 +288,7 @@ export function TimeAmPmField({
             value={mm}
             inputMode="numeric"
             maxLength={2}
+            autoComplete="off"
             aria-label={`${label} 분`}
             aria-describedby={error ? errorId : undefined}
             onKeyDown={handleTimeKey}
