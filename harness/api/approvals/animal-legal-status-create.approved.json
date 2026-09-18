@@ -1,15 +1,15 @@
 {
   "feature": "animal-legal-status-create",
   "apiId": "ANIMAL_LEGAL_STATUS_CREATE",
-  "approvedAt": "2026-09-16T15:20:11.848Z",
+  "approvedAt": "2026-09-18T02:48:20.336Z",
   "approvedBy": "yunho09",
-  "taskSpecHash": "a5f24c4101eb5f8a6b280927c311f230fd79ea668a4e0928ac4d72522f26ee93",
+  "taskSpecHash": "1c0e688b36afba840e274fc4fb399e9cc9a7a8bb566bbcfe389e648a0dfc8537",
   "contractHash": "c44628933e530816f9a0a18eb5d3c6e0c351d6a7d8c0ba622977992271244b5b",
   "contractMarkdownHash": "8d893eadf68200a2f08244e0b9644c56622a48663171e9de79a70dfae731db7f",
-  "planHash": "57bf2444ce1b37166a89e1965514a3598c9e3a788d016a5dd4c7fdaaa04288f0",
-  "scenarioHash": "9cb4afd7c216f4797f20075c1d85f95d690626f2a90f81f16f23b3e2322c02bb",
-  "testHash": "10d7af84523c7e307c5bb4c43a6daab5432f262c057aebfedcbdbc2ec858d674",
+  "planHash": "b5944a096721ac16a91966abcc5edca43084d5dd295d0486958369a840b949d3",
+  "scenarioHash": "7e8783a31eb4e7c6f694d412ba799a1a69ec54fab286435c77d829935d0d4fa1",
+  "testHash": "71dcbcc4c369348baa3536ba82ba05f3ade3d4ce4bf85c73b9d0e0b96f5da42a",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T00:45:03.898Z"
+  "testApprovedAt": "2026-09-18T02:48:20.505Z"
 }

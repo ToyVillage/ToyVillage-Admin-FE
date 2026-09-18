@@ -38,7 +38,7 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test('S1: 기본 선택지 뒤에 서버 목록을 붙이고 같은 이름은 한 번만 보인다', async ({
+test('S1: 서버 목록을 받은 순서대로 보이고 모두 ✕ 로 지울 수 있다', async ({
   page,
 }) => {
   await page.goto('/species/create')
@@ -50,26 +50,22 @@ test('S1: 기본 선택지 뒤에 서버 목록을 붙이고 같은 이름은 �
       ?.headers.authorization,
   ).toMatch(/^Bearer /)
   await expect(legalGroup(page).getByRole('button')).toHaveText([
-    '지정관리 야생동물',
-    '멸종위기 야생생물 I급',
     '천연기념물',
+    '',
     '국제보호종',
     '',
     '법정분류 추가',
   ])
   await expect(legalRemoveButton(page, '국제보호종')).toBeVisible()
-  await expect(legalRemoveButton(page, '천연기념물')).toHaveCount(0)
+  await expect(legalRemoveButton(page, '천연기념물')).toBeVisible()
 })
 
-test('S2: 빈 목록이면 기본 선택지와 추가 버튼만 보인다', async ({ page }) => {
+test('S2: 빈 목록이면 추가 버튼만 보인다', async ({ page }) => {
   api.legalStatuses = []
   await page.goto('/species/create')
 
   await expect(addLegalButton(page)).toBeEnabled()
   await expect(legalGroup(page).getByRole('button')).toHaveText([
-    '지정관리 야생동물',
-    '멸종위기 야생생물 I급',
-    '천연기념물',
     '법정분류 추가',
   ])
   await expect(page.getByText(loadFailure)).toHaveCount(0)
@@ -83,9 +79,8 @@ test('S3: 수정 화면은 목록에 없는 저장값도 선택된 채 복원하
   for (const name of ['천연기념물', '국제보호종', '삭제된분류']) {
     await expect(legalPill(page, name)).toHaveAttribute('aria-pressed', 'true')
   }
-  for (const name of ['지정관리 야생동물', '멸종위기 야생생물 I급']) {
-    await expect(legalPill(page, name)).toHaveAttribute('aria-pressed', 'false')
-  }
+  // 공용 목록·저장값에 없는 이름은 pill 자체가 없다.
+  await expect(legalPill(page, '지정관리 야생동물')).toHaveCount(0)
 
   await submitButton(page, '저장하기').click()
 

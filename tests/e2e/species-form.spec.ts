@@ -11,7 +11,8 @@ import {
 
 const createUrl = '/species/create'
 const editUrl = '/species/1/edit'
-const legalPresets = [
+// 가짜 서버 공용 목록 기본값. 기본 선택지는 없고 이 셋도 ✕ 로 지울 수 있다.
+const legalStatusNames = [
   '지정관리 야생동물',
   '멸종위기 야생생물 I급',
   '천연기념물',
@@ -47,11 +48,11 @@ test('S1: 등록 화면 진입 기본 상태', async ({ page }) => {
   await expectOnlyTaxonGroupChecked(page, '포유류')
 
   await expect(legalGroup(page).locator('button[aria-pressed]')).toHaveCount(
-    legalPresets.length,
+    legalStatusNames.length,
   )
-  for (const name of legalPresets) {
+  for (const name of legalStatusNames) {
     await expect(legalPill(page, name)).toHaveAttribute('aria-pressed', 'false')
-    await expect(removeButton(page, name)).toHaveCount(0)
+    await expect(removeButton(page, name)).toHaveCount(1)
   }
   await expect(addLegalButton(page)).toBeVisible()
 
@@ -70,7 +71,7 @@ test('S2: 분류군 단일 선택', async ({ page }) => {
   await expectOnlyTaxonGroupChecked(page, '어류')
 })
 
-test('S3: 법정지정분류 기본 선택지 토글', async ({ page }) => {
+test('S3: 법정지정분류 pill 토글', async ({ page }) => {
   await page.goto(createUrl)
 
   await legalPill(page, '지정관리 야생동물').click()
@@ -358,9 +359,9 @@ test('S18: 모달 빈 이름', async ({ page }) => {
   // 모달이 열린 동안 폼은 aria-hidden 이라 숨은 요소까지 센다.
   await expect(
     page.getByRole('button', { name: /삭제$/, includeHidden: true }),
-  ).toHaveCount(0)
+  ).toHaveCount(legalStatusNames.length)
   await expect(page.locator('button[aria-pressed]')).toHaveCount(
-    legalPresets.length,
+    legalStatusNames.length,
   )
 })
 
@@ -422,9 +423,9 @@ test('S21: 직접 추가한 법정분류 제거', async ({ page }) => {
   expect(api.legalStatuses.map(({ kind }) => kind)).not.toContain(
     '해양보호생물',
   )
-  for (const name of legalPresets) {
+  for (const name of legalStatusNames) {
     await expect(legalPill(page, name)).toBeVisible()
-    await expect(removeButton(page, name)).toHaveCount(0)
+    await expect(removeButton(page, name)).toHaveCount(1)
   }
 })
 
@@ -441,6 +442,46 @@ test('S22: 사진 교체', async ({ page }) => {
   ).toBeVisible()
   await expect(page.getByText('capybara-2.png', { exact: true })).toBeVisible()
   await expect(page.getByText('capybara.jpg', { exact: true })).toHaveCount(0)
+})
+
+test('S23: 사진 제거', async ({ page }) => {
+  await page.goto(createUrl)
+  await uploadPhoto(page, imageFile('capybara.jpg', 'image/jpeg'))
+  await expect(photoDownloadButtons(page)).toHaveCount(1)
+
+  await removeButton(page, 'capybara.jpg').click()
+
+  await expect(photoDownloadButtons(page)).toHaveCount(0)
+  await expect(page.getByText('capybara.jpg', { exact: true })).toHaveCount(0)
+  await expect(uploadButton(page)).toBeVisible()
+
+  // 사진은 필수라 지운 채로는 생성되지 않는다.
+  await koreanNameInput(page).fill('카피바라')
+  await englishNameInput(page).fill('Capybara')
+  await scientificNameInput(page).fill('Hydrochoerus hydrochaeris')
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  await expect(errorRow(page, '사진을 등록해주세요!')).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`${createUrl}$`))
+})
+
+test('S33: 수정 화면 사진 제거', async ({ page }) => {
+  await page.goto(editUrl)
+  await expect(photoDownloadButtons(page)).toHaveCount(1)
+  const fileName = await photoDownloadButtons(page)
+    .getAttribute('aria-label')
+    .then((label) => label?.replace(' 다운로드', '') ?? '')
+
+  await removeButton(page, fileName).click()
+
+  await expect(photoDownloadButtons(page)).toHaveCount(0)
+  await page.getByRole('button', { name: '저장하기' }).click()
+  await expect(errorRow(page, '사진을 등록해주세요!')).toBeVisible()
+
+  // 다시 올리면 저장된다.
+  await uploadPhoto(page, imageFile('re-uploaded.png', 'image/png'))
+  await page.getByRole('button', { name: '저장하기' }).click()
+  await expect(page).toHaveURL(/\/species\/1$/)
 })
 
 test('S24: 이미지가 아닌 파일 거부', async ({ page }) => {
@@ -569,7 +610,7 @@ test('S32: 키보드 조작', async ({ page }) => {
   await expect(page.getByRole('radio', { name: '파충류' })).toBeFocused()
   await expectOnlyTaxonGroupChecked(page, '파충류')
 
-  // 세부 분류 → 법정지정분류 기본 선택지
+  // 세부 분류 → 법정지정분류. pill 마다 본문 → 삭제 순서로 들어간다.
   await page.keyboard.press('Tab')
   await expect(subClassificationInput(page)).toBeFocused()
   await page.keyboard.press('Tab')
@@ -580,9 +621,15 @@ test('S32: 키보드 조작', async ({ page }) => {
     'true',
   )
   await page.keyboard.press('Tab')
+  await expect(removeButton(page, '지정관리 야생동물')).toBeFocused()
+  await page.keyboard.press('Tab')
   await expect(legalPill(page, '멸종위기 야생생물 I급')).toBeFocused()
   await page.keyboard.press('Tab')
+  await expect(removeButton(page, '멸종위기 야생생물 I급')).toBeFocused()
+  await page.keyboard.press('Tab')
   await expect(legalPill(page, '천연기념물')).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(removeButton(page, '천연기념물')).toBeFocused()
 
   // 법정분류 추가 → 모달 입력 → Enter 로 추가
   await page.keyboard.press('Tab')
@@ -621,11 +668,15 @@ test('S32: 키보드 조작', async ({ page }) => {
   await uploadPhoto(page, imageFile('keyboard.jpg', 'image/jpeg'))
   await expect(page.getByText('keyboard.jpg', { exact: true })).toBeVisible()
 
-  // 사진 chip 다운로드 → 사진 업로드 → 생성하기
+  // 사진 chip 다운로드 → 삭제 → 사진 업로드 → 생성하기
+  await page.keyboard.press('Shift+Tab')
+  await expect(removeButton(page, 'keyboard.jpg')).toBeFocused()
   await page.keyboard.press('Shift+Tab')
   await expect(
     page.getByRole('button', { name: 'keyboard.jpg 다운로드' }),
   ).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(removeButton(page, 'keyboard.jpg')).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(uploadButton(page)).toBeFocused()
   await page.keyboard.press('Tab')

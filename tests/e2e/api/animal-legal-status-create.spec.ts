@@ -135,15 +135,16 @@ test('S6: 201 이 아닌 성공 status 는 실패로 본다', async ({ page }) =
   await expect(addLegalDialog(page)).toContainText(addFailure)
 })
 
-test('S7: 목록에 없는 기본 항목은 저장할 때 만든 뒤 새 id 로 생성한다', async ({
+test('S7: 고른 뒤 목록에서 사라진 항목은 저장할 때 만든 뒤 새 id 로 생성한다', async ({
   page,
 }) => {
-  api.legalStatuses = api.legalStatuses.filter(
-    ({ kind }) => kind !== '천연기념물',
-  )
   await openCreate(page)
   await fillRequired(page)
   await legalPill(page, '천연기념물').click()
+  // 고르고 나서 다른 곳에서 삭제된 상황
+  api.legalStatuses = api.legalStatuses.filter(
+    ({ kind }) => kind !== '천연기념물',
+  )
 
   await submitButton(page).click()
 
@@ -161,13 +162,13 @@ test('S7: 목록에 없는 기본 항목은 저장할 때 만든 뒤 새 id 로 
   })
 })
 
-test('S8: 기본 항목 생성이 실패하면 종을 만들지 않는다', async ({ page }) => {
-  api.legalStatuses = api.legalStatuses.filter(
-    ({ kind }) => kind !== '천연기념물',
-  )
+test('S8: 사라진 항목 생성이 실패하면 종을 만들지 않는다', async ({ page }) => {
   await openCreate(page)
   await fillRequired(page)
   await legalPill(page, '천연기념물').click()
+  api.legalStatuses = api.legalStatuses.filter(
+    ({ kind }) => kind !== '천연기념물',
+  )
   api.failNext('legalStatus.create', 500)
 
   await submitButton(page).click()

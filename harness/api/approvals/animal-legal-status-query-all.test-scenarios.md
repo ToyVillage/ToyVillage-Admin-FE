@@ -16,19 +16,19 @@
 ## Mock S1 — 등록 화면 선택지 순서
 
 - 사용자 동작: `/species/create` 진입
-- 기대 결과: GET 1회. pill 순서 `지정관리 야생동물`·`멸종위기 야생생물 I급`·`천연기념물`
-  (✕ 없음) → `국제보호종`(✕ 있음) → `+ 법정분류 추가`. `천연기념물`은 한 번만 보인다
+- 기대 결과: GET 1회. pill 순서는 응답 순서 `천연기념물` → `국제보호종`(각각 ✕ 있음) → `+ 법정분류 추가`
+  (2026-09-18 개발자 결정, 이슈 #149: 화면이 들고 있던 기본 선택지를 없앴다)
 
 ## Mock S2 — 빈 목록
 
 - Mock response: HTTP 200 `[]`
-- 기대 결과: 기본 3개와 추가 버튼만 보인다, 오류 행 없음
+- 기대 결과: `+ 법정분류 추가` 버튼만 보인다, 오류 행 없음
 
 ## Mock S3 — 수정 화면 복원
 
 - 사전 조건: 종 상세 mock `legalStatuses: [{ animalLegalStatusId: 1, kind: "천연기념물" }, { animalLegalStatusId: 5, kind: "국제보호종" }, { animalLegalStatusId: null, kind: "삭제된분류" }]`, 목록 GET에는 `삭제된분류` 없음
 - 사용자 동작: `/species/1/edit` 진입
-- 기대 결과: 세 pill(`삭제된분류` 포함)이 선택 상태, 나머지는 미선택. 그대로 저장하면 `POST /animal-manage/legal-status` `{ kind: "삭제된분류" }` 후 목록 재조회, PATCH `animalLegalDesignation`에 새 id 포함
+- 기대 결과: 세 pill(`삭제된분류` 포함)이 선택 상태이고 공용 목록·저장값에 없는 이름은 pill 자체가 없다. 그대로 저장하면 `POST /animal-manage/legal-status` `{ kind: "삭제된분류" }` 후 목록 재조회, PATCH `animalLegalDesignation`에 새 id 포함
 
 ## Mock S4 — 저장 시 이름을 id로 변환
 

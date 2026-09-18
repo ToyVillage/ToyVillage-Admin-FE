@@ -1,5 +1,4 @@
 import {
-  legalDesignationPresets,
   type CreateSpeciesInput,
   type Photo,
   type PhotoInput,
@@ -28,7 +27,7 @@ export function toSpeciesFormValues(species?: Species): SpeciesFormValues {
     scientificName: species.scientificName,
     taxonGroup: species.taxonGroup,
     subClassification: species.subClassification ?? '',
-    legalDesignations: toDisplayOrder(species.legalDesignations),
+    legalDesignations: [...species.legalDesignations],
     photo: { fileName: species.photo.fileName, url: species.photo.url },
   }
 }
@@ -78,13 +77,4 @@ function toPhotoInput(
   if (photo?.file) return { kind: 'new', file: photo.file }
   if (photo && savedPhoto) return { kind: 'existing', photo: savedPhoto }
   throw new Error('Species photo is required')
-}
-
-// 화면은 기본 선택지를 항상 먼저 보이고 직접 추가 항목을 저장 순서대로 뒤에 붙인다.
-function toDisplayOrder(legalDesignations: string[]): string[] {
-  const presets: readonly string[] = legalDesignationPresets
-  return [
-    ...presets.filter((name) => legalDesignations.includes(name)),
-    ...legalDesignations.filter((name) => !presets.includes(name)),
-  ]
 }

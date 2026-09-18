@@ -40,10 +40,10 @@ body, `PATCH **/animal-manage/kind/1`(200 `{ "message": "종 수정 성공" }`),
 - Mock response: 지연된 200
 - 기대 결과: PATCH 1회
 
-## Mock S8 — 없는 기본 항목 선택 후 저장
+## Mock S8 — 고른 뒤 목록에서 사라진 항목 저장
 
-- 사전 조건: 목록 GET에 `멸종위기 야생생물 I급` 없음
-- 사용자 동작: `멸종위기 야생생물 I급` 선택 → 저장
+- 사전 조건: `국제보호종`을 고른 뒤 목록 GET 응답에서 그 이름이 빠진다(다른 곳에서 삭제)
+- 사용자 동작: `국제보호종` 선택 → 저장
 - 기대 결과: legal-status POST → 목록 GET → PATCH(새 id 포함) 순서
 
 ## Staging R1

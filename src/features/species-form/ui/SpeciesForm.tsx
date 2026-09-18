@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createSpecies,
   getLegalStatuses,
-  legalDesignationPresets,
   legalStatusQueryKeys,
   resolvePhotoFileKey,
   speciesQueryKeys,
@@ -233,7 +232,6 @@ export function SpeciesForm({
         </FormFieldCard>
 
         <LegalDesignationField
-          presets={legalDesignationPresets}
           statuses={legalStatusesQuery.data}
           loadFailed={legalStatusesQuery.isError}
           value={values.legalDesignations}

@@ -1,9 +1,9 @@
 {
   "feature": "animal-kind-create",
   "apiId": "ANIMAL_KIND_CREATE",
-  "approvedAt": "2026-09-16T15:20:10.426Z",
+  "approvedAt": "2026-09-18T02:48:59.191Z",
   "approvedBy": "yunho09",
-  "taskSpecHash": "3670dcc14833136a2616112bcd29de162997f493934c9d7baef47ca5aa201750",
+  "taskSpecHash": "02d59dac7a7e8c3ef9245e6e1c63d1de4d725742e9d0dc3355f1643a4edc74b5",
   "contractHash": "cc5193cd300ea056f8af781d1ac66a1708ba65626cfd3c3788332a87cdbb5289",
   "contractMarkdownHash": "307c63cd457ecaf4ec2ed2f1e30a76da8d0144effea3ff09b4b2a5c55264a509",
   "planHash": "15dde4709970a6ff546cd2db0c4080477c90ca96526d1bb372273d9d3b44c466",
@@ -11,5 +11,5 @@
   "testHash": "7746e03faff5876840a1b4640aa56361c8485a65654082459de8eb956b0d2aa8",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T00:45:02.388Z"
+  "testApprovedAt": "2026-09-18T02:48:59.365Z"
 }

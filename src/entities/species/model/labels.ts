@@ -7,10 +7,3 @@ export const taxonGroupLabels: Record<TaxonGroup, string> = {
   BIRDS: '조류',
   FISH: '어류',
 }
-
-// 종 폼 법정지정분류 기본 선택지. 서버 공용 목록에 없으면 저장할 때 만든다.
-export const legalDesignationPresets = [
-  '지정관리 야생동물',
-  '멸종위기 야생생물 I급',
-  '천연기념물',
-] as const

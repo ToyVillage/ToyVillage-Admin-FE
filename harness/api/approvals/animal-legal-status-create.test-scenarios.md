@@ -37,14 +37,14 @@
 - Mock response: HTTP 200 성공 body
 - 기대 결과: S3과 같은 실패 표시(Contract status 201만 성공)
 
-## Mock S7 — 저장 시 없는 기본 항목 생성
+## Mock S7 — 저장 시 목록에서 사라진 항목 생성
 
-- 사전 조건: 목록 GET이 `천연기념물`을 포함하지 않는다
+- 사전 조건: `천연기념물`을 고른 뒤 목록 GET 응답에서 그 이름이 빠진다(다른 곳에서 삭제)
 - 사용자 동작: 필수값 입력, `천연기념물` 선택 → 저장
 - 기대 결과: 요청 순서 `POST legal-status {kind:"천연기념물"}` → 목록 GET → 종 생성 POST
   (`animalLegalDesignation`에 새 id)
 
-## Mock S8 — 기본 항목 생성 실패
+## Mock S8 — 사라진 항목 생성 실패
 
 - Mock response: legal-status POST HTTP 500
 - 기대 결과: 종 생성 POST 없음, `생성하지 못했습니다. 다시 시도해 주세요.`, 입력 보존
