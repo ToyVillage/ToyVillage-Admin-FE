@@ -40,6 +40,7 @@ test('S3: 수정 저장 → 목록에 같은 ID 수정값 반영', async ({ page
   await expect(
     page.getByTestId('resource-row').filter({ hasText: '수정된 근무지침' }),
   ).toHaveCount(1)
+  await expect(page.getByText('데이터 수정에 성공했습니다')).toBeVisible()
 })
 
 test('S4: 빈 제목 → 오류 확인 후 제목 포커스', async ({ page }) => {
@@ -125,7 +126,7 @@ test('S10: 저장 더블클릭 → 동일 ID 한 건만 저장', async ({ page }
   expect(api.updateRequests.map(({ id }) => id)).toEqual([1])
 })
 
-test('S11: 저장·삭제 실패 → 예외 모달 표시 후 화면 유지', async ({ page }) => {
+test('S11: 저장 실패는 예외 모달, 삭제 실패는 토스트로 알리고 화면 유지', async ({ page }) => {
   // 저장·삭제 실패 주입. 나중에 등록한 route 가 먼저 매칭된다.
   await mockDocumentApi(page, { updateStatus: 500, deleteStatus: 500 })
   await page.goto('/notices/resources/1')
@@ -145,12 +146,8 @@ test('S11: 저장·삭제 실패 → 예외 모달 표시 후 화면 유지', as
   await page.getByRole('button', { name: '삭제하기' }).click()
   await page.getByRole('button', { name: '확인', exact: true }).click()
 
-  const deleteDialog = page.getByRole('alertdialog', {
-    name: '삭제에 실패하였습니다',
-  })
-  await expect(deleteDialog).toBeVisible()
-  await deleteDialog.getByRole('button', { name: '확인' }).click()
-  await expect(deleteDialog).toBeHidden()
+  // 삭제 실패는 토스트로 알리고 화면과 입력을 유지한다(Figma 311:12766).
+  await expect(page.getByText('데이터 삭제에 실패했습니다')).toBeVisible()
   await expect(page).toHaveURL(/\/notices\/resources\/1$/)
   await expect(page.getByLabel(/제목/)).toHaveValue('실패할 수정')
 })

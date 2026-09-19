@@ -4,12 +4,34 @@ import { expect, test, type Page } from '@playwright/test'
 // 대상: POST /reservation (RESERVATION_ADMIN_CREATE). 실제 서버는 호출하지 않는다.
 
 // 시간 위젯(HH/MM 두 칸): 시 칸을 포커스한 뒤 자릿수를 키보드로 입력한다.
-async function fillTime(page: Page, label: string, digits: string) {
-  await page.getByLabel(`${label} 시`, { exact: true }).click()
+type Side = '입장시간' | '퇴장시간'
+
+async function fillTime(
+  page: Page,
+  label: string,
+  side: Side,
+  digits: string,
+) {
+  await page.getByLabel(`${label} ${side} 시`, { exact: true }).click()
   await page.keyboard.type(digits, { delay: 20 })
 }
 
-// 필수 16필드를 정상 값으로 채운다. am/pm 기본값(visit/survey 입장 am, 퇴장 pm)을 사용.
+// 생성 화면은 reservationId=-1 로 직원 목록을 조회한다.
+// mock 하지 않으면 실제 서버 401 → 세션 만료로 /login 으로 튕겨 폼이 사라진다.
+async function routeAssignableEmployees(page: Page) {
+  await page.route(
+    /^https:\/\/[^/]+\/reservation\/assigned-employee\/-?\d+(\?.*)?$/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ assigned: [], assignable: [] }),
+      })
+    },
+  )
+}
+
+// 필수 14필드를 정상 값으로 채운다. 시간은 24시간제로 그대로 입력한다.
 async function fillValidForm(page: Page) {
   await page.getByLabel('단체명', { exact: true }).fill('대구유치원')
   await page.getByLabel('지역', { exact: true }).fill('대구광역시')
@@ -20,18 +42,21 @@ async function fillValidForm(page: Page) {
   await page.getByLabel('인솔자 인원').fill('3')
   await page.getByLabel('입장료를 입력해주세요').fill('48000')
   await page.getByLabel('방문일을 선택해주세요').fill('20260820')
-  await fillTime(page, '방문 시간을 선택해주세요 (입장시간)', '1000')
-  await fillTime(page, '퇴장 시간을 선택해주세요 (퇴장시간)', '0600')
+  const visitLabel = '방문 시간을 선택해주세요'
+  await fillTime(page, visitLabel, '입장시간', '1000')
+  await fillTime(page, visitLabel, '퇴장시간', '1800')
   await page.getByLabel('사전답사 인원').fill('8')
   await page.getByLabel('사전답사일을 선택해주세요').fill('20260816')
-  await fillTime(page, '사전답사 시간을 선택해주세요 (입장시간)', '1000')
-  await fillTime(page, '사전답사 시간을 선택해주세요 (퇴장시간)', '0300')
+  const surveyLabel = '사전답사 시간을 선택해주세요'
+  await fillTime(page, surveyLabel, '입장시간', '1000')
+  await fillTime(page, surveyLabel, '퇴장시간', '1500')
 }
 
 test('S1: 폼 값이 Contract 바디로 매핑돼 전송되고 201 후 목록 이동', async ({
   page,
 }) => {
   let body: Record<string, unknown> | null = null
+  await routeAssignableEmployees(page)
   await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback()
     body = route.request().postDataJSON()
@@ -91,6 +116,7 @@ test('S3: 필수 누락 → 인라인 에러, 요청 미발생', async ({ page }
 })
 
 test('S4: 서버 400 → 서버 message 알림, 이동 없음', async ({ page }) => {
+  await routeAssignableEmployees(page)
   await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback()
     await route.fulfill({

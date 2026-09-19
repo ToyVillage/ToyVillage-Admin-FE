@@ -785,13 +785,14 @@ const PageButton = styled.button<{ $active: boolean }>`
   cursor: pointer;
 `
 
-// 번호 버튼과 같은 자리를 차지하되 누를 수 없다.
+// 누를 수 없는 생략 표시. 번호 버튼(32px)만큼 넓으면 좌우 간격까지 더해져
+// 너무 벌어지므로 글자 너비만 차지하게 둔다.
 const PageGap = styled.span`
   display: inline-flex;
-  width: 32px;
   height: 32px;
   align-items: center;
   justify-content: center;
+  margin: 0 -6px;
   color: ${({ theme }) => theme.colors.pageMuted};
   font-size: 18px;
   font-weight: 500;

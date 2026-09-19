@@ -2,7 +2,10 @@ import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { Link, useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom'
 import { LeaveConfirmationDialog } from '@/shared/ui'
-import { ResourceForm } from '@/features/create-resource'
+import {
+  ResourceForm,
+  type ResourceFormCompletion,
+} from '@/features/create-resource'
 
 export function CreateResourcePage() {
   const navigate = useNavigate()
@@ -29,10 +32,14 @@ export function CreateResourcePage() {
     ),
   )
 
-  const handleCompleted = useCallback(() => {
-    allowNavigationRef.current = true
-    navigate('/notices/resources')
-  }, [navigate])
+  // 목록이 결과 토스트를 띄운다(Figma `자료실 · 토스트` 311:12766).
+  const handleCompleted = useCallback(
+    (reason: ResourceFormCompletion) => {
+      allowNavigationRef.current = true
+      navigate('/notices/resources', { state: { toast: reason } })
+    },
+    [navigate],
+  )
 
   return (
     <Page>

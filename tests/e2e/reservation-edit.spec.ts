@@ -74,25 +74,25 @@ async function gotoEdit(page: Page) {
 }
 
 // 시간 입력은 키다운으로 raw 자릿수를 왼쪽부터 채운다(값은 controlled — fill 은 반영 안 됨).
-async function fillTime(page: Page, label: string, digits: string) {
-  await page.getByLabel(`${label} 시`, { exact: true }).click()
-  await page.keyboard.type(digits, { delay: 20 })
-}
+type Side = '입장시간' | '퇴장시간'
 
-// 12시간제: 오후 시각은 am/pm 드롭다운에서 pm 을 선택한다.
-async function selectPm(page: Page, label: string) {
-  await page.getByRole('button', { name: `${label} 오전/오후` }).click()
-  await page.getByRole('option', { name: 'pm' }).click()
+async function fillTime(
+  page: Page,
+  label: string,
+  side: Side,
+  digits: string,
+) {
+  await page.getByLabel(`${label} ${side} 시`, { exact: true }).click()
+  await page.keyboard.type(digits, { delay: 20 })
 }
 
 // 상세 응답에 없는 사전답사 4칸을 채운다(mock 경계).
 async function fillSurvey(page: Page) {
   await page.getByLabel('사전답사 인원').fill('8')
   await page.getByLabel('사전답사일을 선택해주세요').fill('2026.08.16')
-  await fillTime(page, '사전답사 시간을 선택해주세요 (입장시간)', '1000') // 10:00 오전
-  const exitLabel = '사전답사 시간을 선택해주세요 (퇴장시간)'
-  await fillTime(page, exitLabel, '0300')
-  await selectPm(page, exitLabel) // 15:00
+  const surveyLabel = '사전답사 시간을 선택해주세요'
+  await fillTime(page, surveyLabel, '입장시간', '1000') // 10:00
+  await fillTime(page, surveyLabel, '퇴장시간', '1500') // 15:00
 }
 
 test('S1: 상세 진입 시 폼 초기화', async ({ page }) => {

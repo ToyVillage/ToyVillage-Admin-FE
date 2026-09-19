@@ -1,7 +1,12 @@
 import { useEffect } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { Navigate, useLocation, useParams } from 'react-router-dom'
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom'
 import {
   feedQueryKeys,
   FeedHistoryTable,
@@ -22,6 +27,7 @@ const listPath = '/feeds'
 export function FeedDetailPage() {
   const { id = '' } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   // 목록에서 넘어왔다면 그때의 조회 조건(날짜·분류·페이지)으로 돌아간다.
   // 개체 상세에서 넘어왔다면 그 개체 상세로 돌아간다(`backPath`).
   // 분류는 급여 API 가 주지 않아 목록에서 고른 탭을 그대로 받아 뱃지에 쓴다.
@@ -108,6 +114,13 @@ export function FeedDetailPage() {
             <FeedHistoryTable
               records={history}
               emptyLabel={isPending ? ' ' : '급여 이력이 없습니다.'}
+              onSelect={(feedLogId) => {
+                // 같은 개체의 다른 급여 기록으로 옮겨간다. 뒤로가기 목적지는 그대로 물려준다.
+                if (feedLogId === id) return
+                navigate(`/feeds/${feedLogId}`, {
+                  state: { backPath, species },
+                })
+              }}
             />
           </HistoryTableArea>
         </HistorySection>

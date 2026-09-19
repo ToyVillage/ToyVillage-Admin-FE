@@ -1,6 +1,7 @@
 import styled from '@emotion/styled'
 import {
   DataTable,
+  TruncatedText,
   type DataTableColumn,
   type DataTableRow,
 } from '@/shared/ui'
@@ -10,6 +11,8 @@ import type { FeedHistoryRecord } from '../model/types'
 interface FeedHistoryTableProps {
   records: FeedHistoryRecord[]
   emptyLabel: string
+  /** 이력 행을 누르면 그 급여 기록 상세로 간다. 행 id 가 `feedLogId` 다. */
+  onSelect: (feedLogId: string) => void
 }
 
 // Figma `1400:15136` (feed history table). 페이지네이션 없이 이력 전체를 보여준다.
@@ -34,18 +37,12 @@ const columns: DataTableColumn[] = [
     key: 'feed',
     header: '먹이 종류 · 급여량',
     width: 250,
-    render: (row) => {
-      const value = String(row.feed ?? '')
-      return <StrongCell title={value}>{value}</StrongCell>
-    },
+    render: (row) => <StrongCell value={String(row.feed ?? '')} />,
   },
   {
     key: 'note',
     header: '특이사항',
-    render: (row) => {
-      const value = String(row.note ?? '')
-      return <NoteCell title={value}>{value}</NoteCell>
-    },
+    render: (row) => <NoteCell value={String(row.note ?? '')} />,
   },
 ]
 
@@ -62,6 +59,7 @@ const appearance = {
 export function FeedHistoryTable({
   records,
   emptyLabel,
+  onSelect,
 }: FeedHistoryTableProps) {
   return (
     <DataTable
@@ -77,6 +75,7 @@ export function FeedHistoryTable({
       )}
       columns={columns}
       rowTestId="feed-history-row"
+      onRowClick={onSelect}
       emptyLabel={emptyLabel}
       appearance={appearance}
     />
@@ -86,16 +85,12 @@ export function FeedHistoryTable({
 // Figma 의 `급여날짜`·`급여시간`·`급여자` 는 gray/60(#848491) 20px 다.
 function mutedCell(key: string) {
   return function render(row: DataTableRow) {
-    const value = String(row[key] ?? '')
-    return <MutedCell title={value}>{value}</MutedCell>
+    return <MutedCell value={String(row[key] ?? '')} />
   }
 }
 
 // 값이 열 폭보다 길면 줄바꿈하지 않고 말줄임한다(행 높이가 늘면 표가 어긋난다).
-const MutedCell = styled.span`
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
+const MutedCell = styled(TruncatedText)`
   color: ${({ theme }) => theme.colors.textGuide};
   font-size: 20px;
   font-weight: 500;
@@ -103,24 +98,16 @@ const MutedCell = styled.span`
   white-space: nowrap;
 `
 
-const StrongCell = styled.span`
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
+const StrongCell = styled(TruncatedText)`
   color: ${({ theme }) => theme.colors.textStrong};
   font-size: 22px;
   font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 `
 
 // 열 폭을 넘치면 한 줄로 자르고 말줄임표로 끝낸다(Figma `1402:15172`).
-const NoteCell = styled.span`
-  overflow: hidden;
+const NoteCell = styled(TruncatedText)`
   width: 100%;
   color: ${({ theme }) => theme.colors.textGuide};
   font-size: 22px;
   font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 `

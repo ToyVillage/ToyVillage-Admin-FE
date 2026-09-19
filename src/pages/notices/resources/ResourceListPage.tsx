@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ResourceTable,
   getDocuments,
@@ -10,6 +10,8 @@ import {
   tabToFileType,
 } from '@/entities/resource'
 import { CreateResourceButton } from '@/features/create-resource'
+import { Toast } from '@/shared/ui'
+import type { ResourceFormCompletion } from '@/features/create-resource'
 import { FileTypeTabs } from './ui/FileTypeTabs'
 
 // 한 페이지당 자료 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
@@ -19,9 +21,37 @@ const EMPTY_MIN_HEIGHT = 368
 // 검색 입력 디바운스(ms). 입력이 멈춘 뒤에만 조회 요청을 보낸다.
 const SEARCH_DEBOUNCE_MS = 200
 
+// 목록으로 돌아왔을 때 띄우는 토스트(Figma `자료실 · 토스트` 311:12766).
+// 수정 성공만 Figma 에 노드가 없다 — 나머지와 같은 `데이터 {동작}에 성공했습니다`
+// 문구로 맞춘다(개발자 결정).
+const toastMessages: Record<ResourceFormCompletion, string> = {
+  created: '데이터 생성에 성공했습니다',
+  updated: '데이터 수정에 성공했습니다',
+  deleted: '데이터 삭제에 성공했습니다',
+}
+
 export function ResourceListPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
+
+  // 생성·수정·삭제 화면에서 넘겨받은 결과로 토스트를 띄운다.
+  // 첫 렌더에서 값을 읽어 두고 이동 state 는 지운다 — 새로고침이나 뒤로가기로
+  // 같은 토스트가 다시 뜨지 않게 하려는 것이다.
+  const completion = (
+    location.state as { toast?: ResourceFormCompletion } | null
+  )?.toast
+  const [toastMessage, setToastMessage] = useState<string | null>(
+    completion ? toastMessages[completion] : null,
+  )
+  useEffect(() => {
+    if (!completion) return
+
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: null,
+    })
+  }, [completion, location.pathname, location.search, navigate])
   const [active, setActive] = useState('전체')
   const [query, setQuery] = useState('')
   const [debouncedKeyword, setDebouncedKeyword] = useState('')
@@ -128,6 +158,13 @@ export function ResourceListPage() {
           emptyMinHeight={EMPTY_MIN_HEIGHT}
         />
       </Content>
+      {toastMessage && (
+        <Toast
+          variant="success"
+          message={toastMessage}
+          onDismiss={() => setToastMessage(null)}
+        />
+      )}
     </Page>
   )
 }

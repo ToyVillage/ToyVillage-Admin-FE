@@ -9,7 +9,10 @@ import {
 } from 'react-router-dom'
 import { getDocument } from '@/entities/resource'
 import { LeaveConfirmationDialog } from '@/shared/ui'
-import { ResourceForm } from '@/features/create-resource'
+import {
+  ResourceForm,
+  type ResourceFormCompletion,
+} from '@/features/create-resource'
 
 export function ResourceDetailPage() {
   const { id = '' } = useParams()
@@ -61,10 +64,14 @@ export function ResourceDetailPage() {
     ),
   )
 
-  const handleCompleted = useCallback(() => {
-    allowNavigationRef.current = true
-    navigate('/notices/resources')
-  }, [navigate])
+  // 목록이 결과 토스트를 띄운다(Figma `자료실 · 토스트` 311:12766).
+  const handleCompleted = useCallback(
+    (reason: ResourceFormCompletion) => {
+      allowNavigationRef.current = true
+      navigate('/notices/resources', { state: { toast: reason } })
+    },
+    [navigate],
+  )
 
   // 로딩 중에는 빈 폼(수정 레이아웃)을 먼저 보여주고, 데이터가 오면 값이 채워진
   // 폼으로 교체한다(key 변경으로 재마운트). 별도의 '찾을 수 없음' 화면은 두지 않는다.

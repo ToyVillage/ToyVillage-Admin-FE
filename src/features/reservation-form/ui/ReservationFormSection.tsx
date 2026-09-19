@@ -53,7 +53,7 @@ export function ReservationFormSection({
   )
 }
 
-// overflow:hidden 을 쓰지 않는다(am/pm 드롭다운이 섹션 밖으로 나와야 함).
+// overflow:hidden 을 쓰지 않는다(날짜 선택 달력이 섹션 밖으로 나와야 함).
 // 모서리는 헤더/본문이 각자 처리한다.
 const Card = styled.section`
   display: flex;

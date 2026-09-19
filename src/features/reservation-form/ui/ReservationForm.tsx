@@ -2,12 +2,12 @@ import { useState } from 'react'
 import styled from '@emotion/styled'
 import type { Staff } from '@/entities/reservation'
 import type {
-  AmPm,
   ReservationFormErrors,
   ReservationFormValue,
 } from '../model/types'
 import { isSectionComplete } from '../model/validation'
-import { DateField, TextInputField, TimeAmPmField } from './fields'
+import { DateField, TextInputField } from './fields'
+import { TimeRangeField } from './TimeRangeField'
 import { ReservationFormSection } from './ReservationFormSection'
 import { PagePermissionSection } from './PagePermissionSection'
 
@@ -147,23 +147,14 @@ export function ReservationForm({
             value={value.visitDate}
             onChange={(v) => set('visitDate', v)}
           />
-          <TimeAmPmField
-            label="방문 시간을 선택해주세요 (입장시간)"
+          <TimeRangeField
+            label="방문 시간을 선택해주세요"
             required
-            error={errors.visitTime}
-            time={value.visitTime}
-            ampm={value.visitTimeAmPm}
-            onTimeChange={(v) => set('visitTime', v)}
-            onAmPmChange={(v: AmPm) => set('visitTimeAmPm', v)}
-          />
-          <TimeAmPmField
-            label="퇴장 시간을 선택해주세요 (퇴장시간)"
-            required
-            error={errors.exitTime}
-            time={value.exitTime}
-            ampm={value.exitTimeAmPm}
-            onTimeChange={(v) => set('exitTime', v)}
-            onAmPmChange={(v: AmPm) => set('exitTimeAmPm', v)}
+            error={errors.visitTime ?? errors.exitTime}
+            enterTime={value.visitTime}
+            exitTime={value.exitTime}
+            onEnterTimeChange={(v) => set('visitTime', v)}
+            onExitTimeChange={(v) => set('exitTime', v)}
           />
         </Row3>
       </ReservationFormSection>
@@ -192,25 +183,14 @@ export function ReservationForm({
             value={value.surveyDate}
             onChange={(v) => set('surveyDate', v)}
           />
-          <TimeAmPmField
-            label="사전답사 시간을 선택해주세요 (입장시간)"
+          <TimeRangeField
+            label="사전답사 시간을 선택해주세요"
             required
-            error={errors.surveyEnterTime}
-            time={value.surveyEnterTime}
-            ampm={value.surveyEnterAmPm}
-            onTimeChange={(v) => set('surveyEnterTime', v)}
-            onAmPmChange={(v: AmPm) => set('surveyEnterAmPm', v)}
-          />
-        </Row3>
-        <Row3>
-          <TimeAmPmField
-            label="사전답사 시간을 선택해주세요 (퇴장시간)"
-            required
-            error={errors.surveyExitTime}
-            time={value.surveyExitTime}
-            ampm={value.surveyExitAmPm}
-            onTimeChange={(v) => set('surveyExitTime', v)}
-            onAmPmChange={(v: AmPm) => set('surveyExitAmPm', v)}
+            error={errors.surveyEnterTime ?? errors.surveyExitTime}
+            enterTime={value.surveyEnterTime}
+            exitTime={value.surveyExitTime}
+            onEnterTimeChange={(v) => set('surveyEnterTime', v)}
+            onExitTimeChange={(v) => set('surveyExitTime', v)}
           />
         </Row3>
       </ReservationFormSection>

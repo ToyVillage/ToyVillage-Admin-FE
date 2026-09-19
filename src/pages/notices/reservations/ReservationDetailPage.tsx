@@ -13,7 +13,7 @@ import {
 } from '@/entities/reservation'
 import {
   ReservationForm,
-  clock24ToParts,
+  clock24ToRawDigits,
   emptyReservationFormValue,
   formatMoney,
   scrollToFirstError,
@@ -39,12 +39,12 @@ function serverMessage(error: unknown): string {
 }
 
 // 조회한 상세 → 폼 값. 초기값을 폼 입력 계약에 맞춰 서식한다:
-// 금액 콤마, 시간은 24h→12h(raw 자릿수)+am/pm, 사전답사 섹션 포함.
+// 금액 콤마, 시간은 24시간제 raw 자릿수, 사전답사 섹션 포함.
 function toFormValue(detail: ReservationDetail): ReservationFormValue {
-  const visit = clock24ToParts(detail.reserveTime)
-  const exit = clock24ToParts(detail.reserveTimeEnd)
-  const surveyEnter = clock24ToParts(detail.surveyEnterTime ?? '')
-  const surveyExit = clock24ToParts(detail.surveyExitTime ?? '')
+  const visit = clock24ToRawDigits(detail.reserveTime)
+  const exit = clock24ToRawDigits(detail.reserveTimeEnd)
+  const surveyEnter = clock24ToRawDigits(detail.surveyEnterTime ?? '')
+  const surveyExit = clock24ToRawDigits(detail.surveyExitTime ?? '')
   return {
     ...emptyReservationFormValue,
     groupName: detail.groupName,
@@ -60,17 +60,13 @@ function toFormValue(detail: ReservationDetail): ReservationFormValue {
         ? formatMoney(String(detail.admissionFee))
         : '',
     visitDate: detail.reserveDate,
-    visitTime: visit.time,
-    visitTimeAmPm: visit.ampm,
-    exitTime: exit.time,
-    exitTimeAmPm: exit.ampm,
+    visitTime: visit,
+    exitTime: exit,
     // 사전답사 섹션 초기값(visitSite*).
     surveyCount: detail.surveyCount != null ? String(detail.surveyCount) : '',
     surveyDate: detail.surveyDate ?? '',
-    surveyEnterTime: surveyEnter.time,
-    surveyEnterAmPm: surveyEnter.ampm,
-    surveyExitTime: surveyExit.time,
-    surveyExitAmPm: surveyExit.ampm,
+    surveyEnterTime: surveyEnter,
+    surveyExitTime: surveyExit,
   }
 }
 

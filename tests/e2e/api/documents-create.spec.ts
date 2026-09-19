@@ -46,10 +46,11 @@ async function routeStatus(page: Page, status: number, message: string) {
   })
 }
 
-async function expectCreateFailureDialog(page: Page) {
-  const dialog = page.getByRole('alertdialog')
-  await expect(dialog).toBeVisible()
-  await expect(dialog).toContainText('생성에 실패했습니다')
+// 생성 실패는 Figma `자료실 · 토스트`(311:12766) 대로 토스트로 알리고 화면을 유지한다.
+async function expectCreateFailureToast(page: Page) {
+  await expect(
+    page.getByText('데이터 생성에 실패했습니다'),
+  ).toBeVisible()
   await expect(page).toHaveURL(/\/notices\/resources\/create$/)
 }
 
@@ -120,12 +121,12 @@ test('S3: 파일 미첨부 → 요청 미발생 + 검증 다이얼로그', async
   await expect(page).toHaveURL(/\/notices\/resources\/create$/)
 })
 
-test('S4: 유효 입력 + 서버 400 → 생성 실패 다이얼로그', async ({ page }) => {
+test('S4: 유효 입력 + 서버 400 → 생성 실패 토스트', async ({ page }) => {
   // 프론트 검증을 통과한 요청에 route로 400을 주입한다.
   await routeStatus(page, 400, '자료 제목은 비어있을 수 없습니다.')
   await fillValidForm(page)
   await page.getByRole('button', { name: '생성하기' }).click()
-  await expectCreateFailureDialog(page)
+  await expectCreateFailureToast(page)
 })
 
 test('S5: 401 만료된 토큰 → 세션을 비우고 로그인으로 이동', async ({ page }) => {
@@ -139,18 +140,18 @@ test('S5: 401 만료된 토큰 → 세션을 비우고 로그인으로 이동', 
   ).toBeNull()
 })
 
-test('S6: 404 존재하지 않는 파일 → 생성 실패 다이얼로그', async ({ page }) => {
+test('S6: 404 존재하지 않는 파일 → 생성 실패 토스트', async ({ page }) => {
   await routeStatus(page, 404, '존재하지 않는 파일입니다.')
   await fillValidForm(page)
   await page.getByRole('button', { name: '생성하기' }).click()
-  await expectCreateFailureDialog(page)
+  await expectCreateFailureToast(page)
 })
 
-test('S7: 500 서버 오류 → 생성 실패 다이얼로그', async ({ page }) => {
+test('S7: 500 서버 오류 → 생성 실패 토스트', async ({ page }) => {
   await routeStatus(page, 500, '예상하지 못한 에러가 발생했습니다.')
   await fillValidForm(page)
   await page.getByRole('button', { name: '생성하기' }).click()
-  await expectCreateFailureDialog(page)
+  await expectCreateFailureToast(page)
 })
 
 test('S8~S9: 로딩 표시 + 중복 제출 시 등록 요청 1회', async ({ page }) => {

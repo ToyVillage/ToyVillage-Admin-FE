@@ -99,7 +99,7 @@ test('S1: 삭제 성공(200) → 목록 복귀, 재진입 시 캐시 없이 신�
   expect(detailGetCount).toBe(2)
 })
 
-test('S2: 404 존재하지 않는 자료 → 삭제 실패 다이얼로그', async ({ page }) => {
+test('S2: 404 존재하지 않는 자료 → 삭제 실패 토스트', async ({ page }) => {
   await routeDelete(page, {
     status: 404,
     body: errorBody(404, '존재하지 않는 자료입니다.'),
@@ -107,10 +107,10 @@ test('S2: 404 존재하지 않는 자료 → 삭제 실패 다이얼로그', asy
   await page.goto('/notices/resources/1')
   await openDeleteAndConfirm(page)
 
-  await expect(page.getByRole('alertdialog')).toContainText('삭제에 실패')
+  await expect(page.getByText('데이터 삭제에 실패했습니다')).toBeVisible()
 })
 
-test('S3: 500 → 삭제 실패 다이얼로그', async ({ page }) => {
+test('S3: 500 → 삭제 실패 토스트', async ({ page }) => {
   await routeDelete(page, {
     status: 500,
     body: errorBody(500, '예상하지 못한 에러가 발생했습니다.'),
@@ -118,7 +118,7 @@ test('S3: 500 → 삭제 실패 다이얼로그', async ({ page }) => {
   await page.goto('/notices/resources/1')
   await openDeleteAndConfirm(page)
 
-  await expect(page.getByRole('alertdialog')).toContainText('삭제에 실패')
+  await expect(page.getByText('데이터 삭제에 실패했습니다')).toBeVisible()
 })
 
 test('S4: 401 만료된 토큰 → 세션을 비우고 로그인으로 이동', async ({ page }) => {
