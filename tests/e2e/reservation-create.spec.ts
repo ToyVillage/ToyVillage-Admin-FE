@@ -106,6 +106,8 @@ test('S4: 정상 생성', async ({ page }) => {
 })
 
 test('S5: 시간 직접 입력(24시간제)', async ({ page }) => {
+  await routeAssignableEmployees(page)
+
   await page.goto('/notices/reservations/create')
   const label = '방문 시간을 선택해주세요'
   const hour = page.getByLabel(`${label} 입장시간 시`, { exact: true })
