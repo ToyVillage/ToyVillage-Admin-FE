@@ -2,11 +2,15 @@ import styled from '@emotion/styled'
 import { PageHeaderSkeleton, Skeleton, SkeletonStatus } from '@/shared/ui'
 
 const DAYS_IN_WEEK = 7
-const WEEK_ROWS = 5
 const CARD_TITLE_WIDTHS = [237, 103, 108, 90, 108]
 
+interface CloseScheduleSkeletonProps {
+  /** 표시할 달이 걸친 주 수. 실제 달력과 같은 높이를 맞춘다. */
+  weeks: number
+}
+
 // Figma `휴관일 관리 (스켈레톤)`(1:9679). 달력·카드 치수는 `NoticeGuidePage` 를 따른다.
-export function CloseScheduleSkeleton() {
+export function CloseScheduleSkeleton({ weeks }: CloseScheduleSkeletonProps) {
   return (
     <SkeletonStatus>
       <PageHeaderSkeleton action />
@@ -25,7 +29,7 @@ export function CloseScheduleSkeleton() {
             ))}
           </WeekHeader>
           <CalendarGrid>
-            {Array.from({ length: DAYS_IN_WEEK * WEEK_ROWS }, (_, index) => (
+            {Array.from({ length: DAYS_IN_WEEK * weeks }, (_, index) => (
               <DayCell key={index}>
                 <Skeleton width={40} height={16} />
               </DayCell>

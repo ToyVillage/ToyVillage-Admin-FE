@@ -125,7 +125,7 @@ export function NoticeGuidePage() {
     return (
       <Page>
         <Content>
-          <CloseScheduleSkeleton />
+          <CloseScheduleSkeleton weeks={calendarDays.length / 7} />
         </Content>
       </Page>
     )

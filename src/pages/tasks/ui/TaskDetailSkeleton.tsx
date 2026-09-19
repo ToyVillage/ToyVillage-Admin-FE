@@ -72,6 +72,10 @@ const Bottom = styled.div`
   grid-template-columns: minmax(0, 868fr) minmax(0, 420fr);
   gap: 32px;
   align-items: start;
+
+  @media (max-width: 980px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `
 
 const CheckRow = styled.div`

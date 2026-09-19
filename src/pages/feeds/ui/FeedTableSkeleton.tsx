@@ -14,7 +14,7 @@ export function FeedTableSkeleton() {
           { width: 220, bar: 110, barHeight: 18, headerBar: 60, paddingX: 24 },
           { width: 140, bar: 50, barHeight: 18, headerBar: 60, paddingX: 24 },
         ]}
-        rows={3}
+        rows={4}
         pagination
       />
     </SkeletonStatus>

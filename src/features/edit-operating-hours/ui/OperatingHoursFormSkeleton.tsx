@@ -38,6 +38,10 @@ const Fields = styled.div`
   grid-template-columns: repeat(2, minmax(0, 420px));
   gap: 20px;
   margin-top: 24px;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
 `
 
 const Inputs = styled.div`

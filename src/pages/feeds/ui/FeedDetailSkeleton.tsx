@@ -53,6 +53,11 @@ const Record = styled.div`
   padding: 40px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 980px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `
 
 const Info = styled.div`
