@@ -16,6 +16,21 @@ async function fillTime(
   await page.keyboard.type(digits, { delay: 20 })
 }
 
+// 생성 화면은 reservationId=-1 로 직원 목록을 조회한다.
+// mock 하지 않으면 실제 서버 401 → 세션 만료로 /login 으로 튕겨 폼이 사라진다.
+async function routeAssignableEmployees(page: Page) {
+  await page.route(
+    /^https:\/\/[^/]+\/reservation\/assigned-employee\/-?\d+(\?.*)?$/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ assigned: [], assignable: [] }),
+      })
+    },
+  )
+}
+
 // 필수 14필드를 정상 값으로 채운다. 시간은 24시간제로 그대로 입력한다.
 async function fillValidForm(page: Page) {
   await page.getByLabel('단체명', { exact: true }).fill('대구유치원')
@@ -41,6 +56,7 @@ test('S1: 폼 값이 Contract 바디로 매핑돼 전송되고 201 후 목록 �
   page,
 }) => {
   let body: Record<string, unknown> | null = null
+  await routeAssignableEmployees(page)
   await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback()
     body = route.request().postDataJSON()
@@ -100,6 +116,7 @@ test('S3: 필수 누락 → 인라인 에러, 요청 미발생', async ({ page }
 })
 
 test('S4: 서버 400 → 서버 message 알림, 이동 없음', async ({ page }) => {
+  await routeAssignableEmployees(page)
   await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
     if (route.request().method() !== 'POST') return route.fallback()
     await route.fulfill({

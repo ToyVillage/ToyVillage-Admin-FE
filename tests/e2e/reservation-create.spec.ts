@@ -15,6 +15,24 @@ async function fillTime(
   await page.keyboard.type(digits, { delay: 20 })
 }
 
+// 생성 화면은 reservationId=-1 로 직원 목록을 조회한다(전원 assignable).
+// mock 하지 않으면 실제 서버 401 → 세션 만료로 /login 으로 튕겨 폼이 사라진다.
+async function routeAssignableEmployees(page: Page) {
+  await page.route(
+    /^https:\/\/[^/]+\/reservation\/assigned-employee\/-?\d+(\?.*)?$/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          assigned: [],
+          assignable: [{ appAdminId: 3, name: '이승현' }],
+        }),
+      })
+    },
+  )
+}
+
 async function fillAllRequired(page: Page) {
   await page.getByLabel('단체명').fill('대구유치원')
   await page.getByLabel('지역').fill('대구광역시')
@@ -78,6 +96,8 @@ test('S4: 정상 생성', async ({ page }) => {
     })
   })
 
+  await routeAssignableEmployees(page)
+
   await page.goto('/notices/reservations/create')
   await fillAllRequired(page)
   await page.getByRole('button', { name: '생성하기' }).click()
@@ -112,20 +132,7 @@ test('S5: 시간 직접 입력(24시간제)', async ({ page }) => {
 })
 
 test('S6: 페이지 권한 배정 추가/취소', async ({ page }) => {
-  // 생성 화면은 reservationId=-1 로 직원 목록을 조회한다(전원 assignable).
-  await page.route(
-    /^https:\/\/[^/]+\/reservation\/assigned-employee\/-?\d+(\?.*)?$/,
-    async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          assigned: [],
-          assignable: [{ appAdminId: 3, name: '이승현' }],
-        }),
-      })
-    },
-  )
+  await routeAssignableEmployees(page)
 
   await page.goto('/notices/reservations/create')
   await expect(
