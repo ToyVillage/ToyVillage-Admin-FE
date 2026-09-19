@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -18,6 +18,7 @@ import {
 } from '@/features/review-task-report'
 import { RowActionMenu } from '@/features/row-actions'
 import { CategoryTabs, Toast } from '@/shared/ui'
+import { readPageParam, useListSearchParams } from '@/shared/lib'
 
 // 한 페이지 10행(2026-09-13 개발자 결정). Figma 표 높이(행 100 × 3) 기준 3행을 대체한다.
 const TABLE_PAGE_SIZE = 10
@@ -28,6 +29,10 @@ interface ReviewTab {
   count: number
 }
 
+
+// URL 에 남기지 않을 기본값(첫 탭·첫 페이지).
+const listParamDefaults = { status: 'PENDING', page: '1' } as const
+
 // 상세에서 승인·반려에 성공하면 이동 state 로 결과 토스트를 넘겨받는다.
 interface TaskReportListLocationState {
   toast?: TaskReportReviewResult
@@ -36,9 +41,18 @@ interface TaskReportListLocationState {
 export function TaskReportListPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [activeStatus, setActiveStatus] =
-    useState<TaskReportReviewStatus>('PENDING')
-  const [page, setPage] = useState(1)
+  // 조회 조건(탭·페이지)은 URL 이 소유한다. 상세에 다녀와도 그대로 남는다.
+  const { values, update } = useListSearchParams(listParamDefaults)
+  const activeStatus = taskReportReviewStatuses.includes(
+    values.status as TaskReportReviewStatus,
+  )
+    ? (values.status as TaskReportReviewStatus)
+    : 'PENDING'
+  const page = readPageParam(new URLSearchParams({ page: values.page }))
+
+  function setPage(next: number) {
+    update({ page: String(next) })
+  }
   // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null)
@@ -81,8 +95,12 @@ export function TaskReportListPage() {
   const pageCount = Math.max(1, data?.totalPageSize ?? 1)
 
   // 처리로 행이 다른 탭으로 옮겨가 마지막 페이지가 사라지면 범위 밖 페이지에 고착되지 않게 당긴다.
-  // 렌더 중 상태 보정이다(effect 불필요).
-  if (data && page > pageCount) setPage(pageCount)
+  // URL 을 바꾸는 일이라 렌더가 끝난 뒤에 한다(렌더 중 라우터 갱신 금지).
+  useEffect(() => {
+    if (data && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, page, pageCount])
 
   const tabLabels = tabs.map(({ label, count }) => `${label} ${count}`)
   const activeLabel =
@@ -109,8 +127,7 @@ export function TaskReportListPage() {
     if (!selected) return
 
     // 탭이 바뀌면 첫 페이지로 되돌린다.
-    setActiveStatus(selected.reviewStatus)
-    setPage(1)
+    update({ status: selected.reviewStatus, page: '1' })
   }
 
   function handleReview(
@@ -169,7 +186,12 @@ export function TaskReportListPage() {
 
         <TaskReportTable
           reports={reports}
-          onRowClick={(id) => navigate(`/task-reports/${id}`)}
+          onRowClick={(id) =>
+            // 상세의 `returnTo` 규약에 맞춘다 — 조회 조건까지 담아 그 자리로 돌아온다.
+            navigate(`/task-reports/${id}`, {
+              state: { returnTo: `${location.pathname}${location.search}` },
+            })
+          }
           pagination={{ page, pageCount, onChange: setPage }}
           emptyLabel="등록된 업무보고가 없습니다."
           renderRowAction={(report) => (
