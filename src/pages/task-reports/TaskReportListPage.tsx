@@ -114,8 +114,14 @@ export function TaskReportListPage() {
   // 닫을 때 이동 state 를 비워 재방문 시 다시 뜨지 않게 한다.
   const dismissToast = useCallback(() => {
     setLocalToast(null)
-    if (stateToast) navigate(location.pathname, { replace: true, state: null })
-  }, [location.pathname, navigate, stateToast])
+    // 조회 조건(쿼리)은 그대로 두고 토스트 state 만 비운다.
+    if (stateToast) {
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      })
+    }
+  }, [location.pathname, location.search, navigate, stateToast])
 
   const focusMenuTrigger = useCallback((reportId: string) => {
     // 다른 탭으로 옮겨간 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
