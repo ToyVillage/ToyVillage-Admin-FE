@@ -51,19 +51,17 @@ export function WorkLogListPage() {
   const tab: WorkLogTab = searchParams.get('tab') === 'forms' ? 'forms' : 'logs'
   const isoDate = toIsoDate(date)
 
-  // 서버 페이지네이션이다. 명세상 page 는 0부터 시작하고 화면은 1부터 센다.
-  const serverPage = page - 1
+  // 서버 페이지네이션이다. 명세는 page 를 0부터 적었지만 서버는 1부터 센다(#158).
 
   const logsQuery = useQuery({
     queryKey: workLogQueryKeys.list(isoDate, page),
-    queryFn: () =>
-      getWorkLogs({ date: isoDate, page: serverPage, size: TABLE_PAGE_SIZE }),
+    queryFn: () => getWorkLogs({ date: isoDate, page, size: TABLE_PAGE_SIZE }),
     enabled: tab === 'logs',
   })
   // 양식은 날짜에 묶이지 않는다 — 조회날짜를 보내지 않는다(양식 관리 탭에 필터가 없다).
   const formsQuery = useQuery({
     queryKey: workLogFormQueryKeys.list(page),
-    queryFn: () => getWorkLogForms({ page: serverPage, size: TABLE_PAGE_SIZE }),
+    queryFn: () => getWorkLogForms({ page, size: TABLE_PAGE_SIZE }),
     enabled: tab === 'forms',
   })
 

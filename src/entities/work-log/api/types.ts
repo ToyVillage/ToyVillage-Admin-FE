@@ -129,7 +129,7 @@ export interface WorkLogMessageResponse {
 export interface WorkLogQueryAllRequest {
   /** YYYY-MM-DD */
   date: string
-  /** 0부터 시작한다(명세). */
+  /** 1부터 시작한다(명세는 0부터로 적혀 있다). */
   page: number
   size: number
 }
