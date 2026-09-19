@@ -4,6 +4,7 @@ import type { AppTheme } from '../theme/theme'
 import searchIcon from './assets/search.svg'
 import filterIcon from './assets/filter.svg'
 import chevronIcon from './assets/chevron-left.svg'
+import { dataTableDefaultAppearance } from './dataTableAppearance'
 
 // Figma 체크박스 박스 아이콘(assets/checkbox.svg)을 인라인 data URI로 사용해
 // 에셋 URL 로딩과 무관하게 항상 렌더되도록 한다.
@@ -56,21 +57,6 @@ export interface DataTableAppearance {
   /** 페이지네이션을 카드 안/밖 중 어디에 둘지 */
   paginationPlacement?: 'inside' | 'outside'
 }
-
-const defaultAppearance = {
-  offsetTop: 20,
-  bordered: true,
-  headerHeight: 52,
-  headerBackground: 'tableHeader',
-  headerFontSize: 20,
-  headerFontWeight: 500,
-  headerColor: 'text',
-  rowHeight: 92,
-  dividerColor: 'divider',
-  dividerInset: 40,
-  align: 'left',
-  paginationPlacement: 'inside',
-} satisfies Required<DataTableAppearance>
 
 export interface DataTableColumn {
   key: string
@@ -168,7 +154,7 @@ export function DataTable({
   emptyMinHeight,
   appearance,
 }: DataTableProps) {
-  const look = { ...defaultAppearance, ...appearance }
+  const look = { ...dataTableDefaultAppearance, ...appearance }
   const [sortOpen, setSortOpen] = useState(false)
   const sortControlRef = useRef<HTMLDivElement>(null)
   const sortOptions = sort?.options ?? defaultSortOptions
