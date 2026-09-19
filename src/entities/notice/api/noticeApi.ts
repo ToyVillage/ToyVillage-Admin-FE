@@ -11,10 +11,15 @@ import type {
   NoticeUpdateResponse,
 } from './types'
 
+interface NoticeQueryAllRuntimeTeam {
+  id: number
+  name: string
+}
+
 interface NoticeQueryAllRuntimeItem {
   id: number | string
   title: string
-  kind?: unknown
+  teams?: unknown
   createdAt?: unknown
 }
 
@@ -98,7 +103,7 @@ export async function getNotices(
   return {
     notices: data.notices.map((notice) => ({
       id: String(notice.id),
-      category: normalizeNoticeCategory(notice.kind),
+      teams: normalizeNoticeTeams(notice.teams),
       title: notice.title,
       date: typeof notice.createdAt === 'string' ? notice.createdAt : '',
     })),
@@ -153,7 +158,7 @@ export async function getNotice({ id }: NoticeQueryRequest): Promise<Notice> {
 
   return {
     id: String(data.id),
-    category: normalizeNoticeCategory(data.kind),
+    teams: normalizeNoticeTeams(data.teams),
     title: data.title,
     content: data.content,
     date: data.createdAt ?? '',
@@ -174,10 +179,20 @@ export function isNoticeNotFoundError(error: unknown): boolean {
   return (response as { status?: unknown }).status === 404
 }
 
-function normalizeNoticeCategory(value: unknown) {
-  if (typeof value !== 'string' || !value.trim()) return '미분류'
+// 서버가 팀 배열을 주지 않거나 형식이 어긋나면 전체 공개(빈 배열)로 본다.
+function normalizeNoticeTeams(value: unknown): NoticeQueryAllRuntimeTeam[] {
+  if (!Array.isArray(value)) return []
 
-  return value.trim().toUpperCase() === 'ALL' ? '전체' : value
+  return value.filter(isNoticeQueryAllRuntimeTeam)
+}
+
+function isNoticeQueryAllRuntimeTeam(
+  value: unknown,
+): value is NoticeQueryAllRuntimeTeam {
+  if (typeof value !== 'object' || value === null) return false
+
+  const team = value as Record<string, unknown>
+  return typeof team.id === 'number' && typeof team.name === 'string'
 }
 
 function isNoticeQueryAllResponse(

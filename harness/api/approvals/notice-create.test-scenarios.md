@@ -6,7 +6,7 @@
 - Mock request: `POST /api/notice`
 - Request headers: `Content-Type: application/json`, `Authorization: Bearer ...`
 - Request body:
-  `{"title":"API 생성 공지","kind":"ALL","content":"API 생성 내용","files":[]}`
+  `{"title":"API 생성 공지","teamIds":[],"content":"API 생성 내용","files":[]}`
 - Mock response: HTTP 201, response body 없음
 - 후속 Mock request: `GET /api/notice?page=0&size=10`
 - 후속 Mock response: 생성된 공지를 포함한 HTTP 200 목록
@@ -23,7 +23,7 @@
   `{"fileKey":"notice-key.pdf"}`
 - Mock request: `POST /api/notice`
 - Request body:
-  `{"title":"첨부 공지","kind":"ALL","content":"첨부 내용","files":["notice-key.pdf"]}`
+  `{"title":"첨부 공지","teamIds":[],"content":"첨부 내용","files":["notice-key.pdf"]}`
 - 사용자 동작: 파일 하나와 유효한 제목·내용을 입력하고 생성 submit
 - 기대 결과: 파일 업로드 성공 뒤 NOTICE_CREATE가 한 번 호출되고 fileKey 배열
   포함, 성공 이동
@@ -81,3 +81,15 @@
 - loading/error/success 상태가 숨겨지지 않음
 - 실패 시 localStorage mock 생성으로 fallback하지 않음
 - Staging 실제 서버 테스트는 실행하지 않음
+
+## Mock S7 — 여러 팀 선택 (2026-09-18 추가)
+
+- 목적: 고른 팀들의 id를 `teamIds`로 보낸다(Swagger 기준 Contract).
+- 선행 Mock request: `GET /api/team` → `[{id:1,"동물 관리팀"},{id:2,"창고팀"},{id:3,"사육팀"}]`
+- Mock request: `POST /api/notice`
+- Request body:
+  `{"title":"팀 공지","teamIds":[1,3],"content":"팀 공지 내용","files":[]}`
+- Mock response: HTTP 201, response body 없음
+- 사용자 동작: `동물 관리팀`, `사육팀` 체크 후 제목·내용 입력, `생성하기` 클릭
+- 기대 결과: request `teamIds`가 `[1, 3]`, 목록으로 이동
+- 테스트: `tests/e2e/api/notice-create.spec.ts` S6

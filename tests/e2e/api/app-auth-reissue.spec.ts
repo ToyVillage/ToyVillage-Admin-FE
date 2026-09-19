@@ -334,7 +334,7 @@ function fulfillNoticeList(route: Route) {
         {
           id: 7,
           title: '재발급 대상 공지',
-          kind: 'ALL',
+          teams: [],
           createdAt: '2026-08-01',
         },
       ],

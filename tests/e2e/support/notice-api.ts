@@ -7,29 +7,39 @@ import type { Page, Route } from '@playwright/test'
 export const noticeListPattern = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 export const noticeItemPattern = /^https:\/\/[^/]+\/notice\/([^/?]+)(?:\?.*)?$/
 
+export interface MockNoticeTeam {
+  id: number
+  name: string
+}
+
 export interface MockNotice {
   id: number
   title: string
-  kind: string
+  /** 전체 공개는 빈 배열(#147) */
+  teams: MockNoticeTeam[]
   content: string
   /** YYYY-MM-DD */
   createAt: string
   files: { fileName: string; fileKey: string }[]
 }
 
+// 팀 목록 mock(mockTeamList)은 id를 1부터 매긴다. 목록에 없는 팀도 되도록 겹치지 않게 둔다.
+const team1: MockNoticeTeam = { id: 101, name: '팀이름 1' }
+const team2: MockNoticeTeam = { id: 102, name: '팀이름 2' }
+
 // 최신순: 1 → 6. 한 페이지 4건이라 2페이지는 5·6 이다.
 export function createMockNotices(): MockNotice[] {
   return [
-    notice(1, '7월 13일 휴관안내', 'ALL', '2026-07-06', [
+    notice(1, '7월 13일 휴관안내', [], '2026-07-06', [
       '당일 지침.pdf',
       '휴관안내.png',
       '휴관안내.jpg',
     ]),
-    notice(2, '신규 프로그램 오픈 안내', '팀이름 1', '2026-07-05'),
-    notice(3, '주차장 이용 변경 공지', 'ALL', '2026-07-04'),
-    notice(4, '여름 운영시간 안내', '팀이름 2', '2026-07-03'),
-    notice(5, '시설 점검 일정 공지', 'ALL', '2026-07-02'),
-    notice(6, '사육사 교육 일정', '팀이름 1', '2026-07-01'),
+    notice(2, '신규 프로그램 오픈 안내', [team1], '2026-07-05'),
+    notice(3, '주차장 이용 변경 공지', [], '2026-07-04'),
+    notice(4, '여름 운영시간 안내', [team2], '2026-07-03'),
+    notice(5, '시설 점검 일정 공지', [], '2026-07-02'),
+    notice(6, '사육사 교육 일정', [team1], '2026-07-01'),
   ]
 }
 
@@ -57,10 +67,10 @@ export async function mockNoticeApi(
     const size = Number(url.searchParams.get('size') ?? '10')
     const notices = store
       .slice((pageNumber - 1) * size, pageNumber * size)
-      .map(({ id, title, kind, createAt }) => ({
+      .map(({ id, title, teams, createAt }) => ({
         id,
         title,
-        kind,
+        teams,
         createdAt: createAt,
       }))
     await json(route, 200, {
@@ -109,14 +119,14 @@ export async function mockNoticeApi(
 function notice(
   id: number,
   title: string,
-  kind: string,
+  teams: MockNoticeTeam[],
   createAt: string,
   fileNames: string[] = [],
 ): MockNotice {
   return {
     id,
     title,
-    kind,
+    teams,
     content: `그냥 더미 텍스트 입니다. (${title})`,
     createAt,
     files: fileNames.map((fileName, index) => ({

@@ -56,7 +56,7 @@ test('S1: 파일 하나를 multipart로 업로드하고 fileKey를 공지 생성
   expect(uploadRequestBody).toContain('filename="notice.pdf"')
   expect(noticeRequestBody).toEqual({
     title: '첨부 공지',
-    kind: 'ALL',
+    teamIds: [],
     content: '첨부 내용',
     files: ['notice-key.pdf'],
   })
@@ -104,7 +104,7 @@ test('S2: 여러 파일을 요청당 하나씩 순서대로 업로드한다', as
   expect(uploadBodies[1].match(/name="files"/g)).toHaveLength(1)
   expect(noticeRequestBody).toEqual({
     title: '다중 첨부 공지',
-    kind: 'ALL',
+    teamIds: [],
     content: '다중 첨부 내용',
     files: ['file-key-1', 'file-key-2'],
   })
@@ -306,7 +306,7 @@ async function fulfillNoticeList(route: Route, title: string) {
       {
         id: 7,
         title,
-        kind: '공지사항 분류',
+        teams: [],
         createAt: '2026-07-28',
       },
     ]),

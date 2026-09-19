@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
+import { mockTeamList } from '../support/team-api'
 
 const noticeApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
@@ -40,7 +41,7 @@ test('S1: JSON body로 공지를 한 번 생성하고 갱신된 목록으로 이
   expect(createRequestHeaders.authorization).toMatch(/^Bearer /)
   expect(createRequestBody).toEqual({
     title: 'API 생성 공지',
-    kind: 'ALL',
+    teamIds: [],
     content: 'API 생성 내용',
     files: [],
   })
@@ -133,6 +134,35 @@ test('S5: 실제 서버의 HTTP 200도 생성 성공으로 처리한다', async 
   )
 })
 
+test('S6: 고른 팀들의 id를 teamIds로 보낸다', async ({ page }) => {
+  let createRequestBody: unknown
+
+  await mockTeamList(page, ['동물 관리팀', '창고팀', '사육팀'])
+  await page.route(noticeApiPath, async (route) => {
+    if (route.request().method() === 'POST') {
+      createRequestBody = route.request().postDataJSON()
+      await route.fulfill({ status: 201, body: '' })
+      return
+    }
+
+    await fulfillNoticeList(route, '팀 공지')
+  })
+
+  await page.goto('/notices/list/create')
+  await page.getByRole('checkbox', { name: '동물 관리팀' }).check()
+  await page.getByRole('checkbox', { name: '사육팀' }).check()
+  await fillNotice(page, '팀 공지', '팀 공지 내용')
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  await expect(page).toHaveURL(/\/notices\/list$/)
+  expect(createRequestBody).toEqual({
+    title: '팀 공지',
+    teamIds: [1, 3],
+    content: '팀 공지 내용',
+    files: [],
+  })
+})
+
 async function fillNotice(page: Page, title: string, content: string) {
   await page.getByLabel(/제목/).fill(title)
   await page.getByLabel(/내용/).fill(content)
@@ -172,7 +202,7 @@ async function fulfillNoticeList(route: Route, title: string) {
         {
           id: 7,
           title,
-          kind: '공지사항 분류',
+          teams: [],
           createdAt: '2026-07-28',
         },
       ],

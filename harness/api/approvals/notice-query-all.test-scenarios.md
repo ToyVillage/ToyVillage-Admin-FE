@@ -4,7 +4,7 @@
 
 - 목적: API 결과를 기존 테이블에 표시한다.
 - Mock request: `GET /api/notice?page=1&size=10`
-- Mock response: HTTP 200, `{ "notices": [{ id, title, kind, createdAt }], "totalPageSize": 1 }`
+- Mock response: HTTP 200, `{ "notices": [{ id, title, teams: [{id:1,"동물 관리팀"}], createdAt }], "totalPageSize": 1 }`
 - 사용자 동작: `/notices/list` 진입
 - 기대 결과: 요청 query `page=1`, `size=10` 확인, 제목·분류·날짜 표시, 추가 페이지 요청 없음
 
@@ -63,3 +63,14 @@
 - Mock 시나리오는 실제 서버 요청 없음
 - 승인 Contract 밖의 필드 없음
 - loading/error/success 상태가 숨겨지지 않음
+
+## Mock S7 — 여러 팀 공지의 탭 필터 (2026-09-18 추가)
+
+- 목적: `teams`가 여러 개인 공지가 각 팀 탭에 모두 나오고, 분류 칸에 팀 이름을 이어 표시한다. `teams`가 비면 `전체`.
+- 선행 Mock request: `GET /api/team` → `동물 관리팀`, `창고팀`
+- Mock request: `GET /api/notice?page=1&size=10`
+- Mock response: `두 팀 공지`(teams 2개), `전체 공지`(teams 빈 배열)
+- 사용자 동작: `창고팀` 탭 클릭 → `동물 관리팀` 탭 클릭
+- 기대 결과: 첫 행 분류 `동물 관리팀, 창고팀`, 두 탭 모두 `두 팀 공지` 1건만 표시
+- 비고: 서버 `teamId` 필터는 쓰지 않는다. 목록은 전체를 받아 프론트에서 거른다(검색·정렬·페이지가 전체 기준이라 기존 구조 유지).
+- 테스트: `tests/e2e/api/notice-query-all.spec.ts` S7

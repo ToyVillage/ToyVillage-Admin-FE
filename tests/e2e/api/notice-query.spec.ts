@@ -16,7 +16,9 @@ test('S1: route ID로 상세 조회하고 읽기 전용 상세에 표시한다',
   await expect(
     page.getByText('API에서 조회한 공지사항 내용입니다.'),
   ).toBeVisible()
-  await expect(page.getByText('공지사항 분류', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('동물 관리팀, 창고팀', { exact: true }),
+  ).toBeVisible()
   await expect(page.getByText('2026.07.28')).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'notice.pdf 다운로드' }),
@@ -113,7 +115,10 @@ async function mockNoticeDetail(page: Page, requestURLs: string[]) {
       body: JSON.stringify({
         id: 7,
         title: 'API 상세 공지',
-        kind: '공지사항 분류',
+        teams: [
+          { id: 1, name: '동물 관리팀' },
+          { id: 2, name: '창고팀' },
+        ],
         content: 'API에서 조회한 공지사항 내용입니다.',
         createdAt: '2026-07-28',
         files: [

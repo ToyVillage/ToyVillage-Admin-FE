@@ -7,7 +7,9 @@
   "authentication": {
     "required": true,
     "type": "Bearer",
-    "roles": ["ADMIN"]
+    "roles": [
+      "ADMIN"
+    ]
   },
   "contentType": "application/json",
   "headers": [
@@ -20,7 +22,9 @@
       "default": null,
       "example": "Bearer <access-token>",
       "description": "Bearer access token",
-      "constraints": ["Bearer scheme"]
+      "constraints": [
+        "Bearer scheme"
+      ]
     }
   ],
   "pathParameters": [],
@@ -40,18 +44,21 @@
         "constraints": []
       },
       {
-        "name": "kind",
+        "name": "teamIds",
         "location": "body",
-        "type": "enum",
+        "type": "array<integer>",
         "required": true,
         "nullable": false,
         "default": null,
-        "example": "ALL",
-        "description": "공지사항 분류",
-        "constraints": [
-          "백엔드 enum ALL(kindName: \"전체\") 확인 후 ALL 단일 값 고정"
+        "example": [
+          1,
+          2
         ],
-        "allowedValues": ["ALL"]
+        "description": "공지를 보여줄 팀 ID 목록(팀 조회 API의 id). 전체 공개는 빈 배열로 보낸다.",
+        "constraints": [
+          "int64 배열",
+          "Swagger 기준(2026-09-18): 존재하지 않는 팀 ID가 있으면 404 TEAM_NOT_FOUND"
+        ]
       },
       {
         "name": "content",
@@ -71,16 +78,26 @@
         "required": true,
         "nullable": false,
         "default": null,
-        "example": ["file-key-1"],
+        "example": [
+          "file-key-1"
+        ],
         "description": "FILE_CREATE 응답 fileKey 목록",
-        "constraints": ["첨부파일이 없으면 빈 배열"]
+        "constraints": [
+          "첨부파일이 없으면 빈 배열"
+        ]
       }
     ],
     "example": {
       "title": "공지사항 제목",
-      "kind": "ALL",
+      "teamIds": [
+        1,
+        2
+      ],
       "content": "공지사항 내용",
-      "files": ["file-key-1", "file-key-2"]
+      "files": [
+        "file-key-1",
+        "file-key-2"
+      ]
     }
   },
   "responses": {
@@ -213,11 +230,11 @@
       },
       {
         "status": 404,
-        "description": "존재하지 않는 공지사항 분류",
+        "description": "존재하지 않는 팀",
         "body": {
           "type": "object",
           "nullable": false,
-          "description": "공지사항 분류 없음 오류",
+          "description": "팀 없음 오류",
           "fields": [
             {
               "name": "message",
@@ -226,7 +243,7 @@
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "존재하지 않는 공지사항 분류 항목입니다.",
+              "example": "존재하지 않는 팀입니다.",
               "description": "오류 메시지",
               "constraints": []
             },
@@ -339,7 +356,9 @@
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": ["ADMIN"]
+        "roles": [
+          "ADMIN"
+        ]
       }
     },
     "detailValues": {
@@ -349,8 +368,15 @@
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": ["ADMIN"]
+        "roles": [
+          "ADMIN"
+        ]
       }
+    },
+    "swagger": {
+      "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs/app",
+      "checkedAt": "2026-09-18T15:30:00+09:00",
+      "note": "Notion 명세(2026-09-18 04:53 최신 갱신본)는 여전히 kind(enum, ALL 고정) 기준이라 staging 실제 배포(teamIds/teams)와 어긋난다. 사용자 결정(2026-09-18)으로 Swagger(staging 실제 서버)를 근거로 Contract를 갱신했다. Notion 갱신은 별도로 요청한다."
     }
   }
 }

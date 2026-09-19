@@ -2,14 +2,17 @@
 
 ## Source
 
-- API ID 검색 결과: exact match 1건
+- API ID 검색 결과: exact match 1건(Notion, 2026-09-18 04:53 최신 갱신본)
 - Notion database: `https://app.notion.com/p/392bfdfeff94801597c3e8a1d2173825`
-- Notion data source: `collection://392bfdfe-ff94-8042-bc6e-000bcd5da71f`
-- Resolved page: `https://app.notion.com/p/392bfdfeff94803d8009ca9ec7920250`
-- Requested page: `https://app.notion.com/p/392bfdfeff94803d8009ca9ec7920250`
-- Checked at: `2026-07-28T15:29:24+09:00`
-- Backend implementation:
-  `https://github.com/ToyVillage/ToyVillage-WebSite-BE/pull/94`
+- Resolved page: `https://app.notion.com/p/ca77a4d614748259bd558101afbd5065`
+- Checked at: `2026-09-18T15:30:00+09:00`
+- **Swagger(실제 staging 서버) 재확인**: `https://api-stag.toyvillage.kr/v3/api-docs/app` (`NoticeDetailResponse`), checked `2026-09-18T15:30:00+09:00`
+
+## ⚠️ Notion과 Swagger 불일치 (사용자 결정으로 Swagger 채택)
+
+- Notion은 여전히 `kind`(string)로 남아 있다.
+- Swagger(staging 실제 배포)는 `teams: {id, name}[]`를 준다.
+- 2026-09-18 사용자 결정: Swagger를 근거로 Contract를 갱신한다.
 
 ## Basic Information
 
@@ -55,7 +58,7 @@
 {
   "id": 1,
   "title": "공지사항 제목",
-  "kind": "공지사항 분류",
+  "teams": [{ "id": 1, "name": "동물 관리팀" }],
   "content": "공지사항 내용",
   "createdAt": "2026-07-04",
   "files": [
@@ -68,8 +71,8 @@
 ```
 
 - 응답 객체와 모든 필드는 required, nullable false
+- `teams`는 전체 공개면 빈 배열이다. 각 항목의 `id`, `name`은 required non-null
 - `files` 각 항목의 `fileName`, `fileKey`는 required, nullable false string
-- `kind` Allowed Values는 사용자 결정에 따라 임시로 `공지사항 분류` 하나만 고정
 
 ## Error Responses
 
@@ -87,12 +90,9 @@
 
 ## Notes
 
-- Notion 누락값은 2026-07-28 사용자 결정으로 `notice-query-all` 승인 조건과 동일하게 동결했다.
-- HTTP 500 예시의 불필요한 backtick은 문서 오타로 무시한다.
-- Notion의 `createAt`과 첨부 누락은 백엔드 PR #94의 현재
-  `NoticeDetailResponse`와 불일치한다. 프론트는 `createdAt`과
-  `files: FileResponse[]`를 사용한다.
+- 2026-07-28 동결분(`createAt`→`createdAt`, `files: FileResponse[]` 등 PR #94 실제 응답 반영)은 그대로 유지한다.
+- `kind` → `teams` 변경만 2026-09-18 Swagger 재확인으로 갱신했다.
 
 ## Backend Questions
 
-1. `kind`의 실제 전체 enum 값
+- Notion `NOTICE_QUERY` 문서를 `teams: {id, name}[]` 기준으로 갱신 요청.

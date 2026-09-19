@@ -78,19 +78,45 @@
               "constraints": []
             },
             {
-              "name": "kind",
+              "name": "teams",
               "location": "response",
-              "type": "enum",
+              "type": "array<object>",
               "required": true,
               "nullable": false,
               "default": null,
-              "example": "공지사항 분류",
-              "description": "공지사항 분류",
-              "constraints": [
-                "사용자 결정으로 임시 단일 값 고정"
+              "example": [
+                {
+                  "id": 1,
+                  "name": "동물 관리팀"
+                }
               ],
-              "allowedValues": [
-                "공지사항 분류"
+              "description": "공지가 속한 팀 목록. 전체 공개면 빈 배열",
+              "constraints": [
+                "각 항목은 required non-null number id, string name을 포함"
+              ],
+              "fields": [
+                {
+                  "name": "id",
+                  "location": "response",
+                  "type": "number",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": 1,
+                  "description": "팀 ID",
+                  "constraints": []
+                },
+                {
+                  "name": "name",
+                  "location": "response",
+                  "type": "string",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "동물 관리팀",
+                  "description": "팀 이름",
+                  "constraints": []
+                }
               ]
             },
             {
@@ -399,6 +425,11 @@
           "ADMIN"
         ]
       }
+    },
+    "swagger": {
+      "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs/app",
+      "checkedAt": "2026-09-18T15:30:00+09:00",
+      "note": "Notion 명세(2026-09-18 04:53 최신 갱신본)는 여전히 kind(enum, ALL 고정) 기준이라 staging 실제 배포(teamIds/teams)와 어긋난다. 사용자 결정(2026-09-18)으로 Swagger(staging 실제 서버)를 근거로 Contract를 갱신했다. Notion 갱신은 별도로 요청한다."
     }
   }
 }

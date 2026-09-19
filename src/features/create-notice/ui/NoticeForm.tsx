@@ -5,7 +5,7 @@ import { uploadFile } from '@/entities/file'
 import {
   createNotice,
   type Notice,
-  type UpdateNoticeInput,
+  type NoticeTeam,
   updateNotice,
 } from '@/entities/notice'
 import { getTeams } from '@/entities/team'
@@ -19,6 +19,14 @@ const validationMessages: Record<FieldName, string> = {
 }
 
 const defaultCategory = '전체'
+
+interface NoticeFormInput {
+  /** 선택한 팀 id. 비어 있으면 `전체`다. */
+  teamIds: number[]
+  title: string
+  content: string
+  attachments: string[]
+}
 
 interface NoticeFormProps {
   initialNotice?: Notice
@@ -35,7 +43,10 @@ export function NoticeForm({
   const submittingRef = useRef(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
-  const initialCategory = initialNotice?.category ?? defaultCategory
+  const initialTeamIds = useMemo(
+    () => initialNotice?.teams.map((team) => team.id) ?? [],
+    [initialNotice],
+  )
   const initialAttachmentNames = useMemo(
     () => initialNotice?.attachments ?? [],
     [initialNotice?.attachments],
@@ -47,28 +58,26 @@ export function NoticeForm({
     queryKey: ['teams', 'list'],
     queryFn: getTeams,
   })
-  const categories = useMemo(() => {
-    const teamNames = teamsQuery.data?.map((team) => team.name) ?? []
-    // 수정 화면의 기존 분류가 팀 목록에 없더라도 선택 상태는 보여준다.
-    return [...new Set([defaultCategory, initialCategory, ...teamNames])]
-  }, [initialCategory, teamsQuery.data])
-  // 분류는 여러 팀을 고를 수 있다. `전체` 와 팀은 함께 고를 수 없고,
-  // 모두 해제하면 `전체` 로 돌아간다(선택 없는 상태를 두지 않는다).
-  const [selectedCategories, setSelectedCategories] = useState([
-    initialCategory,
-  ])
+  // 팀은 id로 구분한다. 이름이 같은 팀이 있어도 따로 고를 수 있다.
+  const teams = useMemo(() => {
+    const byId = new Map<number, NoticeTeam>()
+    // 수정 화면의 기존 팀이 팀 목록에 없더라도 선택 상태는 보여준다.
+    for (const team of initialNotice?.teams ?? []) byId.set(team.id, team)
+    for (const team of teamsQuery.data ?? []) {
+      byId.set(team.id, { id: team.id, name: team.name })
+    }
+    return [...byId.values()]
+  }, [initialNotice?.teams, teamsQuery.data])
+  // 분류는 여러 팀을 고를 수 있다. 팀을 하나도 고르지 않은 상태가 `전체` 다.
+  // `전체` 를 고르면 팀 선택이 모두 풀리고, 팀을 모두 해제하면 `전체` 로 돌아간다.
+  const [selectedTeamIds, setSelectedTeamIds] = useState(initialTeamIds)
 
-  function toggleCategory(option: string) {
-    setSelectedCategories((previous) => {
-      if (option === defaultCategory) return [defaultCategory]
-
-      const withoutAll = previous.filter((name) => name !== defaultCategory)
-      const next = withoutAll.includes(option)
-        ? withoutAll.filter((name) => name !== option)
-        : [...withoutAll, option]
-
-      return next.length > 0 ? next : [defaultCategory]
-    })
+  function toggleTeam(teamId: number) {
+    setSelectedTeamIds((previous) =>
+      previous.includes(teamId)
+        ? previous.filter((id) => id !== teamId)
+        : [...previous, teamId],
+    )
   }
   const [title, setTitle] = useState(initialNotice?.title ?? '')
   const [content, setContent] = useState(initialNotice?.content ?? '')
@@ -77,13 +86,13 @@ export function NoticeForm({
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
   const [validationError, setValidationError] = useState<FieldName | null>(null)
   const mutation = useMutation({
-    mutationFn: async (input: UpdateNoticeInput) => {
+    mutationFn: async (input: NoticeFormInput) => {
       if (initialNotice) {
         await updateNotice({
           id: Number(initialNotice.id),
           input: {
             title: input.title,
-            kind: 'ALL',
+            teamIds: input.teamIds,
             content: input.content,
           },
         })
@@ -98,7 +107,7 @@ export function NoticeForm({
 
       await createNotice({
         title: input.title,
-        kind: 'ALL',
+        teamIds: input.teamIds,
         content: input.content,
         files,
       })
@@ -110,20 +119,20 @@ export function NoticeForm({
     const isDirty = Boolean(
       title !== (initialNotice?.title ?? '') ||
       content !== (initialNotice?.content ?? '') ||
-      !sameStringArray(selectedCategories, [initialCategory]) ||
+      !sameArray(selectedTeamIds, initialTeamIds) ||
       (isEditing
-        ? !sameStringArray(attachmentNames, initialAttachmentNames)
+        ? !sameArray(attachmentNames, initialAttachmentNames)
         : hasAttachments),
     )
 
     onDirtyChange(isDirty)
   }, [
     attachmentNames,
-    selectedCategories,
+    selectedTeamIds,
     content,
     hasAttachments,
     initialAttachmentNames,
-    initialCategory,
+    initialTeamIds,
     initialNotice,
     isEditing,
     onDirtyChange,
@@ -148,10 +157,8 @@ export function NoticeForm({
     event.preventDefault()
     if (submittingRef.current) return
 
-    const input: UpdateNoticeInput = {
-      // 서버는 아직 분류를 하나만 받아 `kind: 'ALL'` 로 보낸다(#147).
-      // 화면이 고른 팀은 여기에 모아만 둔다.
-      category: selectedCategories.join(', '),
+    const input: NoticeFormInput = {
+      teamIds: selectedTeamIds,
       title: title.trim(),
       content: content.trim(),
       attachments: attachmentNames,
@@ -198,17 +205,29 @@ export function NoticeForm({
       <CategoryCard aria-required="true">
         <CategoryLegend>분류</CategoryLegend>
         <CategoryOptions>
-          {categories.map((option) => (
-            <CategoryOption key={option}>
+          <CategoryOption>
+            <CategorySelectLabel>
+              <CategoryCheckbox
+                type="checkbox"
+                name="notice-category"
+                value="all"
+                checked={selectedTeamIds.length === 0}
+                onChange={() => setSelectedTeamIds([])}
+              />
+              <CategoryPill>{defaultCategory}</CategoryPill>
+            </CategorySelectLabel>
+          </CategoryOption>
+          {teams.map((team) => (
+            <CategoryOption key={team.id}>
               <CategorySelectLabel>
                 <CategoryCheckbox
                   type="checkbox"
                   name="notice-category"
-                  value={option}
-                  checked={selectedCategories.includes(option)}
-                  onChange={(event) => toggleCategory(event.target.value)}
+                  value={team.id}
+                  checked={selectedTeamIds.includes(team.id)}
+                  onChange={() => toggleTeam(team.id)}
                 />
-                <CategoryPill>{categoryDisplayName(option)}</CategoryPill>
+                <CategoryPill>{categoryDisplayName(team.name)}</CategoryPill>
               </CategorySelectLabel>
             </CategoryOption>
           ))}
@@ -285,13 +304,13 @@ export function NoticeForm({
   )
 }
 
-function validate(input: UpdateNoticeInput): FieldName | null {
+function validate(input: NoticeFormInput): FieldName | null {
   if (!input.title) return 'title'
   if (!input.content) return 'content'
   return null
 }
 
-function sameStringArray(left: string[], right: string[]) {
+function sameArray<T>(left: T[], right: T[]) {
   return (
     left.length === right.length &&
     left.every((value, index) => value === right[index])

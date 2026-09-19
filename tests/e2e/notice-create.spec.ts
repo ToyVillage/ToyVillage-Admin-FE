@@ -495,7 +495,7 @@ async function mockSuccessfulNoticeCreate(page: Page, title: string) {
           {
             id: 7,
             title,
-            kind: '공지사항 분류',
+            teams: [],
             createdAt: '2026-07-28',
           },
         ],

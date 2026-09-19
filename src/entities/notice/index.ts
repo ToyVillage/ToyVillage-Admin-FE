@@ -1,19 +1,19 @@
-export type {
-  CreateNoticeInput,
-  Notice,
-  NoticeAttachmentFile,
-  NoticeListItem,
-  UpdateNoticeInput,
+export {
+  noticeCategoryLabel,
+  type CreateNoticeInput,
+  type Notice,
+  type NoticeAttachmentFile,
+  type NoticeListItem,
+  type NoticeTeam,
+  type UpdateNoticeInput,
 } from './model/types'
 export type {
   NoticeCreateErrorResponse,
-  NoticeCreateKind,
   NoticeCreateRequest,
   NoticeCreateResponse,
   NoticeDeleteErrorResponse,
   NoticeDeleteRequest,
   NoticeDeleteResponse,
-  NoticeKind,
   NoticeQueryErrorResponse,
   NoticeQueryFileResponse,
   NoticeQueryAllErrorResponse,
@@ -22,8 +22,8 @@ export type {
   NoticeQueryAllResponseItem,
   NoticeQueryRequest,
   NoticeQueryResponse,
+  NoticeTeamResponse,
   NoticeUpdateErrorResponse,
-  NoticeUpdateKind,
   NoticeUpdateRequest,
   NoticeUpdateResponse,
 } from './api/types'
@@ -36,15 +36,4 @@ export {
   isNoticeNotFoundError,
   updateNotice,
 } from './api/noticeApi'
-export {
-  createMockNotice,
-  deleteMockNotice,
-  deletedNoticeStorageKey,
-  getMockNotice,
-  getMockNotices,
-  mockNotices,
-  noticeCategories,
-  noticeStorageKey,
-  updateMockNotice,
-} from './model/mock'
 export { NoticeTable } from './ui/NoticeTable'
