@@ -52,6 +52,19 @@ export function TimeSegment({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [time])
 
+  // 키 입력 외의 경로(붙여넣기·드래그&드롭·음성 입력·Delete 로 비우기)도 값에 반영한다.
+  // 숫자 키 입력은 keydown 에서 막으므로 여기로 오지 않는다.
+  function handleChange(part: 'hour' | 'minute', raw: string) {
+    const digits = raw.replace(/\D/g, '').slice(0, 2).padStart(2, '0')
+    const next =
+      part === 'hour' ? digits + padded.slice(2, 4) : padded.slice(0, 2) + digits
+
+    // 범위를 벗어난 값(24시·60분)은 반영하지 않는다.
+    if (Number(next.slice(0, 2)) > 23 || Number(next.slice(2, 4)) > 59) return
+
+    onTimeChange(next)
+  }
+
   function handleKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
     if (/^[0-9]$/.test(event.key)) {
       event.preventDefault()
@@ -89,7 +102,7 @@ export function TimeSegment({
         aria-label={`${ariaPrefix} 시`}
         aria-describedby={errorId}
         onKeyDown={handleKeyDown}
-        onChange={() => {}}
+        onChange={(event) => handleChange('hour', event.target.value)}
         onFocus={focusActiveSlot}
       />
       <Colon aria-hidden="true" $muted={muted}>
@@ -105,7 +118,7 @@ export function TimeSegment({
         aria-label={`${ariaPrefix} 분`}
         aria-describedby={errorId}
         onKeyDown={handleKeyDown}
-        onChange={() => {}}
+        onChange={(event) => handleChange('minute', event.target.value)}
         onFocus={focusActiveSlot}
       />
     </Segment>
