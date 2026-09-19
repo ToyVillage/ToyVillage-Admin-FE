@@ -41,8 +41,12 @@ type DeleteTarget =
 // 관찰은 앱에서 작성하므로 등록 버튼이 없다. 관찰 수정·삭제와 개체 수정·삭제는 케밥이 맡는다.
 export function IndividualDetailPage() {
   const location = useLocation()
-  // 종 상세에서 넘어왔다면 그때의 개체 목록 조회 조건(검색어·페이지)으로 돌아간다.
-  const listState = location.state as { listSearch?: string } | null
+  // 종 상세에서 넘어왔다면 그때의 개체 목록 조회 조건(검색어·페이지)으로 돌아가고,
+  // 종 상세가 다시 종 목록으로 돌아갈 수 있게 종 목록 조건도 함께 돌려준다.
+  const listState = location.state as {
+    individualListSearch?: string
+    speciesListSearch?: string
+  } | null
   const { speciesId = '', individualId = '' } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -255,7 +259,8 @@ export function IndividualDetailPage() {
     <Page>
       <Content>
         <BackLink
-          to={`/species/${speciesId}${listState?.listSearch ?? ''}`}
+          to={`/species/${speciesId}${listState?.individualListSearch ?? ''}`}
+          state={{ speciesListSearch: listState?.speciesListSearch }}
         />
 
         <ProfileSection>

@@ -54,8 +54,13 @@ export function SpeciesDetailPage() {
   const keyword = values.keyword
   const page = readPageParam(new URLSearchParams({ page: values.page }))
   const [query, setQuery] = useState(keyword)
-  const listState = location.state as { listSearch?: string } | null
-  const speciesListPath = `/species${listState?.listSearch ?? ''}`
+  // 종 목록에서 받은 조회 조건(`speciesListSearch`)은 이 화면의 뒤로가기에 쓰고,
+  // 개체 상세로 갈 때 함께 넘겨 돌아올 때 두 단계가 모두 복원되게 한다.
+  const listState = location.state as {
+    speciesListSearch?: string
+  } | null
+  const speciesListSearch = listState?.speciesListSearch ?? ''
+  const speciesListPath = `/species${speciesListSearch}`
 
   function setPage(next: number) {
     update({ page: String(next) })
@@ -207,7 +212,7 @@ export function SpeciesDetailPage() {
       <PageStatus
         state="not-found"
         message="종을 찾을 수 없습니다."
-        linkTo="/species"
+        linkTo={speciesListPath}
         linkLabel="목록으로 돌아가기"
       />
     )
@@ -219,7 +224,7 @@ export function SpeciesDetailPage() {
       <PageStatus
         state="not-found"
         message="종을 찾을 수 없습니다."
-        linkTo="/species"
+        linkTo={speciesListPath}
         linkLabel="목록으로 돌아가기"
       />
     )
@@ -299,7 +304,10 @@ export function SpeciesDetailPage() {
             individuals={individuals}
             onRowClick={(id) =>
               navigate(`/species/${speciesId}/individuals/${id}`, {
-                state: { listSearch: location.search },
+                state: {
+                  individualListSearch: location.search,
+                  speciesListSearch,
+                },
               })
             }
             search={{
