@@ -24,6 +24,8 @@ export interface NoticeUpdateRequest {
   title: string
   teamIds: number[]
   content: string
+  /** 수정 후 남길 첨부 전체의 fileKey. 첨부가 없으면 빈 배열(#164, Swagger 2026-09-19 확인) */
+  files: string[]
 }
 
 export interface NoticeUpdateResponse {

@@ -33,7 +33,8 @@ export interface UpdateNoticeInput {
   teamIds: number[]
   title: string
   content: string
-  attachments?: string[]
+  /** 수정 후 남길 첨부 전체의 fileKey */
+  files: string[]
 }
 
 /** 공지 목록·상세 화면에 보여줄 분류 문구. 빈 배열이면 `전체`. */
