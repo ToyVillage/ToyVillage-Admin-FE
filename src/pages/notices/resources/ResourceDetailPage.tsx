@@ -10,6 +10,7 @@ import {
 import { getDocument } from '@/entities/resource'
 import { LeaveConfirmationDialog } from '@/shared/ui'
 import { ResourceForm } from '@/features/create-resource'
+import { ResourceEditSkeleton } from './ui/ResourceEditSkeleton'
 
 export function ResourceDetailPage() {
   const { id = '' } = useParams()
@@ -66,13 +67,23 @@ export function ResourceDetailPage() {
     navigate('/notices/resources')
   }, [navigate])
 
-  // 로딩 중에는 빈 폼(수정 레이아웃)을 먼저 보여주고, 데이터가 오면 값이 채워진
-  // 폼으로 교체한다(key 변경으로 재마운트). 별도의 '찾을 수 없음' 화면은 두지 않는다.
+  // 조회 중에는 입력을 막기 위해 폼 대신 스켈레톤을 보인다. 조회 실패는 위 effect 가
+  // 목록으로 되돌린다(별도의 '찾을 수 없음' 화면은 두지 않는다).
+  if (!resource) {
+    return (
+      <Page>
+        <Content>
+          <ResourceEditSkeleton />
+        </Content>
+      </Page>
+    )
+  }
+
   return (
     <Page>
       <Content>
         <ResourceForm
-          key={resource?.id ?? 'loading'}
+          key={resource.id}
           initialResource={resource}
           editing
           onCompleted={handleCompleted}

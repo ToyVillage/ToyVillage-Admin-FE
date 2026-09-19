@@ -13,6 +13,7 @@ import {
   type TaskReportReviewResult,
 } from '@/features/review-task-report'
 import { AttachmentList, BackLink, Toast } from '@/shared/ui'
+import { TaskReportDetailSkeleton } from './ui/TaskReportDetailSkeleton'
 
 // Figma yot 1:7503 `report management`.
 export function TaskReportDetailPage() {
@@ -43,9 +44,11 @@ export function TaskReportDetailPage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">업무보고를 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <TaskReportDetailSkeleton />
+        </Content>
+      </Page>
     )
   }
 

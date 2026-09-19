@@ -16,6 +16,7 @@ import {
   Toast,
 } from '@/shared/ui'
 import { TaskBackLink } from './ui/TaskBackLink'
+import { TaskDetailSkeleton } from './ui/TaskDetailSkeleton'
 
 // `/tasks/:id` — 읽기 전용 업무 상세(Figma `task detail` yot 133:9725).
 // 편집은 `/tasks/:id/edit`, 삭제는 이 화면의 케밥이 맡는다.
@@ -96,9 +97,11 @@ export function TaskDetailPage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">업무를 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <TaskDetailSkeleton />
+        </Content>
+      </Page>
     )
   }
 
