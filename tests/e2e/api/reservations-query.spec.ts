@@ -70,13 +70,13 @@ test('S1: 상세 조회 성공 → 편집 폼 필드에 매핑 값 채움', asyn
   await expect(page.getByLabel('방문일을 선택해주세요')).toHaveValue(
     '2026.07.13',
   )
-  // 24h "13:01:00" → 12h 01 + pm
+  // 24h "13:01:00" → 시 13 / 분 01 (24시간제 그대로)
   await expect(
-    page.getByLabel('방문 시간을 선택해주세요 (입장시간) 시', { exact: true }),
+    page.getByLabel('방문 시간을 선택해주세요 입장시간 시', { exact: true }),
+  ).toHaveValue('13')
+  await expect(
+    page.getByLabel('방문 시간을 선택해주세요 입장시간 분', { exact: true }),
   ).toHaveValue('01')
-  await expect(
-    page.getByLabel('방문 시간을 선택해주세요 (입장시간) 오전/오후'),
-  ).toContainText('pm')
 
   // 요청 path 확인
   expect(requestURLs).toHaveLength(1)
