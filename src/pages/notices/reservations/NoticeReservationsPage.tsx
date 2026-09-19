@@ -61,7 +61,8 @@ export function NoticeReservationsPage() {
         status: reservationStatusToCode[active],
         title: debouncedKeyword || undefined,
         sort: sortToCode[sort],
-        page: page - 1,
+        // 단체예약 목록은 화면과 같은 1-based 로 보낸다(다른 목록은 0-based 다 — 개발자 결정).
+        page,
         size: PAGE_SIZE,
       }),
     placeholderData: (previousData) => previousData,

@@ -9,7 +9,7 @@ export type {
   UpdateSpeciesInput,
 } from './model/types'
 export { taxonGroups } from './model/types'
-export { legalDesignationPresets, taxonGroupLabels } from './model/labels'
+export { taxonGroupLabels } from './model/labels'
 export {
   formatTaxonGroupLine,
   lastSubClassification,

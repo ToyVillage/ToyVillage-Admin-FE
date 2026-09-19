@@ -9,6 +9,7 @@ figma:
     - 1:8610
     - 1:5968
     - 1:7667
+    - 2098:17385
 requires_functional_test: true
 paths: src/pages/notices/reservations/ReservationDetailPage.tsx, src/features/reservation-form, src/entities/reservation
 ---
@@ -19,6 +20,7 @@ paths: src/pages/notices/reservations/ReservationDetailPage.tsx, src/features/re
 
 - Status: Draft (게이트 승인 대기)
 - 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). yot는 상세(`1:6293`, 읽기 전용)와 수정(`1:7846`)을 나눠 두어 "상세를 편집 폼으로 대체"한 이 명세와 다르다. 반영은 #94에서 한다.
+- 2026-09-18: 시간 입력을 `2098:17385`(입장·퇴장 한 박스) + 24시간제 직접 입력으로 교체했다(`reservation-create`와 공용 `ReservationForm`이라 함께 바뀜).
 - 수정(전체 펼침·데이터): yot Figma `1:7846` / 참고(am·pm, 배정, 삭제 확인): `1:8206` / 페이지 권한 검색 결과 없음: `1:8026` / 검증 에러: `1:8610`
 - 진입: 리스트 행 클릭 → `/notices/reservations/:id` (기존 라우트). **기존 읽기 전용 `reservations-detail`(예약정보 카드+페이지 권한 카드)를 이 편집 폼으로 대체한다.**
 - 생성 페이지와 레이아웃 동일(공용 `ReservationForm`). 차이는 (a) 초기값이 조회 데이터로 채워짐 (b) 하단 액션이 `삭제하기`/`저장하기` (c) 페이지 권한 섹션에 배정팀(취소하기)이 채워짐.
@@ -39,7 +41,7 @@ paths: src/pages/notices/reservations/ReservationDetailPage.tsx, src/features/re
 ## 동작 (source of truth)
 
 - 진입 시 `:id`로 예약을 조회해 폼 초기값을 채운다(mock 경계, 기존 `getReservation` 재사용 후보). 로딩 중에는 디자인에 없는 별도 화면 없이 동일 레이아웃의 빈 폼을 유지한다(no-invented-ui).
-- 섹션 접기/펼치기·상태 배지·am/pm·배정 추가/취소는 `reservation-create`와 동일.
+- 섹션 접기/펼치기·상태 배지·시간 입력(24시간제 한 박스)·배정 추가/취소는 `reservation-create`와 동일.
 - `저장하기` 클릭 → 필수값 검증(생성과 동일 인라인 규칙) → 통과 시 mock 저장 → 목록 복귀(`/notices/reservations`).
 - `삭제하기` 클릭 → 삭제 확인 모달(공용 삭제 확인 패턴) → 확인 시 mock 삭제 후 `/notices/reservations`.
 - 페이지 권한 섹션 `취소`/`완료`의 역할은 미결(배정 하위 편집 확정 vs 전체 저장과 중복) — 게이트 확정.

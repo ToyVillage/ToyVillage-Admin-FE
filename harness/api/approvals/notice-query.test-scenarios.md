@@ -4,10 +4,10 @@
 
 - 목적: route ID로 API를 호출하고 읽기 전용 상세 화면에 응답을 표시한다.
 - Mock request: `GET /api/notice/7`
-- Mock response: HTTP 200, `id`, `title`, `kind`, `content`, `createdAt`,
+- Mock response: HTTP 200, `id`, `title`, `teams: [{id:1,"동물 관리팀"},{id:2,"창고팀"}]`, `content`, `createdAt`,
   `files: [{"fileName":"notice.pdf","fileKey":"notice-key.pdf"}]`
 - 사용자 동작: `/notices/list/7` 진입
-- 기대 결과: 요청 path 확인, 제목(heading)·분류·날짜·내용 텍스트와 `notice.pdf 다운로드` 첨부 chip 표시, 편집 입력 없음
+- 기대 결과: 요청 path 확인, 제목(heading)·분류(`동물 관리팀, 창고팀`)·날짜·내용 텍스트와 `notice.pdf 다운로드` 첨부 chip 표시, 편집 입력 없음
 
 ## Mock S5 — 수정 화면 초기값
 

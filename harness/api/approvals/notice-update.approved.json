@@ -1,15 +1,15 @@
 {
   "feature": "notice-update",
   "apiId": "NOTICE_UPDATE",
-  "approvedAt": "2026-09-17T05:05:27.379Z",
+  "approvedAt": "2026-09-19T12:20:55.181Z",
   "approvedBy": "yunho09",
   "taskSpecHash": "62616ff2e22ce40ede3f9bb010522e3b66d3745066c3e6d22324e78bc34961af",
-  "contractHash": "017355d5beef71ebf2377eb2e29c8e3516e7106333f5874d04acbc18ebf3ac73",
-  "contractMarkdownHash": "08c946999ea5a353d96231abc56ff5aa3505c65d6e3ed3bc559d94e1ea774ebf",
-  "planHash": "55d43abb28cf6fa97835a92ab1fd65deacf2154a5159c5b88f4c91bbb286a919",
-  "scenarioHash": "5ac1ba726f93579098b63f165b869d9e946fa09582d3dcfc42e4ff77583a2d4b",
-  "testHash": "d5556d0aeb8cca7df6ecb2127c42bfcfdb4b9fd67e6c3935edb3db495d2bd9cc",
+  "contractHash": "d7d8adbf6cb8b8408cb8cfd10042fc59c46c825158901efa1b5646b2864b0119",
+  "contractMarkdownHash": "d3a961c806c083ff89d79c25afbe667a2e21d7cea0aa0b9dd05391e182a10864",
+  "planHash": "194db03316666182885a040162f8b92aaf2a32b624e8e99218cc2b298d05e498",
+  "scenarioHash": "b3b871054636727aa8ddfafe1e90e518996a33d19bd8086455bbdefb1dfddf7f",
+  "testHash": "5cfe89c953e0497324dbbce5b65a77db3147a4e98792e85747121fd93b9b204a",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T05:09:27.157Z"
+  "testApprovedAt": "2026-09-19T12:22:35.105Z"
 }

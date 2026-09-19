@@ -25,7 +25,7 @@ test('S1: 목록 진입 기본 상태', async ({ page }) => {
   await page.goto('/species')
 
   await expect(page.getByRole('heading', { name: '개체 카드' })).toBeVisible()
-  await expect(page.getByText('토이빌리지의 등록된 개체 목록')).toBeVisible()
+  await expect(page.getByText('토이빌리지의 종 목록')).toBeVisible()
   await expect(tab(page, '전체')).toHaveAttribute('aria-pressed', 'true')
   await expect(headerCells(page)).toHaveText([
     '분류군',
@@ -44,7 +44,7 @@ test('S1: 목록 진입 기본 상태', async ({ page }) => {
 
 test('S2: 등록 버튼 이동', async ({ page }) => {
   await page.goto('/species')
-  await page.getByRole('link', { name: '개체 등록하기' }).click()
+  await page.getByRole('link', { name: '종 등록하기' }).click()
 
   await expect(page).toHaveURL(/\/species\/create$/)
 })
@@ -305,7 +305,7 @@ test('S24: 종이 없는 탭 → 빈 상태', async ({ page }) => {
   await expect(rows(page)).toHaveCount(0)
   await expect(page.getByText('등록된 개체 카드가 없습니다')).toBeVisible()
   await expect(
-    page.getByText('오른쪽 위 [개체 등록하기]로 첫 개체 카드를 추가해주세요'),
+    page.getByText('오른쪽 위 [종 등록하기]로 첫 개체 카드를 추가해주세요'),
   ).toBeVisible()
   await expect(paginationButtons(page)).toHaveCount(0)
 })

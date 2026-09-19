@@ -1,15 +1,15 @@
 {
   "feature": "animal-kind-query-all",
   "apiId": "ANIMAL_KIND_QUERY_ALL",
-  "approvedAt": "2026-09-16T15:20:09.690Z",
+  "approvedAt": "2026-09-18T05:20:05.695Z",
   "approvedBy": "yunho09",
   "taskSpecHash": "43097e63e9bbc13a6cc68622f20d3deacc3b8a282d1258781dbbec68d73307f3",
   "contractHash": "4373c7e8eaa7f6f9da34ae6595719d15eb28642f6112682ca33fb42088f3cf56",
   "contractMarkdownHash": "aeecc774aa79721fbe214e7cf8385ca4572588126bebde99a8be3409238c5c2e",
   "planHash": "96c72c651563a67f34ce469e9128769c72a750f7c9d47fa93adf03197f112178",
   "scenarioHash": "fe3e683eef7da7c9f40b64de09267155d952b534d39c98b2c0ce0051dbcdc25e",
-  "testHash": "3c871eb1a40b831bfb60eca6cdf7d66a85bf0294a6b0f229c6e50ff00bfc11a3",
+  "testHash": "b327c4f65d14bd5f7ae7a4054d3f04d0a66572b39ac88a6ea6d4c164c180b105",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T00:45:01.620Z"
+  "testApprovedAt": "2026-09-18T05:20:05.886Z"
 }

@@ -1,7 +1,12 @@
 import { useEffect } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { Navigate, useLocation, useParams } from 'react-router-dom'
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom'
 import {
   feedQueryKeys,
   FeedHistoryTable,
@@ -11,6 +16,10 @@ import {
   isFeedNotFoundError,
   type AnimalSpecies,
 } from '@/entities/feed'
+import {
+  getIndividualSpeciesId,
+  individualQueryKeys,
+} from '@/entities/individual'
 import { BackLink, SectionHeader } from '@/shared/ui'
 import { FeedDetailSkeleton } from './ui/FeedDetailSkeleton'
 
@@ -19,6 +28,7 @@ const listPath = '/feeds'
 export function FeedDetailPage() {
   const { id = '' } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   // 목록에서 넘어왔다면 그때의 조회 조건(날짜·분류·페이지)으로 돌아간다.
   // 개체 상세에서 넘어왔다면 그 개체 상세로 돌아간다(`backPath`).
   // 분류는 급여 API 가 주지 않아 목록에서 고른 탭을 그대로 받아 뱃지에 쓴다.
@@ -47,6 +57,22 @@ export function FeedDetailPage() {
     enabled: Number.isSafeInteger(feedLogId) && feedLogId > 0,
     retry: false,
   })
+
+  // `관찰 및 특이사항 보러가기` 링크에는 종 id 가 필요한데 급여 응답은 개체 id 만 준다.
+  const animalManageId = feed?.animalManageId
+  const individualId = animalManageId == null ? '' : String(animalManageId)
+  const { data: speciesId } = useQuery({
+    queryKey: individualQueryKeys.speciesId(individualId),
+    queryFn: () =>
+      getIndividualSpeciesId({ animalManageId: Number(individualId) }),
+    enabled: individualId !== '',
+    retry: false,
+  })
+
+  // 종 id 를 모르면(로딩 중·조회 실패) 링크를 걸지 않고 비활성으로 둔다.
+  const observationHref = speciesId
+    ? `/species/${speciesId}/individuals/${individualId}`
+    : null
 
   // 없는 기록이나 잘못된 id 로 진입하면 목록으로 되돌린다.
   if (!Number.isSafeInteger(feedLogId) || feedLogId <= 0) {
@@ -87,7 +113,12 @@ export function FeedDetailPage() {
       <Content>
         <BackLink to={backPath} />
 
-        {feed && <FeedRecordCard feed={{ ...feed, species }} />}
+        {feed && (
+          <FeedRecordCard
+            feed={{ ...feed, species }}
+            observationHref={observationHref}
+          />
+        )}
 
         <HistorySection>
           <SectionHeader title="급여 이력" count={history.length} />
@@ -95,6 +126,13 @@ export function FeedDetailPage() {
             <FeedHistoryTable
               records={history}
               emptyLabel="급여 이력이 없습니다."
+              onSelect={(feedLogId) => {
+                // 같은 개체의 다른 급여 기록으로 옮겨간다. 뒤로가기 목적지는 그대로 물려준다.
+                if (feedLogId === id) return
+                navigate(`/feeds/${feedLogId}`, {
+                  state: { backPath, species },
+                })
+              }}
             />
           </HistoryTableArea>
         </HistorySection>

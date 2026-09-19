@@ -84,12 +84,12 @@ paths: src/pages/notices/resources/ResourceDetailPage.tsx, src/features/create-r
 - 취소 또는 Escape → 삭제하지 않고 dialog를 닫아 `삭제하기`로 포커스를 복귀한다.
 - 확인 → 해당 ID 삭제 요청을 한 번 전송한다.
 - 성공 → 자료 query를 갱신하고 `/notices/resources`로 이동하며 삭제된 자료는 목록에서 사라지고, 직접 URL로 진입하면 목록으로 되돌아간다.
-- 실패 → 현재 화면과 입력을 유지하고 예외 모달(`ErrorDialog`)로 `삭제에 실패하였습니다`를 표시한다. 확인 시 모달을 닫고 현재 화면을 유지한다.
+- 실패 → 현재 화면과 입력을 유지하고 토스트 `데이터 삭제에 실패했습니다`(fail)를 띄운다. Figma `자료실 · 토스트` `1:7192`.
 
 ## 예외(에러) 모달 — `ErrorDialog` (신규 공용, shared/ui)
 
 - Figma `1039:50` 기준. 한 줄 제목 + 전체 너비 `확인` 버튼으로, `ValidationDialog` 와 동일한 시각 언어다(설명 줄 없음).
-- 카피: 저장 실패 `저장에 실패하였습니다`, 삭제 실패 `삭제에 실패하였습니다`, 생성 실패 `생성에 실패했습니다`.
+- 카피: 저장 실패 `저장에 실패하였습니다`. (삭제·생성 실패는 Figma `자료실 · 토스트`(311:12766)에 토스트로 그려져 있어 모달을 쓰지 않는다.)
 - 구조: `role="alertdialog"`, `aria-modal`, overlay `rgba(0,0,0,0.5)`, surface 카드(radius 20px), 제목 1줄, 단일 `확인` 버튼(에러 확인 성격이므로 취소 없음).
 - props: `ErrorDialog { title, onConfirm }`.
 - 동작: Escape 또는 `확인` → `onConfirm`으로 닫는다. 열릴 때 확인 버튼 포커스, 닫힐 때 호출 control로 포커스 복귀. app root `inert`/`aria-hidden` 처리(기존 다이얼로그와 동일).
@@ -150,4 +150,4 @@ interface UpdateResourceInput {
 ## 미결 사항
 
 - [ ] 실제 자료 API endpoint와 첨부 업로드/다운로드 URL 계약 / 백엔드 담당
-- [ ] 저장 성공 토스트의 별도 Figma node / 디자인 담당
+- [x] 저장 성공 토스트의 별도 Figma node — 2026-09-20 확인: `자료실 · 토스트` 섹션 `311:12766`. 저장(수정) 성공은 그 섹션에 노드가 없지만 목록에서 `데이터 수정에 성공했습니다` 토스트를 띄운다(개발자 결정).

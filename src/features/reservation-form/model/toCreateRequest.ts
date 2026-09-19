@@ -1,5 +1,5 @@
 import type { ReservationCreateRequest } from '@/entities/reservation'
-import { partsTo24hClock } from './format'
+import { rawDigitsTo24hClock } from './format'
 import type { ReservationFormValue } from './types'
 
 // yyyy.MM.dd → yyyy-MM-dd
@@ -22,15 +22,12 @@ export function toCreateReservationRequest(
     leaderCount: toInt(value.guideCount),
     money: toInt(value.admissionFee),
     visitDate: toDashDate(value.visitDate),
-    visitTime: partsTo24hClock(value.visitTime, value.visitTimeAmPm),
-    exitTime: partsTo24hClock(value.exitTime, value.exitTimeAmPm),
+    visitTime: rawDigitsTo24hClock(value.visitTime),
+    exitTime: rawDigitsTo24hClock(value.exitTime),
     visitSiteCount: toInt(value.surveyCount),
     visitSiteDate: toDashDate(value.surveyDate),
-    visitSiteTime: partsTo24hClock(value.surveyEnterTime, value.surveyEnterAmPm),
-    visitSiteExitTime: partsTo24hClock(
-      value.surveyExitTime,
-      value.surveyExitAmPm,
-    ),
+    visitSiteTime: rawDigitsTo24hClock(value.surveyEnterTime),
+    visitSiteExitTime: rawDigitsTo24hClock(value.surveyExitTime),
     appAdminIds,
   }
 }

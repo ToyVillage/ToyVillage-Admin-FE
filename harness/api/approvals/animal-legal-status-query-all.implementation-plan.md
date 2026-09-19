@@ -28,11 +28,11 @@
 ## UI 연결
 
 - `SpeciesForm`: `useQuery({ queryKey: legalStatusQueryKeys.all, queryFn: getLegalStatuses })`.
-- `LegalDesignationField` props: `presets: readonly string[]`, `statuses: LegalStatus[]`,
+- `LegalDesignationField` props: `statuses: LegalStatus[] | undefined`,
   `value: string[]`(선택된 이름, 화면 순서), `onChange`, `status: 'ready' | 'loading' | 'error'`.
-- 표시 목록 = 기본 3개(✕ 없음) + `statuses` 중 이름이 기본에 없는 항목(✕ 있음, 응답 순서)
-  + 저장값 중 어디에도 없는 이름(수정 복원 시 — 아래 승인 항목 2) + `+ 법정분류 추가`.
-- 로딩 중: 기본 3개와 추가 버튼만 보인다(선택 가능).
+- 표시 목록 = `statuses`(✕ 있음, 응답 순서) + 저장값 중 목록에 없는 이름(수정 복원 시 — 아래 승인 항목 2)
+  + `+ 법정분류 추가`. 화면이 들고 있는 기본 선택지는 없다(2026-09-18, 이슈 #149).
+- 로딩 중: 추가 버튼만 보인다.
 - 조회 실패: 필드 안내 아래 오류 행 `법정지정분류를 불러오지 못했습니다. 다시 시도해 주세요.`
   (`role="alert"`), 저장 버튼 비활성.
 
@@ -40,7 +40,7 @@
 
 - 입력: 선택된 이름(화면 순서), `queryClient`.
 - `queryClient.fetchQuery(legalStatusQueryKeys.all)`로 최신 목록을 받는다.
-- 이름이 목록에 있으면 그 id. 없고 기본 항목이면 `createLegalStatus`(create feature) 후 목록을
+- 이름이 목록에 있으면 그 id. 없으면 `createLegalStatus`(create feature) 후 목록을
   다시 받아 id를 찾는다. 모든 생성은 순차 실행.
 - 반환: id 배열(화면 순서). 호출은 `SpeciesForm` mutationFn 안(종 생성·수정 요청 직전).
 
@@ -62,7 +62,7 @@
 2. 재정정(2026-09-17): 법정지정분류를 삭제해도 종에는 이름이 남는다. 종 상세는
    BE PR #162로 `{ animalLegalStatusId: null, kind }`를 준다. 개발자 요구: 다른 곳에서
    지워도 이미 넣은 종의 수정 화면에는 보여야 한다. 그래서 그 이름을 선택된 pill로
-   보이고, 저장 시 기본 항목과 같은 경로로 다시 생성해 새 id로 보낸다(승인 결과와 같음,
+   보이고, 저장 시 다시 생성해 새 id로 보낸다(승인 결과와 같음,
    공용 목록에 다시 나타난다).
 3. 퍼블리싱 spec(`species-form`)의 공용 목록 전환 재승인.
 

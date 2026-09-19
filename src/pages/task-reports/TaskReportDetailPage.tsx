@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   getTaskReport,
   TaskReportContentCard,
@@ -15,11 +15,25 @@ import {
 import { AttachmentList, BackLink, Toast } from '@/shared/ui'
 import { TaskReportDetailSkeleton } from './ui/TaskReportDetailSkeleton'
 
+// 업무지시 상세에서 보고 줄을 눌러 들어오면 그 경로를 이동 state 로 받는다.
+export interface TaskReportDetailLocationState {
+  returnTo?: string
+}
+
 // Figma yot 1:7503 `report management`.
 export function TaskReportDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  // 상세에 머무는 결과는 실패뿐이다. 성공하면 목록으로 이동해 거기서 토스트를 보인다.
+  const location = useLocation()
+  // 뒤로가기와 심사 후 이동은 모두 들어온 곳으로 돌아간다. 업무보고 목록에서 들어왔거나
+  // 주소로 바로 들어오면 state 가 없어 목록이 된다. 다른 출처의 값이 섞이지 않게 내부 경로만 받는다.
+  const stateReturnTo = (location.state as TaskReportDetailLocationState | null)
+    ?.returnTo
+  const returnTo =
+    stateReturnTo?.startsWith('/') && !stateReturnTo.startsWith('//')
+      ? stateReturnTo
+      : '/task-reports'
+  // 상세에 머무는 결과는 실패뿐이다. 성공하면 들어온 곳으로 이동해 거기서 토스트를 보인다.
   // 같은 실패가 연달아 나와도 토스트를 새로 띄우도록 매번 id 를 바꾼다.
   const [errorToast, setErrorToast] = useState<{
     result: TaskReportReviewResult
@@ -57,7 +71,9 @@ export function TaskReportDetailPage() {
       <StatePage>
         <StateCard role="alert">
           업무보고를 찾을 수 없습니다.
-          <BackToList to="/task-reports">목록으로 돌아가기</BackToList>
+          <BackToList to={returnTo}>
+            {returnTo === '/task-reports' ? '목록으로 돌아가기' : '돌아가기'}
+          </BackToList>
         </StateCard>
       </StatePage>
     )
@@ -70,7 +86,7 @@ export function TaskReportDetailPage() {
   return (
     <Page>
       <Content>
-        <DetailBackLink to="/task-reports" />
+        <DetailBackLink to={returnTo} />
 
         <Body>
           <TaskReportMetaRow
@@ -96,18 +112,20 @@ export function TaskReportDetailPage() {
           </AttachmentCard>
         </Body>
 
-        <TaskReportReviewActions
-          reportId={report.id}
-          onSuccess={(action) =>
-            navigate('/task-reports', {
-              state: { toast: `${action}-success` },
-            })
-          }
-          onError={(action) => {
-            toastIdRef.current += 1
-            setErrorToast({ result: `${action}-error`, id: toastIdRef.current })
-          }}
-        />
+        {report.reviewStatus === 'PENDING' && (
+          <TaskReportReviewActions
+            reportId={report.id}
+            onSuccess={(action) =>
+              navigate(returnTo, {
+                state: { toast: `${action}-success` },
+              })
+            }
+            onError={(action) => {
+              toastIdRef.current += 1
+              setErrorToast({ result: `${action}-error`, id: toastIdRef.current })
+            }}
+          />
+        )}
       </Content>
 
       {errorToast && toast && (

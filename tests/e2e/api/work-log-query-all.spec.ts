@@ -6,14 +6,14 @@ import {
 } from '../support/work-log-api'
 
 // 대상: WORK_LOG_QUERY_ALL (GET /work-log) · WORK_LOG_TEMPLATE_QUERY_ALL (GET /work-log/template).
-// 서버 페이지네이션(page 는 0부터, size=4)과 date 필터를 검증한다. 실제 서버는 호출하지 않는다.
+// 서버 페이지네이션(page 는 1부터, size=4)과 date 필터를 검증한다. 실제 서버는 호출하지 않는다.
 
 const templateListPattern = /^https:\/\/[^/]+\/work-log\/template(?:\?.*)?$/
 
 const logRows = (page: Page) => page.getByTestId('work-log-row')
 const formRows = (page: Page) => page.getByTestId('work-log-form-row')
 
-test('S1: 진입 시 date=오늘 · page=0 · size=4 로 조회하고 Bearer 토큰을 보낸다', async ({
+test('S1: 진입 시 date=오늘 · page=1 · size=4 로 조회하고 Bearer 토큰을 보낸다', async ({
   page,
 }) => {
   const requests: { url: string; headers: Record<string, string> }[] = []
@@ -32,12 +32,12 @@ test('S1: 진입 시 date=오늘 · page=0 · size=4 로 조회하고 Bearer 토
   expect(requests).toHaveLength(1)
   const query = new URL(requests[0].url).searchParams
   expect(query.get('date')).toBe(todayIsoDate())
-  expect(query.get('page')).toBe('0')
+  expect(query.get('page')).toBe('1')
   expect(query.get('size')).toBe('4')
   expect(requests[0].headers.authorization).toBe('Bearer test-access-token')
 })
 
-test('S2: 2페이지로 가면 page=1 로 다시 조회한다', async ({ page }) => {
+test('S2: 2페이지로 가면 page=2 로 다시 조회한다', async ({ page }) => {
   const pages: (string | null)[] = []
   await mockWorkLogApi(page)
   await page.route(workLogListPattern, async (route) => {
@@ -50,7 +50,7 @@ test('S2: 2페이지로 가면 page=1 로 다시 조회한다', async ({ page })
   await page.getByRole('button', { name: '2 페이지' }).click()
   await expect(logRows(page)).toHaveCount(4)
 
-  expect(pages).toEqual(['0', '1'])
+  expect(pages).toEqual(['1', '2'])
 })
 
 test('S3: 양식 관리 탭은 조회날짜를 보내지 않는다', async ({ page }) => {
@@ -68,7 +68,7 @@ test('S3: 양식 관리 탭은 조회날짜를 보내지 않는다', async ({ pa
   const query = new URL(requests[0]).searchParams
   // 양식은 날짜에 묶이지 않는다 — 양식 관리 탭에 조회날짜 필터가 없다.
   expect(query.get('date')).toBeNull()
-  expect(query.get('page')).toBe('0')
+  expect(query.get('page')).toBe('1')
   expect(query.get('size')).toBe('4')
 })
 

@@ -50,7 +50,8 @@ function buildBody(url: URL) {
   const status = url.searchParams.get('status')
   const title = (url.searchParams.get('title') ?? '').trim()
   const sort = url.searchParams.get('sort') ?? 'RESERVATION_DATE'
-  const page = Number(url.searchParams.get('page') ?? '0')
+  // 단체예약 목록은 1-based 로 요청한다.
+  const page = Number(url.searchParams.get('page') ?? '1')
   const size = Number(url.searchParams.get('size') ?? '10')
 
   const label = status ? codeToLabel[status] : undefined
@@ -64,7 +65,7 @@ function buildBody(url: URL) {
   })
 
   const totalPages = Math.ceil(sorted.length / size)
-  const start = page * size
+  const start = (page - 1) * size
   const content = sorted.slice(start, start + size)
 
   return {

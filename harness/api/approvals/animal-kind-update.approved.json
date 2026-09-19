@@ -1,15 +1,15 @@
 {
   "feature": "animal-kind-update",
   "apiId": "ANIMAL_KIND_UPDATE",
-  "approvedAt": "2026-09-16T15:59:58.898Z",
+  "approvedAt": "2026-09-18T02:48:21.421Z",
   "approvedBy": "yunho09",
   "taskSpecHash": "3fcc84b3346286d98220592387338b8791cec809a963d0b01f78c697f55ccb6e",
   "contractHash": "10f214ec2d04ee52b153a403a061023347f374c3defca62a5dc65014985bc889",
   "contractMarkdownHash": "f0ed4f8200532213568cf53bc76a8c3119cbfede36b005110ceeeb120e2d24fe",
   "planHash": "11ace5768df9f25fad2e4197e2bf6822928db493fae3b6cf3e1d4647d0c48de2",
-  "scenarioHash": "e7f0c666ea0d9f561d22fb6dbdec0a4f8ef1ce21a47965d8520610c2dc4e7589",
-  "testHash": "63f21a1f97032519f49cd76d6cce7a4d780ff55deb1565a2537d29d76dc3d583",
+  "scenarioHash": "e0645d944a2624c1adeada36f280dfe799032967f21609a855b7cd07880847e3",
+  "testHash": "65ffe97036ebb089417b30bb1d72fbd3a1e5ce6fcac78db66772f40507d008aa",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T00:47:12.411Z"
+  "testApprovedAt": "2026-09-18T02:48:21.611Z"
 }

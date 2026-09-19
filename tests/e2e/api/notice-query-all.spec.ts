@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { mockTeamList } from '../support/team-api'
 
 const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
@@ -14,7 +15,7 @@ test('S1: page=1, size=10으로 조회하고 목록을 표시한다', async ({ p
           {
             id: 7,
             title: 'API 연동 공지',
-            kind: '공지사항 분류',
+            teams: [{ id: 1, name: '동물 관리팀' }],
             createdAt: '2026-07-27',
           },
         ],
@@ -27,7 +28,7 @@ test('S1: page=1, size=10으로 조회하고 목록을 표시한다', async ({ p
 
   await expect(page.getByTestId('notice-row')).toHaveCount(1)
   await expect(page.getByTestId('notice-row')).toContainText('API 연동 공지')
-  await expect(page.getByTestId('notice-row')).toContainText('공지사항 분류')
+  await expect(page.getByTestId('notice-row')).toContainText('동물 관리팀')
   await expect(page.getByTestId('notice-row')).toContainText('2026.07.27')
   expect(requestURLs).toHaveLength(1)
 
@@ -83,7 +84,7 @@ test('S4: 공지 행을 클릭하면 상세 경로로 이동한다', async ({ pa
           {
             id: 7,
             title: '이동할 공지',
-            kind: '공지사항 분류',
+            teams: [],
             createdAt: '2026-07-27',
           },
         ],
@@ -114,7 +115,7 @@ test('S5: totalPageSize만큼 페이지를 조회해 합친다', async ({ page }
         notices: Array.from({ length: count }, (_, index) => ({
           id: startId + index,
           title: `공지 ${startId + index}`,
-          kind: '공지사항 분류',
+          teams: [],
           createdAt: `2026-07-${String(28 - startId - index).padStart(2, '0')}`,
         })),
         totalPageSize: 2,
@@ -145,4 +146,47 @@ test('S6: 배열 응답은 Contract 위반으로 오류를 드러낸다', async 
   await expect(page.getByRole('alert')).toHaveText(
     '공지사항을 불러오지 못했습니다. 다시 시도해 주세요.',
   )
+})
+
+test('S7: 여러 팀에 속한 공지는 각 팀 탭에 모두 나온다', async ({ page }) => {
+  await mockTeamList(page, ['동물 관리팀', '창고팀'])
+  await page.route(apiPath, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        notices: [
+          {
+            id: 1,
+            title: '두 팀 공지',
+            teams: [
+              { id: 1, name: '동물 관리팀' },
+              { id: 2, name: '창고팀' },
+            ],
+            createdAt: '2026-07-27',
+          },
+          {
+            id: 2,
+            title: '전체 공지',
+            teams: [],
+            createdAt: '2026-07-26',
+          },
+        ],
+        totalPageSize: 1,
+      }),
+    })
+  })
+
+  await page.goto('/notices/list')
+  await expect(page.getByTestId('notice-row').first()).toContainText(
+    '동물 관리팀, 창고팀',
+  )
+
+  await page.getByRole('button', { name: '창고팀' }).click()
+  await expect(page.getByTestId('notice-row')).toHaveCount(1)
+  await expect(page.getByTestId('notice-row')).toContainText('두 팀 공지')
+
+  await page.getByRole('button', { name: '동물 관리팀' }).click()
+  await expect(page.getByTestId('notice-row')).toHaveCount(1)
+  await expect(page.getByTestId('notice-row')).toContainText('두 팀 공지')
 })

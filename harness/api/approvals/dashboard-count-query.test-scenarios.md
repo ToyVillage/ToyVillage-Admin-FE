@@ -34,7 +34,7 @@ route 패턴은 `^https://[^/]+/dashboard/<path>(?:\?.*)?$`.
 
 - `GET /close-day` 1회
 - `GET /work-report?page=1&size=3` — `status` 없음
-- `GET /work-log?date=2026-09-03&page=0&size=3`
+- `GET /work-log?date=2026-09-03&page=1&size=3`
 
 ### S8: 재사용 API 응답을 카드에 표시한다
 

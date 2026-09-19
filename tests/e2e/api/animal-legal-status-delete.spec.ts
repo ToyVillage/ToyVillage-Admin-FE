@@ -104,14 +104,10 @@ test('S5: 확인을 연속으로 눌러도 한 번만 삭제한다', async ({ pa
   expect(api.count('legalStatus.delete')).toBe(1)
 })
 
-test('S6: 기본 선택지에는 ✕ 가 없다', async ({ page }) => {
-  for (const name of [
-    '지정관리 야생동물',
-    '멸종위기 야생생물 I급',
-    '천연기념물',
-  ]) {
+test('S6: 공용 목록 항목은 모두 ✕ 로 지울 수 있다', async ({ page }) => {
+  for (const name of ['천연기념물', '국제보호종']) {
     await expect(legalPill(page, name)).toBeVisible()
-    await expect(legalRemoveButton(page, name)).toHaveCount(0)
+    await expect(legalRemoveButton(page, name)).toHaveCount(1)
   }
 })
 

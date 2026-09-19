@@ -14,6 +14,11 @@ interface AttachmentChipProps {
    * `action-first`(Figma `uploaded file` 1057:14773)는 유형 아이콘 → 다운로드 → 파일명이다(대표 사진).
    */
   order?: 'name-first' | 'action-first'
+  /**
+   * 삭제 아이콘 색. `danger`(기본)는 Figma 첨부 칩대로 항상 빨강,
+   * `muted`(대표 사진)는 평소 회색이고 hover·focus 에서 빨강이다 (2026-09-18 개발자 결정, 이슈 #149).
+   */
+  removeTone?: 'danger' | 'muted'
   className?: string
 }
 
@@ -24,6 +29,7 @@ export function AttachmentChip({
   onDownload,
   onRemove,
   order = 'name-first',
+  removeTone = 'danger',
   className,
 }: AttachmentChipProps) {
   const typeIcon = (
@@ -78,10 +84,20 @@ export function AttachmentChip({
         <IconButton
           type="button"
           data-hit-area="right"
+          data-remove-tone={removeTone}
           aria-label={`${fileName} 삭제`}
           onClick={onRemove}
         >
-          <RemoveIcon src={removeIcon} alt="" aria-hidden="true" />
+          {removeTone === 'muted' ? (
+            <MutedRemoveIcon viewBox="0 0 20 20" aria-hidden="true">
+              <path
+                fillRule="evenodd"
+                d="M10 0a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM5.76 6.82l1.06-1.06L10 8.94l3.18-3.18 1.06 1.06L11.06 10l3.18 3.18-1.06 1.06L10 11.06l-3.18 3.18-1.06-1.06L8.94 10 5.76 6.82Z"
+              />
+            </MutedRemoveIcon>
+          ) : (
+            <RemoveIcon src={removeIcon} alt="" aria-hidden="true" />
+          )}
         </IconButton>
       )}
     </Chip>
@@ -175,6 +191,16 @@ const IconButton = styled.button`
     outline: 2px solid ${({ theme }) => theme.colors.textGuide};
     outline-offset: 2px;
   }
+
+  /* 대표 사진 칩: 평소 회색, hover·focus 에서 빨강(RemoveIconButton 과 같은 규칙). */
+  &[data-remove-tone='muted'] {
+    color: ${({ theme }) => theme.colors.textGuide};
+  }
+
+  &[data-remove-tone='muted']:hover,
+  &[data-remove-tone='muted']:focus-visible {
+    color: ${({ theme }) => theme.colors.danger};
+  }
 `
 
 // Figma `healthicons:no-outline` 24px 프레임 안 20px 글리프(inset 8.33%).
@@ -182,4 +208,12 @@ const RemoveIcon = styled.img`
   width: 20px;
   height: 20px;
   flex: 0 0 20px;
+`
+
+// 회색 → hover 빨강으로 쓰는 삭제 글리프(`RemoveIconButton` 과 같은 path).
+const MutedRemoveIcon = styled.svg`
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  fill: currentColor;
 `

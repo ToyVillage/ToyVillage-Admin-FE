@@ -45,6 +45,7 @@
 - path ID는 기존 상세 조회에서 검증된 양의 integer 값을 사용한다.
 - request는 trim된 `title`, 고정 `kind: 'ALL'`, trim된 `content`만 전달한다.
 - `category`와 `attachments`는 Contract 밖이므로 request에서 제외한다.
+- 첨부는 `files`(fileKey 배열)로 보낸다(2026-09-19, #164).
 - 성공 시 기존 `['notices']` prefix를 무효화해 목록과 상세 query를 갱신하고
   목록으로 이동한다.
 - 실패 시 입력 상태를 유지하고 재제출할 수 있게 한다.
@@ -73,10 +74,33 @@
 - 실제 서버는 호출하지 않는다.
 - `kind`의 실제 enum이 `ALL`과 다르면 Contract와 승인을 갱신한다.
 - 팀 분류를 실제 API에 전달해야 하면 팀/분류 식별자 Contract를 먼저 확정한다.
-- 첨부파일 수정은 별도 API ID와 Contract 없이는 연결하지 않는다.
+- ~~첨부파일 수정은 별도 API ID와 Contract 없이는 연결하지 않는다.~~ 2026-09-19 Swagger 재확인으로 `files`를 Contract에 추가했다(#164).
 - 구현 중 승인 Contract 밖의 request 또는 response 필드가 필요하면 중단하고
   ⑧ 승인 단계로 돌아간다.
 
 ## 2026-09-17 변경 (#93·#95 퍼블리싱, #112)
 
 - API Contract는 바뀌지 않았다. 수정 화면 경로만 `/notices/list/:id/edit`로 옮겨 시나리오 진입 경로를 갱신한다.
+
+## 2026-09-18 변경 — `kind` → `teamIds`/`teams` (#147)
+
+- 근거: staging Swagger(`/v3/api-docs/app`). Notion은 아직 `kind` 기준이라 사용자 결정으로 Swagger를 채택했다.
+- `src/entities/notice/model/types.ts`: `Notice.category` 제거, `teams: NoticeTeam[]` 추가. 화면 문구는 `noticeCategoryLabel(teams)`(빈 배열 → `전체`, 아니면 이름을 `, `로 연결).
+- `src/entities/notice/api/types.ts`: 요청 `kind` 제거·`teamIds: number[]` 추가, 응답 `kind` → `teams: {id, name}[]`.
+- `src/entities/notice/api/noticeApi.ts`: 응답 `teams`를 검증해 매핑한다. 배열이 아니거나 항목 형식이 어긋나면 해당 항목을 버리고 빈 배열(`전체`)로 본다.
+- `src/entities/notice/model/mock.ts`: 쓰는 곳이 없는 구 localStorage mock이라 삭제했다.
+- 실제 서버 테스트는 disabled 그대로다.
+- `src/features/create-notice/ui/NoticeForm.tsx`: 상세 응답 `teams`로 선택 상태를 복원한다. 이름→id 매핑에 상세 `teams`도 넣어, 팀 목록에서 사라진 팀도 id를 유지한다.
+- 존재하지 않는 팀은 HTTP 404 `TEAM_NOT_FOUND`다. 기존 400 분류 오류 시나리오를 404로 바꿨다.
+- 팀 선택 상태는 이름이 아니라 팀 id로 보관한다(같은 이름의 팀 구분, PR #157 리뷰).
+
+## 2026-09-19 변경 — 수정 요청에 `files` 추가 (#164)
+
+- 문제: 수정 화면에서 첨부를 지우거나 추가해도 `PUT`에 `files`가 없어 저장 후 반영되지 않았다. 새 파일은 업로드도 하지 않았다.
+- 근거: Swagger상 `PUT /notice/{notice-id}`도 생성과 같은 `NoticeRequestDto`(`title`, `teamIds`, `content`, `files`)를 받는다.
+- `src/entities/notice/api/types.ts`: `NoticeUpdateRequest`에 `files: string[]` 추가.
+- `src/entities/notice/model/types.ts`: `UpdateNoticeInput`에 `files: string[]` 추가.
+- `src/entities/notice/api/noticeApi.ts`: `updateNotice` body에 `files`를 담는다.
+- `src/features/create-notice/ui/NoticeForm.tsx`: `AttachmentField`의 `onFileItemsChange`로 첨부 목록을 받는다. 제출 시 기존 첨부는 `fileKey`를 그대로, 새 파일은 `uploadFile`(FILE_CREATE)로 올린 키를 화면 순서대로 모아 보낸다. `TaskForm`과 같은 방식이다. 생성도 같은 목록에서 업로드한다.
+- 업로드가 실패하면 mutation이 실패하므로 `PUT`을 보내지 않고 기존 오류 문구를 보인다.
+- 테스트: S1·S8 기대 body에 `files: []` 추가, S9(첨부 삭제·추가), S10(업로드 실패) 추가.

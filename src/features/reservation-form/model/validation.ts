@@ -2,7 +2,7 @@ import type { ReservationFormErrors, ReservationFormValue } from './types'
 
 type FieldKind = 'text' | 'date' | 'time'
 
-// 필수 필드와 종류(에러 문구 분기). am/pm은 기본값이 있어 필수에서 제외.
+// 필수 필드와 종류(에러 문구 분기).
 const requiredFields: { key: keyof ReservationFormValue; kind: FieldKind }[] = [
   { key: 'groupName', kind: 'text' },
   { key: 'region', kind: 'text' },
@@ -37,14 +37,16 @@ export const sectionRequiredKeys: Record<
   survey: ['surveyCount', 'surveyDate', 'surveyEnterTime', 'surveyExitTime'],
 }
 
-// 시간 필드는 12시간제 raw 자릿수 "HHMM"만 유효하다: 시 01–12, 분 00–59.
-// (예: "9900"·"1360"·자릿수 부족은 거부해 잘못된 값이 API 요청에 실리지 않게 한다.)
-function isValidClock12(rawDigits: string): boolean {
-  const digits = rawDigits.replace(/\D/g, '')
-  if (digits.length !== 4) return false
-  const hour = Number(digits.slice(0, 2))
-  const minute = Number(digits.slice(2, 4))
-  return hour >= 1 && hour <= 12 && minute >= 0 && minute <= 59
+// 시간 필드는 24시간제 "HHMM"으로 해석한다: 시 00–23, 분 00–59.
+// 자릿수가 모자라면 화면에 보이는 대로(오른쪽을 0으로 채워) 판정한다 —
+// `1` 만 입력해 `10 : 00` 이 보이면 10시 00분으로 통과시킨다(제출도 같은 값).
+function isValidClock24(rawDigits: string): boolean {
+  const digits = rawDigits.replace(/\D/g, '').slice(0, 4)
+  if (!digits) return false
+  const padded = digits.padEnd(4, '0')
+  const hour = Number(padded.slice(0, 2))
+  const minute = Number(padded.slice(2, 4))
+  return hour <= 23 && minute <= 59
 }
 
 export function validateReservationForm(
@@ -56,8 +58,8 @@ export function validateReservationForm(
       errors[key] = messageByKind[kind]
       continue
     }
-    // 채워졌더라도 12시간제 형식(시 01–12, 분 00–59)이 아니면 거부한다.
-    if (kind === 'time' && !isValidClock12(value[key])) {
+    // 채워졌더라도 24시간제 형식(시 00–23, 분 00–59)이 아니면 거부한다.
+    if (kind === 'time' && !isValidClock24(value[key])) {
       errors[key] = '시간을 확인해주세요!'
     }
   }

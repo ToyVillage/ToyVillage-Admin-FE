@@ -37,6 +37,8 @@ interface ResourceUploadFieldProps {
   onFileNamesChange?: (fileNames: string[]) => void
   onFileKeysChange?: (fileKeys: string[]) => void
   onUploadingChange?: (uploading: boolean) => void
+  /** 첨부 즉시 업로드의 결과. 폼이 토스트로 알린다(Figma `자료실 · 토스트` 311:12766). */
+  onUploadResult?: (result: 'success' | 'error') => void
 }
 
 // Figma "upload file" — 점선 드롭존(드래그/클릭, 최대 50MB, 다중 파일).
@@ -51,6 +53,7 @@ export function ResourceUploadField({
   onFileNamesChange,
   onFileKeysChange,
   onUploadingChange,
+  onUploadResult,
 }: ResourceUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<AttachedFile[]>(() =>
@@ -96,11 +99,12 @@ export function ResourceUploadField({
               current.id === attachedFile.id ? { ...current, fileKey } : current,
             ),
           )
+          onUploadResult?.('success')
         } catch {
           setFiles((currentFiles) =>
             currentFiles.filter((current) => current.id !== attachedFile.id),
           )
-          setErrorMessage('파일 업로드에 실패했습니다. 다시 시도해 주세요.')
+          onUploadResult?.('error')
         }
       }),
     )

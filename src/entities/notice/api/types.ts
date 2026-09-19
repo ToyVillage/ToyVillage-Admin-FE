@@ -3,12 +3,10 @@ export interface NoticeQueryAllRequest {
   size: number
 }
 
-export type NoticeCreateKind = 'ALL'
-export type NoticeKind = '공지사항 분류'
-
 export interface NoticeCreateRequest {
   title: string
-  kind: NoticeCreateKind
+  /** 팀 조회 API 팀 id 목록. 전체 공개는 빈 배열(#147, Swagger 2026-09-18 확인) */
+  teamIds: number[]
   content: string
   files: string[]
 }
@@ -22,12 +20,12 @@ export interface NoticeCreateErrorResponse {
   description: string
 }
 
-export type NoticeUpdateKind = 'ALL'
-
 export interface NoticeUpdateRequest {
   title: string
-  kind: NoticeUpdateKind
+  teamIds: number[]
   content: string
+  /** 수정 후 남길 첨부 전체의 fileKey. 첨부가 없으면 빈 배열(#164, Swagger 2026-09-19 확인) */
+  files: string[]
 }
 
 export interface NoticeUpdateResponse {
@@ -56,10 +54,15 @@ export interface NoticeDeleteErrorResponse {
   description: string
 }
 
+export interface NoticeTeamResponse {
+  id: number
+  name: string
+}
+
 export interface NoticeQueryAllResponseItem {
   id: number
   title: string
-  kind: NoticeKind
+  teams: NoticeTeamResponse[]
   createdAt: string
 }
 
@@ -87,7 +90,7 @@ export interface NoticeQueryFileResponse {
 export interface NoticeQueryResponse {
   id: number
   title: string
-  kind: NoticeKind
+  teams: NoticeTeamResponse[]
   content: string
   createdAt: string
   files: NoticeQueryFileResponse[]

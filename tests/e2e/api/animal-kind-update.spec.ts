@@ -129,11 +129,15 @@ test('S7: 연속 클릭해도 PATCH 는 한 번이다', async ({ page }) => {
   expect(api.count('kind.update')).toBe(1)
 })
 
-test('S8: 목록에 없는 기본 항목은 만든 뒤 새 id 로 PATCH 한다', async ({
+test('S8: 고른 뒤 목록에서 사라진 항목은 만든 뒤 새 id 로 PATCH 한다', async ({
   page,
 }) => {
   await openEdit(page)
-  await legalPill(page, '멸종위기 야생생물 I급').click()
+  await legalPill(page, '국제보호종').click()
+  // 고르고 나서 다른 곳에서 삭제된 상황
+  api.legalStatuses = api.legalStatuses.filter(
+    ({ kind }) => kind !== '국제보호종',
+  )
 
   await submitButton(page, '저장하기').click()
 
@@ -146,13 +150,11 @@ test('S8: 목록에 없는 기본 항목은 만든 뒤 새 id 로 PATCH 한다',
     operations.slice(createIndex, updateIndex).includes('legalStatus.list'),
   ).toBe(true)
   expect(api.requests[createIndex].body).toEqual({
-    kind: '멸종위기 야생생물 I급',
+    kind: '국제보호종',
   })
-  const created = api.legalStatuses.find(
-    ({ kind }) => kind === '멸종위기 야생생물 I급',
-  )
+  const created = api.legalStatuses.find(({ kind }) => kind === '국제보호종')
   expect(updateRequest().body).toMatchObject({
-    animalLegalDesignation: [created?.id, 1],
+    animalLegalDesignation: [1, created?.id],
   })
 })
 

@@ -199,6 +199,14 @@ test('S9: 상세 표시 내용', async ({ page }) => {
   await expect(page.getByRole('button', { name: '승인하기' })).toBeVisible()
 })
 
+// #159: 심사가 끝난 보고를 다시 열면 승인·반려 버튼이 없어야 한다(다시 눌러 실패 토스트만 뜨는 문제).
+test('S36: 이미 심사된 보고는 승인·반려 버튼이 없다', async ({ page }) => {
+  await page.goto('/task-reports/13')
+
+  await expect(page.getByRole('button', { name: '반려하기' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '승인하기' })).toHaveCount(0)
+})
+
 test('S10: 첨부자료는 조회 전용', async ({ page }) => {
   await page.goto('/task-reports/1')
   const attachments = page.getByRole('group', { name: '첨부자료' })
@@ -330,7 +338,7 @@ test.describe('업무 상세에서 진입', () => {
     reportApiOptions: {
       reports: [
         ...mockWorkReports.map((item) => ({ ...item })),
-        { ...mockWorkReports[0], id: 31, name: '이승현', status: 'APPROVED' },
+        { ...mockWorkReports[0], id: 31, name: '이승현', status: 'PENDING' },
       ],
     },
   })
@@ -351,6 +359,46 @@ test.describe('업무 상세에서 진입', () => {
 
     await expect(page).toHaveURL(/\/task-reports\/31$/)
     await expect(page.getByText('담당자: 이승현')).toBeVisible()
+  })
+
+  test('S34: 업무 상세에서 들어와 심사하면 업무 상세로 복귀', async ({
+    page,
+  }) => {
+    await mockTaskApi(page)
+    await page.goto('/tasks/1')
+
+    await page
+      .locator('section')
+      .filter({ hasText: '업무 보고' })
+      .getByRole('button')
+      .first()
+      .click()
+    await expect(page).toHaveURL(/\/task-reports\/31$/)
+
+    await page.getByRole('button', { name: '승인하기' }).click()
+
+    // 업무보고 목록이 아니라 들어온 업무 상세로 돌아오고 결과 토스트도 거기서 보인다.
+    await expect(page).toHaveURL(/\/tasks\/1$/)
+    await expect(page.getByText('승인에 성공했습니다')).toBeVisible()
+  })
+
+  test('S35: 업무 상세에서 들어오면 뒤로가기도 업무 상세로', async ({
+    page,
+  }) => {
+    await mockTaskApi(page)
+    await page.goto('/tasks/1')
+
+    await page
+      .locator('section')
+      .filter({ hasText: '업무 보고' })
+      .getByRole('button')
+      .first()
+      .click()
+    await expect(page).toHaveURL(/\/task-reports\/31$/)
+
+    await page.getByRole('link', { name: '뒤로가기' }).click()
+
+    await expect(page).toHaveURL(/\/tasks\/1$/)
   })
 })
 

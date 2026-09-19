@@ -53,3 +53,9 @@ paths: src/pages/notices/resources, src/features/create-resource, src/entities/r
 - 라우트가 `/notices/resources` 하위이므로 상위 `/notices` 라우팅과의 관계(중첩 여부)는 퍼블리싱 시 확인.
 - 업로드 허용 유형(pdf/jpg·jpeg/png/기타) 제한은 실제로는 **생성 페이지**(`/notices/resources/create`)에서 강제 — 이번 슬라이스는 이동 스텁까지라 목록 필터 탭만 구현, 업로드 검증 로직은 추후.
 - 탭 필터와 `fileType` 값의 매핑: `jpg/jpeg` 탭 → `fileType === 'jpg'`, `기타` 탭 → `fileType === 'etc'`.
+
+## 결과 토스트 (Figma `자료실 · 토스트` 311:12766)
+
+- 2026-09-20 반영. 생성·삭제 화면에서 돌아올 때 목록이 결과 토스트를 띄운다.
+- 생성 성공 `데이터 생성에 성공했습니다`(`1:7205`), 삭제 성공 `데이터 삭제에 성공했습니다`(`1:7387`).
+- 수정 성공 `데이터 수정에 성공했습니다` — Figma 에 노드가 없으나 나머지와 같은 문구 규칙으로 맞춘다(개발자 결정).

@@ -203,7 +203,7 @@ async function fulfillNoticeList(route: Route, ids: number[]) {
       notices: ids.map((id) => ({
         id,
         title: targetTitle,
-        kind: '공지사항 분류',
+        teams: [],
         createdAt: '2026-07-28',
       })),
       totalPageSize: ids.length > 0 ? 1 : 0,

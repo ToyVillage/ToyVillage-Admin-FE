@@ -9,7 +9,10 @@ import {
 } from 'react-router-dom'
 import { getDocument } from '@/entities/resource'
 import { LeaveConfirmationDialog } from '@/shared/ui'
-import { ResourceForm } from '@/features/create-resource'
+import {
+  ResourceForm,
+  type ResourceFormCompletion,
+} from '@/features/create-resource'
 import { ResourceEditSkeleton } from './ui/ResourceEditSkeleton'
 
 export function ResourceDetailPage() {
@@ -62,10 +65,14 @@ export function ResourceDetailPage() {
     ),
   )
 
-  const handleCompleted = useCallback(() => {
-    allowNavigationRef.current = true
-    navigate('/notices/resources')
-  }, [navigate])
+  // 목록이 결과 토스트를 띄운다(Figma `자료실 · 토스트` 311:12766).
+  const handleCompleted = useCallback(
+    (reason: ResourceFormCompletion) => {
+      allowNavigationRef.current = true
+      navigate('/notices/resources', { state: { toast: reason } })
+    },
+    [navigate],
+  )
 
   // 조회 중에는 입력을 막기 위해 폼 대신 스켈레톤을 보인다. 조회 실패는 위 effect 가
   // 목록으로 되돌린다(별도의 '찾을 수 없음' 화면은 두지 않는다).

@@ -14,6 +14,7 @@ export {
   createIndividual,
   deleteIndividual,
   getIndividual,
+  getIndividualSpeciesId,
   getIndividuals,
   updateIndividual,
 } from './api/individualApi'

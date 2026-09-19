@@ -68,3 +68,15 @@
 - 날짜 키는 스테이징 실제 응답 `createdAt`(명세 예시 `createAt`과 충돌 → 사용자 결정).
 - 응답 형식이 Contract와 다르거나 중복 ID·페이지 크기 초과면 오류로 드러낸다(빈 목록으로 숨기지 않음).
 - 함께 갱신: `tests/e2e/api/notice-query-all-pagination.spec.ts`, `notice-query-all-invalid-response.spec.ts`, 퍼블리싱 mock `tests/e2e/support/notice-api.ts`.
+
+## 2026-09-18 변경 — `kind` → `teamIds`/`teams` (#147)
+
+- 근거: staging Swagger(`/v3/api-docs/app`). Notion은 아직 `kind` 기준이라 사용자 결정으로 Swagger를 채택했다.
+- `src/entities/notice/model/types.ts`: `Notice.category` 제거, `teams: NoticeTeam[]` 추가. 화면 문구는 `noticeCategoryLabel(teams)`(빈 배열 → `전체`, 아니면 이름을 `, `로 연결).
+- `src/entities/notice/api/types.ts`: 요청 `kind` 제거·`teamIds: number[]` 추가, 응답 `kind` → `teams: {id, name}[]`.
+- `src/entities/notice/api/noticeApi.ts`: 응답 `teams`를 검증해 매핑한다. 배열이 아니거나 항목 형식이 어긋나면 해당 항목을 버리고 빈 배열(`전체`)로 본다.
+- `src/entities/notice/model/mock.ts`: 쓰는 곳이 없는 구 localStorage mock이라 삭제했다.
+- 실제 서버 테스트는 disabled 그대로다.
+- `src/entities/notice/ui/NoticeTable.tsx`: 분류 pill을 `noticeCategoryLabel(teams)`로 표시한다.
+- `src/pages/notices/notice/NoticeListPage.tsx`: 탭 필터를 `teams.some(name === active)`로 바꿔 여러 팀 공지가 각 탭에 나오게 했다. 검색 대상도 팀 이름을 포함한다.
+- `teamId` 쿼리 파라미터는 Contract에 추가했지만 쓰지 않는다. 목록은 전체 페이지를 받아 탭·검색·정렬·페이지를 프론트에서 처리하는 기존 구조를 유지한다.

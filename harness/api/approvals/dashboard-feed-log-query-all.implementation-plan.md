@@ -53,7 +53,7 @@ export async function getDashboardObservations(req: DashboardPageRequest): Promi
 - `useQuery` 7개, `LIST_LIMIT = 3`
   - feeds/observations: `{ page: 1, size: 3 }`
   - task reports: `getTaskReports({ page: 1, size: 3 })`
-  - work logs: `getWorkLogs({ date: toIsoDay(now), page: 0, size: 3 })`
+  - work logs: `getWorkLogs({ date: toIsoDay(now), page: 1, size: 3 })`
   - close schedules: `getCloseSchedules()`
 - 하나라도 `isPending` → 로딩 문구, 하나라도 `isError` → 오류 문구(퍼블리싱 문구·마크업 유지).
 - 레이아웃·카드 링크 유지. 업무보고 행 `primary: report.title` + 상태 배지, 업무일지 행 `formName` / `authorName`.

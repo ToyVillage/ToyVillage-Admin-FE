@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { uploadFile } from '@/entities/file'
 import {
   createNotice,
   type Notice,
-  type UpdateNoticeInput,
+  type NoticeTeam,
   updateNotice,
 } from '@/entities/notice'
+import { getTeams } from '@/entities/team'
 import {
   AttachmentField,
-  RemoveIconButton,
   ValidationDialog,
+  type AttachmentItem,
 } from '@/shared/ui'
-import { TeamAddDialog } from './TeamAddDialog'
 
 type FieldName = 'title' | 'content'
 
@@ -23,6 +23,14 @@ const validationMessages: Record<FieldName, string> = {
 }
 
 const defaultCategory = '전체'
+
+interface NoticeFormInput {
+  /** 선택한 팀 id. 비어 있으면 `전체`다. */
+  teamIds: number[]
+  title: string
+  content: string
+  attachments: string[]
+}
 
 interface NoticeFormProps {
   initialNotice?: Notice
@@ -37,52 +45,83 @@ export function NoticeForm({
 }: NoticeFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
-  const teamAddButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
-  const initialCategory = initialNotice?.category ?? defaultCategory
+  const initialTeamIds = useMemo(
+    () => initialNotice?.teams.map((team) => team.id) ?? [],
+    [initialNotice],
+  )
   const initialAttachmentNames = useMemo(
     () => initialNotice?.attachments ?? [],
     [initialNotice?.attachments],
   )
   // 저장소 키까지 온 첨부만 파일 서버에서 원본을 받는다. mock 첨부는 이름뿐이다.
   const initialAttachmentFiles = initialNotice?.attachmentFiles
-  const formInitialCategories = useMemo(
-    () => [initialCategory],
-    [initialCategory],
-  )
-  const [category, setCategory] = useState(initialCategory)
-  const [categories, setCategories] = useState(formInitialCategories)
-  const [teamDialogOpen, setTeamDialogOpen] = useState(false)
+  // 팀 설정과 같은 캐시를 쓴다. 분류는 `전체` 와 팀 조회 API 가 준 팀 중에서만 고른다.
+  const teamsQuery = useQuery({
+    queryKey: ['teams', 'list'],
+    queryFn: getTeams,
+  })
+  // 팀은 id로 구분한다. 이름이 같은 팀이 있어도 따로 고를 수 있다.
+  const teams = useMemo(() => {
+    const byId = new Map<number, NoticeTeam>()
+    // 수정 화면의 기존 팀이 팀 목록에 없더라도 선택 상태는 보여준다.
+    for (const team of initialNotice?.teams ?? []) byId.set(team.id, team)
+    for (const team of teamsQuery.data ?? []) {
+      byId.set(team.id, { id: team.id, name: team.name })
+    }
+    return [...byId.values()]
+  }, [initialNotice?.teams, teamsQuery.data])
+  // 분류는 여러 팀을 고를 수 있다. 팀을 하나도 고르지 않은 상태가 `전체` 다.
+  // `전체` 를 고르면 팀 선택이 모두 풀리고, 팀을 모두 해제하면 `전체` 로 돌아간다.
+  const [selectedTeamIds, setSelectedTeamIds] = useState(initialTeamIds)
+
+  function toggleTeam(teamId: number) {
+    setSelectedTeamIds((previous) =>
+      previous.includes(teamId)
+        ? previous.filter((id) => id !== teamId)
+        : [...previous, teamId],
+    )
+  }
   const [title, setTitle] = useState(initialNotice?.title ?? '')
   const [content, setContent] = useState(initialNotice?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
-  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
+  // 제출할 첨부 목록. 기존 첨부는 fileKey 를, 새로 고른 파일은 File 을 가진다.
+  const [attachmentItems, setAttachmentItems] = useState<AttachmentItem[]>([])
   const [validationError, setValidationError] = useState<FieldName | null>(null)
   const mutation = useMutation({
-    mutationFn: async (input: UpdateNoticeInput) => {
+    mutationFn: async (input: NoticeFormInput) => {
+      // 기존 첨부는 fileKey 를 그대로 재전송하고, 새로 고른 파일만 업로드한다.
+      // 업로드가 하나라도 실패하면 공지 요청을 보내지 않는다.
+      const files: string[] = []
+      for (const attachment of attachmentItems) {
+        if (attachment.fileKey) {
+          files.push(attachment.fileKey)
+          continue
+        }
+        if (!attachment.file) continue
+
+        const { fileKey } = await uploadFile({ files: attachment.file })
+        files.push(fileKey)
+      }
+
       if (initialNotice) {
         await updateNotice({
           id: Number(initialNotice.id),
           input: {
             title: input.title,
-            kind: 'ALL',
+            teamIds: input.teamIds,
             content: input.content,
+            files,
           },
         })
         return
       }
 
-      const files: string[] = []
-      for (const attachmentFile of attachmentFiles) {
-        const uploadedFile = await uploadFile({ files: attachmentFile })
-        files.push(uploadedFile.fileKey)
-      }
-
       await createNotice({
         title: input.title,
-        kind: 'ALL',
+        teamIds: input.teamIds,
         content: input.content,
         files,
       })
@@ -91,32 +130,26 @@ export function NoticeForm({
   const isEditing = Boolean(initialNotice)
 
   useEffect(() => {
-    const categoriesChanged =
-      categories.length !== formInitialCategories.length ||
-      categories.some((item, index) => item !== formInitialCategories[index])
     const isDirty = Boolean(
       title !== (initialNotice?.title ?? '') ||
       content !== (initialNotice?.content ?? '') ||
-      category !== initialCategory ||
-      categoriesChanged ||
+      !sameArray(selectedTeamIds, initialTeamIds) ||
       (isEditing
-        ? !sameStringArray(attachmentNames, initialAttachmentNames)
+        ? !sameArray(attachmentNames, initialAttachmentNames)
         : hasAttachments),
     )
 
     onDirtyChange(isDirty)
   }, [
     attachmentNames,
-    category,
-    categories,
+    selectedTeamIds,
     content,
     hasAttachments,
     initialAttachmentNames,
-    initialCategory,
+    initialTeamIds,
     initialNotice,
     isEditing,
     onDirtyChange,
-    formInitialCategories,
     title,
   ])
 
@@ -138,8 +171,8 @@ export function NoticeForm({
     event.preventDefault()
     if (submittingRef.current) return
 
-    const input: UpdateNoticeInput = {
-      category,
+    const input: NoticeFormInput = {
+      teamIds: selectedTeamIds,
       title: title.trim(),
       content: content.trim(),
       attachments: attachmentNames,
@@ -186,52 +219,46 @@ export function NoticeForm({
       <CategoryCard aria-required="true">
         <CategoryLegend>분류</CategoryLegend>
         <CategoryOptions>
-          {categories.map((option) => (
-            <CategoryOption key={option}>
+          <CategoryOption>
+            <CategorySelectLabel>
+              <CategoryCheckbox
+                type="checkbox"
+                name="notice-category"
+                value="all"
+                checked={selectedTeamIds.length === 0}
+                onChange={() => setSelectedTeamIds([])}
+              />
+              <CategoryPill>{defaultCategory}</CategoryPill>
+            </CategorySelectLabel>
+          </CategoryOption>
+          {teams.map((team) => (
+            <CategoryOption key={team.id}>
               <CategorySelectLabel>
-                <CategoryRadio
-                  type="radio"
+                <CategoryCheckbox
+                  type="checkbox"
                   name="notice-category"
-                  value={option}
-                  required
-                  checked={category === option}
-                  onChange={(event) => setCategory(event.target.value)}
+                  value={team.id}
+                  checked={selectedTeamIds.includes(team.id)}
+                  onChange={() => toggleTeam(team.id)}
                 />
-                <CategoryPill>{categoryDisplayName(option)}</CategoryPill>
+                <CategoryPill>{categoryDisplayName(team.name)}</CategoryPill>
               </CategorySelectLabel>
-              {option !== '전체' && (
-                <CategoryRemove
-                  type="button"
-                  aria-label={`${categoryDisplayName(option)} 삭제`}
-                  onClick={() => {
-                    const nextCategories = categories.filter(
-                      (item) => item !== option,
-                    )
-                    const normalizedCategories =
-                      nextCategories.length > 0
-                        ? nextCategories
-                        : [defaultCategory]
-
-                    setCategories(normalizedCategories)
-                    if (category === option) {
-                      setCategory(normalizedCategories[0])
-                    }
-                  }}
-                />
-              )}
             </CategoryOption>
           ))}
-          <TeamAddButton
-            ref={teamAddButtonRef}
-            type="button"
-            onClick={() => setTeamDialogOpen(true)}
-          >
-            <PlusIcon viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </PlusIcon>
-            팀 추가
-          </TeamAddButton>
         </CategoryOptions>
+        {teamsQuery.isPending && (
+          <CategoryStatus role="status">
+            팀 목록을 불러오는 중입니다.
+          </CategoryStatus>
+        )}
+        {teamsQuery.isError && (
+          <CategoryStatus role="status">
+            팀 목록을 불러오지 못했습니다.
+            <RetryButton type="button" onClick={() => teamsQuery.refetch()}>
+              다시 시도
+            </RetryButton>
+          </CategoryStatus>
+        )}
       </CategoryCard>
 
       <ContentCard>
@@ -258,7 +285,7 @@ export function NoticeForm({
         storedFiles={Boolean(initialAttachmentFiles)}
         onFilesChange={setHasAttachments}
         onFileNamesChange={setAttachmentNames}
-        onFileObjectsChange={setAttachmentFiles}
+        onFileItemsChange={setAttachmentItems}
       />
 
       {mutation.isError && (
@@ -287,39 +314,17 @@ export function NoticeForm({
           onConfirm={handleConfirm}
         />
       )}
-
-      {teamDialogOpen && (
-        <TeamAddDialog
-          onCancel={() => {
-            setTeamDialogOpen(false)
-            requestAnimationFrame(() => teamAddButtonRef.current?.focus())
-          }}
-          onAdd={(teamName) => {
-            setCategories((current) => {
-              const teamCategories = current.filter(
-                (item) => item !== defaultCategory,
-              )
-              return teamCategories.includes(teamName)
-                ? teamCategories
-                : [...teamCategories, teamName]
-            })
-            setCategory(teamName)
-            setTeamDialogOpen(false)
-            requestAnimationFrame(() => teamAddButtonRef.current?.focus())
-          }}
-        />
-      )}
     </Form>
   )
 }
 
-function validate(input: UpdateNoticeInput): FieldName | null {
+function validate(input: NoticeFormInput): FieldName | null {
   if (!input.title) return 'title'
   if (!input.content) return 'content'
   return null
 }
 
-function sameStringArray(left: string[], right: string[]) {
+function sameArray<T>(left: T[], right: T[]) {
   return (
     left.length === right.length &&
     left.every((value, index) => value === right[index])
@@ -484,7 +489,7 @@ const CategorySelectLabel = styled.label`
   display: inline-flex;
 `
 
-const CategoryRadio = styled.input`
+const CategoryCheckbox = styled.input`
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -492,6 +497,13 @@ const CategoryRadio = styled.input`
   height: 100%;
   margin: 0;
   opacity: 0;
+  cursor: pointer;
+
+  // 자원 폼 분류 pill 과 같은 선택 표시다.
+  &:checked + span {
+    background: ${({ theme }) => theme.colors.textStrong};
+    color: ${({ theme }) => theme.colors.surface};
+  }
 
   &:focus-visible + span {
     outline: 2px solid ${({ theme }) => theme.colors.textGuide};
@@ -520,62 +532,34 @@ const CategoryPill = styled.span`
     color: #434343;
     font-size: 22px;
   }
-`
 
-const CategoryRemove = styled(RemoveIconButton)`
-  z-index: 2;
-  margin-right: 18px;
-
-  form & {
-    width: 24px;
-    height: 24px;
-    margin: 0 20px 0 -12px;
-
-    svg {
-      width: 20px;
-      height: 20px;
-    }
+  form input:checked + & {
+    color: ${({ theme }) => theme.colors.surface};
   }
 `
 
-const TeamAddButton = styled.button`
-  min-height: 44px;
-  padding: 8px 18px;
-  border: 1px solid ${({ theme }) => theme.colors.textGuide};
-  border-radius: 999px;
-  background: ${({ theme }) => theme.colors.surface};
+const CategoryStatus = styled.p`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 0;
   color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 18px;
+`
+
+const RetryButton = styled.button`
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
   font: inherit;
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.2;
+  text-decoration: underline;
 
   &:focus-visible {
     outline: 2px solid ${({ theme }) => theme.colors.textGuide};
     outline-offset: 3px;
   }
-
-  form & {
-    display: inline-flex;
-    height: 46px;
-    min-height: 0;
-    align-items: center;
-    gap: 4px;
-    padding: 0 16px;
-    border-radius: 42px;
-    background: transparent;
-    font-size: 22px;
-  }
-`
-
-const PlusIcon = styled.svg`
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-width: 2;
 `
 
 const ContentCard = styled(FieldCard)`

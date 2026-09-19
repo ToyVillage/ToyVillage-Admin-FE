@@ -15,7 +15,9 @@ import {
 import {
   DeleteConfirmationDialog,
   ErrorDialog,
+  Toast,
   ValidationDialog,
+  type ToastVariant,
 } from '@/shared/ui'
 import { ResourceUploadField } from './ResourceUploadField'
 
@@ -28,11 +30,15 @@ const validationMessages: Record<ValidationField, string> = {
   file: '이미지 또는 파일을 추가해주세요',
 }
 
+/** 폼이 끝난 이유. 목록 화면이 이 값으로 토스트를 고른다. */
+export type ResourceFormCompletion = 'created' | 'updated' | 'deleted'
+
 interface ResourceFormProps {
   initialResource?: Resource
   // 상세(수정) 화면에서 데이터 로딩 전에도 수정 레이아웃을 유지하기 위한 강제 플래그.
   editing?: boolean
-  onCompleted: () => void
+  /** 저장·생성·삭제가 끝났을 때. 목록이 결과 토스트를 띄우는 데 쓴다. */
+  onCompleted: (reason: ResourceFormCompletion) => void
   onDirtyChange: (isDirty: boolean) => void
 }
 
@@ -71,6 +77,19 @@ export function ResourceForm({
   const [validationError, setValidationError] =
     useState<ValidationField | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  // Figma `자료실 · 토스트`(311:12766) — 이 화면에 머무르는 결과는 토스트로 알린다.
+  // 같은 결과가 연달아 나와도 다시 뜨도록 매번 id 를 올린다.
+  const [toast, setToast] = useState<{
+    variant: ToastVariant
+    message: string
+    id: number
+  } | null>(null)
+  const toastIdRef = useRef(0)
+
+  function showToast(variant: ToastVariant, message: string) {
+    toastIdRef.current += 1
+    setToast({ variant, message, id: toastIdRef.current })
+  }
   const mutation = useMutation({
     mutationFn: async (input: UpdateResourceInput) => {
       // 첨부 시 이미 업로드해 둔 file key(수정은 기존 키 포함)를 그대로 보낸다.
@@ -165,10 +184,12 @@ export function ResourceForm({
         // 목록만 무효화한다. 상세 쿼리(['resources', id])까지 무효화하면 아직 떠 있는
         // 상세 페이지가 재조회를 일으킨다.
         await queryClient.invalidateQueries({ queryKey: ['resources', 'list'] })
-        onCompleted()
+        onCompleted(isEditing ? 'updated' : 'created')
       },
       onError: () => {
         submittingRef.current = false
+        // 수정 실패는 Figma 에 토스트가 없어 기존 예외 모달을 그대로 쓴다.
+        if (!isEditing) showToast('error', '데이터 생성에 실패했습니다')
       },
     })
   }
@@ -180,11 +201,11 @@ export function ResourceForm({
       onSuccess: async () => {
         // 목록만 무효화한다. 상세 쿼리를 무효화하면 삭제된 id 를 다시 GET 해 404 가 난다.
         await queryClient.invalidateQueries({ queryKey: ['resources', 'list'] })
-        onCompleted()
+        onCompleted('deleted')
       },
       onError: () => {
-        // 실패 시 삭제 확인 다이얼로그를 닫아 ErrorDialog 만 남긴다.
         setDeleteDialogOpen(false)
+        showToast('error', '데이터 삭제에 실패했습니다')
       },
     })
   }
@@ -232,6 +253,14 @@ export function ResourceForm({
         onFileNamesChange={setAttachmentNames}
         onFileKeysChange={setFileKeys}
         onUploadingChange={setIsUploading}
+        onUploadResult={(result) =>
+          showToast(
+            result === 'success' ? 'success' : 'error',
+            result === 'success'
+              ? '첨부파일 등록에 성공했습니다'
+              : '첨부파일 등록에 실패했습니다',
+          )
+        }
       />
 
       <Actions>
@@ -288,19 +317,23 @@ export function ResourceForm({
         />
       )}
 
-      {mutation.isError && (
+      {/* 수정(저장) 실패만 예외 모달로 남긴다 — Figma 에 저장 실패 토스트가 없다. */}
+      {toast && (
+        <Toast
+          key={toast.id}
+          variant={toast.variant}
+          message={toast.message}
+          onDismiss={() => setToast(null)}
+        />
+      )}
+      {isEditing && mutation.isError && (
         <ErrorDialog
-          title={isEditing ? '저장에 실패하였습니다' : '생성에 실패했습니다'}
+          title="저장에 실패하였습니다"
           onConfirm={() => mutation.reset()}
         />
       )}
 
-      {deleteMutation.isError && (
-        <ErrorDialog
-          title="삭제에 실패하였습니다"
-          onConfirm={() => deleteMutation.reset()}
-        />
-      )}
+
     </Form>
   )
 }

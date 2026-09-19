@@ -73,9 +73,21 @@ test('S5: 업무보고 목록', async ({ page }) => {
   await expect(rows.nth(2)).toContainText('반려')
   await expect(rows.nth(3)).toContainText('김유영')
   await expect(rows.nth(3)).toContainText('심사대기')
-  // 서버 `MISSING`(미제출)도 `심사대기` 로 보여준다.
+  // 서버 `MISSING`(미제출)은 `미제출` 배지로 따로 보여준다.
   await expect(rows.nth(4)).toContainText('홍길동')
-  await expect(rows.nth(4)).toContainText('심사대기')
+  await expect(rows.nth(4)).toContainText('미제출')
+  await expect(rows.nth(4)).not.toContainText('심사대기')
+})
+
+test('S5-1: 미제출 줄은 비활성', async ({ page }) => {
+  await page.goto('/tasks/1')
+
+  // 미제출 줄은 버튼이 아니고 chevron 도 없다. 제출된 줄에만 chevron 이 있다.
+  const missingRows = reportRows(page).filter({ hasText: '미제출' })
+  await expect(missingRows).toHaveCount(2)
+  await expect(missingRows.getByRole('button')).toHaveCount(0)
+  await expect(missingRows.locator('svg')).toHaveCount(0)
+  await expect(reportItems(page).first().locator('svg')).toHaveCount(1)
 })
 
 test('S6: 업무보고 상세 진입', async ({ page }) => {
@@ -92,18 +104,16 @@ test('S6: 업무보고 상세 진입', async ({ page }) => {
 })
 
 test('S7: 진행도 요약', async ({ page }) => {
-  // 심사대기 3 = 심사대기 1 + 미제출 2(미제출은 심사대기에 합산한다).
+  // 미제출은 심사대기와 따로 센다.
   await page.goto('/tasks/1')
-  await expect(
-    page.getByText('전체 6 · 승인 2 · 반려 1 · 심사대기 3'),
-  ).toBeVisible()
+  await expect(page.getByText('전체 6 · 승인 2 · 반려 1')).toBeVisible()
+  await expect(page.getByText('심사대기 1 · 미제출 2')).toBeVisible()
 
-  // 아무도 내지 않은 업무는 전부 심사대기로 모인다.
+  // 아무도 내지 않은 업무는 전부 미제출이다.
   await page.goto('/tasks/2')
-  await expect(
-    page.getByText('전체 1 · 승인 0 · 반려 0 · 심사대기 1'),
-  ).toBeVisible()
-  await expect(reportRows(page).filter({ hasText: '심사대기' })).toHaveCount(1)
+  await expect(page.getByText('전체 1 · 승인 0 · 반려 0')).toBeVisible()
+  await expect(page.getByText('심사대기 0 · 미제출 1')).toBeVisible()
+  await expect(reportRows(page).filter({ hasText: '미제출' })).toHaveCount(1)
 })
 
 test('S8: 업무보고 없음', async ({ page }) => {

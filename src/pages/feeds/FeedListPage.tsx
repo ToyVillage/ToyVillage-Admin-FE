@@ -21,7 +21,7 @@ import {
 import { FeedTableSkeleton } from './ui/FeedTableSkeleton'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
-const TABLE_PAGE_SIZE = 4
+const TABLE_PAGE_SIZE = 10
 
 const allTabLabel = '전체'
 const tabs = [allTabLabel, ...animalSpeciesList]
@@ -61,18 +61,33 @@ export function FeedListPage() {
     setSearchParams(params, { replace: true })
   }
 
-  // 서버 페이지네이션이다. 명세상 page 는 0부터 시작하고 화면은 1부터 센다.
+  // 서버 페이지네이션이다. 급여 목록은 화면과 같은 1-based 로 보낸다
+  // (다른 목록은 0-based 다 — 개발자 결정).
   const feedsQuery = useQuery({
     queryKey: feedQueryKeys.list(isoDate, species, page),
     queryFn: () =>
       getFeeds({
         date: isoDate,
         animalTaxonomic: species && animalTaxonomicBySpecies[species],
-        page: page - 1,
+        page,
         size: TABLE_PAGE_SIZE,
       }),
     // 급여 내역은 다른 직원이 계속 추가하므로 전역 staleTime(60초) 캐시를 쓰지 않는다.
     staleTime: 0,
+    // 페이지를 넘기는 동안 직전 응답을 유지한다. 없으면 `totalPageSize` 가 잠시
+    // 사라져 총 페이지 수가 현재 페이지로 줄었다가 되돌아온다.
+    // 단, 조회날짜·분류가 바뀐 경우에는 버린다 — 새 조건을 기다리는 동안 이전
+    // 조건의 행이 남아 있으면 그 행을 눌러 엉뚱한 상세로 들어갈 수 있다.
+    placeholderData: (previousData, previousQuery) => {
+      const previousFilter = previousQuery?.queryKey[2] as
+        | { date: string; species: AnimalSpecies | null }
+        | undefined
+      if (!previousFilter) return undefined
+      if (previousFilter.date !== isoDate) return undefined
+      if (previousFilter.species !== species) return undefined
+
+      return previousData
+    },
   })
 
   const feeds = useMemo(() => feedsQuery.data?.items ?? [], [feedsQuery.data])

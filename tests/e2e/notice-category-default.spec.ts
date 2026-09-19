@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
-test('공지 분류 ALL은 전체로 표시하고 전체 탭을 기본 선택한다', async ({
+test('팀이 없는 공지는 전체로 표시하고 전체 탭을 기본 선택한다', async ({
   page,
 }) => {
   await page.route(apiPath, async (route) => {
@@ -14,7 +14,7 @@ test('공지 분류 ALL은 전체로 표시하고 전체 탭을 기본 선택한
           {
             id: 1,
             title: '전체 공지',
-            kind: 'ALL',
+            teams: [],
             createdAt: '2026-07-28',
           },
         ],
