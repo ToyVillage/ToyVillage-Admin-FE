@@ -23,8 +23,9 @@ export interface MockNotice {
   files: { fileName: string; fileKey: string }[]
 }
 
-const team1: MockNoticeTeam = { id: 1, name: '팀이름 1' }
-const team2: MockNoticeTeam = { id: 2, name: '팀이름 2' }
+// 팀 목록 mock(mockTeamList)은 id를 1부터 매긴다. 목록에 없는 팀도 되도록 겹치지 않게 둔다.
+const team1: MockNoticeTeam = { id: 101, name: '팀이름 1' }
+const team2: MockNoticeTeam = { id: 102, name: '팀이름 2' }
 
 // 최신순: 1 → 6. 한 페이지 4건이라 2페이지는 5·6 이다.
 export function createMockNotices(): MockNotice[] {
