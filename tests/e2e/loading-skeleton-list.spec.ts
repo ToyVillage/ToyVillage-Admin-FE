@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { mockNoticeApi, noticeListPattern } from './support/notice-api'
-import { mockTeamList } from './support/team-api'
+import { mockTaskApi, taskListPattern } from './support/task-api'
 
 // 승인된 시나리오(loading-skeleton-list.approved.json: S1~S15)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
@@ -82,16 +82,21 @@ test('S14: 조회 실패 → 스켈레톤 대신 기존 오류 표시', async ({
 })
 
 test('S15: 재조회에는 스켈레톤을 다시 보이지 않음', async ({ page }) => {
-  // 분류 탭은 팀 목록이 기준이다(공지 mock 의 분류와 같은 이름).
-  await mockTeamList(page, ['팀이름 1', '팀이름 2'])
-  await mockNoticeApi(page)
-  await page.goto('/notices/list')
-  await expect(page.getByTestId('notice-row').first()).toBeVisible()
+  await mockTaskApi(page)
+  await page.goto('/tasks')
+  const rows = page.getByTestId('task-row')
+  await expect(rows.first()).toBeVisible()
+  const firstRowText = (await rows.first().textContent()) ?? ''
 
-  // 이후 목록 조회는 응답하지 않는다.
-  await page.route(noticeListPattern, () => new Promise<void>(() => {}))
-  await page.getByRole('button', { name: '팀이름 1' }).click()
+  // 이후 목록 조회는 응답하지 않는다. 상태 탭은 서버에 다시 조회한다.
+  let refetched = false
+  await page.route(taskListPattern, () => {
+    refetched = true
+    return new Promise<void>(() => {})
+  })
+  await page.getByRole('button', { name: '진행중', exact: true }).click()
 
+  await expect.poll(() => refetched).toBe(true)
   await expect(page.getByRole('status', { name: '불러오는 중' })).toHaveCount(0)
-  await expect(page.getByTestId('notice-row').first()).toBeVisible()
+  await expect(rows.first()).toHaveText(firstRowText)
 })
