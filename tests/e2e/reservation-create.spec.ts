@@ -3,15 +3,16 @@ import { test, expect, type Page } from '@playwright/test'
 // 승인 시나리오(reservation-create.approved.json: S1~S7) 변환. 생성 폼은 mock 경계.
 
 // 시간 입력은 키다운으로 raw 자릿수를 왼쪽부터 채운다(값은 controlled — fill 은 반영 안 됨).
-async function fillTime(page: Page, label: string, digits: string) {
-  await page.getByLabel(`${label} 시`, { exact: true }).click()
-  await page.keyboard.type(digits, { delay: 20 })
-}
+type Side = '입장시간' | '퇴장시간'
 
-// 12시간제: 오후 시각은 am/pm 드롭다운에서 pm 을 선택한다.
-async function selectPm(page: Page, label: string) {
-  await page.getByRole('button', { name: `${label} 오전/오후` }).click()
-  await page.getByRole('option', { name: 'pm' }).click()
+async function fillTime(
+  page: Page,
+  label: string,
+  side: Side,
+  digits: string,
+) {
+  await page.getByLabel(`${label} ${side} 시`, { exact: true }).click()
+  await page.keyboard.type(digits, { delay: 20 })
 }
 
 async function fillAllRequired(page: Page) {
@@ -24,16 +25,14 @@ async function fillAllRequired(page: Page) {
   await page.getByLabel('인솔자 인원').fill('3')
   await page.getByLabel('입장료를 입력해주세요').fill('48000')
   await page.getByLabel('방문일을 선택해주세요').fill('2026.08.20')
-  await fillTime(page, '방문 시간을 선택해주세요 (입장시간)', '1000') // 10:00 오전
-  const exitLabel = '퇴장 시간을 선택해주세요 (퇴장시간)'
-  await fillTime(page, exitLabel, '0600')
-  await selectPm(page, exitLabel) // 18:00
+  const visitLabel = '방문 시간을 선택해주세요'
+  await fillTime(page, visitLabel, '입장시간', '1000') // 10:00
+  await fillTime(page, visitLabel, '퇴장시간', '1800') // 18:00
   await page.getByLabel('사전답사 인원').fill('8')
   await page.getByLabel('사전답사일을 선택해주세요').fill('2026.08.16')
-  await fillTime(page, '사전답사 시간을 선택해주세요 (입장시간)', '1000') // 10:00 오전
-  const surveyExitLabel = '사전답사 시간을 선택해주세요 (퇴장시간)'
-  await fillTime(page, surveyExitLabel, '0300')
-  await selectPm(page, surveyExitLabel) // 15:00
+  const surveyLabel = '사전답사 시간을 선택해주세요'
+  await fillTime(page, surveyLabel, '입장시간', '1000') // 10:00
+  await fillTime(page, surveyLabel, '퇴장시간', '1500') // 15:00
 }
 
 test('S1: 생성 폼 표시', async ({ page }) => {
@@ -86,14 +85,30 @@ test('S4: 정상 생성', async ({ page }) => {
   await expect(page).toHaveURL(/\/notices\/reservations$/)
 })
 
-test('S5: 시간 am/pm 선택', async ({ page }) => {
+test('S5: 시간 직접 입력(24시간제)', async ({ page }) => {
   await page.goto('/notices/reservations/create')
-  const trigger = page.getByRole('button', {
-    name: '방문 시간을 선택해주세요 (입장시간) 오전/오후',
-  })
-  await trigger.click()
-  await page.getByRole('option', { name: 'pm' }).click()
-  await expect(trigger).toContainText('pm')
+  const label = '방문 시간을 선택해주세요'
+  const hour = page.getByLabel(`${label} 입장시간 시`, { exact: true })
+  const minute = page.getByLabel(`${label} 입장시간 분`, { exact: true })
+
+  // 자릿수를 왼쪽부터 채운다: 2→02시, 22→22시, 223→22시 30분, 2230→22시 30분.
+  await expect(hour).toHaveValue('00')
+  await fillTime(page, label, '입장시간', '2230')
+  await expect(hour).toHaveValue('22')
+  await expect(minute).toHaveValue('30')
+
+  // Backspace 로 분 자릿수를 지우면 00 으로 돌아간다.
+  await page.keyboard.press('Backspace')
+  await page.keyboard.press('Backspace')
+  await expect(minute).toHaveValue('00')
+  await expect(hour).toHaveValue('22')
+
+  // 두 자리 시가 될 수 없는 첫 자리는 0을 앞에 채운다(9 → 09시).
+  const exitHour = page.getByLabel(`${label} 퇴장시간 시`, { exact: true })
+  const exitMinute = page.getByLabel(`${label} 퇴장시간 분`, { exact: true })
+  await fillTime(page, label, '퇴장시간', '9')
+  await expect(exitHour).toHaveValue('09')
+  await expect(exitMinute).toHaveValue('00')
 })
 
 test('S6: 페이지 권한 배정 추가/취소', async ({ page }) => {
