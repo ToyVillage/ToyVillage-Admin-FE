@@ -46,15 +46,15 @@ test('S1: route ID와 JSON body로 공지를 한 번 수정하고 목록으로 �
   expect(updateRequestHeaders.authorization).toMatch(/^Bearer /)
   expect(updateRequestBody).toEqual({
     title: 'API 수정 공지',
-    kind: 'ALL',
+    teamIds: [],
     content: 'API 수정 내용',
   })
 })
 
-test('S2: HTTP 400이면 입력을 보존하고 다시 제출할 수 있다', async ({
+test('S2: 존재하지 않는 팀(HTTP 404)이면 입력을 보존하고 다시 제출할 수 있다', async ({
   page,
 }) => {
-  await mockUpdateError(page, 400, '존재하지 않는 공지사항 분류 항목입니다')
+  await mockUpdateError(page, 404, '존재하지 않는 팀입니다.')
 
   await page.goto('/notices/list/7/edit')
   await fillNotice(page, '검증 오류 공지', '검증 오류 내용')
@@ -171,6 +171,50 @@ test('S7: HTTP 200 응답이 Contract와 다르면 성공 처리하지 않는다
   await expectUpdateFailure(page, '잘못된 응답 공지', '잘못된 응답 내용')
 })
 
+test('S8: 기존 공지의 팀을 그대로 두면 그 팀 id를 teamIds로 보낸다', async ({
+  page,
+}) => {
+  let updateRequestBody: unknown
+
+  await page.route(detailApiPath, async (route) => {
+    if (route.request().method() === 'PUT') {
+      updateRequestBody = route.request().postDataJSON()
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: '공지 수정 성공' }),
+      })
+      return
+    }
+
+    await fulfillNoticeDetail(route, {
+      id: 7,
+      title: '팀 공지',
+      content: '팀 공지 내용',
+      teams: [
+        { id: 2, name: '창고팀' },
+        { id: 4, name: '사육팀' },
+      ],
+    })
+  })
+  await page.route(listApiPath, async (route) => {
+    await fulfillNoticeList(route, '팀 공지 수정')
+  })
+
+  await page.goto('/notices/list/7/edit')
+  await expect(page.getByRole('checkbox', { name: '창고팀' })).toBeChecked()
+  await expect(page.getByRole('checkbox', { name: '사육팀' })).toBeChecked()
+  await fillNotice(page, '팀 공지 수정', '팀 공지 내용')
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  await expect(page).toHaveURL(/\/notices\/list$/)
+  expect(updateRequestBody).toEqual({
+    title: '팀 공지 수정',
+    teamIds: [2, 4],
+    content: '팀 공지 내용',
+  })
+})
+
 async function fillNotice(page: Page, title: string, content: string) {
   await page.getByLabel('제목').fill(title)
   await page.getByLabel('내용').fill(content)
@@ -217,14 +261,19 @@ async function mockUpdateError(
 
 async function fulfillNoticeDetail(
   route: Route,
-  notice: { id: number; title: string; content: string },
+  notice: {
+    id: number
+    title: string
+    content: string
+    teams?: { id: number; name: string }[]
+  },
 ) {
   await route.fulfill({
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({
+      teams: [],
       ...notice,
-      kind: '공지사항 분류',
       createAt: '2026-07-28',
     }),
   })
@@ -239,7 +288,7 @@ async function fulfillNoticeList(route: Route, title: string) {
         {
           id: 7,
           title,
-          kind: '공지사항 분류',
+          teams: [],
           createdAt: '2026-07-28',
         },
       ],

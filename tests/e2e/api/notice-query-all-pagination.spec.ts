@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 
-test('서버의 다음 페이지까지 조회해 11번째 공지와 카테고리를 표시한다', async ({
+test('서버의 다음 페이지까지 조회해 11번째 공지와 팀을 표시한다', async ({
   page,
 }) => {
   const requestedPages: string[] = []
@@ -20,7 +20,11 @@ test('서버의 다음 페이지까지 조회해 11번째 공지와 카테고리
       return {
         id,
         title: `공지 ${id}`,
-        kind: id > 10 ? '두 번째 페이지 분류' : '첫 번째 페이지 분류',
+        teams: [
+          id > 10
+            ? { id: 2, name: '두 번째 페이지 팀' }
+            : { id: 1, name: '첫 번째 페이지 팀' },
+        ],
         createdAt: `2026-07-${String(28 - id).padStart(2, '0')}`,
       }
     })
@@ -34,12 +38,9 @@ test('서버의 다음 페이지까지 조회해 11번째 공지와 카테고리
 
   await page.goto('/notices/list')
 
-  await expect(
-    page.getByRole('button', { name: '두 번째 페이지 분류' }),
-  ).toBeVisible()
   await page.getByRole('button', { name: '3 페이지' }).click()
   await expect(
     page.getByTestId('notice-row').filter({ hasText: '공지 11' }),
-  ).toBeVisible()
+  ).toContainText('두 번째 페이지 팀')
   expect(requestedPages).toEqual(['1', '2'])
 })
