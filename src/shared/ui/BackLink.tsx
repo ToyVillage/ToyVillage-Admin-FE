@@ -6,6 +6,8 @@ interface BackLinkProps {
   to: string
   children?: ReactNode
   className?: string
+  /** 돌아갈 화면에 넘길 이동 state(그 화면이 들고 있던 조회 조건 등). */
+  state?: unknown
 }
 
 // Figma 공용 `back` 컴포넌트(1:10470). 상세 화면에서 목록으로 되돌아가는 링크.
@@ -13,9 +15,10 @@ export function BackLink({
   to,
   children = '뒤로가기',
   className,
+  state,
 }: BackLinkProps) {
   return (
-    <Anchor className={className} to={to}>
+    <Anchor className={className} to={to} state={state}>
       <BackIcon viewBox="0 0 24 24" aria-hidden="true">
         <path d="m15 4-8 8 8 8" />
       </BackIcon>
