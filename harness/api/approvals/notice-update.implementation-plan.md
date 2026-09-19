@@ -80,3 +80,14 @@
 ## 2026-09-17 변경 (#93·#95 퍼블리싱, #112)
 
 - API Contract는 바뀌지 않았다. 수정 화면 경로만 `/notices/list/:id/edit`로 옮겨 시나리오 진입 경로를 갱신한다.
+
+## 2026-09-18 변경 — `kind` → `teamIds`/`teams` (#147)
+
+- 근거: staging Swagger(`/v3/api-docs/app`). Notion은 아직 `kind` 기준이라 사용자 결정으로 Swagger를 채택했다.
+- `src/entities/notice/model/types.ts`: `Notice.category` 제거, `teams: NoticeTeam[]` 추가. 화면 문구는 `noticeCategoryLabel(teams)`(빈 배열 → `전체`, 아니면 이름을 `, `로 연결).
+- `src/entities/notice/api/types.ts`: 요청 `kind` 제거·`teamIds: number[]` 추가, 응답 `kind` → `teams: {id, name}[]`.
+- `src/entities/notice/api/noticeApi.ts`: 응답 `teams`를 검증해 매핑한다. 배열이 아니거나 항목 형식이 어긋나면 해당 항목을 버리고 빈 배열(`전체`)로 본다.
+- `src/entities/notice/model/mock.ts`: 쓰는 곳이 없는 구 localStorage mock이라 삭제했다.
+- 실제 서버 테스트는 disabled 그대로다.
+- `src/features/create-notice/ui/NoticeForm.tsx`: 상세 응답 `teams`로 선택 상태를 복원한다. 이름→id 매핑에 상세 `teams`도 넣어, 팀 목록에서 사라진 팀도 id를 유지한다.
+- 존재하지 않는 팀은 HTTP 404 `TEAM_NOT_FOUND`다. 기존 400 분류 오류 시나리오를 404로 바꿨다.
