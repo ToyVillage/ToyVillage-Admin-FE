@@ -253,6 +253,14 @@ export function ResourceForm({
         onFileNamesChange={setAttachmentNames}
         onFileKeysChange={setFileKeys}
         onUploadingChange={setIsUploading}
+        onUploadResult={(result) =>
+          showToast(
+            result === 'success' ? 'success' : 'error',
+            result === 'success'
+              ? '첨부파일 등록에 성공했습니다'
+              : '첨부파일 등록에 실패했습니다',
+          )
+        }
       />
 
       <Actions>
