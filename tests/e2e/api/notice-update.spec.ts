@@ -3,6 +3,7 @@ import { mockTeamList } from '../support/team-api'
 
 const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
 const listApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
+const fileApiPath = /^https:\/\/[^/]+\/file(?:\?.*)?$/
 
 test('S1: route ID와 JSON body로 공지를 한 번 수정하고 목록으로 이동한다', async ({
   page,
@@ -49,6 +50,7 @@ test('S1: route ID와 JSON body로 공지를 한 번 수정하고 목록으로 �
     title: 'API 수정 공지',
     teamIds: [],
     content: 'API 수정 내용',
+    files: [],
   })
 })
 
@@ -215,7 +217,115 @@ test('S8: 기존 공지의 팀을 그대로 두면 그 팀 id를 teamIds로 보�
     title: '팀 공지 수정',
     teamIds: [2, 4],
     content: '팀 공지 내용',
+    files: [],
   })
+})
+
+test('S9: 지운 첨부는 빼고 새 첨부만 올려 files로 보낸다', async ({ page }) => {
+  let uploadCount = 0
+  let updateRequestBody: unknown
+
+  await page.route(detailApiPath, async (route) => {
+    if (route.request().method() === 'PUT') {
+      updateRequestBody = route.request().postDataJSON()
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: '공지 수정 성공' }),
+      })
+      return
+    }
+
+    await fulfillNoticeDetail(route, {
+      id: 7,
+      title: '첨부 공지',
+      content: '첨부 내용',
+      files: [
+        { fileName: '당일 지침.pdf', fileKey: 'old-key-1' },
+        { fileName: '휴관안내.png', fileKey: 'old-key-2' },
+      ],
+    })
+  })
+  await page.route(fileApiPath, async (route) => {
+    uploadCount += 1
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({ fileKey: 'new-key-1' }),
+    })
+  })
+  await page.route(listApiPath, async (route) => {
+    await fulfillNoticeList(route, '첨부 수정 공지')
+  })
+
+  await page.goto('/notices/list/7/edit')
+  const removeButton = page.getByRole('button', { name: '당일 지침.pdf 삭제' })
+  await removeButton.focus()
+  await removeButton.press('Enter')
+  await page.getByLabel('첨부파일 선택').setInputFiles({
+    name: '새 안내.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('notice'),
+  })
+  await fillNotice(page, '첨부 수정 공지', '첨부 수정 내용')
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  await expect(page).toHaveURL(/\/notices\/list$/)
+  expect(uploadCount).toBe(1)
+  expect(updateRequestBody).toEqual({
+    title: '첨부 수정 공지',
+    teamIds: [],
+    content: '첨부 수정 내용',
+    files: ['old-key-2', 'new-key-1'],
+  })
+})
+
+test('S10: 새 첨부 업로드가 실패하면 수정 요청을 보내지 않는다', async ({
+  page,
+}) => {
+  let updateRequestCount = 0
+
+  await page.route(detailApiPath, async (route) => {
+    if (route.request().method() === 'PUT') {
+      updateRequestCount += 1
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: '공지 수정 성공' }),
+      })
+      return
+    }
+
+    await fulfillNoticeDetail(route, {
+      id: 7,
+      title: '첨부 공지',
+      content: '첨부 내용',
+    })
+  })
+  await page.route(fileApiPath, async (route) => {
+    await route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: '서버 오류',
+        status: 500,
+        timestamp: '2026-09-19T12:00:00',
+        description: '서버 오류',
+      }),
+    })
+  })
+
+  await page.goto('/notices/list/7/edit')
+  await page.getByLabel('첨부파일 선택').setInputFiles({
+    name: '새 안내.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('notice'),
+  })
+  await fillNotice(page, '업로드 실패 공지', '업로드 실패 내용')
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  await expectUpdateFailure(page, '업로드 실패 공지', '업로드 실패 내용')
+  expect(updateRequestCount).toBe(0)
 })
 
 async function fillNotice(page: Page, title: string, content: string) {
@@ -269,6 +379,7 @@ async function fulfillNoticeDetail(
     title: string
     content: string
     teams?: { id: number; name: string }[]
+    files?: { fileName: string; fileKey: string }[]
   },
 ) {
   await route.fulfill({
