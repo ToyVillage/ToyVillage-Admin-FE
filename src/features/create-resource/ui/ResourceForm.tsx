@@ -28,11 +28,15 @@ const validationMessages: Record<ValidationField, string> = {
   file: '이미지 또는 파일을 추가해주세요',
 }
 
+/** 폼이 끝난 이유. 목록 화면이 이 값으로 토스트를 고른다. */
+export type ResourceFormCompletion = 'created' | 'updated' | 'deleted'
+
 interface ResourceFormProps {
   initialResource?: Resource
   // 상세(수정) 화면에서 데이터 로딩 전에도 수정 레이아웃을 유지하기 위한 강제 플래그.
   editing?: boolean
-  onCompleted: () => void
+  /** 저장·생성·삭제가 끝났을 때. 목록이 결과 토스트를 띄우는 데 쓴다. */
+  onCompleted: (reason: ResourceFormCompletion) => void
   onDirtyChange: (isDirty: boolean) => void
 }
 
@@ -165,7 +169,7 @@ export function ResourceForm({
         // 목록만 무효화한다. 상세 쿼리(['resources', id])까지 무효화하면 아직 떠 있는
         // 상세 페이지가 재조회를 일으킨다.
         await queryClient.invalidateQueries({ queryKey: ['resources', 'list'] })
-        onCompleted()
+        onCompleted(isEditing ? 'updated' : 'created')
       },
       onError: () => {
         submittingRef.current = false
@@ -180,7 +184,7 @@ export function ResourceForm({
       onSuccess: async () => {
         // 목록만 무효화한다. 상세 쿼리를 무효화하면 삭제된 id 를 다시 GET 해 404 가 난다.
         await queryClient.invalidateQueries({ queryKey: ['resources', 'list'] })
-        onCompleted()
+        onCompleted('deleted')
       },
       onError: () => {
         // 실패 시 삭제 확인 다이얼로그를 닫아 ErrorDialog 만 남긴다.
