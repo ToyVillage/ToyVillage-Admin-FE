@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
+import { mockTeamList } from '../support/team-api'
 
 const detailApiPath = /^https:\/\/[^/]+\/notice\/[^/?]+(?:\?.*)?$/
 const listApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
@@ -200,6 +201,8 @@ test('S8: 기존 공지의 팀을 그대로 두면 그 팀 id를 teamIds로 보�
   await page.route(listApiPath, async (route) => {
     await fulfillNoticeList(route, '팀 공지 수정')
   })
+  // id는 배열 순서로 매겨진다: 창고팀 2, 사육팀 4.
+  await mockTeamList(page, ['동물 관리팀', '창고팀', '조류팀', '사육팀'])
 
   await page.goto('/notices/list/7/edit')
   await expect(page.getByRole('checkbox', { name: '창고팀' })).toBeChecked()
