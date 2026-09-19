@@ -9,6 +9,7 @@ figma:
     - 1:8610
     - 1:8403
     - 1:8206
+    - 2098:17385
 requires_functional_test: true
 paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/reservation-form, src/entities/reservation
 ---
@@ -19,6 +20,7 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 
 - Status: Draft (게이트 승인 대기)
 - 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). 차이 반영은 #94에서 한다.
+- 2026-09-18: 시간 입력을 새 Figma 컴포넌트 `2098:17385`(시계 아이콘 + `시작 → 종료` 한 박스, 392x66)로 교체했다. 입장·퇴장이 각각 한 필드이던 것을 필드 하나로 합쳐 방문일 2행·사전답사 2행이 각각 1칸씩 줄었다(사전답사는 행 하나가 사라짐). **am/pm 드롭다운을 없애고 24시간제(00:00~23:59) 직접 입력으로 바꿨다** — 개발자 결정, Figma 예시 표기(`10 : 00 PM`)보다 우선한다.
 - 생성 화면(플레이스홀더): yot Figma `1:7667` (섹션 `단체예약 · 폼` `311:12769`)
 - 전체 펼침: `1:7667` / 섹션 접힘·상태 배지: `1:5926`(미완료), `1:5968`(완료) / 검증 에러(인라인): `1:8610` / 날짜 선택: `1:8403` / 참고(am·pm 드롭다운, 배정): `1:8206`
 - 진입: 리스트(`/notices/reservations`)의 `단체예약 생성하기` → `/notices/reservations/create` (신규 라우트·페이지)
@@ -46,14 +48,12 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 - `인솔자 인원 *` (number, suffix `명`)
 - `입장료를 입력해주세요 *` (number, suffix `원`)
 - `방문일을 선택해주세요 *` (date)
-- `방문 시간을 선택해주세요 (입장시간) *` (time `00 : 00` + am/pm 드롭다운)
-- `퇴장 시간을 선택해주세요 (퇴장시간) *` (time + am/pm)
+- `방문 시간을 선택해주세요 *` (입장·퇴장을 한 박스에서 24시간제 직접 입력: `00 : 00` → `00 : 00`)
 
 ### ③ 사전답사 관련
 - `사전답사 인원 *` (number, suffix `명`)
 - `사전답사일을 선택해주세요 *` (date)
-- `사전답사 시간을 선택해주세요 (입장시간) *` (time + am/pm)
-- `사전답사 시간을 선택해주세요 (퇴장시간) *` (time + am/pm)
+- `사전답사 시간을 선택해주세요 *` (입장·퇴장 한 박스, 24시간제 직접 입력)
 
 ### ④ 페이지 권한
 - 검색바 (search 아이콘 + ph `이름을 입력해주세요`)
@@ -63,7 +63,9 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 ## 동작 (source of truth)
 
 - 섹션 헤더 chevron 클릭 → 해당 섹션 접기/펼치기. 접힌 헤더에는 상태 배지 `미완료`(점선 원)/`완료`(파란 체크)가 보인다. **완료 판정 기준은 미결(아래 참조).**
-- am/pm 드롭다운 클릭 → `am`/`pm` 선택.
+- 시간 필드는 24시간제 직접 입력이다(드롭다운 없음). 숫자를 왼쪽부터 채우고 Backspace 로 지운다.
+  두 자리가 될 수 없는 첫 자리는 0을 앞에 채워 확정한다(`9` → `09`시, `10` 뒤의 `8` → `08`분).
+  **화면에 보이는 값이 곧 입력값이다** — `1` 만 눌러 `10 : 00` 이 보이면 10시 00분으로 검증·제출된다.
 - `추가하기`/`취소하기`로 배정팀↔배정가능 이동(mock, 로컬 상태).
 - `생성하기` 클릭 → 필수값 검증. 통과 시 mock 생성 요청 후 `/notices/reservations` 복귀.
 - `뒤로가기` → `/notices/reservations`.
@@ -73,13 +75,13 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 `생성하기` 클릭 시 빈 필수 필드는 **빨강 테두리 + 필드 하단 빨강 메시지**(error 아이콘)로 표시:
 - text/number: `내용을 입력해주세요!`
 - date: `날짜를 선택해주세요!`
-- time: `시간을 선택해주세요!`
+- time: `시간을 선택해주세요!` (빈 값일 때. 시 00–23·분 00–59 범위를 벗어나면 `시간을 확인해주세요!`)
 
 필수: 단체명·지역·상담일·예약인 이름·대표자 연락처·총 인원·인솔자 인원·입장료·방문일·방문 입장/퇴장 시간·사전답사 인원·사전답사일·사전답사 입장/퇴장 시간. (페이지 권한 배정은 필수 아님 — 미결 확인)
 
 ## 데이터·API 경계 (mock)
 
-- 제출 입력 계약(초안): `CreateReservationInput { groupName, region, counselDate, reserverName, representativeContact, headcount, guideCount, admissionFee, visitDate, visitTime{h,m,ampm}, exitTime{...}, surveyCount, surveyDate, surveyEnterTime, surveyExitTime, assignedStaffIds[] }`
+- 제출 입력 계약(초안): `CreateReservationInput { groupName, region, counselDate, reserverName, representativeContact, headcount, guideCount, admissionFee, visitDate, visitTime, exitTime (24시간제 `HH:mm`), surveyCount, surveyDate, surveyEnterTime, surveyExitTime, assignedStaffIds[] }`
 - mock 생성 → `['reservations']` 무효화 → 목록 복귀. 실제 필드/엔드포인트는 `/api` 슬라이스에서 확정(현재 백엔드 생성 명세 미확인).
 
 ## 컴포넌트 경계 (design-rules §1)
@@ -87,7 +89,8 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 - `CreateReservationPage`(pages): 라우팅·제출·검증 상태 조립.
 - `ReservationFormSection`(features/reservation-form): 접이식 섹션 카드(헤더+배지+chevron+children).
 - `ReservationForm`(features/reservation-form): 4개 섹션 + 필드 구성(생성/수정 공용).
-- 필드 프리미티브(라벨+인풋+에러): `LabeledField`, 접미사 인풋(명/원), `TimeAmPmField`(00:00+am/pm), `DateField`(calendar).
+- 필드 프리미티브(라벨+인풋+에러): `LabeledField`, 접미사 인풋(명/원), `DateField`(calendar).
+- `TimeRangeField`(features/reservation-form): Figma `2098:17385` — 입장·퇴장을 한 박스(392x66)에서 24시간제로 입력. 내부 시각 한 칸은 `TimeSegment`.
 - `PagePermissionSection`(features/reservation-form): 검색 + 배정팀/배정가능.
 - 아이콘(calendar·search·chevron·상태배지)은 Figma 벡터 다운로드.
 
