@@ -1,6 +1,6 @@
 {
   "feature": "reservation-create",
-  "approvedAt": "2026-09-18T14:15:26.470Z",
+  "approvedAt": "2026-09-19T18:25:23.174Z",
   "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
@@ -10,8 +10,9 @@
     "S5",
     "S6",
     "S7",
-    "S8"
+    "S8",
+    "S9"
   ],
-  "scenarioHash": "51b87a4edef9094af38eeb1e9ffb04b7284ab4e5f6c64bc66bee4222db59a480",
-  "e2eHash": "588656ef209015a57d2d383ff67d4df23794a4fe7ca72b5faff468ba36b2b2d3"
+  "scenarioHash": "8ba212e7cc532957660b6e8243cdbcea85601403e441a26d83bc34465e9464d8",
+  "e2eHash": "94e91cb947a09de4ce3b34eca97c41d37f241e55aded7ccad5f05f7d369590e7"
 }
