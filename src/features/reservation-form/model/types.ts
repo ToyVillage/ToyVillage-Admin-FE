@@ -1,6 +1,5 @@
-export type AmPm = 'am' | 'pm'
-
 // 생성/수정 공용 폼 값. 입력 편의상 수치도 문자열로 보관한다(제출 시 변환).
+// 시간은 24시간제 원시 자릿수 "HHmm"(예: 18:30 → "1830").
 export interface ReservationFormValue {
   // ① 상담일 관련
   groupName: string
@@ -14,16 +13,12 @@ export interface ReservationFormValue {
   admissionFee: string
   visitDate: string
   visitTime: string
-  visitTimeAmPm: AmPm
   exitTime: string
-  exitTimeAmPm: AmPm
   // ③ 사전답사 관련
   surveyCount: string
   surveyDate: string
   surveyEnterTime: string
-  surveyEnterAmPm: AmPm
   surveyExitTime: string
-  surveyExitAmPm: AmPm
 }
 
 export type ReservationFormErrors = Partial<
@@ -41,13 +36,9 @@ export const emptyReservationFormValue: ReservationFormValue = {
   admissionFee: '',
   visitDate: '',
   visitTime: '',
-  visitTimeAmPm: 'am',
   exitTime: '',
-  exitTimeAmPm: 'pm',
   surveyCount: '',
   surveyDate: '',
   surveyEnterTime: '',
-  surveyEnterAmPm: 'am',
   surveyExitTime: '',
-  surveyExitAmPm: 'pm',
 }
