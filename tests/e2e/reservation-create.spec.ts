@@ -131,6 +131,40 @@ test('S5: 시간 직접 입력(24시간제)', async ({ page }) => {
   await expect(exitMinute).toHaveValue('00')
 })
 
+test('S8: 한 자리만 입력해도 보이는 값으로 제출된다', async ({ page }) => {
+  let body: Record<string, unknown> | null = null
+  await routeAssignableEmployees(page)
+  await page.route(/^https:\/\/[^/]+\/reservation$/, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    body = route.request().postDataJSON()
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: '단체예약 생성이 완료되었습니다.' }),
+    })
+  })
+
+  await page.goto('/notices/reservations/create')
+  await fillAllRequired(page)
+  // 방문 입장시간을 `1` 한 자리로 다시 입력한다 → 화면은 10 : 00.
+  const hour = page.getByLabel('방문 시간을 선택해주세요 입장시간 시', {
+    exact: true,
+  })
+  await hour.click()
+  await page.keyboard.press('Backspace')
+  await page.keyboard.press('Backspace')
+  await page.keyboard.press('Backspace')
+  await page.keyboard.press('Backspace')
+  await page.keyboard.type('1')
+  await expect(hour).toHaveValue('10')
+
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  // 시간 인라인 에러 없이 저장되고, 보이는 값 그대로 전송된다.
+  await expect(page).toHaveURL(/\/notices\/reservations$/)
+  expect(body).toMatchObject({ visitTime: '10:00' })
+})
+
 test('S6: 페이지 권한 배정 추가/취소', async ({ page }) => {
   await routeAssignableEmployees(page)
 
