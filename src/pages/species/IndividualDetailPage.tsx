@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { feedQueryKeys, getFeedHistory } from '@/entities/feed'
 import {
   deleteIndividual,
@@ -22,6 +22,7 @@ import {
   DeleteConfirmationDialog,
   KebabMenu,
   SectionHeader,
+  ShortcutButton,
   Toast,
   useFocusFrame,
 } from '@/shared/ui'
@@ -39,6 +40,13 @@ type DeleteTarget =
 // `/species/:speciesId/individuals/:individualId` — 개체 상세(Figma `individual detail` 64:8735).
 // 관찰은 앱에서 작성하므로 등록 버튼이 없다. 관찰 수정·삭제와 개체 수정·삭제는 케밥이 맡는다.
 export function IndividualDetailPage() {
+  const location = useLocation()
+  // 종 상세에서 넘어왔다면 그때의 개체 목록 조회 조건(검색어·페이지)으로 돌아가고,
+  // 종 상세가 다시 종 목록으로 돌아갈 수 있게 종 목록 조건도 함께 돌려준다.
+  const listState = location.state as {
+    individualListSearch?: string
+    speciesListSearch?: string
+  } | null
   const { speciesId = '', individualId = '' } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -250,7 +258,10 @@ export function IndividualDetailPage() {
   return (
     <Page>
       <Content>
-        <BackLink to={`/species/${speciesId}`} />
+        <BackLink
+          to={`/species/${speciesId}${listState?.individualListSearch ?? ''}`}
+          state={{ speciesListSearch: listState?.speciesListSearch }}
+        />
 
         <ProfileSection>
           <IndividualProfileCard
@@ -261,15 +272,9 @@ export function IndividualDetailPage() {
             photo={individual.photo}
             actions={
               <>
-                <FeedingRecordButton
-                  type="button"
-                  onClick={() => void handleOpenFeedHistory()}
-                >
+                <ShortcutButton onClick={() => void handleOpenFeedHistory()}>
                   먹이 급여 기록 확인하기
-                  <ChevronRightIcon viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="m9 4 8 8-8 8" />
-                  </ChevronRightIcon>
-                </FeedingRecordButton>
+                </ShortcutButton>
                 <KebabMenu
                   placement="below-trigger"
                   ariaLabel={`${individual.name} 개체 메뉴 열기`}
@@ -419,36 +424,4 @@ const ObservationSection = styled.section`
 `
 
 // Figma `link / 먹이 급여 기록`(949:26307) 245×52.
-const FeedingRecordButton = styled.button`
-  display: inline-flex;
-  min-height: 52px;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 0;
-  border-radius: 8px;
-  background: ${({ theme }) => theme.colors.accentBg};
-  color: ${({ theme }) => theme.colors.accent};
-  cursor: pointer;
-  font: inherit;
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.2;
-  white-space: nowrap;
 
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.accent};
-    outline-offset: 3px;
-  }
-`
-
-const ChevronRightIcon = styled.svg`
-  width: 28px;
-  height: 28px;
-  flex: 0 0 28px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-`

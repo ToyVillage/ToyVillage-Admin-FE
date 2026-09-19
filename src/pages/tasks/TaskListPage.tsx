@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -16,8 +16,12 @@ import {
   Toast,
   type ToastVariant,
 } from '@/shared/ui'
+import { readPageParam, useListSearchParams } from '@/shared/lib'
 
 const TABLE_PAGE_SIZE = 10
+
+// URL 에 남기지 않을 기본값(첫 탭·첫 페이지).
+const listParamDefaults = { tab: '전체 업무', page: '1' } as const
 
 const tabs = ['전체 업무', '진행중', '완료', '지연']
 
@@ -54,8 +58,19 @@ export function TaskListPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
-  const [active, setActive] = useState(tabs[0])
-  const [page, setPage] = useState(1)
+  // 조회 조건(탭·페이지)은 URL 이 소유한다. 상세에 다녀와도 그대로 남는다.
+  const { values, update } = useListSearchParams(listParamDefaults)
+  const active = tabs.includes(values.tab) ? values.tab : tabs[0]
+  const page = readPageParam(new URLSearchParams({ page: values.page }))
+
+  // 탭이 바뀌면 첫 페이지로 되돌린다.
+  function setActive(next: string) {
+    update({ tab: next, page: '1' })
+  }
+
+  function setPage(next: number) {
+    update({ page: String(next) })
+  }
   // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
@@ -69,13 +84,6 @@ export function TaskListPage() {
     // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
     requestAnimationFrame(() => menuTriggersRef.current.get(taskId)?.focus())
   }, [])
-
-  // 탭이 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
-  const [prevActive, setPrevActive] = useState(active)
-  if (prevActive !== active) {
-    setPrevActive(active)
-    setPage(1)
-  }
 
   const status = tabStatuses[active]
   const {
@@ -92,8 +100,12 @@ export function TaskListPage() {
   const pageCount = Math.max(1, data?.totalPageSize ?? 1)
 
   // 삭제로 마지막 페이지가 사라지면 범위 밖 페이지에 고착되지 않게 되돌린다.
-  // 탭 보정과 같은 렌더 중 상태 보정이다(effect 불필요).
-  if (data && page > pageCount) setPage(pageCount)
+  // URL 을 바꾸는 일이라 렌더가 끝난 뒤에 한다(렌더 중 라우터 갱신 금지).
+  useEffect(() => {
+    if (data && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, page, pageCount])
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteTask({ id: Number(id) }),
@@ -106,8 +118,14 @@ export function TaskListPage() {
 
   const dismissToast = useCallback(() => {
     setLocalToast(null)
-    if (stateToast) navigate(location.pathname, { replace: true, state: null })
-  }, [location.pathname, navigate, stateToast])
+    // 조회 조건(쿼리)은 그대로 두고 토스트 state 만 비운다.
+    if (stateToast) {
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      })
+    }
+  }, [location.pathname, location.search, navigate, stateToast])
 
   function handleDelete() {
     if (!deleteTargetId || deletingRef.current || deleteMutation.isPending) {
@@ -167,7 +185,11 @@ export function TaskListPage() {
 
         <TaskTable
           tasks={tasks}
-          onRowClick={(id) => navigate(`/tasks/${id}`)}
+          onRowClick={(id) =>
+            navigate(`/tasks/${id}`, {
+              state: { listSearch: location.search },
+            })
+          }
           pagination={{ page: Math.min(page, pageCount), pageCount, onChange: setPage }}
           emptyLabel="등록된 업무가 없습니다."
           renderRowAction={(task) => (

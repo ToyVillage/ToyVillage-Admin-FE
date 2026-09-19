@@ -1,7 +1,7 @@
 import { useRef, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   deleteNotice,
   getAllNotices,
@@ -19,16 +19,47 @@ import {
   type DataTableSortValue,
   type ToastVariant,
 } from '@/shared/ui'
+import { readPageParam, useListSearchParams } from '@/shared/lib'
 
 const API_PAGE_SIZE = 10
 const TABLE_PAGE_SIZE = 4
 
+// URL 에 남기지 않을 기본값(전체 분류·최신순·첫 페이지·검색어 없음).
+const listParamDefaults = {
+  tab: '전체',
+  keyword: '',
+  sort: 'newest',
+  page: '1',
+} as const
+
 export function NoticeListPage() {
   const navigate = useNavigate()
-  const [active, setActive] = useState('전체')
-  const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<DataTableSortValue>('newest')
-  const [page, setPage] = useState(1)
+  const location = useLocation()
+  // 조회 조건(분류·검색어·정렬·페이지)은 URL 이 소유한다.
+  // 상세에 다녀오거나 새로고침해도 걸어둔 조건이 그대로 남는다.
+  const { values, update } = useListSearchParams(listParamDefaults)
+  const active = values.tab
+  const query = values.keyword
+  const sort: DataTableSortValue =
+    values.sort === 'oldest' ? 'oldest' : 'newest'
+  const page = readPageParam(new URLSearchParams({ page: values.page }))
+
+  // 분류·검색어·정렬이 바뀌면 첫 페이지로 되돌린다.
+  function setActive(next: string) {
+    update({ tab: next, page: '1' })
+  }
+
+  function setQuery(next: string) {
+    update({ keyword: next, page: '1' })
+  }
+
+  function setSort(next: DataTableSortValue) {
+    update({ sort: next, page: '1' })
+  }
+
+  function setPage(next: number) {
+    update({ page: String(next) })
+  }
   // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
   const [openKebabId, setOpenKebabId] = useState<string | null>(null)
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
@@ -92,13 +123,6 @@ export function NoticeListPage() {
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / TABLE_PAGE_SIZE))
 
-  // 탭·검색이 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
-  const filterKey = `${active} ${query} ${sort}`
-  const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
-  if (prevFilterKey !== filterKey) {
-    setPrevFilterKey(filterKey)
-    setPage(1)
-  }
   const currentPage = Math.min(page, pageCount)
 
   const notices = useMemo(
@@ -189,7 +213,11 @@ export function NoticeListPage() {
 
         <NoticeTable
           notices={notices}
-          onRowClick={(id) => navigate(`/notices/list/${id}`)}
+          onRowClick={(id) =>
+            navigate(`/notices/list/${id}`, {
+              state: { listSearch: location.search },
+            })
+          }
           onEdit={(id) => navigate(`/notices/list/${id}/edit`)}
           onDelete={setDeleteTargetId}
           openKebabId={openKebabId}

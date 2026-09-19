@@ -1,6 +1,5 @@
 import styled from '@emotion/styled'
-import { Link } from 'react-router-dom'
-import { ProfilePhoto } from '@/shared/ui'
+import { ProfilePhoto, ShortcutButton } from '@/shared/ui'
 import { formatFedDate } from '../model/format'
 import type { FeedRecordDetail } from '../model/types'
 import { AnimalSpeciesBadge } from './AnimalSpeciesBadge'
@@ -48,18 +47,15 @@ export function FeedRecordCard({
         </Fields>
       </Info>
 
-      {/* 개체 상세의 `관찰 및 특이사항` 표로 간다. 종 id 를 모르면 비활성이다. */}
-      {observationHref ? (
-        <ObservationLink to={observationHref}>
+      {/* 개체 상세의 `먹이 급여 기록 확인하기` 와 같은 버튼. 종 id 를 모르면 비활성이다. */}
+      <Actions>
+        <ShortcutButton
+          to={observationHref ?? undefined}
+          disabled={observationHref === null}
+        >
           관찰 및 특이사항 보러가기
-          <Chevron aria-hidden="true">›</Chevron>
-        </ObservationLink>
-      ) : (
-        <ObservationButton aria-disabled="true">
-          관찰 및 특이사항 보러가기
-          <Chevron aria-hidden="true">›</Chevron>
-        </ObservationButton>
-      )}
+        </ShortcutButton>
+      </Actions>
     </Card>
   )
 }
@@ -73,19 +69,41 @@ function Field({ label, value }: { label: string; value: string }) {
   )
 }
 
-const Card = styled.div`
-  position: relative;
-  display: flex;
+// 개체 상세의 `IndividualProfileCard` 와 같은 골격(사진 180 / 정보 / 액션).
+const Card = styled.section`
+  display: grid;
   width: 100%;
   margin-top: 33px;
+  grid-template-areas: 'photo info actions';
+  grid-template-columns: 180px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 40px;
+  column-gap: 40px;
   padding: 40px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 980px) {
+    grid-template-areas:
+      'photo actions'
+      'info info';
+    grid-template-columns: 180px minmax(0, 1fr);
+    row-gap: 24px;
+    column-gap: 24px;
+    padding: 24px;
+  }
+`
+
+const Actions = styled.div`
+  display: flex;
+  grid-area: actions;
+  align-items: center;
+  align-self: start;
+  justify-self: end;
+  gap: 24px;
 `
 
 const Photo = styled(ProfilePhoto)`
+  grid-area: photo;
   width: 180px;
   height: 180px;
   flex: 0 0 180px;
@@ -94,6 +112,7 @@ const Photo = styled(ProfilePhoto)`
 `
 
 const Info = styled.div`
+  grid-area: info;
   display: flex;
   min-width: 0;
   flex: 1;
@@ -152,40 +171,5 @@ const FieldValue = styled.span`
   line-height: 1.2;
 `
 
-const ObservationButton = styled.span`
-  position: absolute;
-  top: 42px;
-  right: 32px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 8px;
-  background: ${({ theme }) => theme.colors.accentBg};
-  color: ${({ theme }) => theme.colors.accent};
-  cursor: default;
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.2;
-`
 
-// 비활성 배지와 같은 모양이되 실제로 이동한다.
-const ObservationLink = styled(ObservationButton.withComponent(Link))`
-  cursor: pointer;
-  text-decoration: none;
 
-  &:hover {
-    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.accent};
-    outline-offset: 2px;
-  }
-`
-
-const Chevron = styled.span`
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1;
-`

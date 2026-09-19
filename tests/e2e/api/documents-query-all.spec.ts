@@ -47,7 +47,7 @@ async function routeStatus(page: Page, status: number, body: unknown) {
   })
 }
 
-test('S1: 첫 페이지를 page=0&size=10 으로 요청하고 행 표시', async ({ page }) => {
+test('S1: 첫 페이지를 page=1&size=10 으로 요청하고 행 표시', async ({ page }) => {
   let firstUrl = ''
   await page.route('**/documents*', async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
@@ -62,7 +62,7 @@ test('S1: 첫 페이지를 page=0&size=10 으로 요청하고 행 표시', async
 
   await expect(page.getByText('근무지침요령')).toBeVisible()
   const url = new URL(firstUrl)
-  expect(url.searchParams.get('page')).toBe('0')
+  expect(url.searchParams.get('page')).toBe('1')
   expect(url.searchParams.get('size')).toBe('10')
   // '전체' 탭에서는 types 를 보내지 않는다.
   expect(url.searchParams.getAll('types')).toEqual([])
@@ -101,7 +101,7 @@ test('S5: 다음 페이지 이동 시 page 파라미터로 재요청', async ({ 
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(
-        requestedPage === '0' ? page200(fullPage, 2) : page200(secondPage, 2),
+        requestedPage === '1' ? page200(fullPage, 2) : page200(secondPage, 2),
       ),
     })
   })
@@ -111,7 +111,7 @@ test('S5: 다음 페이지 이동 시 page 파라미터로 재요청', async ({ 
   await page.getByRole('button', { name: '다음 페이지' }).click()
 
   await expect(page.getByText('마지막 자료')).toBeVisible()
-  expect(requestedPages).toContain('1')
+  expect(requestedPages).toContain('2')
 })
 
 test('S6: totalPageSize 만큼만 페이지 번호를 그린다', async ({ page }) => {
@@ -122,7 +122,7 @@ test('S6: totalPageSize 만큼만 페이지 번호를 그린다', async ({ page 
   await expect(page.getByRole('button', { name: '3 페이지' })).toHaveCount(0)
 })
 
-test('S7: 파일 유형 탭 선택 → types 필터로 재요청(page 는 0으로 리셋)', async ({
+test('S7: 파일 유형 탭 선택 → types 필터로 재요청(page 는 1로 리셋)', async ({
   page,
 }) => {
   const requestedUrls: string[] = []
@@ -151,7 +151,7 @@ test('S7: 파일 유형 탭 선택 → types 필터로 재요청(page 는 0으�
   expect(filteredUrl).toBeDefined()
   // 배열이지만 `types[]=` 가 아니라 `types=JPG` 로 보낸다.
   expect(filteredUrl?.search).toContain('types=JPG')
-  expect(filteredUrl?.searchParams.get('page')).toBe('0')
+  expect(filteredUrl?.searchParams.get('page')).toBe('1')
 })
 
 test('S8: totalPageSize 가 줄면 범위를 벗어난 page 에서 마지막 페이지로 복귀', async ({
@@ -161,5 +161,6 @@ test('S8: totalPageSize 가 줄면 범위를 벗어난 page 에서 마지막 페
   await page.goto('/notices/resources?page=5')
 
   await expect(page.getByText('근무지침요령')).toBeVisible()
-  await expect(page).toHaveURL(/page=1/)
+  // 첫 페이지는 기본값이라 URL 에 page 를 남기지 않는다.
+  await expect(page).toHaveURL(/\/notices\/resources$/)
 })

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { formatIsoDate } from '@/shared/lib'
 import {
   getNotice,
@@ -21,6 +21,10 @@ const downloadErrorMessage = '파일 다운로드에 실패했습니다. 다시 
 // `/notices/list/:id` — 읽기 전용 공지 상세(Figma `notification detail` yot 219:11825,
 // 첨부 없음 221:12475). 수정은 목록 케밥의 `/notices/list/:id/edit` 에서 한다.
 export function NoticeDetailPage() {
+  const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건(분류·검색어·정렬·페이지)으로 돌아간다.
+  const listState = location.state as { listSearch?: string } | null
+  const listPath = `/notices/list${listState?.listSearch ?? ''}`
   const { id = '' } = useParams()
   const noticeId = parseNoticeId(id)
   const [downloadFailed, setDownloadFailed] = useState(false)
@@ -49,7 +53,7 @@ export function NoticeDetailPage() {
       <StatePage>
         <StateCard>
           <StateTitle>공지사항을 찾을 수 없습니다.</StateTitle>
-          <StateLink to="/notices/list">공지사항 목록으로 돌아가기</StateLink>
+          <StateLink to={listPath}>공지사항 목록으로 돌아가기</StateLink>
         </StateCard>
       </StatePage>
     )
@@ -69,7 +73,7 @@ export function NoticeDetailPage() {
         <StateCard role="alert">
           <StateTitle>공지사항을 불러오지 못했습니다.</StateTitle>
           <StateDescription>다시 시도해 주세요.</StateDescription>
-          <StateLink to="/notices/list">공지사항 목록으로 돌아가기</StateLink>
+          <StateLink to={listPath}>공지사항 목록으로 돌아가기</StateLink>
         </StateCard>
       </StatePage>
     )
@@ -89,7 +93,7 @@ export function NoticeDetailPage() {
   return (
     <Page>
       <Content>
-        <BackLink to="/notices/list" />
+        <BackLink to={listPath} />
 
         <MetaCard>
           <MetaItem>

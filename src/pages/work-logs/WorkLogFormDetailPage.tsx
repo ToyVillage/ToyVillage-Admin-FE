@@ -1,6 +1,6 @@
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useParams } from 'react-router-dom'
 import {
   getWorkLogFormDetail,
   isWorkLogNotFoundError,
@@ -13,6 +13,12 @@ const listPath = '/work-logs?tab=forms'
 
 export function WorkLogFormDetailPage() {
   const { id = '' } = useParams()
+  const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건(페이지)으로 돌아간다.
+  const navState = location.state as { listSearch?: string } | null
+  const backPath = navState?.listSearch
+    ? `/work-logs${navState.listSearch}`
+    : listPath
 
   const workLogTemplateId = Number(id)
   const {
@@ -28,14 +34,14 @@ export function WorkLogFormDetailPage() {
 
   // 삭제된 양식(404)이나 잘못된 id 로 진입하면 양식 관리 탭으로 되돌린다(spec).
   if (!Number.isSafeInteger(workLogTemplateId) || workLogTemplateId <= 0) {
-    return <Navigate to={listPath} replace />
+    return <Navigate to={backPath} replace />
   }
 
   // 404(지워진 양식)만 목록으로 되돌린다. 500·네트워크 실패까지 되돌리면
   // 조회 실패가 '삭제됨'으로 오인된다.
   if (!isPending && !form) {
     if (isWorkLogNotFoundError(error)) {
-      return <Navigate to={listPath} replace />
+      return <Navigate to={backPath} replace />
     }
     return (
       <StatePage>
@@ -49,7 +55,7 @@ export function WorkLogFormDetailPage() {
   return (
     <Page>
       <Content>
-        <BackLink to={listPath} />
+        <BackLink to={backPath} />
         <Cards>
           <TitleCard>
             <TitleLabel>

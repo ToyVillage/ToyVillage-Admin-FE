@@ -28,6 +28,9 @@ export function TaskDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건(탭·페이지)으로 돌아간다.
+  const listState = location.state as { listSearch?: string } | null
+  const backPath = `/tasks${listState?.listSearch ?? ''}`
   const queryClient = useQueryClient()
   const deletingRef = useRef(false)
   const menuTriggerRef = useRef<HTMLButtonElement | null>(null)
@@ -125,7 +128,7 @@ export function TaskDetailPage() {
       <StatePage>
         <StateCard role="alert">
           업무를 찾을 수 없습니다.
-          <BackToList to="/tasks">목록으로 돌아가기</BackToList>
+          <BackToList to={backPath}>목록으로 돌아가기</BackToList>
         </StateCard>
       </StatePage>
     )
@@ -135,7 +138,7 @@ export function TaskDetailPage() {
     <Page>
       <Content>
         <TopRow>
-          <TaskBackLink />
+          <TaskBackLink to={backPath} />
           <RowActionMenu
             triggerLabel={`${task.title} 업무 메뉴 열기`}
             open={menuOpen}
