@@ -128,7 +128,7 @@ export function TaskDetailPage() {
       <StatePage>
         <StateCard role="alert">
           업무를 찾을 수 없습니다.
-          <BackToList to="/tasks">목록으로 돌아가기</BackToList>
+          <BackToList to={backPath}>목록으로 돌아가기</BackToList>
         </StateCard>
       </StatePage>
     )

@@ -53,7 +53,7 @@ export function NoticeDetailPage() {
       <StatePage>
         <StateCard>
           <StateTitle>공지사항을 찾을 수 없습니다.</StateTitle>
-          <StateLink to="/notices/list">공지사항 목록으로 돌아가기</StateLink>
+          <StateLink to={listPath}>공지사항 목록으로 돌아가기</StateLink>
         </StateCard>
       </StatePage>
     )
@@ -73,7 +73,7 @@ export function NoticeDetailPage() {
         <StateCard role="alert">
           <StateTitle>공지사항을 불러오지 못했습니다.</StateTitle>
           <StateDescription>다시 시도해 주세요.</StateDescription>
-          <StateLink to="/notices/list">공지사항 목록으로 돌아가기</StateLink>
+          <StateLink to={listPath}>공지사항 목록으로 돌아가기</StateLink>
         </StateCard>
       </StatePage>
     )
