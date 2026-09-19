@@ -8,13 +8,13 @@
 - Mock request: `PUT /api/notice/7`
 - Request headers: `Content-Type: application/json`, `Authorization: Bearer ...`
 - Request body:
-  `{"title":"API 수정 공지","teamIds":[],"content":"API 수정 내용"}`
+  `{"title":"API 수정 공지","teamIds":[],"content":"API 수정 내용","files":[]}`
 - Mock response: HTTP 200, `{"message":"공지 수정 성공"}`
 - 후속 Mock request: `GET /api/notice?page=1&size=10`
 - 후속 Mock response: 수정된 공지를 포함한 HTTP 200 목록
 - 사용자 동작: `/notices/list/7/edit`에서 제목과 내용을 수정하고 `저장하기` 클릭
 - 기대 결과: PUT이 정확히 한 번 호출되고 request에 `category`나 `attachments`가
-  없으며, `/notices/list`로 이동해 갱신된 목록을 표시
+  없으며 첨부가 없으므로 `files`는 빈 배열이고, `/notices/list`로 이동해 갱신된 목록을 표시
 
 ## Mock S2 — 존재하지 않는 팀
 
@@ -83,6 +83,7 @@
 
 - Mock 시나리오는 실제 서버 요청 없음
 - 승인 Contract 밖의 request/response 필드 없음
+- 기존 첨부는 다시 업로드하지 않고 상세 응답의 `fileKey`를 그대로 보낸다
 - 수정 API는 공통 Axios와 기존 인증 interceptor를 사용
 - loading/error/success 상태가 숨겨지지 않음
 - 실패 시 localStorage mock 수정으로 fallback하지 않음
@@ -94,7 +95,29 @@
 - 목적: 수정 화면이 상세 응답 `teams`를 선택 상태로 복원하고, 그대로 저장하면 그 팀 id를 `teamIds`로 보낸다. 팀 목록 조회에 없어도 id를 잃지 않는다.
 - 사전 Mock request: `GET /api/notice/7` → `teams: [{id:2,"창고팀"},{id:4,"사육팀"}]`
 - Mock request: `PUT /api/notice/7`
-- Request body: `{"title":"팀 공지 수정","teamIds":[2,4],"content":"팀 공지 내용"}`
+- Request body: `{"title":"팀 공지 수정","teamIds":[2,4],"content":"팀 공지 내용","files":[]}`
 - 사용자 동작: 제목 수정 후 `저장하기` 클릭
 - 기대 결과: `창고팀`·`사육팀` 체크 상태, request `teamIds`가 `[2, 4]`
 - 테스트: `tests/e2e/api/notice-update.spec.ts` S8
+
+## Mock S9 — 첨부 삭제·추가 반영 (2026-09-19 추가, #164)
+
+- 목적: 수정 화면에서 바꾼 첨부를 `files`에 담아 보낸다. 남긴 기존 첨부는 `fileKey`를 그대로, 새 파일은 업로드한 키를 보낸다.
+- 사전 Mock request: `GET /api/notice/7` → `files: [{fileName:"당일 지침.pdf",fileKey:"old-key-1"},{fileName:"휴관안내.png",fileKey:"old-key-2"}]`
+- 선행 Mock request: 새 파일만 `POST /api/file` 한 번
+- 선행 Mock response: HTTP 201, `{"fileKey":"new-key-1"}`
+- Mock request: `PUT /api/notice/7`
+- Request body: `{"title":"첨부 수정 공지","teamIds":[],"content":"첨부 수정 내용","files":["old-key-2","new-key-1"]}`
+- 사용자 동작: `당일 지침.pdf`를 삭제하고 `새 안내.pdf`를 추가한 뒤 제목·내용을 수정하고 `저장하기` 클릭
+- 기대 결과: 파일 업로드 1회(새 파일만), PUT 1회, `files`가 `["old-key-2","new-key-1"]`, 목록으로 이동
+- 테스트: `tests/e2e/api/notice-update.spec.ts` S9
+
+## Mock S10 — 새 첨부 업로드 실패 (2026-09-19 추가, #164)
+
+- 목적: 새 파일 업로드가 실패하면 수정 요청을 보내지 않고 입력을 보존한다.
+- 선행 Mock request: `POST /api/file`
+- 선행 Mock response: HTTP 500 오류 body
+- 사용자 동작: 새 파일을 추가하고 `저장하기` 클릭
+- 기대 결과: PUT 요청 없음, 수정 페이지와 입력을 유지하고
+  `저장하지 못했습니다. 다시 시도해 주세요.` 표시, 제출 버튼 재활성화
+- 테스트: `tests/e2e/api/notice-update.spec.ts` S10
