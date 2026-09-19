@@ -6,6 +6,7 @@ import { formatIsoDate } from '@/shared/lib'
 import {
   getNotice,
   isNoticeNotFoundError,
+  noticeCategoryLabel,
   type NoticeAttachmentFile,
 } from '@/entities/notice'
 import {
@@ -93,7 +94,7 @@ export function NoticeDetailPage() {
         <MetaCard>
           <MetaItem>
             <MetaLabel>분류</MetaLabel>
-            <Pill>{notice.category}</Pill>
+            <Pill>{noticeCategoryLabel(notice.teams)}</Pill>
           </MetaItem>
           <MetaItem>
             <MetaLabel>날짜</MetaLabel>

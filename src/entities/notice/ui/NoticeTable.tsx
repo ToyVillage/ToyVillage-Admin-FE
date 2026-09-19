@@ -7,7 +7,7 @@ import {
   type DataTablePagination,
 } from '@/shared/ui'
 import { formatIsoDate } from '@/shared/lib'
-import type { NoticeListItem } from '../model/types'
+import { noticeCategoryLabel, type NoticeListItem } from '../model/types'
 
 interface NoticeTableProps {
   notices: NoticeListItem[]
@@ -69,7 +69,7 @@ export function NoticeTable({
     <DataTable
       rows={notices.map((n) => ({
         id: n.id,
-        pill: n.category,
+        pill: noticeCategoryLabel(n.teams),
         title: n.title,
         date: formatIsoDate(n.date),
       }))}

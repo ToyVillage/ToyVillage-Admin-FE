@@ -2,12 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { uploadFile } from '@/entities/file'
-import {
-  createNotice,
-  type Notice,
-  type UpdateNoticeInput,
-  updateNotice,
-} from '@/entities/notice'
+import { createNotice, type Notice, updateNotice } from '@/entities/notice'
 import { getTeams } from '@/entities/team'
 import { AttachmentField, ValidationDialog } from '@/shared/ui'
 
@@ -19,6 +14,14 @@ const validationMessages: Record<FieldName, string> = {
 }
 
 const defaultCategory = '전체'
+
+interface NoticeFormInput {
+  /** 선택한 분류 이름. `전체`거나 팀 이름들이다. */
+  categories: string[]
+  title: string
+  content: string
+  attachments: string[]
+}
 
 interface NoticeFormProps {
   initialNotice?: Notice
@@ -35,7 +38,13 @@ export function NoticeForm({
   const submittingRef = useRef(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
-  const initialCategory = initialNotice?.category ?? defaultCategory
+  const initialCategories = useMemo(
+    () =>
+      initialNotice?.teams.length
+        ? initialNotice.teams.map((team) => team.name)
+        : [defaultCategory],
+    [initialNotice],
+  )
   const initialAttachmentNames = useMemo(
     () => initialNotice?.attachments ?? [],
     [initialNotice?.attachments],
@@ -50,13 +59,12 @@ export function NoticeForm({
   const categories = useMemo(() => {
     const teamNames = teamsQuery.data?.map((team) => team.name) ?? []
     // 수정 화면의 기존 분류가 팀 목록에 없더라도 선택 상태는 보여준다.
-    return [...new Set([defaultCategory, initialCategory, ...teamNames])]
-  }, [initialCategory, teamsQuery.data])
+    return [...new Set([defaultCategory, ...initialCategories, ...teamNames])]
+  }, [initialCategories, teamsQuery.data])
   // 분류는 여러 팀을 고를 수 있다. `전체` 와 팀은 함께 고를 수 없고,
   // 모두 해제하면 `전체` 로 돌아간다(선택 없는 상태를 두지 않는다).
-  const [selectedCategories, setSelectedCategories] = useState([
-    initialCategory,
-  ])
+  const [selectedCategories, setSelectedCategories] =
+    useState(initialCategories)
 
   function toggleCategory(option: string) {
     setSelectedCategories((previous) => {
@@ -76,14 +84,26 @@ export function NoticeForm({
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
   const [validationError, setValidationError] = useState<FieldName | null>(null)
+  // 이름→id 매핑. 팀 목록에 없어졌더라도 수정 중인 공지의 기존 팀은 id를 잃지 않는다.
+  const teamIdByName = useMemo(() => {
+    const entries = new Map<string, number>()
+    for (const team of initialNotice?.teams ?? []) entries.set(team.name, team.id)
+    for (const team of teamsQuery.data ?? []) entries.set(team.name, team.id)
+    return entries
+  }, [initialNotice?.teams, teamsQuery.data])
   const mutation = useMutation({
-    mutationFn: async (input: UpdateNoticeInput) => {
+    mutationFn: async (input: NoticeFormInput) => {
+      const teamIds = input.categories
+        .filter((name) => name !== defaultCategory)
+        .map((name) => teamIdByName.get(name))
+        .filter((id): id is number => id !== undefined)
+
       if (initialNotice) {
         await updateNotice({
           id: Number(initialNotice.id),
           input: {
             title: input.title,
-            kind: 'ALL',
+            teamIds,
             content: input.content,
           },
         })
@@ -98,7 +118,7 @@ export function NoticeForm({
 
       await createNotice({
         title: input.title,
-        kind: 'ALL',
+        teamIds,
         content: input.content,
         files,
       })
@@ -110,7 +130,7 @@ export function NoticeForm({
     const isDirty = Boolean(
       title !== (initialNotice?.title ?? '') ||
       content !== (initialNotice?.content ?? '') ||
-      !sameStringArray(selectedCategories, [initialCategory]) ||
+      !sameStringArray(selectedCategories, initialCategories) ||
       (isEditing
         ? !sameStringArray(attachmentNames, initialAttachmentNames)
         : hasAttachments),
@@ -123,7 +143,7 @@ export function NoticeForm({
     content,
     hasAttachments,
     initialAttachmentNames,
-    initialCategory,
+    initialCategories,
     initialNotice,
     isEditing,
     onDirtyChange,
@@ -148,10 +168,8 @@ export function NoticeForm({
     event.preventDefault()
     if (submittingRef.current) return
 
-    const input: UpdateNoticeInput = {
-      // 서버는 아직 분류를 하나만 받아 `kind: 'ALL'` 로 보낸다(#147).
-      // 화면이 고른 팀은 여기에 모아만 둔다.
-      category: selectedCategories.join(', '),
+    const input: NoticeFormInput = {
+      categories: selectedCategories,
       title: title.trim(),
       content: content.trim(),
       attachments: attachmentNames,
@@ -285,7 +303,7 @@ export function NoticeForm({
   )
 }
 
-function validate(input: UpdateNoticeInput): FieldName | null {
+function validate(input: NoticeFormInput): FieldName | null {
   if (!input.title) return 'title'
   if (!input.content) return 'content'
   return null
