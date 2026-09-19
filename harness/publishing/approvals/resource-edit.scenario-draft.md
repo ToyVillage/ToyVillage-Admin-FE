@@ -17,7 +17,7 @@
 ### S3: 저장 성공
 - Given: 기존 자료의 제목을 수정했다.
 - When: `저장하기`를 클릭한다.
-- Then: `/notices/resources`로 이동하고 동일 ID 한 행에 수정 제목이 보인다.
+- Then: `/notices/resources`로 이동하고 동일 ID 한 행에 수정 제목이 보이며, 목록이 `데이터 수정에 성공했습니다` 토스트를 띄운다.
 
 ### S4: 제목 검증
 - Given: 제목이 공백이다.
@@ -56,11 +56,11 @@
 - When: action을 다시 실행한다.
 - Then: 요청은 한 번만 전송된다.
 
-### S11: 저장/삭제 예외 모달
+### S11: 저장 실패는 예외 모달, 삭제 실패는 토스트
 - Given: 저장 또는 삭제 요청이 실패한다.
 - When: 실패 응답을 받는다.
-- Then: 예외 모달(`ErrorDialog`)이 `저장에 실패하였습니다` / `삭제에 실패하였습니다`를 표시하고, `확인` 시 모달을 닫으며 현재 URL·입력을 유지한다.
-- 비고: e2e(S11)는 `page.route` mock 서버가 PUT·DELETE `/documents/{id}`에 500으로 응답하게 해 저장·삭제 실패 모두 예외 모달을 검증한다. (Figma 1039:50 시각 디테일은 rate limit 해제 후 확정)
+- Then: 저장 실패는 예외 모달(`ErrorDialog`) `저장에 실패하였습니다`로 알리고 `확인` 시 닫는다. 삭제 실패는 토스트 `데이터 삭제에 실패했습니다`로 알린다. 두 경우 모두 현재 URL과 입력을 유지한다.
+- 비고: e2e(S11)는 `page.route` mock 서버가 PUT·DELETE `/documents/{id}`에 500으로 응답하게 해 두 경로를 함께 검증한다. 삭제 실패 토스트는 Figma `자료실 · 토스트` `1:7192`, 저장 실패 토스트는 그 섹션에 없어 모달을 유지한다.
 
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 resource-edit.approved.json의 scenarioIds에 적는다.
