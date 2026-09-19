@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
 
@@ -17,9 +17,23 @@ interface TruncatedTextProps {
 export function TruncatedText({ value, className }: TruncatedTextProps) {
   const tooltipId = useId()
   const textRef = useRef<HTMLSpanElement>(null)
+  const bubbleRef = useRef<HTMLSpanElement>(null)
   const [origin, setOrigin] = useState<{ top: number; left: number } | null>(
     null,
   )
+
+  // 오른쪽 끝 열에서는 말풍선이 화면 밖으로 나간다. 그려진 폭을 재서 안으로 당긴다.
+  useLayoutEffect(() => {
+    const bubble = bubbleRef.current
+    if (!origin || !bubble) return
+
+    const { width } = bubble.getBoundingClientRect()
+    const left = Math.max(
+      viewportMargin,
+      Math.min(origin.left, window.innerWidth - viewportMargin - width),
+    )
+    if (left !== origin.left) setOrigin({ ...origin, left })
+  }, [origin])
 
   function open() {
     const element = textRef.current
@@ -43,7 +57,7 @@ export function TruncatedText({ value, className }: TruncatedTextProps) {
       </Text>
       {origin &&
         createPortal(
-          <Bubble id={tooltipId} role="tooltip" style={origin}>
+          <Bubble ref={bubbleRef} id={tooltipId} role="tooltip" style={origin}>
             {value}
           </Bubble>,
           document.body,
@@ -51,6 +65,9 @@ export function TruncatedText({ value, className }: TruncatedTextProps) {
     </>
   )
 }
+
+// 말풍선과 화면 가장자리 사이에 두는 여백.
+const viewportMargin = 16
 
 const Text = styled.span`
   display: block;
