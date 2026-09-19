@@ -20,6 +20,7 @@ import {
   useFocusFrame,
 } from '@/shared/ui'
 import { PageStatus } from './ui/PageStatus'
+import { ObservationDetailSkeleton } from './ui/ObservationDetailSkeleton'
 
 // `/species/:speciesId/individuals/:individualId/observations/:observationId` — 읽기 전용 관찰 상세
 // (Figma `observation detail` 1323:15015). 수정은 `…/edit`, 삭제는 제목 행 케밥이 맡는다.
@@ -92,7 +93,11 @@ export function ObservationDetailPage() {
 
   if (observationQuery.isPending || individualQuery.isPending) {
     return (
-      <PageStatus state="loading" message="관찰 기록을 불러오는 중입니다." />
+      <Page>
+        <Content>
+          <ObservationDetailSkeleton />
+        </Content>
+      </Page>
     )
   }
 

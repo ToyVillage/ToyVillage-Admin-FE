@@ -6,6 +6,7 @@ import {
   type CloseSchedule,
 } from '@/entities/close-schedule'
 import { BackLink } from '@/shared/ui'
+import { CloseScheduleDetailSkeleton } from './ui/CloseScheduleDetailSkeleton'
 
 // Figma yot `holiday detail`(2000:17207). 읽기 전용이며 수정은 목록 카드 케밥으로만 들어간다.
 export function CloseScheduleDetailPage() {
@@ -30,7 +31,18 @@ export function CloseScheduleDetailPage() {
   })
 
   if (!id) return <Navigate to="/notices/guide" replace />
-  if (isPending) return null
+  if (isPending) {
+    return (
+      <Page>
+        <Content>
+          <BackRow>
+            <BackLink to="/notices/guide" />
+          </BackRow>
+          <CloseScheduleDetailSkeleton />
+        </Content>
+      </Page>
+    )
+  }
   if (!schedule) return <Navigate to="/notices/guide" replace />
 
   return (

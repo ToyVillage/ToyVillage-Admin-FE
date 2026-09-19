@@ -22,6 +22,7 @@ import {
   TaskStatusDonut,
   toIsoDay,
 } from '@/features/dashboard'
+import { DashboardSkeleton } from './ui/DashboardSkeleton'
 
 const LIST_LIMIT = 3
 // 대시보드 목록 API·업무보고·업무일지 목록은 page 가 1부터다.
@@ -82,6 +83,27 @@ export function DashboardPage() {
   const taskReports = taskReportsQuery.data?.items
   const workLogs = workLogsQuery.data?.items
 
+  const hasError = queries.some((query) => query.isError)
+
+  if (
+    !hasError &&
+    (!kpi ||
+      !taskStatusCounts ||
+      !feeds ||
+      !observations ||
+      !closeSchedules ||
+      !taskReports ||
+      !workLogs)
+  ) {
+    return (
+      <Page>
+        <Content>
+          <DashboardSkeleton />
+        </Content>
+      </Page>
+    )
+  }
+
   return (
     <Page>
       <Content>
@@ -92,19 +114,16 @@ export function DashboardPage() {
           </ChipSlot>
         </Header>
 
-        {queries.some((query) => query.isError) ? (
+        {hasError ||
+        !kpi ||
+        !taskStatusCounts ||
+        !feeds ||
+        !observations ||
+        !closeSchedules ||
+        !taskReports ||
+        !workLogs ? (
           <StateMessage role="alert">
             대시보드를 불러오지 못했습니다.
-          </StateMessage>
-        ) : !kpi ||
-          !taskStatusCounts ||
-          !feeds ||
-          !observations ||
-          !closeSchedules ||
-          !taskReports ||
-          !workLogs ? (
-          <StateMessage role="status">
-            대시보드를 불러오는 중입니다.
           </StateMessage>
         ) : (
           <>

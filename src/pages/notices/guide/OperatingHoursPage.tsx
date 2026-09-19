@@ -38,7 +38,8 @@ function OperatingHoursDetail({ date }: { date: string }) {
         </BackRow>
         <Title>{formatTitle(date)}</Title>
         {isPending ? (
-          <QueryStatus role="status">휴관일을 조회하는 중입니다.</QueryStatus>
+          // 조회 중 status 는 영업시간 스켈레톤 하나만 둔다(중복 알림 방지).
+          <QueryStatus>휴관일을 조회하는 중입니다.</QueryStatus>
         ) : isError ? (
           <QueryStatus role="alert">
             휴관일을 불러오지 못했습니다. 다시 시도해 주세요.

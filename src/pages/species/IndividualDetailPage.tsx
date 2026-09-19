@@ -29,6 +29,7 @@ import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
+import { ProfileDetailSkeleton } from './ui/ProfileDetailSkeleton'
 
 // 카드 케밥의 메뉴 id. 행 케밥은 관찰 id 를 쓴다(관찰 id 는 숫자 문자열).
 const profileMenuId = 'profile'
@@ -214,7 +215,29 @@ export function IndividualDetailPage() {
     individualQuery.isPending ||
     (observationsQuery.isPending && !observationsQuery.isError)
   ) {
-    return <PageStatus state="loading" message="개체를 불러오는 중입니다." />
+    return (
+      <Page>
+        <Content>
+          <ProfileDetailSkeleton
+            infoRows={2}
+            columns={[
+              { width: 200, bar: 90, barHeight: 18 },
+              { width: 180, bar: 40, barHeight: 18 },
+              { bar: 300, barHeight: 18 },
+              { width: 240, bar: 150, barHeight: 32 },
+              {
+                width: 80,
+                bar: 8,
+                barHeight: 32,
+                headerBar: 0,
+                paddingX: 0,
+                align: 'center',
+              },
+            ]}
+          />
+        </Content>
+      </Page>
+    )
   }
 
   if (individualQuery.isError && !isNotFoundError(individualQuery.error)) {

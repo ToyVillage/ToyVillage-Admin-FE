@@ -13,6 +13,7 @@ import {
   type TaskReportReviewResult,
 } from '@/features/review-task-report'
 import { AttachmentList, BackLink, Toast } from '@/shared/ui'
+import { TaskReportDetailSkeleton } from './ui/TaskReportDetailSkeleton'
 
 // 업무지시 상세에서 보고 줄을 눌러 들어오면 그 경로를 이동 state 로 받는다.
 export interface TaskReportDetailLocationState {
@@ -57,9 +58,11 @@ export function TaskReportDetailPage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">업무보고를 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <TaskReportDetailSkeleton />
+        </Content>
+      </Page>
     )
   }
 

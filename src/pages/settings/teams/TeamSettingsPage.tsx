@@ -17,6 +17,7 @@ import {
 } from '@/entities/team'
 import { AddTeamDialog, AddTeamMemberDialog } from '@/features/team-settings'
 import { DeleteConfirmationDialog, Toast, type ToastVariant } from '@/shared/ui'
+import { TeamSettingsSkeleton } from './ui/TeamSettingsSkeleton'
 
 type OpenDialog = 'add-team' | 'add-member' | 'delete-team' | null
 
@@ -192,6 +193,16 @@ export function TeamSettingsPage() {
           팀 목록을 불러오지 못했습니다. 다시 시도해 주세요.
         </StateCard>
       </StatePage>
+    )
+  }
+
+  if (teamsQuery.isPending) {
+    return (
+      <Page>
+        <Content>
+          <TeamSettingsSkeleton />
+        </Content>
+      </Page>
     )
   }
 

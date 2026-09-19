@@ -11,6 +11,7 @@ import {
 import { getNotice, isNoticeNotFoundError } from '@/entities/notice'
 import { NoticeForm } from '@/features/create-notice'
 import { BackLink as ListBackLink, LeaveConfirmationDialog } from '@/shared/ui'
+import { NoticeEditSkeleton } from './ui/NoticeEditSkeleton'
 
 export function EditNoticePage() {
   const { id = '' } = useParams()
@@ -76,9 +77,11 @@ export function EditNoticePage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">공지사항을 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <NoticeEditSkeleton />
+        </Content>
+      </Page>
     )
   }
 

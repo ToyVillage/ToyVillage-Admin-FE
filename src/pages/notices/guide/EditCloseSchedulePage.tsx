@@ -6,6 +6,7 @@ import {
 } from '@/entities/close-schedule'
 import { CloseScheduleForm } from '@/features/create-close-schedule'
 import { CloseScheduleFormPage } from './ui/CloseScheduleFormPage'
+import { CloseScheduleEditSkeleton } from './ui/CloseScheduleEditSkeleton'
 
 export function EditCloseSchedulePage() {
   const { id } = useParams()
@@ -29,7 +30,13 @@ export function EditCloseSchedulePage() {
   })
 
   if (!id) return <Navigate to="/notices/guide" replace />
-  if (isPending) return null
+  if (isPending) {
+    return (
+      <CloseScheduleFormPage>
+        <CloseScheduleEditSkeleton />
+      </CloseScheduleFormPage>
+    )
+  }
   if (!schedule) return <Navigate to="/notices/guide" replace />
 
   return (

@@ -152,7 +152,10 @@ test('S8: 최근 목록 카드 내용', async ({ page }) => {
 
 test('S9: 로딩', async ({ page }) => {
   await open(page, { delayMs: { count: 3000 } })
-  await expect(page.getByText('대시보드를 불러오는 중입니다.')).toBeVisible()
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
+  await expect(page.getByText('대시보드를 불러오는 중입니다.')).toHaveCount(0)
 })
 
 test('S10: 조회 실패', async ({ page }) => {

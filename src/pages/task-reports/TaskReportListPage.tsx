@@ -18,6 +18,7 @@ import {
 } from '@/features/review-task-report'
 import { RowActionMenu } from '@/features/row-actions'
 import { CategoryTabs, Toast } from '@/shared/ui'
+import { TaskReportListSkeleton } from './ui/TaskReportListSkeleton'
 
 // 한 페이지 10행(2026-09-13 개발자 결정). Figma 표 높이(행 100 × 3) 기준 3행을 대체한다.
 const TABLE_PAGE_SIZE = 10
@@ -137,9 +138,11 @@ export function TaskReportListPage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">업무보고를 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <TaskReportListSkeleton />
+        </Content>
+      </Page>
     )
   }
 

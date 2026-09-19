@@ -16,6 +16,7 @@ import {
   type ToastVariant,
 } from '@/shared/ui'
 import arrowIcon from './ui/assets/arrow.svg'
+import { CloseScheduleSkeleton } from './ui/CloseScheduleSkeleton'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -120,6 +121,16 @@ export function NoticeGuidePage() {
     focusKebabTrigger(targetId)
   }
 
+  if (isPending) {
+    return (
+      <Page>
+        <Content>
+          <CloseScheduleSkeleton weeks={calendarDays.length / 7} />
+        </Content>
+      </Page>
+    )
+  }
+
   return (
     <Page>
       <Content>
@@ -178,11 +189,7 @@ export function NoticeGuidePage() {
           </CalendarSection>
 
           <Aside>
-            {isPending ? (
-              <QueryStatus role="status">
-                휴관일을 불러오는 중입니다.
-              </QueryStatus>
-            ) : isError ? (
+            {isError ? (
               <QueryStatus role="alert">
                 휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
               </QueryStatus>

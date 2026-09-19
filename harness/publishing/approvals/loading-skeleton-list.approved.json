@@ -1,0 +1,24 @@
+{
+  "feature": "loading-skeleton-list",
+  "approvedAt": "2026-09-19T17:41:46.779Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15"
+  ],
+  "scenarioHash": "a34d5e65951bb12a9094fb07558d4d65b7374aca94e0824b00f5f447a5ba74f3",
+  "e2eHash": "6d6803b205d82408550beb92980c599c5f5e09a72439bc3509eda004b040a137"
+}

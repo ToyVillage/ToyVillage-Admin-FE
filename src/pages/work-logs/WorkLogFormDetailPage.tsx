@@ -8,6 +8,7 @@ import {
   WorkLogFormQuestionCard,
 } from '@/entities/work-log'
 import { BackLink } from '@/shared/ui'
+import { WorkLogFormDetailSkeleton } from './ui/WorkLogFormDetailSkeleton'
 
 const listPath = '/work-logs?tab=forms'
 
@@ -29,6 +30,17 @@ export function WorkLogFormDetailPage() {
   // 삭제된 양식(404)이나 잘못된 id 로 진입하면 양식 관리 탭으로 되돌린다(spec).
   if (!Number.isSafeInteger(workLogTemplateId) || workLogTemplateId <= 0) {
     return <Navigate to={listPath} replace />
+  }
+
+  if (isPending) {
+    return (
+      <Page>
+        <Content>
+          <BackLink to={listPath} />
+          <WorkLogFormDetailSkeleton />
+        </Content>
+      </Page>
+    )
   }
 
   // 404(지워진 양식)만 목록으로 되돌린다. 500·네트워크 실패까지 되돌리면

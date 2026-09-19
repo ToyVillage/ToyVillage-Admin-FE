@@ -13,6 +13,7 @@ import { CreateResourceButton } from '@/features/create-resource'
 import { Toast } from '@/shared/ui'
 import type { ResourceFormCompletion } from '@/features/create-resource'
 import { FileTypeTabs } from './ui/FileTypeTabs'
+import { ResourceListSkeleton } from './ui/ResourceListSkeleton'
 
 // 한 페이지당 자료 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
 const PAGE_SIZE = 10
@@ -85,7 +86,7 @@ export function ResourceListPage() {
   }, [active])
 
   // 서버 사이드 페이지네이션: page(0부터)·size·keyword·types 로 해당 페이지만 요청한다.
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: [
       'resources',
       'list',
@@ -123,6 +124,16 @@ export function ResourceListPage() {
       setPage(pageCount, { replace: true })
     }
   }, [data, page, pageCount, setPage])
+
+  if (isPending) {
+    return (
+      <Page>
+        <Content>
+          <ResourceListSkeleton />
+        </Content>
+      </Page>
+    )
+  }
 
   return (
     <Page>

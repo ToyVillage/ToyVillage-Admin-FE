@@ -30,6 +30,7 @@ import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { SpeciesEmptyMessage } from './ui/SpeciesEmptyMessage'
 import { SEARCH_DEBOUNCE_MS, TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
+import { ProfileDetailSkeleton } from './ui/ProfileDetailSkeleton'
 
 type DeleteTarget =
   { kind: 'species' } | { kind: 'individual'; individualId: string }
@@ -172,7 +173,29 @@ export function SpeciesDetailPage() {
   }
 
   if (speciesQuery.isPending || individualsQuery.isPending) {
-    return <PageStatus state="loading" message="종 정보를 불러오는 중입니다." />
+    return (
+      <Page>
+        <Content>
+          <ProfileDetailSkeleton
+            infoRows={3}
+            search
+            columns={[
+              { width: 520, bar: 60, barHeight: 18 },
+              { width: 300, bar: 56, barHeight: 32 },
+              { bar: 60, barHeight: 18 },
+              {
+                width: 80,
+                bar: 8,
+                barHeight: 32,
+                headerBar: 0,
+                paddingX: 0,
+                align: 'center',
+              },
+            ]}
+          />
+        </Content>
+      </Page>
+    )
   }
 
   if (speciesQuery.isError && !isNotFoundError(speciesQuery.error)) {
