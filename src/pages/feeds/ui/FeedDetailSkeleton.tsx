@@ -31,16 +31,18 @@ export function FeedDetailSkeleton() {
         <Skeleton width={120} height={24} />
         <Skeleton width={30} height={20} />
       </SectionHeader>
-      <TableSkeleton
-        appearance={{ offsetTop: 20, dividerColor: 'textGuide' }}
-        columns={[
-          { width: 280, bar: 170, barHeight: 18 },
-          { width: 200, bar: 40, barHeight: 18 },
-          { width: 260, bar: 110, barHeight: 18 },
-          { bar: 360, barHeight: 18 },
-        ]}
-        rows={3}
-      />
+      <TableScroll>
+        <TableSkeleton
+          appearance={{ offsetTop: 20, dividerColor: 'textGuide' }}
+          columns={[
+            { width: 280, bar: 170, barHeight: 18 },
+            { width: 200, bar: 40, barHeight: 18 },
+            { width: 260, bar: 110, barHeight: 18 },
+            { bar: 360, barHeight: 18 },
+          ]}
+          rows={3}
+        />
+      </TableScroll>
     </SkeletonStatus>
   )
 }
@@ -72,6 +74,12 @@ const Row = styled.div`
   display: flex;
   align-items: center;
   gap: 32px;
+`
+
+// 실제 급여 이력 표처럼 좁은 화면에서는 표만 가로로 스크롤한다.
+const TableScroll = styled.div`
+  width: 100%;
+  overflow-x: auto;
 `
 
 const SectionHeader = styled.div`
