@@ -109,18 +109,20 @@ export function TaskReportDetailPage() {
           </AttachmentCard>
         </Body>
 
-        <TaskReportReviewActions
-          reportId={report.id}
-          onSuccess={(action) =>
-            navigate(returnTo, {
-              state: { toast: `${action}-success` },
-            })
-          }
-          onError={(action) => {
-            toastIdRef.current += 1
-            setErrorToast({ result: `${action}-error`, id: toastIdRef.current })
-          }}
-        />
+        {report.reviewStatus === 'PENDING' && (
+          <TaskReportReviewActions
+            reportId={report.id}
+            onSuccess={(action) =>
+              navigate(returnTo, {
+                state: { toast: `${action}-success` },
+              })
+            }
+            onError={(action) => {
+              toastIdRef.current += 1
+              setErrorToast({ result: `${action}-error`, id: toastIdRef.current })
+            }}
+          />
+        )}
       </Content>
 
       {errorToast && toast && (
