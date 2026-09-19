@@ -15,7 +15,9 @@ import {
 import {
   DeleteConfirmationDialog,
   ErrorDialog,
+  Toast,
   ValidationDialog,
+  type ToastVariant,
 } from '@/shared/ui'
 import { ResourceUploadField } from './ResourceUploadField'
 
@@ -75,6 +77,19 @@ export function ResourceForm({
   const [validationError, setValidationError] =
     useState<ValidationField | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  // Figma `자료실 · 토스트`(311:12766) — 이 화면에 머무르는 결과는 토스트로 알린다.
+  // 같은 결과가 연달아 나와도 다시 뜨도록 매번 id 를 올린다.
+  const [toast, setToast] = useState<{
+    variant: ToastVariant
+    message: string
+    id: number
+  } | null>(null)
+  const toastIdRef = useRef(0)
+
+  function showToast(variant: ToastVariant, message: string) {
+    toastIdRef.current += 1
+    setToast({ variant, message, id: toastIdRef.current })
+  }
   const mutation = useMutation({
     mutationFn: async (input: UpdateResourceInput) => {
       // 첨부 시 이미 업로드해 둔 file key(수정은 기존 키 포함)를 그대로 보낸다.
@@ -173,6 +188,8 @@ export function ResourceForm({
       },
       onError: () => {
         submittingRef.current = false
+        // 수정 실패는 Figma 에 토스트가 없어 기존 예외 모달을 그대로 쓴다.
+        if (!isEditing) showToast('error', '데이터 생성에 실패했습니다')
       },
     })
   }
@@ -187,8 +204,8 @@ export function ResourceForm({
         onCompleted('deleted')
       },
       onError: () => {
-        // 실패 시 삭제 확인 다이얼로그를 닫아 ErrorDialog 만 남긴다.
         setDeleteDialogOpen(false)
+        showToast('error', '데이터 삭제에 실패했습니다')
       },
     })
   }
@@ -292,19 +309,23 @@ export function ResourceForm({
         />
       )}
 
-      {mutation.isError && (
+      {/* 수정(저장) 실패만 예외 모달로 남긴다 — Figma 에 저장 실패 토스트가 없다. */}
+      {toast && (
+        <Toast
+          key={toast.id}
+          variant={toast.variant}
+          message={toast.message}
+          onDismiss={() => setToast(null)}
+        />
+      )}
+      {isEditing && mutation.isError && (
         <ErrorDialog
-          title={isEditing ? '저장에 실패하였습니다' : '생성에 실패했습니다'}
+          title="저장에 실패하였습니다"
           onConfirm={() => mutation.reset()}
         />
       )}
 
-      {deleteMutation.isError && (
-        <ErrorDialog
-          title="삭제에 실패하였습니다"
-          onConfirm={() => deleteMutation.reset()}
-        />
-      )}
+
     </Form>
   )
 }
