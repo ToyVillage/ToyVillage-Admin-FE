@@ -44,7 +44,7 @@ real_server:
   - 기존 승인 API 재사용 3개(개발자 결정, 2026-09-17):
     - 휴관일 관리 — `CLOSE_DAT_QUERY_ALL`(`getCloseSchedules`) 결과에서 이번 달만 표시(기존 로직)
     - 업무보고 — `APP_WORK_REPORT_QUERY_ALL`(`getTaskReports`) `page=1&size=3`, `status` 없이 조회. 제목은 응답 `reports[].title`
-    - 업무일지관리 — `WORK_LOG_QUERY_ALL`(`getWorkLogs`) `date=오늘&page=0&size=3`
+    - 업무일지관리 — `WORK_LOG_QUERY_ALL`(`getWorkLogs`) `date=오늘&page=1&size=3`
 - 로딩·오류 표시는 퍼블리싱 동작을 유지한다. 7개 중 하나라도 최초 로딩 중이면 `대시보드를 불러오는 중입니다.`, 하나라도 실패하면 `대시보드를 불러오지 못했습니다.`
 - 카드 이동 링크, 레이아웃, 빈 상태 문구는 바꾸지 않는다.
 
