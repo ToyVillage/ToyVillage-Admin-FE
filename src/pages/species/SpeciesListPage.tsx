@@ -156,7 +156,7 @@ export function SpeciesListPage() {
       <Content>
         <PageHeader
           title="개체 카드"
-          subtitle="토이빌리지의 등록된 개체 목록"
+          subtitle="토이빌리지의 종 목록"
           action={<LinkButton to="/species/create">종 등록하기</LinkButton>}
         />
 
