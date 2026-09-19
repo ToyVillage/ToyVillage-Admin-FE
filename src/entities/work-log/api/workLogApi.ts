@@ -343,9 +343,9 @@ function assertIsoDate(date: string): void {
   }
 }
 
-// 명세상 page 는 0부터 시작한다.
+// 명세는 page 를 0부터 적었지만 서버는 1부터 센다(#158).
 function assertPaging(page: number, size: number): void {
-  if (!Number.isSafeInteger(page) || page < 0) {
+  if (!Number.isSafeInteger(page) || page < 1) {
     throw new Error('페이지 번호가 올바르지 않습니다.')
   }
 

@@ -442,10 +442,10 @@ function titleOf(handle: WorkLogApiHandle, templateId: number): string {
   )
 }
 
-// 명세의 page 는 0부터 시작한다.
+// 서버의 page 는 1부터 센다(#158). 응답의 number 는 Spring Page 그대로 0부터다.
 function pageBody<T>(items: T[], query: URLSearchParams) {
   const size = Number(query.get('size') ?? 4)
-  const number = Number(query.get('page') ?? 0)
+  const number = Number(query.get('page') ?? 1) - 1
 
   // numberOfElements·empty 는 전체가 아니라 이 페이지의 content 기준이다.
   const content = items.slice(number * size, (number + 1) * size)

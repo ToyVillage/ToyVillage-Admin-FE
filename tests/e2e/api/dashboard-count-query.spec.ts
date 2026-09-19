@@ -117,7 +117,7 @@ test('S7: 재사용 API 3개를 대시보드 조건으로 호출한다', async (
   expect(requests.workLogs).toHaveLength(1)
   const workLogQuery = requests.workLogs[0].url.searchParams
   expect(workLogQuery.get('date')).toBe('2026-09-03')
-  expect(workLogQuery.get('page')).toBe('0')
+  expect(workLogQuery.get('page')).toBe('1')
   expect(workLogQuery.get('size')).toBe('3')
 })
 

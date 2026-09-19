@@ -24,9 +24,8 @@ import {
 } from '@/features/dashboard'
 
 const LIST_LIMIT = 3
-// 대시보드 목록 API 와 업무보고 목록은 page 가 1부터, 업무일지 목록은 0부터다.
+// 대시보드 목록 API·업무보고·업무일지 목록은 page 가 1부터다.
 const FIRST_PAGE = 1
-const WORK_LOG_FIRST_PAGE = 0
 
 // Figma `dashboard`(1385:15048).
 export function DashboardPage() {
@@ -61,13 +60,9 @@ export function DashboardPage() {
     queryFn: () => getTaskReports({ page: FIRST_PAGE, size: LIST_LIMIT }),
   })
   const workLogsQuery = useQuery({
-    queryKey: dashboardQueryKeys.workLogs(
-      today,
-      WORK_LOG_FIRST_PAGE,
-      LIST_LIMIT,
-    ),
+    queryKey: dashboardQueryKeys.workLogs(today, FIRST_PAGE, LIST_LIMIT),
     queryFn: () =>
-      getWorkLogs({ date: today, page: WORK_LOG_FIRST_PAGE, size: LIST_LIMIT }),
+      getWorkLogs({ date: today, page: FIRST_PAGE, size: LIST_LIMIT }),
   })
 
   const queries = [
