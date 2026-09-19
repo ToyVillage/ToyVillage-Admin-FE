@@ -9,7 +9,11 @@ import {
   updateNotice,
 } from '@/entities/notice'
 import { getTeams } from '@/entities/team'
-import { AttachmentField, ValidationDialog } from '@/shared/ui'
+import {
+  AttachmentField,
+  ValidationDialog,
+  type AttachmentItem,
+} from '@/shared/ui'
 
 type FieldName = 'title' | 'content'
 
@@ -83,10 +87,25 @@ export function NoticeForm({
   const [content, setContent] = useState(initialNotice?.content ?? '')
   const [hasAttachments, setHasAttachments] = useState(false)
   const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
-  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
+  // 제출할 첨부 목록. 기존 첨부는 fileKey 를, 새로 고른 파일은 File 을 가진다.
+  const [attachmentItems, setAttachmentItems] = useState<AttachmentItem[]>([])
   const [validationError, setValidationError] = useState<FieldName | null>(null)
   const mutation = useMutation({
     mutationFn: async (input: NoticeFormInput) => {
+      // 기존 첨부는 fileKey 를 그대로 재전송하고, 새로 고른 파일만 업로드한다.
+      // 업로드가 하나라도 실패하면 공지 요청을 보내지 않는다.
+      const files: string[] = []
+      for (const attachment of attachmentItems) {
+        if (attachment.fileKey) {
+          files.push(attachment.fileKey)
+          continue
+        }
+        if (!attachment.file) continue
+
+        const { fileKey } = await uploadFile({ files: attachment.file })
+        files.push(fileKey)
+      }
+
       if (initialNotice) {
         await updateNotice({
           id: Number(initialNotice.id),
@@ -94,15 +113,10 @@ export function NoticeForm({
             title: input.title,
             teamIds: input.teamIds,
             content: input.content,
+            files,
           },
         })
         return
-      }
-
-      const files: string[] = []
-      for (const attachmentFile of attachmentFiles) {
-        const uploadedFile = await uploadFile({ files: attachmentFile })
-        files.push(uploadedFile.fileKey)
       }
 
       await createNotice({
@@ -271,7 +285,7 @@ export function NoticeForm({
         storedFiles={Boolean(initialAttachmentFiles)}
         onFilesChange={setHasAttachments}
         onFileNamesChange={setAttachmentNames}
-        onFileObjectsChange={setAttachmentFiles}
+        onFileItemsChange={setAttachmentItems}
       />
 
       {mutation.isError && (
