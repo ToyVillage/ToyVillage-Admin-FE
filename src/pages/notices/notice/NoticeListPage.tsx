@@ -13,6 +13,7 @@ import {
   type DataTableSortValue,
   type ToastVariant,
 } from '@/shared/ui'
+import { NoticeListSkeleton } from './ui/NoticeListSkeleton'
 
 const API_PAGE_SIZE = 10
 const TABLE_PAGE_SIZE = 4
@@ -139,9 +140,11 @@ export function NoticeListPage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">공지사항을 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <NoticeListSkeleton />
+        </Content>
+      </Page>
     )
   }
 

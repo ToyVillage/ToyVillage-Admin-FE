@@ -16,6 +16,7 @@ import {
   Toast,
   type ToastVariant,
 } from '@/shared/ui'
+import { TaskListSkeleton } from './ui/TaskListSkeleton'
 
 const TABLE_PAGE_SIZE = 10
 
@@ -136,9 +137,11 @@ export function TaskListPage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">업무를 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <TaskListSkeleton />
+        </Content>
+      </Page>
     )
   }
 
