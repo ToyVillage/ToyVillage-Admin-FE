@@ -5,11 +5,13 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { individualQueryKeys } from '@/entities/individual'
 import { observationQueryKeys } from '@/entities/observation'
 import {
+  SpeciesTable,
+  TaxonGroupTabs,
   deleteSpecies,
   getSpeciesList,
-  SpeciesTable,
   speciesQueryKeys,
-  TaxonGroupTabs,
+  taxonGroups,
+  type TaxonGroup,
   type TaxonGroupTabValue,
 } from '@/entities/species'
 import {
@@ -30,6 +32,10 @@ import { usePageToast } from './ui/usePageToast'
 // URL 에 남기지 않을 기본값(전체 분류군·첫 페이지·검색어 없음).
 const listParamDefaults = { taxon: 'ALL', keyword: '', page: '1' } as const
 
+function isTaxonGroupTabValue(value: string): value is TaxonGroupTabValue {
+  return value === 'ALL' || taxonGroups.includes(value as TaxonGroup)
+}
+
 // `/species` — 종 목록(Figma `individual (kebab)` yot 39:8751).
 // 분류군·검색어·페이지는 서버가 거른다(`ANIMAL_KIND_QUERY_ALL`). 정렬은 없다.
 export function SpeciesListPage() {
@@ -38,7 +44,10 @@ export function SpeciesListPage() {
   const queryClient = useQueryClient()
   // 조회 조건(분류군·검색어·페이지)은 URL 이 소유한다. 상세에 다녀와도 그대로 남는다.
   const { values, update } = useListSearchParams(listParamDefaults)
-  const taxonGroup = values.taxon as TaxonGroupTabValue
+  // URL 은 사용자가 고칠 수 있다. 모르는 분류군 값은 기본값(전체)으로 본다.
+  const taxonGroup: TaxonGroupTabValue = isTaxonGroupTabValue(values.taxon)
+    ? values.taxon
+    : 'ALL'
   const keyword = values.keyword
   const page = readPageParam(new URLSearchParams({ page: values.page }))
   const [query, setQuery] = useState(keyword)
@@ -183,7 +192,7 @@ export function SpeciesListPage() {
           species={speciesQuery.data?.items ?? []}
           onRowClick={(id) =>
             navigate(`/species/${id}`, {
-              state: { listSearch: location.search },
+              state: { speciesListSearch: location.search },
             })
           }
           search={{
