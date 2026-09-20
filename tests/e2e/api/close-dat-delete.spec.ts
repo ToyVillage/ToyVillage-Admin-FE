@@ -213,6 +213,7 @@ async function expectDeleteSuccess(page: Page) {
   await expect(page).toHaveURL(/\/notices\/guide$/)
   await expect(page.getByText('데이터 삭제에 성공했습니다')).toBeVisible()
   await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  await expect(page.getByText(targetTitle)).toHaveCount(0)
 }
 
 async function expectDeleteFailure(page: Page) {
@@ -252,10 +253,17 @@ async function mockDeleteResponse(
   status: number,
   body: Record<string, unknown>,
 ) {
+  // 삭제 뒤 재조회는 빈 목록을 준다. 카드가 사라지는 것까지 확인하기 위해서다.
+  let deleted = false
+
   await page.route(closeScheduleApiPath, async (route) => {
-    await fulfillCloseScheduleList(route, [createCloseSchedule()])
+    await fulfillCloseScheduleList(
+      route,
+      deleted ? [] : [createCloseSchedule()],
+    )
   })
   await page.route(closeScheduleDetailApiPath, async (route) => {
+    deleted = true
     await route.fulfill({
       status,
       contentType: 'application/json',
