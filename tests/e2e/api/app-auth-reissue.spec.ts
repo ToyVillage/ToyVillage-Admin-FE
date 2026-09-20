@@ -174,7 +174,8 @@ test('S8: 403 이면 재발급 후 원 요청을 재시도한다', async ({ page
   await expect.poll(() => reissue.count()).toBe(1)
   await expect.poll(() => readStorage(page, 'accessToken')).toBe('new-access')
   await expect(page).toHaveURL(/\/notices\/list$/)
-  expect(calls).toBeGreaterThan(1)
+  // 재시도 요청은 토큰 저장 직후에 나가므로 기록될 때까지 기다린다.
+  await expect.poll(() => calls).toBeGreaterThan(1)
 })
 
 test('S8b: 재발급해도 다시 403 이면 세션을 비운다', async ({ page }) => {
