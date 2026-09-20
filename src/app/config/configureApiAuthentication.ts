@@ -1,6 +1,7 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 import {
   appAuthLoginPath,
+  appAuthLogoutPath,
   appAuthReissuePath,
   reissueAppToken,
 } from '@/entities/auth'
@@ -43,15 +44,20 @@ export function configureApiAuthentication(): void {
 
       if (!config || isPublicAuthPath(config.url)) throw error
 
-      // 403은 권한 거부이지만 이 앱은 관리자 단일 대상이라 세션 무효로 다룬다.
-      if (status === 403) {
+      // 로그아웃의 403(권한 거부)은 재발급해도 달라지지 않는다. 바로 세션을 끝낸다.
+      // (로그아웃의 401 은 기존대로 재발급 후 재시도한다 — 아래 흐름을 탄다.)
+      if (status === 403 && isLogoutPath(config.url)) {
         endSession()
         throw error
       }
 
-      if (status !== 401) throw error
+      // 서버는 만료·누락 토큰에 401 이 아니라 403(빈 본문)을 준다.
+      // 그래서 403 도 재발급 대상으로 본다 — 예전처럼 즉시 로그아웃하면
+      // access token 이 만료될 때마다 재발급 없이 튕긴다.
+      // 권한 거부로 인한 403 이면 재발급 후 재시도도 403 이라 아래에서 세션을 비운다.
+      if (status !== 401 && status !== 403) throw error
 
-      // 새 토큰으로 재시도했는데도 401이면 더 시도하지 않는다.
+      // 새 토큰으로 재시도했는데도 막히면 더 시도하지 않는다.
       if (config.isSessionRetry) {
         endSession()
         throw error
@@ -98,6 +104,10 @@ async function requestReissue(): Promise<string | null> {
   } catch {
     return null
   }
+}
+
+function isLogoutPath(url: string | undefined): boolean {
+  return url !== undefined && url.startsWith(appAuthLogoutPath)
 }
 
 function isPublicAuthPath(url: string | undefined): boolean {
