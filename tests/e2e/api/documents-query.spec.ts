@@ -33,28 +33,30 @@ async function routeDetail(page: Page, status: number, body: unknown) {
   })
 }
 
-test('S1: 상세 조회 성공 → 편집 폼에 제목·첨부 표시', async ({ page }) => {
+test('S1: 상세 조회 성공 → 읽기 전용 상세에 제목·첨부 표시', async ({ page }) => {
   await routeDetail(page, 201, detail)
   await page.goto('/notices/resources/7')
 
-  await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
+  await expect(
+    page.getByRole('heading', { name: '상세 자료 제목' }),
+  ).toBeVisible()
   await expect(page.getByText('문서.pdf')).toBeVisible()
   await expect(page.getByText('안내.png')).toBeVisible()
 })
 
-test('S2: 404 → 별도 안내 화면 없이 빈 폼 유지', async ({ page }) => {
+test('S2: 404 → 별도 안내 화면 없이 목록으로 되돌린다', async ({ page }) => {
   // 디자인에 없는 '자료를 찾을 수 없습니다' 화면은 두지 않는다.
   await routeDetail(page, 404, errorBody(404, '존재하지 않는 자료입니다.'))
   await page.goto('/notices/resources/999')
 
   await expect(page.getByText('자료를 찾을 수 없습니다')).toHaveCount(0)
-  await expect(page.getByLabel(/제목/)).toHaveValue('')
+  await expect(page).toHaveURL(/\/notices\/resources$/)
 })
 
-test('S3: 500 → 별도 안내 화면 없이 빈 폼 유지', async ({ page }) => {
+test('S3: 500 → 별도 안내 화면 없이 목록으로 되돌린다', async ({ page }) => {
   await routeDetail(page, 500, errorBody(500, '예상하지 못한 에러가 발생했습니다.'))
   await page.goto('/notices/resources/7')
 
   await expect(page.getByText('자료를 찾을 수 없습니다')).toHaveCount(0)
-  await expect(page.getByLabel(/제목/)).toHaveValue('')
+  await expect(page).toHaveURL(/\/notices\/resources$/)
 })
