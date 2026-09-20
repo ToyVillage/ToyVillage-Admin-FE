@@ -60,3 +60,18 @@ export type { TableSkeletonColumn } from './TableSkeleton'
 export { SkeletonCard } from './SkeletonCard'
 export { FieldSkeleton } from './FieldSkeleton'
 export { AttachmentChipsSkeleton } from './AttachmentChipsSkeleton'
+export {
+  motionDuration,
+  motionEasing,
+  prefersReducedMotion,
+  fadeIn,
+  fadeOut,
+  popIn,
+  dropIn,
+  dropOut,
+  slideInFromLeft,
+  slideOutToLeft,
+  toastIn,
+  toastOut,
+} from './motion'
+export { useExitAnimation } from './useExitAnimation'

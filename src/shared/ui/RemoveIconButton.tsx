@@ -1,5 +1,6 @@
 import type { ComponentPropsWithRef } from 'react'
 import styled from '@emotion/styled'
+import { motionDuration, motionEasing } from './motion'
 
 type RemoveIconButtonProps = ComponentPropsWithRef<'button'>
 
@@ -28,6 +29,7 @@ const Button = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textGuide};
   cursor: pointer;
+  transition: color ${motionDuration.color}ms ${motionEasing.enter};
 
   &:hover {
     color: ${({ theme }) => theme.colors.danger};

@@ -5,6 +5,7 @@ import searchIcon from './assets/search.svg'
 import filterIcon from './assets/filter.svg'
 import chevronIcon from './assets/chevron-left.svg'
 import { dataTableDefaultAppearance } from './dataTableAppearance'
+import { motionDuration, motionEasing } from './motion'
 import { Skeleton } from './Skeleton'
 import { SkeletonStatus } from './SkeletonStatus'
 
@@ -620,6 +621,7 @@ const SortOption = styled.button`
   font-size: 20px;
   font-weight: 500;
   cursor: pointer;
+  transition: background ${motionDuration.color}ms ${motionEasing.enter};
 
   /* 현재 선택된 정렬을 강조해 어떤 정렬인지 보이게 한다. */
   &[aria-checked='true'] {
