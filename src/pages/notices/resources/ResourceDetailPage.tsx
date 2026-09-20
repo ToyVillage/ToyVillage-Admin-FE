@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   useBeforeUnload,
   useBlocker,
+  useLocation,
   useNavigate,
   useParams,
 } from 'react-router-dom'
@@ -15,9 +16,15 @@ import {
 } from '@/features/create-resource'
 import { ResourceEditSkeleton } from './ui/ResourceEditSkeleton'
 
+// `/notices/resources/:id/edit` — 자료 수정 폼(Figma `remake resource` yot 1:6226).
+// 읽기 전용 상세는 `ResourceViewPage` 가 맡는다.
 export function ResourceDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건으로 돌아간다.
+  const listState = location.state as { listSearch?: string } | null
+  const listPath = `/notices/resources${listState?.listSearch ?? ''}`
   const allowNavigationRef = useRef(false)
   const [isDirty, setIsDirty] = useState(false)
 
@@ -42,8 +49,8 @@ export function ResourceDetailPage() {
   useEffect(() => {
     if (!isError) return
     allowNavigationRef.current = true
-    navigate('/notices/resources', { replace: true })
-  }, [isError, navigate])
+    navigate(listPath, { replace: true })
+  }, [isError, listPath, navigate])
   const blocker = useBlocker(
     useCallback(
       ({ currentLocation, nextLocation }) =>
@@ -69,9 +76,9 @@ export function ResourceDetailPage() {
   const handleCompleted = useCallback(
     (reason: ResourceFormCompletion) => {
       allowNavigationRef.current = true
-      navigate('/notices/resources', { state: { toast: reason } })
+      navigate(listPath, { state: { toast: reason } })
     },
-    [navigate],
+    [listPath, navigate],
   )
 
   // 조회 중에는 입력을 막기 위해 폼 대신 스켈레톤을 보인다. 조회 실패는 위 effect 가
