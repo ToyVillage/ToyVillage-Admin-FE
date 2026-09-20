@@ -71,14 +71,16 @@ function Field({ label, value }: { label: string; value: string }) {
   )
 }
 
-// 개체 상세의 `IndividualProfileCard` 와 같은 골격(사진 180 / 정보 / 액션).
+// 사진 180 + 정보. 사진·정보는 위를 맞추고, 값이 길어지면 아래 여백만 늘어난다.
+// 액션은 카드 우상단에 띄운다 — 열로 잡으면 아래 행의 긴 값이 버튼 폭만큼 일찍 끊긴다.
 const Card = styled.section`
+  position: relative;
   display: grid;
   width: 100%;
   margin-top: 33px;
-  grid-template-areas: 'photo info actions';
-  grid-template-columns: 180px minmax(0, 1fr) auto;
-  align-items: center;
+  grid-template-areas: 'photo info';
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: start;
   column-gap: 40px;
   padding: 40px;
   border-radius: 20px;
@@ -86,9 +88,9 @@ const Card = styled.section`
 
   @media (max-width: 980px) {
     grid-template-areas:
-      'photo actions'
+      'photo photo'
       'info info';
-    grid-template-columns: 180px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     row-gap: 24px;
     column-gap: 24px;
     padding: 24px;
@@ -96,12 +98,18 @@ const Card = styled.section`
 `
 
 const Actions = styled.div`
+  position: absolute;
+  top: 40px;
+  right: 40px;
   display: flex;
-  grid-area: actions;
   align-items: center;
-  align-self: start;
-  justify-self: end;
   gap: 24px;
+
+  /* 좁은 화면에서는 띄우지 않고 흐름에 둔다(사진·정보와 겹치지 않게). */
+  @media (max-width: 980px) {
+    position: static;
+    justify-content: flex-end;
+  }
 `
 
 const Photo = styled(ProfilePhoto)`
@@ -122,11 +130,17 @@ const Info = styled.div`
   gap: 20px;
 `
 
+// 개체명 행만 우상단 버튼과 같은 높이라 버튼 폭을 비켜 간다.
 const Titles = styled.div`
   display: flex;
   min-height: 48px;
   align-items: center;
   gap: 16px;
+  padding-right: 320px;
+
+  @media (max-width: 980px) {
+    padding-right: 0;
+  }
 `
 
 const AnimalName = styled.h1`
