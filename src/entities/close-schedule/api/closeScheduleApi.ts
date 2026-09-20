@@ -4,7 +4,6 @@ import type {
   CloseDateCreateRequest,
   CloseDateCreateResponse,
   CloseDateDeleteRequest,
-  CloseDateDeleteResponse,
   CloseDateQueryAllResponseItem,
   CloseDateQueryByDateRequest,
   CloseDateUpdateRequest,
@@ -20,23 +19,14 @@ export async function createCloseSchedule(
 
 export async function deleteCloseSchedule({
   id,
-}: CloseDateDeleteRequest): Promise<CloseDateDeleteResponse> {
+}: CloseDateDeleteRequest): Promise<void> {
   if (!Number.isSafeInteger(id) || id <= 0) {
     throw new Error('휴관일 삭제 요청 ID가 올바르지 않습니다.')
   }
 
-  const { data, status } = await api.delete<unknown>(`/close-day/${id}`)
-
-  // Contract 성공 status 는 201 하나다. 200 등은 성공으로 처리하지 않는다.
-  if (status !== 201) {
-    throw new Error('휴관일 삭제 응답 상태가 올바르지 않습니다.')
-  }
-
-  if (!isCloseDateMessageResponse(data)) {
-    throw new Error('휴관일 삭제 응답 형식이 올바르지 않습니다.')
-  }
-
-  return data
+  // 서버 성공 status 는 Contract 의 201 과 다를 수 있다. axios 가 성공으로 본
+  // 2xx 응답이면 body 형식과 무관하게 삭제된 것으로 처리한다.
+  await api.delete(`/close-day/${id}`)
 }
 
 export async function updateCloseSchedule({
@@ -141,7 +131,7 @@ function toCloseSchedule(schedule: CloseDateQueryAllResponseItem) {
 
 function isCloseDateMessageResponse(
   value: unknown,
-): value is CloseDateUpdateResponse | CloseDateDeleteResponse {
+): value is CloseDateUpdateResponse {
   if (typeof value !== 'object' || value === null) return false
 
   return typeof (value as Record<string, unknown>).message === 'string'

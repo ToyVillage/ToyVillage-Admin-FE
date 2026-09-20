@@ -141,7 +141,7 @@ test('S6: 연속 확인에도 삭제 요청은 한 번만 전송한다', async (
   expect(deleteRequestCount).toBe(1)
 })
 
-test('S7: HTTP 201 body가 Contract와 다르면 성공 처리하지 않는다', async ({
+test('S7: HTTP 201 body가 Contract와 달라도 삭제 성공으로 처리한다', async ({
   page,
 }) => {
   await mockDeleteResponse(page, 201, { result: 'ok' })
@@ -149,12 +149,10 @@ test('S7: HTTP 201 body가 Contract와 다르면 성공 처리하지 않는다',
   await page.goto('/notices/guide')
   await confirmDelete(page)
 
-  await expectDeleteFailure(page)
+  await expectDeleteSuccess(page)
 })
 
-test('S8: HTTP 200은 승인된 성공 Status가 아니므로 거부한다', async ({
-  page,
-}) => {
+test('S8: HTTP 200도 삭제 성공으로 처리한다', async ({ page }) => {
   await mockDeleteResponse(page, 200, {
     message: '휴관일이 삭제되었습니다.',
   })
@@ -162,7 +160,7 @@ test('S8: HTTP 200은 승인된 성공 Status가 아니므로 거부한다', asy
   await page.goto('/notices/guide')
   await confirmDelete(page)
 
-  await expectDeleteFailure(page)
+  await expectDeleteSuccess(page)
 })
 
 test('S9: 새로고침 후 실제 목록 조회 값을 카드에서 삭제한다', async ({
@@ -209,6 +207,12 @@ async function confirmDelete(page: Page) {
     .getByRole('alertdialog')
     .getByRole('button', { name: '확인', exact: true })
     .click()
+}
+
+async function expectDeleteSuccess(page: Page) {
+  await expect(page).toHaveURL(/\/notices\/guide$/)
+  await expect(page.getByText('데이터 삭제에 성공했습니다')).toBeVisible()
+  await expect(page.getByRole('alertdialog')).toHaveCount(0)
 }
 
 async function expectDeleteFailure(page: Page) {

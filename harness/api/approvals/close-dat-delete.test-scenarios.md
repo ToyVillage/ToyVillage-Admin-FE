@@ -59,22 +59,22 @@
 - 사용자 동작: 삭제 확인 동작을 연속 발생
 - 기대 결과: DELETE 요청 횟수 1회, 완료 후 카드가 사라짐
 
-## Mock S7 — Contract 응답 형식 위반
+## Mock S7 — Contract 와 다른 성공 body 허용
 
-- 목적: HTTP 201 body가 Contract와 다르면 성공 이동하지 않는다.
+- 목적: 2xx 응답이면 body 형식이 Contract 와 달라도 삭제 성공으로 처리한다.
 - Mock request: `DELETE /api/close-day/7`
 - Mock response: HTTP 201, `{"result":"ok"}`
 - 사용자 동작: 카드 케밥에서 삭제 확인
-- 기대 결과: 휴관일 관리에 머물고 카드가 남아 있으며 `데이터 삭제에 실패했습니다` 토스트를 표시한다
+- 기대 결과: 카드가 사라지고 `데이터 삭제에 성공했습니다` 토스트를 표시한다
 
-## Mock S8 — 승인되지 않은 성공 Status 거부
+## Mock S8 — HTTP 200 성공 허용
 
-- 목적: body가 맞더라도 HTTP 200을 Contract 성공으로 처리하지 않는다.
+- 목적: 서버가 Contract 의 201 대신 200 을 주어도 삭제 성공으로 처리한다.
 - Mock request: `DELETE /api/close-day/7`
 - Mock response: HTTP 200,
   `{"message":"휴관일이 삭제되었습니다."}`
 - 사용자 동작: 카드 케밥에서 삭제 확인
-- 기대 결과: 휴관일 관리에 머물고 카드가 남아 있으며 `데이터 삭제에 실패했습니다` 토스트를 표시한다
+- 기대 결과: 카드가 사라지고 `데이터 삭제에 성공했습니다` 토스트를 표시한다
 
 ## Mock S9 — 새로고침 후 실제 목록 기준 삭제
 
