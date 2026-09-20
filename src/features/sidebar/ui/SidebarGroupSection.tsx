@@ -39,8 +39,9 @@ export function SidebarGroupSection({
       </GroupHeader>
 
       {/* 접힌 상태도 DOM 에 남겨 높이를 0 으로 접는다(grid 0fr → 1fr).
-          닫힌 동안에는 visibility 로 초점이 들어가지 않게 한다. */}
-      <SubListFrame id={listId} $open={open}>
+          접는 동안에도 항목이 보여야 하므로 visibility 는 전환이 끝난 뒤에 hidden 이 된다.
+          그 사이 링크가 눌리거나 초점이 들어가지 않게 접기 시작과 동시에 inert 를 건다. */}
+      <SubListFrame id={listId} $open={open} inert={!open}>
         <SubList $open={open}>
           {group.items.map((item) =>
             item.to ? (
