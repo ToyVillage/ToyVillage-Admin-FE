@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ResourceTable,
+  deleteDocument,
   getDocuments,
   fileTypeTabs,
   fileTypeToDocumentType,
@@ -11,7 +12,13 @@ import {
 } from '@/entities/resource'
 import { CreateResourceButton } from '@/features/create-resource'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
-import { Toast } from '@/shared/ui'
+import {
+  DeleteConfirmationDialog,
+  Toast,
+  useFocusFrame,
+  type DataTableSortValue,
+  type ToastVariant,
+} from '@/shared/ui'
 import type { ResourceFormCompletion } from '@/features/create-resource'
 import { FileTypeTabs } from './ui/FileTypeTabs'
 import { ResourceListSkeleton } from './ui/ResourceListSkeleton'
@@ -23,17 +30,21 @@ const EMPTY_MIN_HEIGHT = 368
 // 검색 입력 디바운스(ms). 입력이 멈춘 뒤에만 조회 요청을 보낸다.
 const SEARCH_DEBOUNCE_MS = 200
 
-// 목록으로 돌아왔을 때 띄우는 토스트(Figma `자료실 · 토스트` 311:12766).
-// 수정 성공만 Figma 에 노드가 없다 — 나머지와 같은 `데이터 {동작}에 성공했습니다`
-// 문구로 맞춘다(개발자 결정).
+// 생성·수정 화면에서 돌아왔을 때 띄우는 토스트(Figma `자료실 · 토스트` 311:12766).
+// 삭제는 이 화면(목록 케밥)에서 하므로 아래 `localToast` 가 맡는다.
+// 수정 성공만 Figma 에 노드가 없다 — 나머지와 같은 문구 규칙으로 맞춘다(개발자 결정).
 const toastMessages: Record<ResourceFormCompletion, string> = {
   created: '데이터 생성에 성공했습니다',
   updated: '데이터 수정에 성공했습니다',
-  deleted: '데이터 삭제에 성공했습니다',
 }
 
-// URL 에 남기지 않을 기본값(전체 유형·첫 페이지·검색어 없음).
-const listParamDefaults = { tab: '전체', keyword: '', page: '1' } as const
+// URL 에 남기지 않을 기본값(전체 유형·최신순·첫 페이지·검색어 없음).
+const listParamDefaults = {
+  tab: '전체',
+  keyword: '',
+  sort: 'newest',
+  page: '1',
+} as const
 
 export function ResourceListPage() {
   const navigate = useNavigate()
@@ -45,6 +56,28 @@ export function ResourceListPage() {
   const debouncedKeyword = values.keyword
   const page = readPageParam(new URLSearchParams({ page: values.page }))
   const [query, setQuery] = useState(debouncedKeyword)
+  // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [localToast, setLocalToast] = useState<{
+    variant: ToastVariant
+    message: string
+  } | null>(null)
+  const queryClient = useQueryClient()
+  const deletingRef = useRef(false)
+  // 행별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
+  const kebabTriggersRef = useRef(new Map<string, HTMLButtonElement>())
+  const focusFrame = useFocusFrame()
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteDocument({ id: Number(id) }),
+  })
+
+  const sort: DataTableSortValue =
+    values.sort === 'oldest' ? 'oldest' : 'newest'
+
+  function setSort(next: DataTableSortValue) {
+    update({ sort: next, page: '1' })
+  }
 
   // 생성·수정·삭제 화면에서 넘겨받은 결과로 토스트를 띄운다.
   // 첫 렌더에서 값을 읽어 두고 이동 state 는 지운다 — 새로고침이나 뒤로가기로
@@ -95,14 +128,15 @@ export function ResourceListPage() {
     queryKey: [
       'resources',
       'list',
-      { page, size: PAGE_SIZE, keyword: debouncedKeyword, types },
+      { page, size: PAGE_SIZE, keyword: debouncedKeyword, types, sort },
     ],
     queryFn: () =>
       getDocuments({
         page,
         size: PAGE_SIZE,
         keyword: debouncedKeyword || undefined,
-        orderDirection: 'DESC',
+        // 최신순 = 등록일 내림차순. 오래된순이 ASC 다.
+        orderDirection: sort === 'oldest' ? 'ASC' : 'DESC',
         types,
       }),
     placeholderData: (previousData) => previousData,
@@ -119,6 +153,41 @@ export function ResourceListPage() {
     // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, page, pageCount])
+
+  function focusKebabTrigger(id: string) {
+    // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
+    focusFrame(() => kebabTriggersRef.current.get(id))
+  }
+
+  function handleDelete() {
+    if (!deleteTargetId || deletingRef.current || deleteMutation.isPending) {
+      return
+    }
+
+    deletingRef.current = true
+    const targetId = deleteTargetId
+    deleteMutation.mutate(targetId, {
+      onSuccess: async () => {
+        // 목록만 무효화한다. 상세 쿼리까지 넓히면 삭제된 id 를 다시 GET 해 404 가 난다.
+        await queryClient.invalidateQueries({ queryKey: ['resources', 'list'] })
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        setLocalToast({
+          variant: 'success',
+          message: '데이터 삭제에 성공했습니다',
+        })
+      },
+      onError: () => {
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        setLocalToast({
+          variant: 'error',
+          message: '데이터 삭제에 실패했습니다',
+        })
+        focusKebabTrigger(targetId)
+      },
+    })
+  }
 
   if (isPending) {
     return (
@@ -154,6 +223,26 @@ export function ResourceListPage() {
               state: { listSearch: location.search },
             })
           }
+          onEdit={(id) =>
+            navigate(`/notices/resources/${id}/edit`, {
+              state: { listSearch: location.search },
+            })
+          }
+          onDelete={(id) => {
+            setOpenKebabId(null)
+            setDeleteTargetId(id)
+          }}
+          openKebabId={openKebabId}
+          onOpenKebabChange={setOpenKebabId}
+          onKebabTriggerRef={(id, node) => {
+            if (node) kebabTriggersRef.current.set(id, node)
+            else kebabTriggersRef.current.delete(id)
+          }}
+          sort={{
+            value: sort,
+            onChange: (value) => setSort(value as DataTableSortValue),
+            ariaLabel: '자료 날짜 정렬',
+          }}
           search={{
             value: query,
             onChange: setQuery,
@@ -168,7 +257,28 @@ export function ResourceListPage() {
           emptyMinHeight={EMPTY_MIN_HEIGHT}
         />
       </Content>
-      {toastMessage && (
+
+      {deleteTargetId && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={() => {
+            const targetId = deleteTargetId
+            setDeleteTargetId(null)
+            focusKebabTrigger(targetId)
+          }}
+          onConfirm={handleDelete}
+        />
+      )}
+
+      {localToast && (
+        <Toast
+          variant={localToast.variant}
+          message={localToast.message}
+          onDismiss={() => setLocalToast(null)}
+        />
+      )}
+
+      {!localToast && toastMessage && (
         <Toast
           variant="success"
           message={toastMessage}
