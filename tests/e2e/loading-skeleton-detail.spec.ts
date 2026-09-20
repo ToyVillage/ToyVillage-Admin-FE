@@ -111,3 +111,25 @@ test('S21: 조회 실패 → 스켈레톤 대신 기존 오류 표시', async ({
   })
   await expect(page.getByRole('status', { name: '불러오는 중' })).toHaveCount(0)
 })
+
+test('S22: 상세 조회 중에도 정적 UI는 실제 UI로 보인다', async ({ page }) => {
+  await stallApi(page)
+  await page.goto('/notices/list/1')
+  await expectSkeleton(page)
+
+  await expect(page.getByRole('link', { name: '뒤로가기' })).toBeVisible()
+  for (const label of ['분류', '날짜', '첨부자료']) {
+    await expect(page.getByText(label, { exact: true })).toBeVisible()
+  }
+})
+
+test('S23: 수정 조회 중에도 폼 라벨은 실제 UI로 보인다', async ({ page }) => {
+  await stallApi(page)
+  await page.goto('/notices/list/1/edit')
+  await expectSkeleton(page)
+
+  for (const label of ['제목', '분류', '첨부자료']) {
+    await expect(page.getByText(label, { exact: true })).toBeVisible()
+  }
+  await expect(page.getByText('상세 업무 내용')).toBeVisible()
+})
