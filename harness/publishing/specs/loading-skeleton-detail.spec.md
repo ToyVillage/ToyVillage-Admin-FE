@@ -57,6 +57,7 @@ paths: src/shared/ui, src/pages
   | 업무일지 상세 | `/work-logs/:id` | `2238:20340` |
   | 업무일지 양식 상세 | `/work-logs/forms/:id` | `2238:20430` |
   | 먹이 급여 상세 | `/feeds/:id` | `2238:20833` |
+  | 자료실 상세 | `/notices/resources/:id` | `2238:19991` |
   | 종 상세 | `/species/:speciesId` | `2238:20550` |
   | 개체 상세 | `/species/:speciesId/individuals/:individualId` | `2238:20683` |
   | 관찰 상세 | `/species/.../observations/:observationId` | `2238:20804` |
@@ -80,7 +81,7 @@ paths: src/shared/ui, src/pages
 ## 비고
 
 - 단체예약은 상세 경로가 곧 수정 폼이라 `수정` 프레임을 기준으로 구현한다.
-- 자료실은 #92 에서 읽기 전용 상세(`/notices/resources/:id`)와 수정(`…/edit`)이 갈렸다. 새 상세 화면 스켈레톤(`2238:19991`)은 후속 범위다.
+- 자료실은 #92 에서 읽기 전용 상세(`/notices/resources/:id`)와 수정(`…/edit`)이 갈렸다. 상세는 `2238:19991`, 수정은 `2238:21937` 을 따른다(#180).
 - `업무일지 양식 수정`(`2238:22176`)·`업무일지 구역 수정`(`2238:22326`)은 조회하는 수정 화면이 없어 제외한다.
 - 업무 수정(`/tasks/:id/edit`)은 Figma 스켈레톤 프레임이 없어 이번 범위에서 제외한다.
 - 막대 쉬머 애니메이션은 `loading-skeleton-list` 비고와 같다(이슈 #173).

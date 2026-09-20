@@ -9,7 +9,10 @@ import {
 } from '@/entities/resource'
 import {
   AttachmentChip,
+  AttachmentChipsSkeleton,
   BackLink,
+  Skeleton,
+  SkeletonStatus,
   Toast,
   downloadStoredFile,
 } from '@/shared/ui'
@@ -27,7 +30,11 @@ export function ResourceViewPage() {
   const navigate = useNavigate()
   const [downloadFailed, setDownloadFailed] = useState(false)
 
-  const { data: resource, isError } = useQuery({
+  const {
+    data: resource,
+    isError,
+    isPending,
+  } = useQuery({
     queryKey: ['resources', id],
     queryFn: () => getDocument({ id: Number(id) }),
     enabled: Boolean(id),
@@ -53,32 +60,47 @@ export function ResourceViewPage() {
     }
   }
 
-  // 조회 전에는 같은 자리에 빈 카드를 두어 값이 와도 레이아웃이 튀지 않게 한다.
-  return (
-    <Page>
-      <Content>
-        <BackLink to={listPath} />
-
-        <MetaCard>
-          <MetaItem>
-            <MetaLabel>분류</MetaLabel>
-            {resource && <Pill>{fileTypeLabel[resource.fileType]}</Pill>}
-          </MetaItem>
-          <MetaItem>
-            <MetaLabel>날짜</MetaLabel>
+  // 조회 중에는 카드·라벨을 그대로 두고 서버가 주는 값 자리만 막대로 채운다
+  // (Figma `자료실 상세 (스켈레톤)` 2238:19991). 값이 와도 레이아웃이 튀지 않는다.
+  const cards = (
+    <>
+      <MetaCard>
+        <MetaItem>
+          <MetaLabel>분류</MetaLabel>
+          {isPending ? (
+            <Skeleton width={56} height={30} />
+          ) : (
+            resource && <Pill>{fileTypeLabel[resource.fileType]}</Pill>
+          )}
+        </MetaItem>
+        <MetaItem>
+          <MetaLabel>날짜</MetaLabel>
+          {isPending ? (
+            <Skeleton width={120} height={22} />
+          ) : (
             <MetaDate>{resource?.date ?? ''}</MetaDate>
-          </MetaItem>
-        </MetaCard>
+          )}
+        </MetaItem>
+      </MetaCard>
 
-        <TitleCard>
+      <TitleCard>
+        {isPending ? (
+          <Skeleton width={90} height={26} />
+        ) : (
           <Title>{resource?.title ?? ''}</Title>
-        </TitleCard>
+        )}
+      </TitleCard>
 
-        <AttachmentCard aria-labelledby="resource-attachments-title">
-          <AttachmentTitle id="resource-attachments-title">
-            첨부자료
-          </AttachmentTitle>
-          {files.length > 0 && (
+      <AttachmentCard aria-labelledby="resource-attachments-title">
+        <AttachmentTitle id="resource-attachments-title">
+          첨부자료
+        </AttachmentTitle>
+        {isPending ? (
+          <AttachmentRow>
+            <AttachmentChipsSkeleton />
+          </AttachmentRow>
+        ) : (
+          files.length > 0 && (
             <AttachmentRow>
               {files.map((file) => (
                 <AttachmentChip
@@ -88,8 +110,18 @@ export function ResourceViewPage() {
                 />
               ))}
             </AttachmentRow>
-          )}
-        </AttachmentCard>
+          )
+        )}
+      </AttachmentCard>
+    </>
+  )
+
+  return (
+    <Page>
+      <Content>
+        <BackLink to={listPath} />
+
+        {isPending ? <SkeletonStatus>{cards}</SkeletonStatus> : cards}
       </Content>
 
       {downloadFailed && (
