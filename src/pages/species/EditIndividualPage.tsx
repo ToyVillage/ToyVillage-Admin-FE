@@ -12,6 +12,7 @@ import { LeaveConfirmationDialog } from '@/shared/ui'
 import { FormPageLayout } from './ui/FormPageLayout'
 import { PageStatus } from './ui/PageStatus'
 import { useFormLeaveGuard } from './ui/useFormLeaveGuard'
+import { FormPageSkeleton } from './ui/FormPageSkeleton'
 
 // `/species/:speciesId/individuals/:individualId/edit` — 개체 수정.
 // 개체 상세 케밥·종 상세 개체 표 행 케밥 `수정` 에서 들어온다.
@@ -40,7 +41,7 @@ export function EditIndividualPage() {
   }, [allowNavigation, detailPath, navigate])
 
   if (speciesQuery.isPending || individualQuery.isPending) {
-    return <PageStatus state="loading" message="개체를 불러오는 중입니다." />
+    return <FormPageSkeleton cards={4} photo />
   }
 
   if (

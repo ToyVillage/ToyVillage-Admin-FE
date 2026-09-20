@@ -16,6 +16,7 @@ import {
 import { RowActionMenu } from '@/features/row-actions'
 import { AttachmentList, DeleteConfirmationDialog, Toast } from '@/shared/ui'
 import { TaskBackLink } from './ui/TaskBackLink'
+import { TaskDetailSkeleton } from './ui/TaskDetailSkeleton'
 
 // 여기서 연 업무보고를 심사하고 돌아오면 그 결과를 이동 state 로 받는다.
 interface TaskDetailLocationState {
@@ -117,9 +118,11 @@ export function TaskDetailPage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">업무를 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <TaskDetailSkeleton />
+        </Content>
+      </Page>
     )
   }
 

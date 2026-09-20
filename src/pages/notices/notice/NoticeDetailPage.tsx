@@ -15,6 +15,7 @@ import {
   Toast,
   downloadStoredFile,
 } from '@/shared/ui'
+import { NoticeDetailSkeleton } from './ui/NoticeDetailSkeleton'
 
 const downloadErrorMessage = '파일 다운로드에 실패했습니다. 다시 시도해 주세요.'
 
@@ -61,9 +62,11 @@ export function NoticeDetailPage() {
 
   if (isPending) {
     return (
-      <StatePage>
-        <StateCard role="status">공지사항을 불러오는 중입니다.</StateCard>
-      </StatePage>
+      <Page>
+        <Content>
+          <NoticeDetailSkeleton />
+        </Content>
+      </Page>
     )
   }
 

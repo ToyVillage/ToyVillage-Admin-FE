@@ -23,6 +23,7 @@ import {
   LinkButton,
   Toast,
 } from '@/shared/ui'
+import { WorkLogTableSkeleton } from './ui/WorkLogTableSkeleton'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 4
@@ -126,12 +127,6 @@ export function WorkLogListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalPages, page, pageCount])
 
-  // 로딩 중에는 같은 자리에 빈 표를 두어 레이아웃이 튀지 않게 한다(빈 상태 문구는 아직 쓰지 않는다).
-  const logsEmptyLabel = isPending
-    ? ' '
-    : '해당 날짜에 작성된 업무일지가 없습니다.'
-  const formsEmptyLabel = isPending ? ' ' : '등록된 양식이 없습니다.'
-
   function handleSelectTab(label: string) {
     const nextTab: WorkLogTab = label === formsTabLabel ? 'forms' : 'logs'
     setOpenKebabId(null)
@@ -176,7 +171,9 @@ export function WorkLogListPage() {
         {tab === 'logs' && <DateFilter value={date} onChange={setDate} />}
 
         <TableArea>
-          {tab === 'logs' ? (
+          {isPending ? (
+            <WorkLogTableSkeleton tab={tab} />
+          ) : tab === 'logs' ? (
             <WorkLogTable
               logs={logs}
               onRowClick={(id) =>
@@ -188,7 +185,7 @@ export function WorkLogListPage() {
               openKebabId={openKebabId}
               onOpenKebabChange={setOpenKebabId}
               pagination={pagination}
-              emptyLabel={logsEmptyLabel}
+              emptyLabel="해당 날짜에 작성된 업무일지가 없습니다."
             />
           ) : (
             <WorkLogFormTable
@@ -202,7 +199,7 @@ export function WorkLogListPage() {
               openKebabId={openKebabId}
               onOpenKebabChange={setOpenKebabId}
               pagination={pagination}
-              emptyLabel={formsEmptyLabel}
+              emptyLabel="등록된 양식이 없습니다."
             />
           )}
         </TableArea>

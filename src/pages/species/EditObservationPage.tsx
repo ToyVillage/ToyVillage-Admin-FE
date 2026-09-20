@@ -13,6 +13,7 @@ import { ObservationForm } from '@/features/observation-form'
 import { BackLink, LeaveConfirmationDialog } from '@/shared/ui'
 import { PageStatus } from './ui/PageStatus'
 import { useFormLeaveGuard } from './ui/useFormLeaveGuard'
+import { FormPageSkeleton } from './ui/FormPageSkeleton'
 
 // `/species/:speciesId/individuals/:individualId/observations/:observationId/edit` — 관찰 수정
 // (Figma `observation edit` 1282:15007). 관찰 상세 제목 행 케밥·개체 상세 관찰 표 행 케밥 `수정` 에서 들어온다.
@@ -56,9 +57,7 @@ export function EditObservationPage() {
     individualQuery.isPending ||
     speciesQuery.isPending
   ) {
-    return (
-      <PageStatus state="loading" message="관찰 기록을 불러오는 중입니다." />
-    )
+    return <FormPageSkeleton cards={3} />
   }
 
   if (

@@ -9,6 +9,7 @@ import {
   WorkLogSheet,
 } from '@/entities/work-log'
 import { BackLink, Toast } from '@/shared/ui'
+import { WorkLogDetailSkeleton } from './ui/WorkLogDetailSkeleton'
 
 const listPath = '/work-logs'
 
@@ -36,6 +37,17 @@ export function WorkLogDetailPage() {
   // 삭제된 일지나 잘못된 id 로 진입하면 목록으로 되돌린다(spec).
   if (!Number.isSafeInteger(workLogId) || workLogId <= 0) {
     return <Navigate to={backPath} replace />
+  }
+
+  if (isPending) {
+    return (
+      <Page>
+        <Content>
+          <BackLink to="/work-logs" />
+          <WorkLogDetailSkeleton />
+        </Content>
+      </Page>
+    )
   }
 
   // 404(지워진 일지)만 목록으로 되돌린다. 500·네트워크 실패까지 되돌리면

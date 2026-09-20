@@ -26,6 +26,7 @@ import { readPageParam, useListSearchParams } from '@/shared/lib'
 import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { SpeciesEmptyMessage } from './ui/SpeciesEmptyMessage'
+import { SpeciesListSkeleton } from './ui/SpeciesListSkeleton'
 import { SEARCH_DEBOUNCE_MS, TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
 
@@ -167,8 +168,17 @@ export function SpeciesListPage() {
     )
   }
 
-  // 로딩 중에는 빈 상태 문구를 띄우지 않는다.
-  const emptyLabel = speciesQuery.isPending ? undefined : keyword ? (
+  if (speciesQuery.isPending) {
+    return (
+      <Page>
+        <Content>
+          <SpeciesListSkeleton />
+        </Content>
+      </Page>
+    )
+  }
+
+  const emptyLabel = keyword ? (
     '검색결과가 없습니다'
   ) : (
     <SpeciesEmptyMessage

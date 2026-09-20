@@ -14,6 +14,7 @@ import {
   type Meridiem,
   type TimeParts,
 } from './OperatingTimeField'
+import { OperatingHoursFormSkeleton } from './OperatingHoursFormSkeleton'
 
 interface OperatingHoursFormProps {
   date: string
@@ -40,9 +41,7 @@ export function OperatingHoursForm({
   })
 
   if (isPending) {
-    return (
-      <QueryStatus role="status">영업시간을 조회하는 중입니다.</QueryStatus>
-    )
+    return <OperatingHoursFormSkeleton />
   }
 
   if (isError || !hours) {

@@ -24,6 +24,7 @@ import {
 } from '@/features/reservation-form'
 import { DeleteConfirmationDialog } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
+import { ReservationEditSkeleton } from './ui/ReservationEditSkeleton'
 
 // 서버 오류 응답에서 사용자용 message 를 뽑는다(없으면 기본 문구).
 function serverMessage(error: unknown): string {
@@ -216,7 +217,18 @@ export function ReservationDetailPage() {
     }
   }
 
-  // 조회가 끝났는데 데이터가 없을 때만 상태 화면을 띄운다(로딩 중에는 빈 폼 유지).
+  if (isPending) {
+    return (
+      <Page>
+        <Content>
+          <ReservationBackLink />
+          <ReservationEditSkeleton />
+        </Content>
+      </Page>
+    )
+  }
+
+  // 조회가 끝났는데 데이터가 없을 때만 상태 화면을 띄운다.
   // 404(존재하지 않는 예약)만 '찾을 수 없음'이고, 그 외 오류(500·네트워크)는 조회 실패로
   // 구분해 안내한다 — 실패를 '없음'으로 오인시키지 않는다.
   if (!isPending && !reservation) {

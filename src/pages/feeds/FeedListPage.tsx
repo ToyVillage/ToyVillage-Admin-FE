@@ -19,6 +19,7 @@ import {
   toIsoDate,
   type CalendarDate,
 } from '@/shared/lib'
+import { FeedTableSkeleton } from './ui/FeedTableSkeleton'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 10
@@ -105,11 +106,6 @@ export function FeedListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalPageSize, page, pageCount])
 
-  // 로딩 중에는 같은 자리에 빈 표를 두어 레이아웃이 튀지 않게 한다.
-  const emptyLabel = feedsQuery.isPending
-    ? ' '
-    : '해당 날짜에 급여 내역이 없습니다.'
-
   // 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
   if (feedsQuery.isError) {
     return (
@@ -134,17 +130,21 @@ export function FeedListPage() {
         <CategoryTabs categories={tabs} active={tab} onSelect={setTab} />
 
         <TableArea data-testid="feed-table-scroll">
-          <FeedTable
-            feeds={feeds}
-            // 상세의 뒤로가기와 분류 뱃지가 이 조회 조건을 쓴다.
-            onRowClick={(id) =>
-              navigate(`/feeds/${id}`, {
-                state: { listSearch: location.search, species },
-              })
-            }
-            pagination={pagination}
-            emptyLabel={emptyLabel}
-          />
+          {feedsQuery.isPending ? (
+            <FeedTableSkeleton />
+          ) : (
+            <FeedTable
+              feeds={feeds}
+              // 상세의 뒤로가기와 분류 뱃지가 이 조회 조건을 쓴다.
+              onRowClick={(id) =>
+                navigate(`/feeds/${id}`, {
+                  state: { listSearch: location.search, species },
+                })
+              }
+              pagination={pagination}
+              emptyLabel="해당 날짜에 급여 내역이 없습니다."
+            />
+          )}
         </TableArea>
       </Content>
     </Page>

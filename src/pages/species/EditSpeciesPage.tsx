@@ -11,6 +11,7 @@ import { LeaveConfirmationDialog } from '@/shared/ui'
 import { FormPageLayout } from './ui/FormPageLayout'
 import { PageStatus } from './ui/PageStatus'
 import { useFormLeaveGuard } from './ui/useFormLeaveGuard'
+import { FormPageSkeleton } from './ui/FormPageSkeleton'
 
 // `/species/:speciesId/edit` — 종 수정. 종 목록 행·종 상세 카드 케밥 `수정` 에서 들어온다.
 export function EditSpeciesPage() {
@@ -36,7 +37,7 @@ export function EditSpeciesPage() {
   }, [allowNavigation, navigate, speciesId])
 
   if (isPending) {
-    return <PageStatus state="loading" message="종 정보를 불러오는 중입니다." />
+    return <FormPageSkeleton cards={4} photo />
   }
 
   if (isError && !isNotFoundError(error)) {
