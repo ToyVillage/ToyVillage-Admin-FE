@@ -5,10 +5,14 @@ import {
   type ReservationStatus,
 } from '@/entities/reservation'
 
+import { Skeleton } from '@/shared/ui'
+
 interface ReservationStatusCardsProps {
   counts: Record<ReservationStatus, number>
   active: ReservationStatus
   onSelect: (status: ReservationStatus) => void
+  // 첫 조회 중. 라벨은 그대로 두고 건수 자리만 막대로 채운다(Figma 2238:18694).
+  loading?: boolean
 }
 
 // 상태별 카운트 카드 + 필터 탭. 활성 카드는 blue-background(accentBg) 강조.
@@ -16,6 +20,7 @@ export function ReservationStatusCards({
   counts,
   active,
   onSelect,
+  loading = false,
 }: ReservationStatusCardsProps) {
   return (
     <Cards role="group" aria-label="상태별 예약 수">
@@ -30,7 +35,11 @@ export function ReservationStatusCards({
           <Label $active={status === active}>
             {reservationStatusLabel[status]}
           </Label>
-          <Count $active={status === active}>{counts[status]}</Count>
+          {loading ? (
+            <Skeleton width={36} height={36} radius={18} />
+          ) : (
+            <Count $active={status === active}>{counts[status]}</Count>
+          )}
         </Card>
       ))}
     </Cards>

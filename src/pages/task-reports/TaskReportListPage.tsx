@@ -101,7 +101,10 @@ export function TaskReportListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, page, pageCount])
 
-  const tabLabels = tabs.map(({ label, count }) => `${label} ${count}`)
+  // 조회 전에는 건수를 모르므로 `0` 을 보이지 않고 라벨만 둔다.
+  const tabLabels = tabs.map(({ label, count }) =>
+    isPending ? label : `${label} ${count}`,
+  )
   const activeLabel =
     tabLabels[tabs.findIndex((tab) => tab.reviewStatus === activeStatus)]
 

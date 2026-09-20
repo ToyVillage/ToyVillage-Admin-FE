@@ -132,6 +132,7 @@ export function NoticeReservationsPage() {
             counts={counts}
             active={active}
             onSelect={handleStatusSelect}
+            loading={isPending}
           />
           <CreateButton
             type="button"
