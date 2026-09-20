@@ -16,6 +16,7 @@ import {
   CreateResourcePage,
   ResourceDetailPage,
   ResourceListPage,
+  ResourceViewPage,
 } from '@/pages/notices/resources'
 import {
   CloseScheduleDetailPage,
@@ -111,6 +112,10 @@ const router = createBrowserRouter([
           },
           {
             path: '/notices/resources/:id',
+            element: <ResourceViewPage />,
+          },
+          {
+            path: '/notices/resources/:id/edit',
             element: <ResourceDetailPage />,
           },
           {
