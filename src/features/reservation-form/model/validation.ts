@@ -63,7 +63,32 @@ export function validateReservationForm(
       errors[key] = '시간을 확인해주세요!'
     }
   }
+
+  // 서버가 거부하는 조건(퇴장이 입장보다 빠름)은 요청 전에 그 칸에서 막는다.
+  // 화면 상단 알림 대신 다른 검증과 같은 인라인 에러로 보인다.
+  for (const { enter, exit } of timeOrderPairs) {
+    if (errors[enter] || errors[exit]) continue
+    if (toMinutes(value[exit]) < toMinutes(value[enter])) {
+      errors[exit] = '퇴장 시간은 입장 시간보다 빠를 수 없습니다.'
+    }
+  }
+
   return errors
+}
+
+// 입장·퇴장이 한 칸에 있는 시간 필드. 에러는 퇴장 쪽 키에 담는다.
+const timeOrderPairs = [
+  { enter: 'visitTime', exit: 'exitTime' },
+  { enter: 'surveyEnterTime', exit: 'surveyExitTime' },
+] as const satisfies readonly {
+  enter: keyof ReservationFormValue
+  exit: keyof ReservationFormValue
+}[]
+
+// 24시간제 raw 자릿수 "HHMM" → 분. 비교용이라 형식 검증을 통과한 값에만 쓴다.
+function toMinutes(rawDigits: string): number {
+  const padded = rawDigits.replace(/\D/g, '').slice(0, 4).padEnd(4, '0')
+  return Number(padded.slice(0, 2)) * 60 + Number(padded.slice(2, 4))
 }
 
 // 제출 시 첫 번째 에러 필드로 스크롤한다. DOM 순서가 화면 순서와 같으므로

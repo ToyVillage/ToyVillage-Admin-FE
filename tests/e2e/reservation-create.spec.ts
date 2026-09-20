@@ -167,6 +167,22 @@ test('S8: 한 자리만 입력해도 보이는 값으로 제출된다', async ({
   expect(body).toMatchObject({ visitTime: '10:00' })
 })
 
+test('S9: 퇴장이 입장보다 빠르면 그 칸에 인라인 에러', async ({ page }) => {
+  await routeAssignableEmployees(page)
+
+  await page.goto('/notices/reservations/create')
+  const label = '방문 시간을 선택해주세요'
+  await fillTime(page, label, '입장시간', '1400')
+  await fillTime(page, label, '퇴장시간', '0900')
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  // 화면 상단 알림이 아니라 그 필드 아래에 빨간 문구로 보인다.
+  await expect(
+    page.getByText('퇴장 시간은 입장 시간보다 빠를 수 없습니다.'),
+  ).toBeVisible()
+  await expect(page).toHaveURL(/\/notices\/reservations\/create$/)
+})
+
 test('S6: 페이지 권한 배정 추가/취소', async ({ page }) => {
   await routeAssignableEmployees(page)
 
