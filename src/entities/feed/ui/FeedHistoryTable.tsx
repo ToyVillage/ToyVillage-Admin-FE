@@ -13,6 +13,8 @@ interface FeedHistoryTableProps {
   emptyLabel: string
   /** 이력 행을 누르면 그 급여 기록 상세로 간다. 행 id 가 `feedLogId` 다. */
   onSelect: (feedLogId: string) => void
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Figma `1400:15136` (feed history table). 페이지네이션 없이 이력 전체를 보여준다.
@@ -60,24 +62,24 @@ export function FeedHistoryTable({
   records,
   emptyLabel,
   onSelect,
+  loading,
 }: FeedHistoryTableProps) {
   return (
     <DataTable
-      rows={records.map(
-        (record): DataTableRow => ({
-          id: record.id,
-          fedDate: formatFedDate(record.fedDate),
-          fedTime: record.fedTime,
-          feeder: record.feederName,
-          feed: formatFeedLabel(record.feedType, record.feedAmount),
-          note: record.note,
-        }),
-      )}
+      rows={records.map((record): DataTableRow => ({
+        id: record.id,
+        fedDate: formatFedDate(record.fedDate),
+        fedTime: record.fedTime,
+        feeder: record.feederName,
+        feed: formatFeedLabel(record.feedType, record.feedAmount),
+        note: record.note,
+      }))}
       columns={columns}
       rowTestId="feed-history-row"
       onRowClick={onSelect}
       emptyLabel={emptyLabel}
       appearance={appearance}
+      loading={loading}
     />
   )
 }

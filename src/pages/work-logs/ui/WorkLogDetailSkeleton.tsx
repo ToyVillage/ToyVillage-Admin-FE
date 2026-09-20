@@ -4,7 +4,8 @@ import { Skeleton, SkeletonStatus } from '@/shared/ui'
 const COLUMN_BARS = [36, 30, 50, 36, 160]
 const SHEET_ROWS = 6
 
-// Figma `업무일지 상세 (스켈레톤)`(2021:21097). 뒤로가기는 페이지가 그린다.
+// Figma `업무일지 상세 (스켈레톤)`(2238:20340) — 뒤로가기와 시트 첫 열 머리(`설정된 구역`)는
+// 실제 UI 이고, 양식이 정하는 질문 열과 값만 막대다. 뒤로가기는 page 가 그린다.
 export function WorkLogDetailSkeleton() {
   return (
     <SkeletonStatus>
@@ -15,7 +16,10 @@ export function WorkLogDetailSkeleton() {
       </Meta>
       <Sheet>
         <HeadRow>
-          {COLUMN_BARS.map((width, index) => (
+          <Cell>
+            <HeadLabel>설정된 구역</HeadLabel>
+          </Cell>
+          {COLUMN_BARS.slice(1).map((width, index) => (
             <Cell key={index}>
               <Skeleton width={width + 20} height={16} />
             </Cell>
@@ -34,6 +38,14 @@ export function WorkLogDetailSkeleton() {
     </SkeletonStatus>
   )
 }
+
+// 실제 시트 첫 열 머리와 같은 글자.
+const HeadLabel = styled.span`
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+`
 
 const Meta = styled.div`
   display: flex;

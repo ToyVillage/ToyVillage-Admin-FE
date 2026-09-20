@@ -1,11 +1,14 @@
 import styled from '@emotion/styled'
 import { Link } from 'react-router-dom'
+import { Skeleton } from '@/shared/ui'
 
 interface DashboardKpiCardProps {
   label: string
   value: number
   icon: string
   to: string
+  // 첫 조회 중. 라벨·아이콘은 그대로 두고 수치 자리만 막대로 채운다(Figma 2238:22610).
+  loading?: boolean
 }
 
 // Figma `kpi *`(1481:14972 등) — 카드 전체가 해당 관리 화면 링크다.
@@ -14,10 +17,17 @@ export function DashboardKpiCard({
   value,
   icon,
   to,
+  loading = false,
 }: DashboardKpiCardProps) {
   return (
     <Card to={to}>
-      <Value>{value}</Value>
+      {loading ? (
+        <ValueSlot>
+          <Skeleton width={30} height={48} radius={24} />
+        </ValueSlot>
+      ) : (
+        <Value>{value}</Value>
+      )}
       <Label>{label}</Label>
       <Icon src={icon} alt="" />
     </Card>
@@ -39,6 +49,12 @@ const Card = styled(Link)`
     outline: 3px solid ${({ theme }) => theme.colors.accent};
     outline-offset: 2px;
   }
+`
+
+const ValueSlot = styled.span`
+  display: flex;
+  align-items: center;
+  height: 48px;
 `
 
 const Value = styled.span`

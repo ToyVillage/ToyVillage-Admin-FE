@@ -5,10 +5,13 @@ import {
   taskStatusLabels,
   type TaskStatus,
 } from '@/entities/task'
+import { Skeleton } from '@/shared/ui'
 import type { DashboardTaskStatusCounts } from '../model/types'
 
 interface TaskStatusDonutProps {
   counts: DashboardTaskStatusCounts
+  // 첫 조회 중. 상태 배지는 그대로 두고 도넛과 수치 자리만 막대로 채운다(Figma 2238:22610).
+  loading?: boolean
 }
 
 const SIZE = 168
@@ -20,7 +23,10 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 const order: TaskStatus[] = ['COMPLETED', 'IN_PROGRESS', 'EXPIRED']
 
 // Figma `donut`(1906:17625) + `legend`(1906:17630).
-export function TaskStatusDonut({ counts }: TaskStatusDonutProps) {
+export function TaskStatusDonut({
+  counts,
+  loading = false,
+}: TaskStatusDonutProps) {
   const theme = useTheme()
 
   const total = order.reduce((sum, status) => sum + counts[status], 0)
@@ -40,6 +46,36 @@ export function TaskStatusDonut({ counts }: TaskStatusDonutProps) {
     const length = total === 0 ? 0 : (counts[status] / total) * CIRCUMFERENCE
     return [...acc, { status, length, offset }]
   }, [])
+
+  if (loading) {
+    return (
+      <Body>
+        <Chart aria-hidden="true">
+          <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+            <circle
+              cx={SIZE / 2}
+              cy={SIZE / 2}
+              r={RADIUS}
+              fill="none"
+              stroke={theme.colors.tableHeaderStrong}
+              strokeWidth={STROKE}
+            />
+          </svg>
+          <Total aria-hidden="true">
+            <Skeleton width={40} height={36} radius={18} />
+          </Total>
+        </Chart>
+        <Legend>
+          {order.map((status) => (
+            <LegendRow key={status}>
+              <TaskStatusBadge status={status} />
+              <Skeleton width={28} height={20} />
+            </LegendRow>
+          ))}
+        </Legend>
+      </Body>
+    )
+  }
 
   return (
     <Body>

@@ -1,16 +1,26 @@
 import styled from '@emotion/styled'
 import { motionDuration, motionEasing } from './motion'
+import { Skeleton } from './Skeleton'
 
 interface CategoryTabsProps {
   categories: string[]
   active: string
   onSelect: (category: string) => void
+  // 탭 이름을 아직 받아오지 못했을 때. 고정 탭(`전체`)은 그대로 두고 나머지 자리만 막대로 채운다.
+  loading?: boolean
+  // 조회 중 그릴 막대 탭 수. 생략 시 5.
+  loadingTabs?: number
 }
+
+// Figma 스켈레톤(2237:17442)은 선택된 탭 라벨을 실제 글자로 두고 서버가 주는 팀 이름만 막대로 둔다.
+const loadingTabWidths = [140, 118, 163, 118, 118]
 
 export function CategoryTabs({
   categories,
   active,
   onSelect,
+  loading = false,
+  loadingTabs = 5,
 }: CategoryTabsProps) {
   return (
     <Tabs>
@@ -25,6 +35,15 @@ export function CategoryTabs({
           {c}
         </Tab>
       ))}
+      {loading &&
+        Array.from({ length: loadingTabs }, (_, index) => (
+          <LoadingTab key={index}>
+            <Skeleton
+              width={loadingTabWidths[index % loadingTabWidths.length]}
+              height={27}
+            />
+          </LoadingTab>
+        ))}
     </Tabs>
   )
 }
@@ -33,6 +52,13 @@ const Tabs = styled.div`
   display: flex;
   width: 100%;
   margin-top: 32px;
+`
+
+const LoadingTab = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 10px 44px;
+  border-bottom: 2px solid transparent;
 `
 
 const Tab = styled.button<{ $active: boolean }>`

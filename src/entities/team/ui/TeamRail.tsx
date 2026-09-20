@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { Skeleton } from '@/shared/ui'
 import type { Team } from '../model/types'
 
 interface TeamRailProps {
@@ -6,7 +7,12 @@ interface TeamRailProps {
   selectedId: number | null
   onSelect: (teamId: number) => void
   onAddClick: () => void
+  // 첫 조회 중. 라벨·`팀 추가하기`는 그대로 두고 팀 이름·인원 자리만 막대로 채운다.
+  loading?: boolean
 }
+
+// Figma 스켈레톤(2238:18812) 팀 행 막대 폭.
+const loadingRowWidths = [140, 90, 180, 96]
 
 // Figma `team / rail`(1770:16527) — 좌측 팀 목록과 하단 `팀 추가하기`.
 export function TeamRail({
@@ -14,15 +20,29 @@ export function TeamRail({
   selectedId,
   onSelect,
   onAddClick,
+  loading = false,
 }: TeamRailProps) {
   return (
     <Rail>
       <List>
         <Header>
           <HeaderLabel>팀</HeaderLabel>
-          <HeaderCount>{teams.length}개</HeaderCount>
+          {loading ? (
+            <Skeleton width={30} height={18} />
+          ) : (
+            <HeaderCount>{teams.length}개</HeaderCount>
+          )}
         </Header>
         <Rows>
+          {loading &&
+            loadingRowWidths.map((width, index) => (
+              <li key={index}>
+                <LoadingRow>
+                  <Skeleton width={width} height={20} />
+                  <Skeleton width={36} height={18} />
+                </LoadingRow>
+              </li>
+            ))}
           {teams.map((team) => {
             const selected = team.id === selectedId
             return (
@@ -35,9 +55,7 @@ export function TeamRail({
                   onClick={() => onSelect(team.id)}
                 >
                   <RowName $selected={selected}>{team.name}</RowName>
-                  <RowCount $selected={selected}>
-                    {team.memberCount}명
-                  </RowCount>
+                  <RowCount $selected={selected}>{team.memberCount}명</RowCount>
                 </Row>
               </li>
             )
@@ -54,6 +72,14 @@ export function TeamRail({
     </Rail>
   )
 }
+
+const LoadingRow = styled.div`
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+`
 
 const Rail = styled.nav`
   display: flex;

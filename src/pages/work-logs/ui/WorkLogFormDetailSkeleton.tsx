@@ -3,13 +3,16 @@ import { Skeleton, SkeletonCard, SkeletonStatus } from '@/shared/ui'
 
 const QUESTION_OPTIONS = [3, 3, 1]
 
-// Figma `업무일지 양식 상세 (스켈레톤)`(2021:21273). 뒤로가기는 페이지가 그린다.
+// Figma `업무일지 양식 상세 (스켈레톤)`(2238:20430) — 뒤로가기·`양식명` 라벨은 실제 UI 이고
+// 서버가 주는 값만 막대다. 뒤로가기는 page 가 그린다.
 export function WorkLogFormDetailSkeleton() {
   return (
     <SkeletonStatus>
       <Cards>
         <SkeletonCard>
-          <Skeleton width={60} height={18} />
+          <TitleLabel>
+            양식명<Required aria-hidden="true"> *</Required>
+          </TitleLabel>
           <Skeleton width={80} height={36} />
         </SkeletonCard>
         {QUESTION_OPTIONS.map((options, index) => (
@@ -34,6 +37,18 @@ export function WorkLogFormDetailSkeleton() {
     </SkeletonStatus>
   )
 }
+
+// 실제 양식 상세의 `양식명 *` 라벨과 같은 글자.
+const TitleLabel = styled.span`
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+`
+
+const Required = styled.span`
+  color: ${({ theme }) => theme.colors.accent};
+`
 
 const Cards = styled.div`
   display: flex;

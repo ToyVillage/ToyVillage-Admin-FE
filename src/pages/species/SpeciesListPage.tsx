@@ -26,7 +26,6 @@ import { readPageParam, useListSearchParams } from '@/shared/lib'
 import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { SpeciesEmptyMessage } from './ui/SpeciesEmptyMessage'
-import { SpeciesListSkeleton } from './ui/SpeciesListSkeleton'
 import { SEARCH_DEBOUNCE_MS, TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
 
@@ -168,16 +167,6 @@ export function SpeciesListPage() {
     )
   }
 
-  if (speciesQuery.isPending) {
-    return (
-      <Page>
-        <Content>
-          <SpeciesListSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   const emptyLabel = keyword ? (
     '검색결과가 없습니다'
   ) : (
@@ -199,6 +188,7 @@ export function SpeciesListPage() {
         <TaxonGroupTabs value={taxonGroup} onChange={setTaxonGroup} />
 
         <SpeciesTable
+          loading={speciesQuery.isPending}
           species={speciesQuery.data?.items ?? []}
           onRowClick={(id) =>
             navigate(`/species/${id}`, {

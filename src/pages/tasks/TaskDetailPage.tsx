@@ -14,7 +14,12 @@ import {
   type TaskReportReviewResult,
 } from '@/features/review-task-report'
 import { RowActionMenu } from '@/features/row-actions'
-import { AttachmentList, DeleteConfirmationDialog, Toast } from '@/shared/ui'
+import {
+  AttachmentList,
+  DeleteConfirmationDialog,
+  Skeleton,
+  Toast,
+} from '@/shared/ui'
 import { TaskBackLink } from './ui/TaskBackLink'
 import { TaskDetailSkeleton } from './ui/TaskDetailSkeleton'
 
@@ -120,6 +125,11 @@ export function TaskDetailPage() {
     return (
       <Page>
         <Content>
+          <TopRow>
+            <TaskBackLink to={backPath} />
+            {/* Figma 2238:20192 의 ⋮ 자리. 조회 전에는 메뉴를 열 수 없어 자리만 둔다. */}
+            <Skeleton width={6} height={26} radius={3} />
+          </TopRow>
           <TaskDetailSkeleton />
         </Content>
       </Page>

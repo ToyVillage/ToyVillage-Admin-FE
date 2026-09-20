@@ -3,7 +3,6 @@ import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createDocument,
-  deleteDocument,
   fileTypeLabel,
   fileTypeToDocumentType,
   resourceCategories,
@@ -13,7 +12,6 @@ import {
   type UpdateResourceInput,
 } from '@/entities/resource'
 import {
-  DeleteConfirmationDialog,
   ErrorDialog,
   Toast,
   ValidationDialog,
@@ -31,7 +29,7 @@ const validationMessages: Record<ValidationField, string> = {
 }
 
 /** 폼이 끝난 이유. 목록 화면이 이 값으로 토스트를 고른다. */
-export type ResourceFormCompletion = 'created' | 'updated' | 'deleted'
+export type ResourceFormCompletion = 'created' | 'updated'
 
 interface ResourceFormProps {
   initialResource?: Resource
@@ -50,7 +48,6 @@ export function ResourceForm({
 }: ResourceFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
-  const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const uploadButtonRef = useRef<HTMLButtonElement>(null)
   const isEditing = editing ?? Boolean(initialResource)
@@ -76,7 +73,6 @@ export function ResourceForm({
   const [isUploading, setIsUploading] = useState(false)
   const [validationError, setValidationError] =
     useState<ValidationField | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   // Figma `자료실 · 토스트`(311:12766) — 이 화면에 머무르는 결과는 토스트로 알린다.
   // 같은 결과가 연달아 나와도 다시 뜨도록 매번 id 를 올린다.
   const [toast, setToast] = useState<{
@@ -109,12 +105,6 @@ export function ResourceForm({
         type: fileTypeToDocumentType[input.fileType],
         files: fileKeys,
       })
-    },
-  })
-  const deleteMutation = useMutation({
-    mutationFn: () => {
-      if (!initialResource) throw new Error('Resource not found')
-      return deleteDocument({ id: Number(initialResource.id) })
     },
   })
 
@@ -194,22 +184,6 @@ export function ResourceForm({
     })
   }
 
-  function handleDelete() {
-    if (deleteMutation.isPending) return
-
-    deleteMutation.mutate(undefined, {
-      onSuccess: async () => {
-        // 목록만 무효화한다. 상세 쿼리를 무효화하면 삭제된 id 를 다시 GET 해 404 가 난다.
-        await queryClient.invalidateQueries({ queryKey: ['resources', 'list'] })
-        onCompleted('deleted')
-      },
-      onError: () => {
-        setDeleteDialogOpen(false)
-        showToast('error', '데이터 삭제에 실패했습니다')
-      },
-    })
-  }
-
   return (
     <Form data-editing={isEditing} onSubmit={handleSubmit} noValidate>
       <TitleCard>
@@ -264,28 +238,9 @@ export function ResourceForm({
       />
 
       <Actions>
-        {isEditing && (
-          <DeleteButton
-            ref={deleteButtonRef}
-            type="button"
-            disabled={
-              mutation.isPending ||
-              deleteMutation.isPending ||
-              isLoadingPlaceholder
-            }
-            onClick={() => setDeleteDialogOpen(true)}
-          >
-            삭제하기
-          </DeleteButton>
-        )}
         <SubmitButton
           type="submit"
-          disabled={
-            mutation.isPending ||
-            deleteMutation.isPending ||
-            isUploading ||
-            isLoadingPlaceholder
-          }
+          disabled={mutation.isPending || isUploading || isLoadingPlaceholder}
         >
           {isUploading
             ? '업로드 중'
@@ -303,17 +258,6 @@ export function ResourceForm({
         <ValidationDialog
           message={validationMessages[validationError]}
           onConfirm={handleConfirm}
-        />
-      )}
-
-      {deleteDialogOpen && (
-        <DeleteConfirmationDialog
-          pending={deleteMutation.isPending}
-          onCancel={() => {
-            setDeleteDialogOpen(false)
-            requestAnimationFrame(() => deleteButtonRef.current?.focus())
-          }}
-          onConfirm={handleDelete}
         />
       )}
 
@@ -488,30 +432,6 @@ const Actions = styled.div`
   margin-top: 32px;
 `
 
-const DeleteButton = styled.button`
-  min-width: 123px;
-  height: 61px;
-  padding: 0 16px;
-  border: 2px solid ${({ theme }) => theme.colors.danger};
-  border-radius: 8px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.danger};
-  cursor: pointer;
-  font: inherit;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.2;
-
-  &:disabled {
-    cursor: wait;
-    opacity: 0.6;
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.danger};
-    outline-offset: 3px;
-  }
-`
 
 const SubmitButton = styled.button`
   min-width: 123px;

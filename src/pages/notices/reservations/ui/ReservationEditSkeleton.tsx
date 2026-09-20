@@ -1,24 +1,54 @@
 import styled from '@emotion/styled'
 import { FieldSkeleton, Skeleton, SkeletonStatus } from '@/shared/ui'
 
-// 섹션별 입력칸 수(Figma `단체예약 수정 (스켈레톤)` 2021:22902 — 기본·예약·담당·권한 4섹션).
-const SECTION_FIELDS = [5, 6, 4]
+// 섹션 제목과 입력 라벨(실제 `ReservationForm` 과 같은 문구).
+const SECTIONS: { title: string; labels: string[] }[] = [
+  {
+    title: '상담일 관련',
+    labels: [
+      '단체명',
+      '지역',
+      '상담일을 선택해주세요',
+      '예약인 이름',
+      '대표자 연락처를 입력해주세요',
+    ],
+  },
+  {
+    title: '방문일 관련',
+    labels: [
+      '총 인원',
+      '인솔자 인원',
+      '입장료를 입력해주세요',
+      '방문일을 선택해주세요',
+      '방문 시간을 선택해주세요',
+    ],
+  },
+  {
+    title: '사전답사 관련',
+    labels: [
+      '사전답사 인원',
+      '사전답사일을 선택해주세요',
+      '사전답사 시간을 선택해주세요',
+    ],
+  },
+]
 
+// Figma `단체예약 수정 (스켈레톤)`(2238:21994) — 섹션 제목·입력 라벨·`저장하기` 는 실제 UI 이고
+// 서버가 주는 값만 막대다. 뒤로가기는 page 가 그린다.
 export function ReservationEditSkeleton() {
   return (
     <SkeletonStatus>
       <Sections>
-        {SECTION_FIELDS.map((fields, sectionIndex) => (
-          <Section key={sectionIndex}>
+        {SECTIONS.map((section) => (
+          <Section key={section.title}>
             <SectionHeader>
-              <Skeleton width={sectionIndex === 0 ? 120 : 70} height={20} />
-              <Skeleton width={16} height={16} />
+              <SectionTitle>{section.title}</SectionTitle>
             </SectionHeader>
             <Grid>
-              {Array.from({ length: fields }, (_, index) => (
+              {section.labels.map((label, index) => (
                 <FieldSkeleton
-                  key={index}
-                  label={index % 2 === 0 ? 90 : 60}
+                  key={label}
+                  label={label}
                   value={index % 3 === 0 ? 120 : 80}
                   box
                   boxHeight={48}
@@ -29,8 +59,7 @@ export function ReservationEditSkeleton() {
         ))}
         <Section>
           <SectionHeader>
-            <Skeleton width={70} height={20} />
-            <Skeleton width={16} height={16} />
+            <SectionTitle>페이지 권한</SectionTitle>
           </SectionHeader>
           <Body>
             <SearchBox>
@@ -43,11 +72,33 @@ export function ReservationEditSkeleton() {
         </Section>
       </Sections>
       <Footer>
-        <Skeleton width={120} height={56} radius={12} />
+        <SaveButton type="button" disabled>
+          저장하기
+        </SaveButton>
       </Footer>
     </SkeletonStatus>
   )
 }
+
+// 실제 폼의 섹션 제목·`저장하기` 와 같은 글자·모양.
+const SectionTitle = styled.h2`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+`
+
+const SaveButton = styled.button`
+  height: 56px;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
+  font-size: 18px;
+  font-weight: 600;
+`
 
 const Sections = styled.div`
   display: flex;

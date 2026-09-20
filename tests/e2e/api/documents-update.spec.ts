@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 
 // 승인된 시나리오(documents-update.test-scenarios.md: S1~S8)를 mock 으로 변환한 것.
-// 상세(GET /documents/{id})로 편집 폼을 띄운 뒤 PUT /documents/{id}로 수정한다.
+// 상세(GET /documents/{id})로 수정 폼(`/notices/resources/{id}/edit`)을 띄운 뒤
+// PUT /documents/{id}로 수정한다.
 // 실제 서버는 호출하지 않는다.
 
 const detail = {
@@ -59,7 +60,7 @@ test('S1: 수정 성공(201) → 기존 file key 재전송, 목록 복귀', asyn
       putBody = body as typeof putBody
     },
   })
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
 
   await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
   await page.getByLabel(/제목/).fill('수정된 제목')
@@ -76,11 +77,11 @@ test('S2: 400 → 저장 실패 다이얼로그', async ({ page }) => {
     status: 400,
     body: errorBody(400, '자료 제목은 비어있을 수 없습니다.'),
   })
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await page.getByRole('button', { name: '저장하기' }).click()
 
   await expect(page.getByRole('alertdialog')).toContainText('저장에 실패')
-  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
+  await expect(page).toHaveURL(/\/notices\/resources\/1\/edit$/)
 })
 
 test('S3: 404 → 저장 실패 다이얼로그', async ({ page }) => {
@@ -88,7 +89,7 @@ test('S3: 404 → 저장 실패 다이얼로그', async ({ page }) => {
     status: 404,
     body: errorBody(404, '존재하지 않는 자료입니다.'),
   })
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await page.getByRole('button', { name: '저장하기' }).click()
 
   await expect(page.getByRole('alertdialog')).toContainText('저장에 실패')
@@ -99,7 +100,7 @@ test('S4: 500 → 저장 실패 다이얼로그', async ({ page }) => {
     status: 500,
     body: errorBody(500, '예상하지 못한 에러가 발생했습니다.'),
   })
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await page.getByRole('button', { name: '저장하기' }).click()
 
   await expect(page.getByRole('alertdialog')).toContainText('저장에 실패')
@@ -124,7 +125,7 @@ test('S5: 새 파일 추가 → 기존 키 + 새 업로드 키 병합 전송(파
       putBody = body as typeof putBody
     },
   })
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
 
   // 새 파일 첨부 → 즉시 업로드(new-key)
@@ -148,7 +149,7 @@ test('S7: 기존 파일 제거 → 남은 키만 전송', async ({ page }) => {
       putBody = body as typeof putBody
     },
   })
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
 
   // 기존 첨부 '안내.png'(key-2) 제거
@@ -165,7 +166,7 @@ test('S6: 401 만료된 토큰 → 세션을 비우고 로그인으로 이동', 
     status: 401,
     body: errorBody(401, '만료된 토큰입니다.'),
   })
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await expect(page.getByLabel(/제목/)).toHaveValue('상세 자료 제목')
   await page.getByRole('button', { name: '저장하기' }).click()
 

@@ -20,6 +20,8 @@ interface SpeciesTableProps {
   emptyLabel?: ReactNode
   /** 행 우측 케밥 메뉴. 메뉴 동작(이동·삭제)은 페이지가 소유한다. */
   renderRowAction: (species: SpeciesListItem) => ReactNode
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Figma `species list`(127:9099) — 탭바 하단 32, 헤더 `#DDDDE3`, 행 구분선 `#848491`.
@@ -72,6 +74,7 @@ export function SpeciesTable({
   pagination,
   emptyLabel,
   renderRowAction,
+  loading,
 }: SpeciesTableProps) {
   const speciesById = new Map(species.map((item) => [item.id, item]))
   const columns: DataTableColumn[] = [
@@ -109,6 +112,7 @@ export function SpeciesTable({
           pagination={pagination}
           emptyLabel={emptyLabel}
           appearance={appearance}
+          loading={loading}
         />
       </TableFrame>
     </TableScroll>

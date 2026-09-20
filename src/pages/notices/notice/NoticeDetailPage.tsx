@@ -64,6 +64,7 @@ export function NoticeDetailPage() {
     return (
       <Page>
         <Content>
+          <BackLink to={listPath} />
           <NoticeDetailSkeleton />
         </Content>
       </Page>

@@ -18,6 +18,8 @@ interface WorkLogTableProps {
   onOpenKebabChange: (id: string | null) => void
   pagination?: DataTablePagination
   emptyLabel: string
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Figma `1:3420` 의 열 구성. 케밥 열(80)은 헤더 텍스트가 없다.
@@ -35,6 +37,7 @@ export function WorkLogTable({
   onOpenKebabChange,
   pagination,
   emptyLabel,
+  loading,
 }: WorkLogTableProps) {
   // 빈 상태(Figma `1:3509`)에는 케밥 열이 없고 `양식` 열이 840 으로 넓어진다.
   const columns: DataTableColumn[] =
@@ -53,9 +56,7 @@ export function WorkLogTable({
             render: (row) => (
               <KebabMenu
                 open={openKebabId === row.id}
-                onOpenChange={(open) =>
-                  onOpenKebabChange(open ? row.id : null)
-                }
+                onOpenChange={(open) => onOpenKebabChange(open ? row.id : null)}
                 ariaLabel={`${String(row.formName)} 관리 메뉴`}
                 items={[
                   {
@@ -71,20 +72,19 @@ export function WorkLogTable({
 
   return (
     <DataTable
-      rows={logs.map(
-        (log): DataTableRow => ({
-          id: log.id,
-          authorName: log.authorName,
-          formName: log.formName,
-          date: formatWorkLogDate(log.date),
-        }),
-      )}
+      rows={logs.map((log): DataTableRow => ({
+        id: log.id,
+        authorName: log.authorName,
+        formName: log.formName,
+        date: formatWorkLogDate(log.date),
+      }))}
       columns={columns}
       onRowClick={onRowClick}
       rowTestId="work-log-row"
       pagination={pagination}
       emptyLabel={emptyLabel}
       emptyMinHeight={500}
+      loading={loading}
     />
   )
 }

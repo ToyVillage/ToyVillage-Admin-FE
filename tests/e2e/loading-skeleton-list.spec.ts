@@ -100,3 +100,35 @@ test('S15: 재조회에는 스켈레톤을 다시 보이지 않음', async ({ pa
   await expect(page.getByRole('status', { name: '불러오는 중' })).toHaveCount(0)
   await expect(rows.first()).toHaveText(firstRowText)
 })
+
+test('S16: 목록 조회 중에도 정적 UI는 실제 UI로 보인다', async ({ page }) => {
+  await stallApi(page)
+  await page.goto('/notices/list')
+  await expectSkeleton(page)
+
+  await expect(
+    page.getByRole('heading', { name: '공지사항', exact: true }),
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: /공지 생성하기/ })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '전체', exact: true }),
+  ).toBeVisible()
+  for (const header of ['분류', '제목', '날짜']) {
+    await expect(page.getByText(header, { exact: true })).toBeVisible()
+  }
+  await expect(page.getByPlaceholder('제목을 입력해주세요')).toBeVisible()
+})
+
+test('S17: 목록 조회 중 고정 상태 탭 라벨은 실제 UI로 보인다', async ({
+  page,
+}) => {
+  await stallApi(page)
+  await page.goto('/tasks')
+  await expectSkeleton(page)
+
+  for (const label of ['전체 업무', '진행중', '완료', '지연']) {
+    await expect(
+      page.getByRole('button', { name: label, exact: true }),
+    ).toBeVisible()
+  }
+})

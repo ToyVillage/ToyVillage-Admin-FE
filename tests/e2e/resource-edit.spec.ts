@@ -11,18 +11,17 @@ test.beforeEach(async ({ page }) => {
   api = await mockDocumentApi(page)
 })
 
-test('S1: 자료 행 클릭 → 수정 URL 이동', async ({ page }) => {
+test('S1: 목록 케밥 `수정` → 수정 URL 이동', async ({ page }) => {
   await page.goto('/notices/resources')
   await page
-    .getByTestId('resource-row')
-    .filter({ hasText: '근무지침요령 1' })
-    .first()
+    .getByRole('button', { name: '근무지침요령 1 관리 메뉴' })
     .click()
-  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
+  await page.getByRole('menuitem', { name: '수정' }).click()
+  await expect(page).toHaveURL(/\/notices\/resources\/1\/edit$/)
 })
 
 test('S2: 기존 제목·분류·첨부 복원', async ({ page }) => {
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
 
   await expect(page.getByLabel(/제목/)).toHaveValue('근무지침요령 1')
   await expect(page.getByRole('radio', { name: 'pdf' })).toBeChecked()
@@ -32,7 +31,7 @@ test('S2: 기존 제목·분류·첨부 복원', async ({ page }) => {
 })
 
 test('S3: 수정 저장 → 목록에 같은 ID 수정값 반영', async ({ page }) => {
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await page.getByLabel(/제목/).fill('수정된 근무지침')
   await page.getByRole('button', { name: '저장하기' }).click()
 
@@ -44,7 +43,7 @@ test('S3: 수정 저장 → 목록에 같은 ID 수정값 반영', async ({ page
 })
 
 test('S4: 빈 제목 → 오류 확인 후 제목 포커스', async ({ page }) => {
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   const title = page.getByLabel(/제목/)
   await title.fill('   ')
   await page.getByRole('button', { name: '저장하기' }).click()
@@ -57,7 +56,7 @@ test('S4: 빈 제목 → 오류 확인 후 제목 포커스', async ({ page }) =
 })
 
 test('S5: 기존 첨부 제거와 새 파일 추가', async ({ page }) => {
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await page.getByText('당일 지침.pdf').hover()
   await page.getByRole('button', { name: '당일 지침.pdf 삭제' }).click()
   await expect(page.getByText('당일 지침.pdf')).toHaveCount(0)
@@ -70,27 +69,29 @@ test('S5: 기존 첨부 제거와 새 파일 추가', async ({ page }) => {
   await expect(page.getByText('새 자료.pdf')).toBeVisible()
 })
 
-test('S6: 삭제 취소 → 화면 유지와 포커스 복귀', async ({ page }) => {
-  await page.goto('/notices/resources/1')
-  const deleteButton = page.getByRole('button', { name: '삭제하기' })
-  await deleteButton.click()
+test('S6: 목록 케밥 삭제 취소 → 목록 유지와 포커스 복귀', async ({ page }) => {
+  await page.goto('/notices/resources')
+  const kebab = page.getByRole('button', { name: '근무지침요령 1 관리 메뉴' })
+  await kebab.click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
   await page.getByRole('button', { name: '취소' }).click()
 
-  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
-  await expect(deleteButton).toBeFocused()
+  await expect(page).toHaveURL(/\/notices\/resources$/)
+  await expect(kebab).toBeFocused()
 })
 
-test('S7: 삭제 확인 → 목록·직접 URL에서 제거', async ({ page }) => {
-  await page.goto('/notices/resources/1')
-  await page.getByRole('button', { name: '삭제하기' }).click()
+test('S7: 목록 케밥 삭제 확인 → 행 제거와 성공 토스트', async ({ page }) => {
+  await page.goto('/notices/resources')
+  await page.getByRole('button', { name: '근무지침요령 1 관리 메뉴' }).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
   await page.getByRole('button', { name: '확인', exact: true }).click()
 
-  await expect(page).toHaveURL(/\/notices\/resources$/)
   await expect(
     page.getByTestId('resource-row').filter({ hasText: '근무지침요령 1' }),
   ).toHaveCount(0)
+  await expect(page.getByText('데이터 삭제에 성공했습니다')).toBeVisible()
 
-  // 조회 실패(404)면 별도 안내 화면 없이 목록으로 되돌린다.
+  // 지워진 자료의 상세로 직접 들어가면 안내 화면 없이 목록으로 되돌린다.
   await page.goto('/notices/resources/1')
   await expect(page).toHaveURL(/\/notices\/resources$/)
   expect(api.deleteRequests).toEqual([1])
@@ -105,7 +106,7 @@ test('S8: 존재하지 않는 자료 → 목록으로 복귀', async ({ page }) 
 })
 
 test('S9: 수정 중 사이드바 이동 → 이탈 확인', async ({ page }) => {
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await page.getByLabel(/제목/).fill('저장 전 제목')
   await page.getByRole('button', { name: '사이드바 열기' }).click()
   // `/notices/resources/*` 는 `공지사항` 대분류라 사이드바를 열면 이미 펼쳐져 있다.
@@ -114,11 +115,11 @@ test('S9: 수정 중 사이드바 이동 → 이탈 확인', async ({ page }) =>
   await expect(
     page.getByRole('alertdialog', { name: '정말 나가시겠습니까?' }),
   ).toBeVisible()
-  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
+  await expect(page).toHaveURL(/\/notices\/resources\/1\/edit$/)
 })
 
 test('S10: 저장 더블클릭 → 동일 ID 한 건만 저장', async ({ page }) => {
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
   await page.getByLabel(/제목/).fill('중복 없는 수정')
   await page.getByRole('button', { name: '저장하기' }).dblclick()
   await expect(page).toHaveURL(/\/notices\/resources$/)
@@ -126,10 +127,10 @@ test('S10: 저장 더블클릭 → 동일 ID 한 건만 저장', async ({ page }
   expect(api.updateRequests.map(({ id }) => id)).toEqual([1])
 })
 
-test('S11: 저장 실패는 예외 모달, 삭제 실패는 토스트로 알리고 화면 유지', async ({ page }) => {
+test('S11: 저장 실패는 예외 모달로 알리고 화면과 입력을 유지한다', async ({ page }) => {
   // 저장·삭제 실패 주입. 나중에 등록한 route 가 먼저 매칭된다.
   await mockDocumentApi(page, { updateStatus: 500, deleteStatus: 500 })
-  await page.goto('/notices/resources/1')
+  await page.goto('/notices/resources/1/edit')
 
   await page.getByLabel(/제목/).fill('실패할 수정')
   await page.getByRole('button', { name: '저장하기' }).click()
@@ -140,14 +141,24 @@ test('S11: 저장 실패는 예외 모달, 삭제 실패는 토스트로 알리�
   await expect(saveDialog).toBeVisible()
   await saveDialog.getByRole('button', { name: '확인' }).click()
   await expect(saveDialog).toBeHidden()
-  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
+  await expect(page).toHaveURL(/\/notices\/resources\/1\/edit$/)
   await expect(page.getByLabel(/제목/)).toHaveValue('실패할 수정')
 
-  await page.getByRole('button', { name: '삭제하기' }).click()
+})
+
+test('S12: 목록 삭제 실패는 토스트로 알리고 목록을 유지한다', async ({
+  page,
+}) => {
+  await mockDocumentApi(page, { deleteStatus: 500 })
+  await page.goto('/notices/resources')
+  await page.getByRole('button', { name: '근무지침요령 1 관리 메뉴' }).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
   await page.getByRole('button', { name: '확인', exact: true }).click()
 
-  // 삭제 실패는 토스트로 알리고 화면과 입력을 유지한다(Figma 311:12766).
+  // 삭제 실패는 토스트로 알린다(Figma `자료실 · 토스트` 1:7192).
   await expect(page.getByText('데이터 삭제에 실패했습니다')).toBeVisible()
-  await expect(page).toHaveURL(/\/notices\/resources\/1$/)
-  await expect(page.getByLabel(/제목/)).toHaveValue('실패할 수정')
+  await expect(page).toHaveURL(/\/notices\/resources$/)
+  await expect(
+    page.getByTestId('resource-row').filter({ hasText: '근무지침요령 1' }),
+  ).toHaveCount(1)
 })
