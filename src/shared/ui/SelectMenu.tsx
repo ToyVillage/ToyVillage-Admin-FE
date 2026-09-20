@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { dropIn, motionDuration, motionEasing } from './motion'
+import { dropIn, dropOut, motionDuration, motionEasing } from './motion'
+import { useExitAnimation } from './useExitAnimation'
 import chevronDown from './assets/chevron-down.svg'
 
 export interface SelectMenuOption {
@@ -52,6 +53,8 @@ export function SelectMenu({
   placeholder,
 }: SelectMenuProps) {
   const [open, setOpen] = useState(false)
+  // 닫힘 애니메이션이 끝날 때까지 목록을 남겨 둔다.
+  const listMounted = useExitAnimation(open, motionDuration.reveal)
   const wrapRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const selectedRef = useRef<HTMLButtonElement>(null)
@@ -93,7 +96,7 @@ export function SelectMenu({
     <Wrap ref={wrapRef} $width={width}>
       <Trigger
         type="button"
-        $open={open}
+        $open={listMounted}
         $variant={variant}
         $height={height}
         $openBorder={openBorder}
@@ -115,7 +118,7 @@ export function SelectMenu({
         </TriggerContent>
         <Chevron src={chevronDown} alt="" aria-hidden="true" $open={open} />
       </Trigger>
-      {open && (
+      {listMounted && (
         <List
           ref={listRef}
           role="listbox"
@@ -124,6 +127,7 @@ export function SelectMenu({
           $openBorder={openBorder}
           $variant={variant}
           $top={height}
+          $closing={!open}
         >
           {options.map((option, index) => (
             <Fragment key={option.value}>
@@ -222,6 +226,7 @@ const List = styled.div<{
   $variant: SelectMenuVariant
   $top: number
   $openBorder: boolean
+  $closing: boolean
 }>`
   position: absolute;
   z-index: 2;
@@ -244,7 +249,12 @@ const List = styled.div<{
   overflow-y: auto;
   scrollbar-color: ${({ theme }) => theme.colors.textFaint} transparent;
   scrollbar-width: thin;
-  animation: ${dropIn} ${motionDuration.reveal}ms ${motionEasing.enter} both;
+  animation: ${({ $closing }) => ($closing ? dropOut : dropIn)}
+    ${motionDuration.reveal}ms
+    ${({ $closing }) => ($closing ? motionEasing.exit : motionEasing.enter)}
+    both;
+  /* 사라지는 동안에는 항목이 다시 눌리지 않게 한다. */
+  pointer-events: ${({ $closing }) => ($closing ? 'none' : 'auto')};
 `
 
 const Divider = styled.span`

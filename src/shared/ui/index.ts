@@ -68,8 +68,10 @@ export {
   fadeOut,
   popIn,
   dropIn,
+  dropOut,
   slideInFromLeft,
   slideOutToLeft,
   toastIn,
   toastOut,
 } from './motion'
+export { useExitAnimation } from './useExitAnimation'

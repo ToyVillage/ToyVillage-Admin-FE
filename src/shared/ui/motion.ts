@@ -59,6 +59,17 @@ export const dropIn = keyframes`
   }
 `
 
+export const dropOut = keyframes`
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+`
+
 // 사이드바 패널: 화면 왼쪽 밖에서 들어오고 같은 방향으로 나간다.
 export const slideInFromLeft = keyframes`
   from {

@@ -7,9 +7,9 @@ import {
   fadeOut,
   motionDuration,
   motionEasing,
-  prefersReducedMotion,
   slideInFromLeft,
   slideOutToLeft,
+  useExitAnimation,
 } from '@/shared/ui'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
 import { useLogout } from '../model/useLogout'
@@ -26,9 +26,7 @@ export function Sidebar() {
   const logout = useLogout()
   const panelRef = useRef<HTMLDivElement>(null)
   // 닫을 때 패널이 왼쪽으로 빠져나가는 동안은 DOM 에 남겨 둔다.
-  // 열 때는 렌더 중에 바로 올려서 아래 effect 가 패널에 초점을 줄 수 있게 한다.
-  const [mounted, setMounted] = useState(isOpen)
-  if (isOpen && !mounted) setMounted(true)
+  const mounted = useExitAnimation(isOpen, motionDuration.overlay)
   // 아코디언은 한 번에 하나만 펼친다(Figma variant `열린메뉴=*`).
   const [openGroupId, setOpenGroupId] = useState<string | null>(null)
 
@@ -43,18 +41,6 @@ export function Sidebar() {
 
   // 현재 라우트와 일치하는 하위 항목만 선택 상태로 표시한다(Figma `상태=선택`).
   const activeItemId = findActiveMenu(pathname).itemId
-
-  // 닫힘 애니메이션이 끝난 뒤에 언마운트한다.
-  useEffect(() => {
-    if (isOpen || !mounted) return
-
-    const timer = window.setTimeout(
-      () => setMounted(false),
-      prefersReducedMotion() ? 0 : motionDuration.overlay,
-    )
-
-    return () => window.clearTimeout(timer)
-  }, [isOpen, mounted])
 
   useEffect(() => {
     if (!isOpen) return

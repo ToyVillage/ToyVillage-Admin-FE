@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import styled from '@emotion/styled'
-import { dropIn, motionDuration, motionEasing } from './motion'
+import { dropIn, dropOut, motionDuration, motionEasing } from './motion'
+import { useExitAnimation } from './useExitAnimation'
 import kebabIcon from './assets/kebab.svg'
 
 export interface KebabMenuItem {
@@ -41,6 +42,8 @@ export function KebabMenu({
 }: KebabMenuProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  // 닫힘 애니메이션이 끝날 때까지 메뉴를 남겨 둔다.
+  const menuMounted = useExitAnimation(open, motionDuration.reveal)
 
   useEffect(() => {
     if (!open) return
@@ -80,8 +83,13 @@ export function KebabMenu({
     triggerRef.current?.focus()
   }
 
-  const menu = open && (
-    <Menu role="menu" aria-label={ariaLabel} data-placement={placement}>
+  const menu = menuMounted && (
+    <Menu
+      role="menu"
+      aria-label={ariaLabel}
+      data-placement={placement}
+      $closing={!open}
+    >
       {items.map((item) => (
         <MenuItem
           key={item.label}
@@ -166,7 +174,7 @@ const MenuAnchor = styled.div`
 
 // Figma 배치: 메뉴는 케밥이 속한 행의 오른쪽 위 모서리에 붙는다.
 // 기준은 가장 가까운 positioned 조상 — 표에서는 `position: relative` 인 행이다.
-const Menu = styled.div`
+const Menu = styled.div<{ $closing: boolean }>`
   position: absolute;
   z-index: 2;
   top: 0;
@@ -180,7 +188,12 @@ const Menu = styled.div`
   border-radius: 12px;
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
-  animation: ${dropIn} ${motionDuration.reveal}ms ${motionEasing.enter} both;
+  animation: ${({ $closing }) => ($closing ? dropOut : dropIn)}
+    ${motionDuration.reveal}ms
+    ${({ $closing }) => ($closing ? motionEasing.exit : motionEasing.enter)}
+    both;
+  /* 사라지는 동안에는 항목이 다시 눌리지 않게 한다. */
+  pointer-events: ${({ $closing }) => ($closing ? 'none' : 'auto')};
 
   &[data-placement='below-trigger'] {
     top: auto;
