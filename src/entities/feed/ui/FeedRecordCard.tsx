@@ -114,6 +114,9 @@ const Actions = styled.div`
 
 const Photo = styled(ProfilePhoto)`
   grid-area: photo;
+  /* 개체 상세 카드(IndividualProfileCard)의 사진은 카드 위에서 57px 떨어져 있다.
+     여기도 같은 자리에 고정하고, 값이 길어지면 사진 아래 여백만 늘어난다. */
+  margin-top: 17px;
   width: 180px;
   height: 180px;
   flex: 0 0 180px;
@@ -157,9 +160,16 @@ const Fields = styled.div`
   gap: 23px;
 `
 
+// 왼쪽 열 폭을 고정해 두 번째 열이 늘 같은 자리에서 시작하게 한다.
+// (flex 로 반씩 나누면 카드 폭에 따라 두 번째 열이 밀린다.)
 const Row = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: 348px minmax(0, 1fr);
   gap: 24px;
+
+  @media (max-width: 980px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `
 
 // 값이 여러 줄이어도 라벨은 첫 줄에 맞춘다(가운데 정렬하면 라벨이 아래로 내려간다).
