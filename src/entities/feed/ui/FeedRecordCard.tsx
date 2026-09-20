@@ -71,16 +71,13 @@ function Field({ label, value }: { label: string; value: string }) {
   )
 }
 
-// 개체 상세의 `IndividualProfileCard` 와 같은 사진 180 + 정보 골격.
-// 액션은 카드 우상단에 띄워 둔다 — 정보 칸이 카드 폭을 끝까지 쓰게 하려는 것이다.
-// (그리드 열로 두면 특이사항처럼 긴 값이 버튼 폭만큼 일찍 줄바꿈된다.)
+// 개체 상세의 `IndividualProfileCard` 와 같은 골격(사진 180 / 정보 / 액션).
 const Card = styled.section`
-  position: relative;
   display: grid;
   width: 100%;
   margin-top: 33px;
-  grid-template-areas: 'photo info';
-  grid-template-columns: 180px minmax(0, 1fr);
+  grid-template-areas: 'photo info actions';
+  grid-template-columns: 180px minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 40px;
   padding: 40px;
@@ -89,8 +86,9 @@ const Card = styled.section`
 
   @media (max-width: 980px) {
     grid-template-areas:
-      'photo photo'
+      'photo actions'
       'info info';
+    grid-template-columns: 180px minmax(0, 1fr);
     row-gap: 24px;
     column-gap: 24px;
     padding: 24px;
@@ -98,11 +96,11 @@ const Card = styled.section`
 `
 
 const Actions = styled.div`
-  position: absolute;
-  top: 40px;
-  right: 40px;
   display: flex;
+  grid-area: actions;
   align-items: center;
+  align-self: start;
+  justify-self: end;
   gap: 24px;
 `
 
@@ -150,11 +148,13 @@ const Row = styled.div`
   gap: 24px;
 `
 
+// 값이 여러 줄이어도 라벨은 첫 줄에 맞춘다(가운데 정렬하면 라벨이 아래로 내려간다).
+// 글자 크기가 서로 달라 baseline 으로 맞춘다.
 const FieldBox = styled.div`
   display: flex;
   min-width: 0;
   flex: 1;
-  align-items: center;
+  align-items: baseline;
   gap: 16px;
 `
 
