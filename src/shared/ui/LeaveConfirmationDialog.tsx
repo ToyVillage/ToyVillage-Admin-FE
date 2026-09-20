@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
+import { fadeIn, motionDuration, motionEasing, popIn } from './motion'
 
 interface LeaveConfirmationDialogProps {
   onCancel: () => void
@@ -94,6 +95,7 @@ const Overlay = styled.div`
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.5);
+  animation: ${fadeIn} ${motionDuration.overlay}ms ${motionEasing.enter} both;
 `
 
 const Dialog = styled.div`
@@ -103,11 +105,14 @@ const Dialog = styled.div`
   flex-direction: column;
   padding: 72px 52px 36px;
   border-radius: 20px;
-  transform: translateY(-36px);
+  /* Figma 는 이 모달을 화면 중앙보다 36px 위에 둔다.
+     transform 은 등장 애니메이션이 쓰므로 자리 보정은 아래 여백으로 한다. */
+  margin-bottom: 72px;
   background: ${({ theme }) => theme.colors.surface};
+  animation: ${popIn} ${motionDuration.overlay}ms ${motionEasing.enter} both;
 
   @media (max-height: 480px) {
-    transform: none;
+    margin-bottom: 0;
   }
 `
 

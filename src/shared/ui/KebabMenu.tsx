@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import styled from '@emotion/styled'
+import { dropIn, motionDuration, motionEasing } from './motion'
 import kebabIcon from './assets/kebab.svg'
 
 export interface KebabMenuItem {
@@ -179,6 +180,7 @@ const Menu = styled.div`
   border-radius: 12px;
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  animation: ${dropIn} ${motionDuration.reveal}ms ${motionEasing.enter} both;
 
   &[data-placement='below-trigger'] {
     top: auto;
@@ -200,6 +202,7 @@ const MenuItem = styled.button<{ $danger: boolean }>`
   font-size: 20px;
   font-weight: 500;
   text-align: left;
+  transition: background ${motionDuration.color}ms ${motionEasing.enter};
 
   &:hover {
     background: ${({ theme }) => theme.colors.background};

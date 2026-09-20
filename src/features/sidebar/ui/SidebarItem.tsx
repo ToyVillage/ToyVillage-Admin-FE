@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import styled from '@emotion/styled'
+import { motionDuration, motionEasing } from '@/shared/ui'
 import { SidebarIcon } from './SidebarIcon'
 import type { SidebarDashboardItem } from '../model/types'
 
@@ -34,6 +35,9 @@ const NavItem = styled(Link, {
   color: ${({ theme, $active }) =>
     $active ? theme.colors.accent : theme.colors.text};
   text-decoration: none;
+  transition:
+    background ${motionDuration.color}ms ${motionEasing.enter},
+    color ${motionDuration.color}ms ${motionEasing.enter};
 `
 
 const ItemLabel = styled.span`

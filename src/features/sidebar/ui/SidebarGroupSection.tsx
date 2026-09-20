@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import styled from '@emotion/styled'
+import { motionDuration, motionEasing } from '@/shared/ui'
 import { SidebarIcon } from './SidebarIcon'
 import type { SidebarGroup } from '../model/types'
 
@@ -37,8 +38,10 @@ export function SidebarGroupSection({
         </Chevron>
       </GroupHeader>
 
-      {open && (
-        <SubList id={listId}>
+      {/* 접힌 상태도 DOM 에 남겨 높이를 0 으로 접는다(grid 0fr → 1fr).
+          닫힌 동안에는 visibility 로 초점이 들어가지 않게 한다. */}
+      <SubListFrame id={listId} $open={open}>
+        <SubList $open={open}>
           {group.items.map((item) =>
             item.to ? (
               <SubLink
@@ -57,7 +60,7 @@ export function SidebarGroupSection({
             ),
           )}
         </SubList>
-      )}
+      </SubListFrame>
     </Section>
   )
 }
@@ -104,13 +107,28 @@ const Chevron = styled.svg<{ $open: boolean }>`
   stroke-linejoin: round;
   stroke-width: 2.4;
   transform: rotate(${({ $open }) => ($open ? '180deg' : '0deg')});
+  transition: transform ${motionDuration.reveal}ms ${motionEasing.enter};
 `
 
-const SubList = styled.div`
+const SubListFrame = styled.div<{ $open: boolean }>`
+  display: grid;
+  grid-template-rows: ${({ $open }) => ($open ? '1fr' : '0fr')};
+  transition: grid-template-rows ${motionDuration.reveal}ms
+    ${motionEasing.enter};
+`
+
+const SubList = styled.div<{ $open: boolean }>`
   display: flex;
+  min-height: 0;
   flex-direction: column;
   gap: 4px;
-  padding: 4px 0;
+  /* border-box 라 접힌 상태에 세로 padding 이 남으면 그만큼 높이가 남는다. */
+  padding: ${({ $open }) => ($open ? '4px 0' : '0')};
+  overflow: hidden;
+  visibility: ${({ $open }) => ($open ? 'visible' : 'hidden')};
+  transition:
+    padding ${motionDuration.reveal}ms ${motionEasing.enter},
+    visibility ${motionDuration.reveal}ms;
 `
 
 const subItemLayout = `
@@ -133,6 +151,9 @@ const SubLink = styled(Link, {
   color: ${({ theme, $active }) =>
     $active ? theme.colors.accent : theme.colors.subMenuText};
   text-decoration: none;
+  transition:
+    background ${motionDuration.color}ms ${motionEasing.enter},
+    color ${motionDuration.color}ms ${motionEasing.enter};
 `
 
 const DisabledSubItem = styled.span`

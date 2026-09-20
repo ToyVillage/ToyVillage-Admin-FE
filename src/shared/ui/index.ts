@@ -63,3 +63,16 @@ export { BackLinkSkeleton } from './BackLinkSkeleton'
 export { SkeletonCard } from './SkeletonCard'
 export { FieldSkeleton } from './FieldSkeleton'
 export { AttachmentChipsSkeleton } from './AttachmentChipsSkeleton'
+export {
+  motionDuration,
+  motionEasing,
+  prefersReducedMotion,
+  fadeIn,
+  fadeOut,
+  popIn,
+  dropIn,
+  slideInFromLeft,
+  slideOutToLeft,
+  toastIn,
+  toastOut,
+} from './motion'

@@ -2,6 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useLocation } from 'react-router-dom'
 import { readSessionUser } from '@/shared/api/session'
+import {
+  fadeIn,
+  fadeOut,
+  motionDuration,
+  motionEasing,
+  prefersReducedMotion,
+  slideInFromLeft,
+  slideOutToLeft,
+} from '@/shared/ui'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
 import { useLogout } from '../model/useLogout'
 import { mockSidebarDashboardItem, mockSidebarGroups } from '../model/mock'
@@ -16,6 +25,10 @@ export function Sidebar() {
   const close = useSidebarStore((state) => state.close)
   const logout = useLogout()
   const panelRef = useRef<HTMLDivElement>(null)
+  // 닫을 때 패널이 왼쪽으로 빠져나가는 동안은 DOM 에 남겨 둔다.
+  // 열 때는 렌더 중에 바로 올려서 아래 effect 가 패널에 초점을 줄 수 있게 한다.
+  const [mounted, setMounted] = useState(isOpen)
+  if (isOpen && !mounted) setMounted(true)
   // 아코디언은 한 번에 하나만 펼친다(Figma variant `열린메뉴=*`).
   const [openGroupId, setOpenGroupId] = useState<string | null>(null)
 
@@ -30,6 +43,18 @@ export function Sidebar() {
 
   // 현재 라우트와 일치하는 하위 항목만 선택 상태로 표시한다(Figma `상태=선택`).
   const activeItemId = findActiveMenu(pathname).itemId
+
+  // 닫힘 애니메이션이 끝난 뒤에 언마운트한다.
+  useEffect(() => {
+    if (isOpen || !mounted) return
+
+    const timer = window.setTimeout(
+      () => setMounted(false),
+      prefersReducedMotion() ? 0 : motionDuration.overlay,
+    )
+
+    return () => window.clearTimeout(timer)
+  }, [isOpen, mounted])
 
   useEffect(() => {
     if (!isOpen) return
@@ -50,18 +75,25 @@ export function Sidebar() {
     }
   }, [close, isOpen])
 
-  if (!isOpen) return null
+  if (!mounted) return null
 
   // 사용자 조회 API가 없어 로그인 응답으로 저장한 세션 사용자를 쓴다.
   // 열 때마다 읽으므로 다른 계정으로 다시 로그인해도 바로 반영된다.
   // 토큰만 남고 사용자 정보가 없는 세션(이전 로그인)은 이름 대신 기본 문구를 보인다.
   const userName = readSessionUser()?.name ?? '사용자'
 
+  // 닫히는 동안에는 초점과 접근성 트리에서 빼 둔다.
   return (
-    <Layer>
-      <Overlay type="button" aria-label="사이드바 닫기" onClick={close} />
+    <Layer inert={!isOpen}>
+      <Overlay
+        type="button"
+        aria-label="사이드바 닫기"
+        $closing={!isOpen}
+        onClick={close}
+      />
       <Panel
         ref={panelRef}
+        $closing={!isOpen}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
@@ -135,7 +167,7 @@ const Layer = styled.div`
   inset: 0;
 `
 
-const Overlay = styled.button`
+const Overlay = styled.button<{ $closing: boolean }>`
   position: absolute;
   inset: 0;
   width: 100%;
@@ -144,10 +176,14 @@ const Overlay = styled.button`
   border: 0;
   background: rgba(0, 0, 0, 0.24);
   cursor: pointer;
+  animation: ${({ $closing }) => ($closing ? fadeOut : fadeIn)}
+    ${motionDuration.overlay}ms
+    ${({ $closing }) => ($closing ? motionEasing.exit : motionEasing.enter)}
+    both;
 `
 
 // 패널은 항상 화면 높이에 맞춘다. 메뉴가 길어지면 패널이 밖으로 나가지 않고 Nav 만 스크롤한다.
-const Panel = styled.aside`
+const Panel = styled.aside<{ $closing: boolean }>`
   position: relative;
   width: 400px;
   max-width: 100vw;
@@ -156,6 +192,10 @@ const Panel = styled.aside`
   background: ${({ theme }) => theme.colors.surface};
   border-radius: 0 20px 20px 0;
   box-shadow: 4px 0px 10px 0px rgba(0, 0, 0, 0.1);
+  animation: ${({ $closing }) => ($closing ? slideOutToLeft : slideInFromLeft)}
+    ${motionDuration.overlay}ms
+    ${({ $closing }) => ($closing ? motionEasing.exit : motionEasing.enter)}
+    both;
 
   @media (max-width: 480px) {
     width: 100vw;

@@ -5,6 +5,7 @@ import searchIcon from './assets/search.svg'
 import filterIcon from './assets/filter.svg'
 import chevronIcon from './assets/chevron-left.svg'
 import { dataTableDefaultAppearance } from './dataTableAppearance'
+import { motionDuration, motionEasing } from './motion'
 
 // Figma 체크박스 박스 아이콘(assets/checkbox.svg)을 인라인 data URI로 사용해
 // 에셋 URL 로딩과 무관하게 항상 렌더되도록 한다.
@@ -554,6 +555,7 @@ const SortOption = styled.button`
   font-size: 20px;
   font-weight: 500;
   cursor: pointer;
+  transition: background ${motionDuration.color}ms ${motionEasing.enter};
 
   /* 현재 선택된 정렬을 강조해 어떤 정렬인지 보이게 한다. */
   &[aria-checked='true'] {

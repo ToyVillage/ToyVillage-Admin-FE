@@ -1,6 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
+import {
+  motionDuration,
+  motionEasing,
+  prefersReducedMotion,
+  toastIn,
+  toastOut,
+} from './motion'
 
 export type ToastVariant = 'success' | 'error'
 
@@ -21,13 +28,35 @@ export function Toast({
   onDismiss,
   duration = defaultDuration,
 }: ToastProps) {
+  // 사라질 때도 올라가며 없어지도록, 표시 시간이 끝나면 먼저 나가는 애니메이션을 켜고
+  // 그 길이만큼 지난 뒤에 화면에서 내린다.
+  const [leaving, setLeaving] = useState(false)
+
+  // 같은 자리에서 다른 토스트로 바뀌면 다시 처음부터 보여 준다.
+  // 렌더 중 상태 보정이라 effect 가 필요 없다.
+  const toastKey = `${variant}|${message}|${duration}`
+  const [prevToastKey, setPrevToastKey] = useState(toastKey)
+  if (prevToastKey !== toastKey) {
+    setPrevToastKey(toastKey)
+    setLeaving(false)
+  }
+
   useEffect(() => {
-    const timer = window.setTimeout(onDismiss, duration)
-    return () => window.clearTimeout(timer)
+    const exitDuration = prefersReducedMotion() ? 0 : motionDuration.reveal
+    const startExit = window.setTimeout(() => setLeaving(true), duration)
+    const dismiss = window.setTimeout(onDismiss, duration + exitDuration)
+
+    return () => {
+      window.clearTimeout(startExit)
+      window.clearTimeout(dismiss)
+    }
   }, [duration, message, onDismiss, variant])
 
   return createPortal(
-    <Container role={variant === 'error' ? 'alert' : 'status'}>
+    <Container
+      role={variant === 'error' ? 'alert' : 'status'}
+      $leaving={leaving}
+    >
       <Row>
         <Icon viewBox="0 0 40 40" aria-hidden="true" $variant={variant}>
           {variant === 'success' ? (
@@ -43,7 +72,7 @@ export function Toast({
   )
 }
 
-const Container = styled.div`
+const Container = styled.div<{ $leaving: boolean }>`
   position: fixed;
   top: 32px;
   right: 48px;
@@ -56,6 +85,11 @@ const Container = styled.div`
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
   font-family: ${({ theme }) => theme.font.body};
+  animation: ${({ $leaving }) => ($leaving ? toastOut : toastIn)}
+    ${({ $leaving }) =>
+      $leaving ? motionDuration.reveal : motionDuration.overlay}ms
+    ${({ $leaving }) => ($leaving ? motionEasing.exit : motionEasing.enter)}
+    both;
 `
 
 const Row = styled.div`

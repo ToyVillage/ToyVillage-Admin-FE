@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
+import { dropIn, motionDuration, motionEasing } from './motion'
 import chevronDown from './assets/chevron-down.svg'
 
 export interface SelectMenuOption {
@@ -213,6 +214,7 @@ const Chevron = styled.img<{ $open: boolean }>`
   height: 24px;
   flex: 0 0 24px;
   transform: rotate(${({ $open }) => ($open ? '0deg' : '180deg')});
+  transition: transform ${motionDuration.reveal}ms ${motionEasing.enter};
 `
 
 const List = styled.div<{
@@ -242,6 +244,7 @@ const List = styled.div<{
   overflow-y: auto;
   scrollbar-color: ${({ theme }) => theme.colors.textFaint} transparent;
   scrollbar-width: thin;
+  animation: ${dropIn} ${motionDuration.reveal}ms ${motionEasing.enter} both;
 `
 
 const Divider = styled.span`
@@ -275,6 +278,7 @@ const Option = styled.button<{
   font-size: ${({ $variant }) => ($variant === 'field' ? 22 : 24)}px;
   font-weight: 500;
   text-align: left;
+  transition: background ${motionDuration.color}ms ${motionEasing.enter};
 
   &:hover,
   &:focus-visible {

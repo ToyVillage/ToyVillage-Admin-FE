@@ -23,3 +23,16 @@ body,
   padding: 0;
   min-height: 100%;
 }
+
+/* 모션 최소화를 켠 사용자에게는 전환과 애니메이션을 즉시 끝낸다.
+   (길이만 0 으로 줄이고 최종 상태는 그대로 두어 레이아웃이 깨지지 않게 한다.) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

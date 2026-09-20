@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { motionDuration, motionEasing } from './motion'
 
 interface CategoryTabsProps {
   categories: string[]
@@ -47,6 +48,9 @@ const Tab = styled.button<{ $active: boolean }>`
   background: transparent;
   color: ${({ theme, $active }) =>
     $active ? theme.colors.text : theme.colors.textGuide};
+  transition:
+    border-color ${motionDuration.color}ms ${motionEasing.enter},
+    color ${motionDuration.color}ms ${motionEasing.enter};
 
   &[aria-pressed='false'] {
     font-weight: 500;
