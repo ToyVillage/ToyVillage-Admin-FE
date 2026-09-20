@@ -58,3 +58,15 @@ real_server:
 - 요청 필드와 응답 형식은 Contract 에 명시된 값만 사용한다.
 - 실제 서버 테스트는 비활성화한다.
 - 개발자 승인 전 API 코드와 테스트 코드를 작성하지 않는다.
+
+## 만료 토큰의 실제 응답 코드 (2026-09-20 확인)
+
+Notion 계약은 만료 토큰을 401 로 적고 있으나, 스테이징 서버는 **403(빈 본문)** 을 준다.
+
+```
+curl -o /dev/null -w "%{http_code}" https://api-stag.toyvillage.kr/documents?page=1&size=10   # 403 (토큰 없음)
+curl -H "Authorization: Bearer invalid.token.value" ...                                        # 403
+```
+
+그래서 프론트는 401 과 403 을 모두 재발급 대상으로 본다. 재발급 뒤 재시도도 막히면
+그때 세션을 비운다(권한 거부로 인한 403 은 이 경로로 정리된다).
