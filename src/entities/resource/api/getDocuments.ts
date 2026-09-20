@@ -45,7 +45,7 @@ interface DocumentQueryRuntimeItem extends DocumentQueryAllRuntimeItem {
   files?: DocumentQueryRuntimeFile[]
 }
 
-// 서버 사이드 페이지네이션. 해당 page(0부터)의 자료 한 페이지와 전체 페이지 수를 조회한다.
+// 서버 사이드 페이지네이션. 해당 page(1부터)의 자료 한 페이지와 전체 페이지 수를 조회한다.
 export async function getDocuments(
   params: DocumentsQueryAllRequest,
 ): Promise<DocumentsPage> {

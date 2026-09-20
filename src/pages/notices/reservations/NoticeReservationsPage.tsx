@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ReservationTable,
   getAdminReservations,
@@ -9,6 +9,7 @@ import {
   type ReservationSortCode,
   type ReservationStatus,
 } from '@/entities/reservation'
+import { readPageParam, useListSearchParams } from '@/shared/lib'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 import { ReservationListSkeleton } from './ui/ReservationListSkeleton'
 
@@ -30,6 +31,14 @@ const sortToCode: Record<ReservationSort, ReservationSortCode> = {
   reserve: 'RESERVATION_DATE',
 }
 
+// URL 에 남기지 않을 기본값(사전답사 전 탭·상담일순·첫 페이지·검색어 없음).
+const listParamDefaults = {
+  status: 'pending',
+  keyword: '',
+  sort: 'consult',
+  page: '1',
+} as const
+
 const emptyCounts: Record<ReservationStatus, number> = {
   pending: 0,
   approved: 0,
@@ -38,20 +47,37 @@ const emptyCounts: Record<ReservationStatus, number> = {
 
 export function NoticeReservationsPage() {
   const navigate = useNavigate()
-  const [active, setActive] = useState<ReservationStatus>('pending')
-  const [query, setQuery] = useState('')
-  const [debouncedKeyword, setDebouncedKeyword] = useState('')
-  const [sort, setSort] = useState<ReservationSort>('consult')
-  const [page, setPage] = useState(1)
+  const location = useLocation()
+  // 조회 조건(상태·검색어·정렬·페이지)은 URL 이 소유한다.
+  // 상세에 다녀오거나 새로고침해도 걸어둔 조건이 그대로 남는다.
+  const { values, update } = useListSearchParams(listParamDefaults)
+  const active: ReservationStatus =
+    values.status === 'approved' || values.status === 'rejected'
+      ? values.status
+      : 'pending'
+  const sort: ReservationSort = values.sort === 'reserve' ? 'reserve' : 'consult'
+  const page = readPageParam(new URLSearchParams({ page: values.page }))
+  const debouncedKeyword = values.keyword
 
-  // 입력값(query)은 즉시 반영하되, 실제 조회 키워드는 디바운스해 타이핑 중 요청을 막는다.
+  // 입력값은 즉시 반영하되, 실제 조회 키워드(URL)는 디바운스해 타이핑 중 요청을 막는다.
+  const [query, setQuery] = useState(debouncedKeyword)
   useEffect(() => {
+    if (query.trim() === debouncedKeyword) return
+
     const timer = setTimeout(
-      () => setDebouncedKeyword(query.trim()),
+      () => update({ keyword: query.trim(), page: '1' }),
       SEARCH_DEBOUNCE_MS,
     )
     return () => clearTimeout(timer)
-  }, [query])
+  }, [query, debouncedKeyword, update])
+
+  function setSort(next: ReservationSort) {
+    update({ sort: next, page: '1' })
+  }
+
+  function setPage(next: number) {
+    update({ page: String(next) })
+  }
 
   // 서버 사이드 조회: 상태 필터·검색·정렬·페이지를 파라미터로 전달한다.
   const { data, isPending, isError } = useQuery({
@@ -73,22 +99,14 @@ export function NoticeReservationsPage() {
   const pageReservations = data?.reservations ?? []
   const pageCount = Math.max(1, data?.totalPages ?? 1)
 
-  // 상태·검색·정렬이 바뀌면 첫 페이지로 되돌린다.
-  const filterKey = `${active} ${debouncedKeyword} ${sort}`
-  const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
-  if (prevFilterKey !== filterKey) {
-    setPrevFilterKey(filterKey)
-    setPage(1)
-  }
   const currentPage = Math.min(page, pageCount)
 
   // 상태 필터를 바꾸면 검색어를 초기화한다(다른 상태에서 이전 검색어로 빈 결과가 뜨는 혼란 방지).
   function handleStatusSelect(next: ReservationStatus) {
-    if (next !== active) {
-      setQuery('')
-      setDebouncedKeyword('')
-    }
-    setActive(next)
+    if (next === active) return
+
+    setQuery('')
+    update({ status: next, keyword: '', page: '1' })
   }
 
   if (isPending) {
@@ -131,7 +149,11 @@ export function NoticeReservationsPage() {
 
         <ReservationTable
           reservations={pageReservations}
-          onRowClick={(id) => navigate(`/notices/reservations/${id}`)}
+          onRowClick={(id) =>
+            navigate(`/notices/reservations/${id}`, {
+              state: { listSearch: location.search },
+            })
+          }
           search={{
             value: query,
             onChange: setQuery,

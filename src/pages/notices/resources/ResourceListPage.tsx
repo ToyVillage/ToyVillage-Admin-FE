@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ResourceTable,
   getDocuments,
@@ -10,6 +10,7 @@ import {
   tabToFileType,
 } from '@/entities/resource'
 import { CreateResourceButton } from '@/features/create-resource'
+import { readPageParam, useListSearchParams } from '@/shared/lib'
 import { Toast } from '@/shared/ui'
 import type { ResourceFormCompletion } from '@/features/create-resource'
 import { FileTypeTabs } from './ui/FileTypeTabs'
@@ -31,10 +32,19 @@ const toastMessages: Record<ResourceFormCompletion, string> = {
   deleted: '데이터 삭제에 성공했습니다',
 }
 
+// URL 에 남기지 않을 기본값(전체 유형·첫 페이지·검색어 없음).
+const listParamDefaults = { tab: '전체', keyword: '', page: '1' } as const
+
 export function ResourceListPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [searchParams, setSearchParams] = useSearchParams()
+  // 조회 조건(파일 유형·검색어·페이지)은 URL 이 소유한다.
+  // 상세에 다녀오거나 새로고침해도 걸어둔 조건이 그대로 남는다.
+  const { values, update } = useListSearchParams(listParamDefaults)
+  const active = values.tab
+  const debouncedKeyword = values.keyword
+  const page = readPageParam(new URLSearchParams({ page: values.page }))
+  const [query, setQuery] = useState(debouncedKeyword)
 
   // 생성·수정·삭제 화면에서 넘겨받은 결과로 토스트를 띄운다.
   // 첫 렌더에서 값을 읽어 두고 이동 state 는 지운다 — 새로고침이나 뒤로가기로
@@ -53,31 +63,25 @@ export function ResourceListPage() {
       state: null,
     })
   }, [completion, location.pathname, location.search, navigate])
-  const [active, setActive] = useState('전체')
-  const [query, setQuery] = useState('')
-  const [debouncedKeyword, setDebouncedKeyword] = useState('')
 
-  // 페이지 번호는 URL(?page=)에 둔다. 상세로 갔다가 뒤로가기 하면 그 페이지가 복원된다.
-  const page = Math.max(1, Number(searchParams.get('page')) || 1)
-  const setPage = useCallback(
-    (next: number, options?: { replace?: boolean }) => {
-      setSearchParams((prev) => {
-        const params = new URLSearchParams(prev)
-        params.set('page', String(next))
-        return params
-      }, options)
-    },
-    [setSearchParams],
-  )
+  function setActive(next: string) {
+    update({ tab: next, page: '1' })
+  }
 
-  // 입력값(query)은 즉시 반영하되, 실제 조회 키워드는 디바운스해 타이핑 중 요청을 막는다.
+  function setPage(next: number) {
+    update({ page: String(next) })
+  }
+
+  // 입력값(query)은 즉시 반영하되, 실제 조회 키워드(URL)는 디바운스해 타이핑 중 요청을 막는다.
   useEffect(() => {
+    if (query.trim() === debouncedKeyword) return
+
     const timer = setTimeout(
-      () => setDebouncedKeyword(query.trim()),
+      () => update({ keyword: query.trim(), page: '1' }),
       SEARCH_DEBOUNCE_MS,
     )
     return () => clearTimeout(timer)
-  }, [query])
+  }, [query, debouncedKeyword, update])
 
   // 파일 유형 탭 → DOCUMENTS_QUERY_ALL 의 types 필터. '전체'면 보내지 않는다.
   const types = useMemo(() => {
@@ -85,7 +89,8 @@ export function ResourceListPage() {
     return fileType ? [fileTypeToDocumentType[fileType]] : undefined
   }, [active])
 
-  // 서버 사이드 페이지네이션: page(0부터)·size·keyword·types 로 해당 페이지만 요청한다.
+  // 서버 사이드 페이지네이션: page·size·keyword·types 로 해당 페이지만 요청한다.
+  // 자료실 API 의 page 는 화면과 같은 1-based 다(1 페이지 = `page=1`, 서버 기본값도 1).
   const { data, isPending } = useQuery({
     queryKey: [
       'resources',
@@ -94,7 +99,7 @@ export function ResourceListPage() {
     ],
     queryFn: () =>
       getDocuments({
-        page: page - 1,
+        page,
         size: PAGE_SIZE,
         keyword: debouncedKeyword || undefined,
         orderDirection: 'DESC',
@@ -104,26 +109,16 @@ export function ResourceListPage() {
   })
   const resources = useMemo(() => data?.resources ?? [], [data])
 
-  // 탭·검색이 바뀌면 첫 페이지로 되돌린다(최초 마운트에서는 URL 페이지를 유지).
-  const filterKey = `${active} ${debouncedKeyword}`
-  const prevFilterKeyRef = useRef(filterKey)
-  useEffect(() => {
-    if (prevFilterKeyRef.current !== filterKey) {
-      prevFilterKeyRef.current = filterKey
-      setPage(1)
-    }
-  }, [filterKey, setPage])
-
   // 응답의 totalPageSize(전체 페이지 수)로 페이지 번호를 그린다. 자료가 없으면 1로 둔다.
   const pageCount = Math.max(1, data?.totalPageSize ?? 1)
 
   // 삭제·필터로 전체 페이지 수가 줄어 URL 의 page 가 범위를 벗어나면 마지막 페이지로
   // 되돌려 빈 페이지에 고착되지 않게 한다.
   useEffect(() => {
-    if (data && page > pageCount) {
-      setPage(pageCount, { replace: true })
-    }
-  }, [data, page, pageCount, setPage])
+    if (data && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, page, pageCount])
 
   if (isPending) {
     return (
@@ -154,7 +149,11 @@ export function ResourceListPage() {
 
         <ResourceTable
           resources={resources}
-          onRowClick={(id) => navigate(`/notices/resources/${id}`)}
+          onRowClick={(id) =>
+            navigate(`/notices/resources/${id}`, {
+              state: { listSearch: location.search },
+            })
+          }
           search={{
             value: query,
             onChange: setQuery,

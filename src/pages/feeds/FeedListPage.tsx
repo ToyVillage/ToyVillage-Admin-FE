@@ -13,8 +13,9 @@ import {
 } from '@/entities/feed'
 import { CategoryTabs, DateFilter } from '@/shared/ui'
 import {
-  daysInMonth,
-  todayCalendarDate,
+  readIsoDateParam,
+  readPageParam,
+  toCalendarDate,
   toIsoDate,
   type CalendarDate,
 } from '@/shared/lib'
@@ -32,10 +33,10 @@ export function FeedListPage() {
   // 조회 조건은 URL 이 소유한다. 상세에 다녀오거나 새로고침해도 그대로 남는다.
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const isoDate = readIsoDate(searchParams)
+  const isoDate = readIsoDateParam(searchParams)
   const date = toCalendarDate(isoDate)
   const tab = readTab(searchParams)
-  const page = readPage(searchParams)
+  const page = readPageParam(searchParams)
   // 탭 목록은 프론트 상수다. `전체` 는 분류를 보내지 않는다.
   const species: AnimalSpecies | null =
     tab === allTabLabel ? null : (tab as AnimalSpecies)
@@ -150,24 +151,7 @@ export function FeedListPage() {
   )
 }
 
-// 형식만 보면 `2026-02-31`·`2026-13-01` 같은 없는 날짜가 통과해 서버로 나간다.
-// 실제 달력에 있는 날인지까지 확인하고, 아니면 오늘로 둔다.
-function readIsoDate(params: URLSearchParams): string {
-  const value = params.get('date')
-  return value && isCalendarIsoDate(value) ? value : toIsoDate(todayCalendarDate())
-}
 
-function isCalendarIsoDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-
-  const [year, month, day] = value.split('-').map(Number)
-  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month)
-}
-
-function toCalendarDate(isoDate: string): CalendarDate {
-  const [year, month, day] = isoDate.split('-').map(Number)
-  return { year, month, day }
-}
 
 // 알 수 없는 값은 기본 탭으로 본다.
 function readTab(params: URLSearchParams): string {
@@ -175,10 +159,6 @@ function readTab(params: URLSearchParams): string {
   return value && tabs.includes(value) ? value : allTabLabel
 }
 
-function readPage(params: URLSearchParams): number {
-  const value = Number(params.get('page'))
-  return Number.isSafeInteger(value) && value > 0 ? value : 1
-}
 
 const StatePage = styled.main`
   display: grid;

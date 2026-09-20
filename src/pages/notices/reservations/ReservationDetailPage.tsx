@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   deleteReservation,
   getReservation,
@@ -74,6 +74,10 @@ function toFormValue(detail: ReservationDetail): ReservationFormValue {
 export function ReservationDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건(상태·검색어·정렬·페이지)으로 돌아간다.
+  const listState = location.state as { listSearch?: string } | null
+  const listPath = `/notices/reservations${listState?.listSearch ?? ''}`
   const queryClient = useQueryClient()
 
   const [value, setValue] = useState<ReservationFormValue | null>(null)
@@ -174,7 +178,7 @@ export function ReservationDetailPage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-      navigate('/notices/reservations')
+      navigate(listPath)
     },
     onError: (error) => setActionError(serverMessage(error)),
   })
@@ -182,7 +186,7 @@ export function ReservationDetailPage() {
     mutationFn: () => deleteReservation(Number(id)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-      navigate('/notices/reservations')
+      navigate(listPath)
     },
     onError: (error) => {
       setDeleteOpen(false)
@@ -233,7 +237,7 @@ export function ReservationDetailPage() {
     return (
       <Page>
         <Content>
-          <ReservationBackLink />
+          <ReservationBackLink to={listPath} />
           {notFound ? (
             <NotFound>예약을 찾을 수 없습니다.</NotFound>
           ) : (
@@ -249,7 +253,7 @@ export function ReservationDetailPage() {
   return (
     <Page>
       <Content>
-        <ReservationBackLink />
+        <ReservationBackLink to={listPath} />
         {actionError && <ErrorAlert role="alert">{actionError}</ErrorAlert>}
         <ReservationForm
           value={formValue}

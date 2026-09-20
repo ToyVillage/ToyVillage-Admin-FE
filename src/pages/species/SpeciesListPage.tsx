@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { individualQueryKeys } from '@/entities/individual'
 import { observationQueryKeys } from '@/entities/observation'
 import {
+  SpeciesTable,
+  TaxonGroupTabs,
   deleteSpecies,
   getSpeciesList,
-  SpeciesTable,
   speciesQueryKeys,
-  TaxonGroupTabs,
+  taxonGroups,
+  type TaxonGroup,
   type TaxonGroupTabValue,
 } from '@/entities/species'
 import {
@@ -20,6 +22,7 @@ import {
   Toast,
   useFocusFrame,
 } from '@/shared/ui'
+import { readPageParam, useListSearchParams } from '@/shared/lib'
 import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { SpeciesEmptyMessage } from './ui/SpeciesEmptyMessage'
@@ -27,15 +30,36 @@ import { SpeciesListSkeleton } from './ui/SpeciesListSkeleton'
 import { SEARCH_DEBOUNCE_MS, TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
 
+// URL 에 남기지 않을 기본값(전체 분류군·첫 페이지·검색어 없음).
+const listParamDefaults = { taxon: 'ALL', keyword: '', page: '1' } as const
+
+function isTaxonGroupTabValue(value: string): value is TaxonGroupTabValue {
+  return value === 'ALL' || taxonGroups.includes(value as TaxonGroup)
+}
+
 // `/species` — 종 목록(Figma `individual (kebab)` yot 39:8751).
 // 분류군·검색어·페이지는 서버가 거른다(`ANIMAL_KIND_QUERY_ALL`). 정렬은 없다.
 export function SpeciesListPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
-  const [taxonGroup, setTaxonGroup] = useState<TaxonGroupTabValue>('ALL')
-  const [query, setQuery] = useState('')
-  const [keyword, setKeyword] = useState('')
-  const [page, setPage] = useState(1)
+  // 조회 조건(분류군·검색어·페이지)은 URL 이 소유한다. 상세에 다녀와도 그대로 남는다.
+  const { values, update } = useListSearchParams(listParamDefaults)
+  // URL 은 사용자가 고칠 수 있다. 모르는 분류군 값은 기본값(전체)으로 본다.
+  const taxonGroup: TaxonGroupTabValue = isTaxonGroupTabValue(values.taxon)
+    ? values.taxon
+    : 'ALL'
+  const keyword = values.keyword
+  const page = readPageParam(new URLSearchParams({ page: values.page }))
+  const [query, setQuery] = useState(keyword)
+
+  function setTaxonGroup(next: TaxonGroupTabValue) {
+    update({ taxon: next, page: '1' })
+  }
+
+  function setPage(next: number) {
+    update({ page: String(next) })
+  }
   // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
@@ -46,11 +70,16 @@ export function SpeciesListPage() {
   const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
   const focusFrame = useFocusFrame()
 
-  // 입력값은 즉시 보이고, 조회 검색어는 디바운스해 타이핑 중 요청을 막는다.
+  // 입력값은 즉시 보이고, 조회 검색어(URL)는 디바운스해 타이핑 중 요청을 막는다.
   useEffect(() => {
-    const timer = setTimeout(() => setKeyword(query.trim()), SEARCH_DEBOUNCE_MS)
+    if (query.trim() === keyword) return
+
+    const timer = setTimeout(
+      () => update({ keyword: query.trim(), page: '1' }),
+      SEARCH_DEBOUNCE_MS,
+    )
     return () => clearTimeout(timer)
-  }, [query])
+  }, [query, keyword, update])
 
   const selectedTaxonGroup = taxonGroup === 'ALL' ? undefined : taxonGroup
   const speciesQuery = useQuery({
@@ -76,16 +105,13 @@ export function SpeciesListPage() {
 
   const pageCount = Math.max(1, speciesQuery.data?.totalPageSize ?? 1)
 
-  // 탭·검색어가 바뀌면 첫 페이지로, 삭제로 페이지가 범위를 벗어나면 마지막 페이지로 되돌린다.
-  // 렌더 중 상태 보정(effect 불필요).
-  const filterKey = `${taxonGroup}|${keyword}`
-  const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
-  if (prevFilterKey !== filterKey) {
-    setPrevFilterKey(filterKey)
-    setPage(1)
-  } else if (speciesQuery.data && page > pageCount) {
-    setPage(pageCount)
-  }
+  // 삭제로 페이지가 범위를 벗어나면 마지막 페이지로 되돌린다.
+  // URL 을 바꾸는 일이라 렌더가 끝난 뒤에 한다(렌더 중 라우터 갱신 금지).
+  useEffect(() => {
+    if (speciesQuery.data && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speciesQuery.data, page, pageCount])
 
   const focusMenuTrigger = useCallback(
     (speciesId: string) => {
@@ -174,7 +200,11 @@ export function SpeciesListPage() {
 
         <SpeciesTable
           species={speciesQuery.data?.items ?? []}
-          onRowClick={(id) => navigate(`/species/${id}`)}
+          onRowClick={(id) =>
+            navigate(`/species/${id}`, {
+              state: { speciesListSearch: location.search },
+            })
+          }
           search={{
             value: query,
             onChange: setQuery,

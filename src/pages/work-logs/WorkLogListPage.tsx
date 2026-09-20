@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   deleteWorkLog,
   deleteWorkLogForm,
@@ -15,6 +15,7 @@ import {
   WorkLogTable,
   type WorkLogDate,
 } from '@/entities/work-log'
+import { readIsoDateParam, readPageParam, toCalendarDate } from '@/shared/lib'
 import {
   CategoryTabs,
   DateFilter,
@@ -40,17 +41,39 @@ interface PendingDelete {
 
 export function WorkLogListPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
+  // 조회 조건(탭·조회날짜·페이지)은 URL 이 소유한다.
+  // 상세에 다녀오거나 새로고침해도 고른 날짜와 페이지가 그대로 남는다.
   const [searchParams, setSearchParams] = useSearchParams()
-  const [date, setDate] = useState<WorkLogDate>(todayWorkLogDate)
-  const [page, setPage] = useState(1)
   const [openKebabId, setOpenKebabId] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  // 탭은 URL 이 소유한다. 알 수 없는 값은 기본 탭으로 본다(spec).
+  // 알 수 없는 탭 값은 기본 탭으로 본다(spec).
   const tab: WorkLogTab = searchParams.get('tab') === 'forms' ? 'forms' : 'logs'
-  const isoDate = toIsoDate(date)
+  const isoDate = readIsoDateParam(searchParams)
+  const date: WorkLogDate = toCalendarDate(isoDate)
+  const page = readPageParam(searchParams)
+
+  // 조회날짜·탭이 바뀌면 첫 페이지로 되돌린다.
+  function setDate(next: WorkLogDate) {
+    updateParams({ tab, date: toIsoDate(next), page: 1 })
+  }
+
+  function setPage(next: number) {
+    updateParams({ tab, date: isoDate, page: next })
+  }
+
+  function updateParams(next: { tab: WorkLogTab; date: string; page: number }) {
+    const params = new URLSearchParams()
+    params.set('tab', next.tab)
+    // 오늘이면 URL 에 남기지 않는다(기본값). 양식 관리에서도 값은 들고 다녀
+    // 탭을 왕복해도 고른 날짜가 풀리지 않게 한다.
+    if (next.date !== toIsoDate(todayWorkLogDate())) params.set('date', next.date)
+    if (next.page > 1) params.set('page', String(next.page))
+    setSearchParams(params, { replace: true })
+  }
 
   // 서버 페이지네이션이다. 명세는 page 를 0부터 적었지만 서버는 1부터 센다(#158).
 
@@ -95,23 +118,19 @@ export function WorkLogListPage() {
   const currentPage = Math.min(page, pageCount)
   const pagination = { page: currentPage, pageCount, onChange: setPage }
 
-  // 탭·조회날짜가 바뀌면 첫 페이지로 되돌린다. 렌더 중 상태 보정(effect 불필요).
-  // 양식 관리는 날짜로 거르지 않으므로 날짜 변경에 반응하지 않는다.
-  const tabAndDate = tab === 'logs' ? `logs:${isoDate}` : 'forms'
-  const [prevTabAndDate, setPrevTabAndDate] = useState(tabAndDate)
-  if (prevTabAndDate !== tabAndDate) {
-    setPrevTabAndDate(tabAndDate)
-    setPage(1)
-    setOpenKebabId(null)
-  }
-
   // 삭제로 마지막 페이지가 비면 직전 페이지를 다시 조회한다.
   // 로딩 중에는 총 페이지 수를 모르므로 응답을 받은 뒤에만 보정한다.
-  if (totalPages !== undefined && page > pageCount) setPage(pageCount)
+  // URL 을 바꾸는 일이라 렌더가 끝난 뒤에 한다(렌더 중 라우터 갱신 금지).
+  useEffect(() => {
+    if (totalPages !== undefined && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalPages, page, pageCount])
 
   function handleSelectTab(label: string) {
     const nextTab: WorkLogTab = label === formsTabLabel ? 'forms' : 'logs'
-    setSearchParams({ tab: nextTab })
+    setOpenKebabId(null)
+    updateParams({ tab: nextTab, date: isoDate, page: 1 })
   }
 
   function handleRequestDelete(id: string) {
@@ -157,7 +176,11 @@ export function WorkLogListPage() {
           ) : tab === 'logs' ? (
             <WorkLogTable
               logs={logs}
-              onRowClick={(id) => navigate(`/work-logs/${id}`)}
+              onRowClick={(id) =>
+                navigate(`/work-logs/${id}`, {
+                  state: { listSearch: location.search },
+                })
+              }
               onDelete={handleRequestDelete}
               openKebabId={openKebabId}
               onOpenKebabChange={setOpenKebabId}
@@ -167,7 +190,11 @@ export function WorkLogListPage() {
           ) : (
             <WorkLogFormTable
               forms={forms}
-              onRowClick={(id) => navigate(`/work-logs/forms/${id}`)}
+              onRowClick={(id) =>
+                navigate(`/work-logs/forms/${id}`, {
+                  state: { listSearch: location.search },
+                })
+              }
               onDelete={handleRequestDelete}
               openKebabId={openKebabId}
               onOpenKebabChange={setOpenKebabId}

@@ -113,9 +113,9 @@ export async function mockDocumentApi(
       return
     }
 
-    // DOCUMENTS_QUERY_ALL 은 page 가 0부터다. types 는 반복 파라미터로 온다.
+    // DOCUMENTS_QUERY_ALL 의 page 는 화면과 같은 1부터다. types 는 반복 파라미터로 온다.
     const url = new URL(request.url())
-    const pageNumber = Number(url.searchParams.get('page') ?? '0')
+    const pageNumber = Math.max(1, Number(url.searchParams.get('page') ?? '1'))
     const size = Number(url.searchParams.get('size') ?? '10')
     const keyword = url.searchParams.get('keyword') ?? ''
     const types = url.searchParams.getAll('types')
@@ -125,7 +125,7 @@ export async function mockDocumentApi(
     )
     await json(route, 200, {
       documents: filtered
-        .slice(pageNumber * size, (pageNumber + 1) * size)
+        .slice((pageNumber - 1) * size, pageNumber * size)
         .map(({ id, title, type, createdAt }) => ({
           id,
           title,

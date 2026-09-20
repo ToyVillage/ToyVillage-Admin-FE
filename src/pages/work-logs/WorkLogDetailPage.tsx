@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useParams } from 'react-router-dom'
 import {
   getWorkLogDetail,
   isWorkLogNotFoundError,
@@ -11,8 +11,14 @@ import {
 import { BackLink, Toast } from '@/shared/ui'
 import { WorkLogDetailSkeleton } from './ui/WorkLogDetailSkeleton'
 
+const listPath = '/work-logs'
+
 export function WorkLogDetailPage() {
   const { id = '' } = useParams()
+  const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건(조회날짜·페이지)으로 돌아간다.
+  const navState = location.state as { listSearch?: string } | null
+  const backPath = `${listPath}${navState?.listSearch ?? ''}`
   // 첨부 다운로드 실패는 토스트로만 알린다(같은 파일을 다시 눌러도 다시 뜨게 key 를 올린다).
   const [downloadErrorId, setDownloadErrorId] = useState(0)
 
@@ -30,7 +36,7 @@ export function WorkLogDetailPage() {
 
   // 삭제된 일지나 잘못된 id 로 진입하면 목록으로 되돌린다(spec).
   if (!Number.isSafeInteger(workLogId) || workLogId <= 0) {
-    return <Navigate to="/work-logs" replace />
+    return <Navigate to={backPath} replace />
   }
 
   if (isPending) {
@@ -48,7 +54,7 @@ export function WorkLogDetailPage() {
   // 조회 실패가 '삭제됨'으로 오인된다.
   if (!isPending && !detail) {
     if (isWorkLogNotFoundError(error)) {
-      return <Navigate to="/work-logs" replace />
+      return <Navigate to={backPath} replace />
     }
     return (
       <StatePage>
@@ -62,7 +68,7 @@ export function WorkLogDetailPage() {
   return (
     <Page>
       <Content>
-        <BackLink to="/work-logs" />
+        <BackLink to={backPath} />
         <Meta>
           <Title>{detail ? formatTitle(detail.date) : ''}</Title>
           <MetaItem>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   deleteIndividual,
   getIndividuals,
@@ -25,6 +25,7 @@ import {
   Toast,
   useFocusFrame,
 } from '@/shared/ui'
+import { readPageParam, useListSearchParams } from '@/shared/lib'
 import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { SpeciesEmptyMessage } from './ui/SpeciesEmptyMessage'
@@ -38,15 +39,33 @@ type DeleteTarget =
 // 카드 케밥과 행 케밥을 합쳐 동시에 하나만 열린다. 열린 메뉴를 한 키로 구분한다.
 const speciesMenuKey = 'species'
 
+// URL 에 남기지 않을 기본값(첫 페이지·검색어 없음).
+const listParamDefaults = { keyword: '', page: '1' } as const
+
 // `/species/:speciesId` — 읽기 전용 종 상세(Figma `species detail` yot 58:8717).
 // 종 수정은 `/species/:speciesId/edit`, 종·개체 삭제는 이 화면의 케밥이 맡는다.
 export function SpeciesDetailPage() {
   const { speciesId = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
-  const [query, setQuery] = useState('')
-  const [keyword, setKeyword] = useState('')
-  const [page, setPage] = useState(1)
+  // 개체 목록의 조회 조건(검색어·페이지)은 URL 이 소유한다.
+  // 개체 상세에 다녀와도 그대로 남는다. 종 목록에서 받은 조회 조건은 뒤로가기에 쓴다.
+  const { values, update } = useListSearchParams(listParamDefaults)
+  const keyword = values.keyword
+  const page = readPageParam(new URLSearchParams({ page: values.page }))
+  const [query, setQuery] = useState(keyword)
+  // 종 목록에서 받은 조회 조건(`speciesListSearch`)은 이 화면의 뒤로가기에 쓰고,
+  // 개체 상세로 갈 때 함께 넘겨 돌아올 때 두 단계가 모두 복원되게 한다.
+  const listState = location.state as {
+    speciesListSearch?: string
+  } | null
+  const speciesListSearch = listState?.speciesListSearch ?? ''
+  const speciesListPath = `/species${speciesListSearch}`
+
+  function setPage(next: number) {
+    update({ page: String(next) })
+  }
   const [openMenuKey, setOpenMenuKey] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
   // 개체 등록 성공·개체 삭제 결과 토스트(이동 state 로 받은 것과 이 화면에서 발생한 것).
@@ -57,11 +76,16 @@ export function SpeciesDetailPage() {
   const individualMenuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
   const focusFrame = useFocusFrame()
 
-  // 입력값은 즉시 보이고, 조회 검색어는 디바운스해 타이핑 중 요청을 막는다.
+  // 입력값은 즉시 보이고, 조회 검색어(URL)는 디바운스해 타이핑 중 요청을 막는다.
   useEffect(() => {
-    const timer = setTimeout(() => setKeyword(query.trim()), SEARCH_DEBOUNCE_MS)
+    if (query.trim() === keyword) return
+
+    const timer = setTimeout(
+      () => update({ keyword: query.trim(), page: '1' }),
+      SEARCH_DEBOUNCE_MS,
+    )
     return () => clearTimeout(timer)
-  }, [query])
+  }, [query, keyword, update])
 
   const speciesQuery = useQuery({
     queryKey: speciesQueryKeys.detail(speciesId),
@@ -89,15 +113,13 @@ export function SpeciesDetailPage() {
 
   const pageCount = Math.max(1, individualsQuery.data?.totalPages ?? 1)
 
-  // 검색어가 바뀌면 첫 페이지로, 삭제로 페이지가 범위를 벗어나면 마지막 페이지로 되돌린다.
-  // 렌더 중 상태 보정(effect 불필요).
-  const [prevKeyword, setPrevKeyword] = useState(keyword)
-  if (prevKeyword !== keyword) {
-    setPrevKeyword(keyword)
-    setPage(1)
-  } else if (individualsQuery.data && page > pageCount) {
-    setPage(pageCount)
-  }
+  // 삭제로 페이지가 범위를 벗어나면 마지막 페이지로 되돌린다.
+  // URL 을 바꾸는 일이라 렌더가 끝난 뒤에 한다(렌더 중 라우터 갱신 금지).
+  useEffect(() => {
+    if (individualsQuery.data && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [individualsQuery.data, page, pageCount])
 
   const focusMenuTrigger = useCallback(
     (target: DeleteTarget) => {
@@ -213,7 +235,7 @@ export function SpeciesDetailPage() {
       <PageStatus
         state="not-found"
         message="종을 찾을 수 없습니다."
-        linkTo="/species"
+        linkTo={speciesListPath}
         linkLabel="목록으로 돌아가기"
       />
     )
@@ -225,7 +247,7 @@ export function SpeciesDetailPage() {
       <PageStatus
         state="not-found"
         message="종을 찾을 수 없습니다."
-        linkTo="/species"
+        linkTo={speciesListPath}
         linkLabel="목록으로 돌아가기"
       />
     )
@@ -256,7 +278,7 @@ export function SpeciesDetailPage() {
   return (
     <Page>
       <Content>
-        <BackToSpeciesList to="/species" />
+        <BackToSpeciesList to={speciesListPath} />
 
         <ProfileArea>
           <SpeciesProfileCard
@@ -304,7 +326,12 @@ export function SpeciesDetailPage() {
           <IndividualTable
             individuals={individuals}
             onRowClick={(id) =>
-              navigate(`/species/${speciesId}/individuals/${id}`)
+              navigate(`/species/${speciesId}/individuals/${id}`, {
+                state: {
+                  individualListSearch: location.search,
+                  speciesListSearch,
+                },
+              })
             }
             search={{
               value: query,

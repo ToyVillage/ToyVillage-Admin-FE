@@ -50,8 +50,14 @@ export function usePageToast() {
 
   const dismissToast = useCallback(() => {
     setLocalToast(null)
-    if (stateToast) navigate(location.pathname, { replace: true, state: null })
-  }, [location.pathname, navigate, stateToast])
+    // 조회 조건(쿼리)은 그대로 두고 토스트 state 만 비운다.
+    if (stateToast) {
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      })
+    }
+  }, [location.pathname, location.search, navigate, stateToast])
 
   return { toast, showToast: setLocalToast, dismissToast }
 }
