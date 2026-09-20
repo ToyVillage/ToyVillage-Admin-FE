@@ -20,7 +20,6 @@ import {
   type ToastVariant,
 } from '@/shared/ui'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
-import { NoticeListSkeleton } from './ui/NoticeListSkeleton'
 
 const API_PAGE_SIZE = 10
 const TABLE_PAGE_SIZE = 4
@@ -85,7 +84,10 @@ export function NoticeListPage() {
   const allNotices = useMemo(() => queryNotices ?? [], [queryNotices])
   // 분류 탭은 공지에 붙은 분류가 아니라 팀 목록이 기준이다(yot `1:2721`).
   // 생성·수정 폼과 같은 캐시를 써서 같은 팀 이름을 보여준다.
-  const teamsQuery = useQuery({ queryKey: ['teams', 'list'], queryFn: getTeams })
+  const teamsQuery = useQuery({
+    queryKey: ['teams', 'list'],
+    queryFn: getTeams,
+  })
 
   const categories = useMemo(
     () => [
@@ -177,16 +179,6 @@ export function NoticeListPage() {
     focusKebabTrigger(targetId)
   }
 
-  if (isPending) {
-    return (
-      <Page>
-        <Content>
-          <NoticeListSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   if (isError) {
     return (
       <StatePage>
@@ -212,10 +204,12 @@ export function NoticeListPage() {
           categories={categories}
           active={active}
           onSelect={setActive}
+          loading={teamsQuery.isPending}
         />
 
         <NoticeTable
           notices={notices}
+          loading={isPending}
           onRowClick={(id) =>
             navigate(`/notices/list/${id}`, {
               state: { listSearch: location.search },

@@ -18,6 +18,8 @@ interface TaskReportTableProps {
   emptyLabel?: string
   /** 행 우측 액션 셀(케밥 메뉴). 넘기지 않으면 액션 컬럼을 그리지 않는다. */
   renderRowAction?: (report: TaskReportListItem) => ReactNode
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 interface TaskReportTableRow extends DataTableRow {
@@ -82,6 +84,7 @@ export function TaskReportTable({
   pagination,
   emptyLabel,
   renderRowAction,
+  loading,
 }: TaskReportTableProps) {
   const reportById = new Map(reports.map((report) => [report.id, report]))
   const columns: DataTableColumn[] = renderRowAction
@@ -118,6 +121,7 @@ export function TaskReportTable({
       pagination={pagination}
       emptyLabel={emptyLabel}
       appearance={appearance}
+      loading={loading}
     />
   )
 }

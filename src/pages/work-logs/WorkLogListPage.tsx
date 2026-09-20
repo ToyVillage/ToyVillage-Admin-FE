@@ -23,7 +23,6 @@ import {
   LinkButton,
   Toast,
 } from '@/shared/ui'
-import { WorkLogTableSkeleton } from './ui/WorkLogTableSkeleton'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 4
@@ -70,7 +69,8 @@ export function WorkLogListPage() {
     params.set('tab', next.tab)
     // 오늘이면 URL 에 남기지 않는다(기본값). 양식 관리에서도 값은 들고 다녀
     // 탭을 왕복해도 고른 날짜가 풀리지 않게 한다.
-    if (next.date !== toIsoDate(todayWorkLogDate())) params.set('date', next.date)
+    if (next.date !== toIsoDate(todayWorkLogDate()))
+      params.set('date', next.date)
     if (next.page > 1) params.set('page', String(next.page))
     setSearchParams(params, { replace: true })
   }
@@ -171,11 +171,10 @@ export function WorkLogListPage() {
         {tab === 'logs' && <DateFilter value={date} onChange={setDate} />}
 
         <TableArea>
-          {isPending ? (
-            <WorkLogTableSkeleton tab={tab} />
-          ) : tab === 'logs' ? (
+          {tab === 'logs' ? (
             <WorkLogTable
               logs={logs}
+              loading={isPending}
               onRowClick={(id) =>
                 navigate(`/work-logs/${id}`, {
                   state: { listSearch: location.search },
@@ -190,6 +189,7 @@ export function WorkLogListPage() {
           ) : (
             <WorkLogFormTable
               forms={forms}
+              loading={isPending}
               onRowClick={(id) =>
                 navigate(`/work-logs/forms/${id}`, {
                   state: { listSearch: location.search },

@@ -23,6 +23,8 @@ interface ResourceTableProps {
   pagination?: DataTablePagination
   emptyLabel?: string
   emptyMinHeight?: number
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Resource → DataTable row 매핑. Figma `resource / 자료 목록 테이블`(yot 246:12236):
@@ -40,6 +42,7 @@ export function ResourceTable({
   pagination,
   emptyLabel,
   emptyMinHeight,
+  loading,
 }: ResourceTableProps) {
   const columns: DataTableColumn[] = [
     { key: 'pill', header: '분류', width: 240, variant: 'pill' },
@@ -83,6 +86,7 @@ export function ResourceTable({
       pagination={pagination}
       emptyLabel={emptyLabel}
       emptyMinHeight={emptyMinHeight}
+      loading={loading}
     />
   )
 }

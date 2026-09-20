@@ -19,7 +19,6 @@ import {
 import { RowActionMenu } from '@/features/row-actions'
 import { CategoryTabs, Toast } from '@/shared/ui'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
-import { TaskReportListSkeleton } from './ui/TaskReportListSkeleton'
 
 // 한 페이지 10행(2026-09-13 개발자 결정). Figma 표 높이(행 100 × 3) 기준 3행을 대체한다.
 const TABLE_PAGE_SIZE = 10
@@ -29,7 +28,6 @@ interface ReviewTab {
   reviewStatus: TaskReportReviewStatus
   count: number
 }
-
 
 // URL 에 남기지 않을 기본값(첫 탭·첫 페이지).
 const listParamDefaults = { status: 'PENDING', page: '1' } as const
@@ -103,7 +101,10 @@ export function TaskReportListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, page, pageCount])
 
-  const tabLabels = tabs.map(({ label, count }) => `${label} ${count}`)
+  // 조회 전에는 건수를 모르므로 `0` 을 보이지 않고 라벨만 둔다.
+  const tabLabels = tabs.map(({ label, count }) =>
+    isPending ? label : `${label} ${count}`,
+  )
   const activeLabel =
     tabLabels[tabs.findIndex((tab) => tab.reviewStatus === activeStatus)]
 
@@ -159,16 +160,6 @@ export function TaskReportListPage() {
     )
   }
 
-  if (isPending) {
-    return (
-      <Page>
-        <Content>
-          <TaskReportListSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   if (isError) {
     return (
       <StatePage>
@@ -194,6 +185,7 @@ export function TaskReportListPage() {
         />
 
         <TaskReportTable
+          loading={isPending}
           reports={reports}
           onRowClick={(id) =>
             // 상세의 `returnTo` 규약에 맞춘다 — 조회 조건까지 담아 그 자리로 돌아온다.

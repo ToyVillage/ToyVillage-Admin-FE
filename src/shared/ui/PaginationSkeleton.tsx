@@ -1,17 +1,18 @@
 import styled from '@emotion/styled'
+import chevronIcon from './assets/chevron-left.svg'
 import { Skeleton } from './Skeleton'
 
 interface PaginationSkeletonProps {
   placement?: 'inside' | 'outside'
 }
 
-// Figma 스켈레톤 `Frame 240`(224x32) — `DataTable` 페이지네이션 자리.
+// Figma 스켈레톤 `Frame 240`(224x32) — 화살표는 실제 아이콘이고 번호 자리만 막대다.
 export function PaginationSkeleton({
   placement = 'inside',
 }: PaginationSkeletonProps) {
   return (
     <Pagination $placement={placement}>
-      <Skeleton width={20} height={20} />
+      <ChevronIcon src={chevronIcon} alt="" aria-hidden="true" />
       <Pages>
         <PageCell>
           <Skeleton width={12} height={16} />
@@ -23,10 +24,17 @@ export function PaginationSkeleton({
           <Skeleton width={12} height={16} />
         </PageCell>
       </Pages>
-      <Skeleton width={20} height={20} />
+      <ChevronIcon src={chevronIcon} alt="" aria-hidden="true" $flip />
     </Pagination>
   )
 }
+
+const ChevronIcon = styled.img<{ $flip?: boolean }>`
+  width: 20px;
+  height: 20px;
+  opacity: 0.4;
+  transform: ${({ $flip }) => ($flip ? 'rotate(180deg)' : 'none')};
+`
 
 const Pagination = styled.div<{ $placement: 'inside' | 'outside' }>`
   display: flex;

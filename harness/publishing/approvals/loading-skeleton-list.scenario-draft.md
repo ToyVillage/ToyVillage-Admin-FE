@@ -1,6 +1,6 @@
 # Scenario Draft — loading-skeleton-list
 
-출처: `harness/publishing/specs/loading-skeleton-list.spec.md` (yot `2021:24413`, 2026-09-18)
+출처: `harness/publishing/specs/loading-skeleton-list.spec.md` (yot `2021:24413`, Figma 재작업분 2026-09-20)
 상태: draft — 개발자 승인 대기
 
 ## 핵심 시나리오
@@ -69,6 +69,16 @@
 - Given: `/notices/list` 조회 응답을 지연시켰고 스켈레톤이 보인다
 - When: 응답이 도착한다
 - Then: 스켈레톤이 사라지고 공지 행이 보인다
+
+### S16: 목록 조회 중에도 정적 UI는 실제 UI로 보인다
+- Given: 공지사항 목록 조회 응답을 지연시켰다
+- When: `/notices/list` 에 진입
+- Then: 제목 `공지사항`, `공지 생성하기` 버튼, `전체` 탭, 표 헤더 `분류`·`제목`·`날짜`, 검색 입력(placeholder `제목을 입력해주세요`)이 모두 보인다
+
+### S17: 목록 조회 중 고정 상태 탭 라벨은 실제 UI로 보인다
+- Given: 업무관리 목록 조회 응답을 지연시켰다
+- When: `/tasks` 에 진입
+- Then: 고정 상태 탭 라벨이 막대가 아니라 글자로 보인다
 
 ## 엣지 케이스
 

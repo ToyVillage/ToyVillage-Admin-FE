@@ -22,6 +22,8 @@ interface NoticeTableProps {
   sort?: DataTableSort
   pagination?: DataTablePagination
   emptyLabel?: string
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Notice → DataTable row 매핑. Figma `notification / 목록 리스트`(yot 218:12028):
@@ -38,11 +40,30 @@ export function NoticeTable({
   sort,
   pagination,
   emptyLabel,
+  loading,
 }: NoticeTableProps) {
   const columns: DataTableColumn[] = [
-    { key: 'pill', header: '분류', width: 240, variant: 'pill' },
-    { key: 'title', header: '제목', width: 760, variant: 'title' },
-    { key: 'date', header: '날짜', width: 240, variant: 'date' },
+    {
+      key: 'pill',
+      header: '분류',
+      width: 240,
+      variant: 'pill',
+      loadingBar: 38,
+    },
+    {
+      key: 'title',
+      header: '제목',
+      width: 760,
+      variant: 'title',
+      loadingBar: 132,
+    },
+    {
+      key: 'date',
+      header: '날짜',
+      width: 240,
+      variant: 'date',
+      loadingBar: 88,
+    },
     {
       key: 'kebab',
       header: '',
@@ -80,6 +101,7 @@ export function NoticeTable({
       sort={sort}
       pagination={pagination}
       emptyLabel={emptyLabel}
+      loading={loading}
     />
   )
 }

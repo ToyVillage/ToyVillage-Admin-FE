@@ -57,7 +57,13 @@ export function EditObservationPage() {
     individualQuery.isPending ||
     speciesQuery.isPending
   ) {
-    return <FormPageSkeleton cards={3} />
+    return (
+      <FormPageSkeleton
+        backTo={detailPath}
+        title="관찰 수정"
+        labels={['제목', '날짜', '관찰자', '관찰사항']}
+      />
+    )
   }
 
   if (

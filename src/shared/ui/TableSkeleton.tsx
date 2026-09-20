@@ -10,7 +10,9 @@ type ThemeColorKey = keyof AppTheme['colors']
 export interface TableSkeletonColumn {
   /** 열 폭(px). 생략하면 남은 폭을 채운다. */
   width?: number
-  /** 헤더 라벨 막대 폭(px). 0 이면 비운다. */
+  /** 헤더 라벨. 조회 중에도 실제 글자로 보인다. */
+  header?: string
+  /** `header` 가 없을 때 그릴 헤더 막대 폭(px). 0 이면 비운다. */
   headerBar?: number
   /** 본문 셀 막대 폭(px). */
   bar: number
@@ -27,6 +29,8 @@ interface TableSkeletonProps {
   appearance?: DataTableAppearance
   /** 검색·정렬 줄 표시 여부. */
   search?: boolean
+  /** 검색 입력 placeholder. 조회 중에도 실제 검색바로 보인다. */
+  searchPlaceholder?: string
   pagination?: boolean
 }
 
@@ -36,6 +40,7 @@ export function TableSkeleton({
   rows,
   appearance,
   search = false,
+  searchPlaceholder,
   pagination = false,
 }: TableSkeletonProps) {
   const look = { ...dataTableDefaultAppearance, ...appearance }
@@ -54,8 +59,17 @@ export function TableSkeleton({
               $paddingX={column.paddingX}
               $align={column.align}
             >
-              {column.headerBar !== 0 && (
-                <Skeleton width={column.headerBar ?? 35} height={18} />
+              {column.header != null ? (
+                <HeadLabel
+                  $fontSize={look.headerFontSize}
+                  $fontWeight={look.headerFontWeight}
+                >
+                  {column.header}
+                </HeadLabel>
+              ) : (
+                column.headerBar !== 0 && (
+                  <Skeleton width={column.headerBar ?? 35} height={18} />
+                )
               )}
             </Cell>
           ))}
@@ -64,7 +78,11 @@ export function TableSkeleton({
         {search && (
           <ControlRow>
             <ControlBar>
-              <Skeleton width={20} height={20} />
+              {searchPlaceholder != null ? (
+                <SearchPlaceholder>{searchPlaceholder}</SearchPlaceholder>
+              ) : (
+                <Skeleton width={20} height={20} />
+              )}
               <Skeleton width={22} height={20} />
             </ControlBar>
           </ControlRow>
@@ -116,6 +134,20 @@ const Header = styled.div<{ $height: number }>`
   min-height: ${({ $height }) => $height}px;
   border-radius: 20px 20px 0 0;
   background: ${({ theme }) => theme.colors.tableHeaderStrong};
+`
+
+// 실제 표 헤더(`DataTable`)와 같은 글자.
+const HeadLabel = styled.span<{ $fontSize: number; $fontWeight: number }>`
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: ${({ $fontSize }) => $fontSize}px;
+  font-weight: ${({ $fontWeight }) => $fontWeight};
+  line-height: 1.2;
+`
+
+const SearchPlaceholder = styled.span`
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 20px;
+  line-height: 1.2;
 `
 
 const ControlRow = styled.div`

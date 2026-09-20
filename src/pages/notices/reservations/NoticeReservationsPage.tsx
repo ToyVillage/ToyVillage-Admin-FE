@@ -11,7 +11,6 @@ import {
 } from '@/entities/reservation'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
-import { ReservationListSkeleton } from './ui/ReservationListSkeleton'
 
 // 한 페이지에 노출할 예약 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
 const PAGE_SIZE = 10
@@ -55,7 +54,8 @@ export function NoticeReservationsPage() {
     values.status === 'approved' || values.status === 'rejected'
       ? values.status
       : 'pending'
-  const sort: ReservationSort = values.sort === 'reserve' ? 'reserve' : 'consult'
+  const sort: ReservationSort =
+    values.sort === 'reserve' ? 'reserve' : 'consult'
   const page = readPageParam(new URLSearchParams({ page: values.page }))
   const debouncedKeyword = values.keyword
 
@@ -81,7 +81,11 @@ export function NoticeReservationsPage() {
 
   // 서버 사이드 조회: 상태 필터·검색·정렬·페이지를 파라미터로 전달한다.
   const { data, isPending, isError } = useQuery({
-    queryKey: ['reservations', 'list', { status: active, title: debouncedKeyword, sort, page }],
+    queryKey: [
+      'reservations',
+      'list',
+      { status: active, title: debouncedKeyword, sort, page },
+    ],
     queryFn: () =>
       getAdminReservations({
         status: reservationStatusToCode[active],
@@ -109,16 +113,6 @@ export function NoticeReservationsPage() {
     update({ status: next, keyword: '', page: '1' })
   }
 
-  if (isPending) {
-    return (
-      <Page>
-        <Content>
-          <ReservationListSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   return (
     <Page>
       <Content>
@@ -138,6 +132,7 @@ export function NoticeReservationsPage() {
             counts={counts}
             active={active}
             onSelect={handleStatusSelect}
+            loading={isPending}
           />
           <CreateButton
             type="button"
@@ -148,6 +143,7 @@ export function NoticeReservationsPage() {
         </StatusRow>
 
         <ReservationTable
+          loading={isPending}
           reservations={pageReservations}
           onRowClick={(id) =>
             navigate(`/notices/reservations/${id}`, {
@@ -168,7 +164,9 @@ export function NoticeReservationsPage() {
           }}
           pagination={{ page: currentPage, pageCount, onChange: setPage }}
           emptyLabel={
-            debouncedKeyword ? '검색결과가 없습니다' : '아직 단체예약이 없습니다'
+            debouncedKeyword
+              ? '검색결과가 없습니다'
+              : '아직 단체예약이 없습니다'
           }
         />
       </Content>

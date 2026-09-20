@@ -21,6 +21,8 @@ interface ReservationTableProps {
   sort?: DataTableSort
   pagination?: DataTablePagination
   emptyLabel?: string
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 const columns: DataTableColumn[] = [
@@ -51,6 +53,7 @@ export function ReservationTable({
   sort,
   pagination,
   emptyLabel,
+  loading,
 }: ReservationTableProps) {
   const rows: DataTableRow[] = reservations.map((reservation) => ({
     id: reservation.id,
@@ -85,6 +88,7 @@ export function ReservationTable({
       pagination={pagination}
       emptyLabel={emptyLabel}
       emptyMinHeight={320}
+      loading={loading}
     />
   )
 }

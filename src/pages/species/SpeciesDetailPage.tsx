@@ -198,21 +198,25 @@ export function SpeciesDetailPage() {
     return (
       <Page>
         <Content>
+          <BackToSpeciesList to={speciesListPath} />
           <ProfileDetailSkeleton
-            infoRows={3}
+            infoRows={[
+              ['국명', '학명'],
+              ['분류군', '법정지정분류'],
+              ['영문명', '세부분류'],
+            ]}
+            sectionTitle="개체"
+            sectionAction={
+              <LinkButton to={`/species/${speciesId}/individuals/create`}>
+                개체 등록하기
+              </LinkButton>
+            }
             search
+            searchPlaceholder="개체 이름을 입력해주세요"
             columns={[
-              { width: 520, bar: 60, barHeight: 18 },
-              { width: 300, bar: 56, barHeight: 32 },
-              { bar: 60, barHeight: 18 },
-              {
-                width: 80,
-                bar: 8,
-                barHeight: 32,
-                headerBar: 0,
-                paddingX: 0,
-                align: 'center',
-              },
+              { width: 520, header: '이름', bar: 60, barHeight: 18 },
+              { width: 300, header: '성별', bar: 56, barHeight: 32 },
+              { header: '출생연도', bar: 60, barHeight: 18 },
             ]}
           />
         </Content>

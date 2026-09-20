@@ -226,21 +226,18 @@ export function IndividualDetailPage() {
     return (
       <Page>
         <Content>
+          <BackLink
+            to={`/species/${speciesId}${listState?.individualListSearch ?? ''}`}
+            state={{ speciesListSearch: listState?.speciesListSearch }}
+          />
           <ProfileDetailSkeleton
-            infoRows={2}
+            infoRows={[['출생연도', '기타정보']]}
+            sectionTitle="관찰 및 특이사항"
             columns={[
-              { width: 200, bar: 90, barHeight: 18 },
-              { width: 180, bar: 40, barHeight: 18 },
-              { bar: 300, barHeight: 18 },
-              { width: 240, bar: 150, barHeight: 32 },
-              {
-                width: 80,
-                bar: 8,
-                barHeight: 32,
-                headerBar: 0,
-                paddingX: 0,
-                align: 'center',
-              },
+              { width: 200, header: '날짜', bar: 90, barHeight: 18 },
+              { width: 180, header: '관찰자', bar: 40, barHeight: 18 },
+              { header: '제목', bar: 300, barHeight: 18 },
+              { width: 240, header: '첨부', bar: 150, barHeight: 32 },
             ]}
           />
         </Content>
@@ -447,4 +444,3 @@ const ObservationSection = styled.section`
 `
 
 // Figma `link / 먹이 급여 기록`(949:26307) 245×52.
-

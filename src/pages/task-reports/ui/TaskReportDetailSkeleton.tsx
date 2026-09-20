@@ -1,21 +1,20 @@
 import styled from '@emotion/styled'
 import {
   AttachmentChipsSkeleton,
-  BackLinkSkeleton,
   Skeleton,
   SkeletonCard,
   SkeletonStatus,
 } from '@/shared/ui'
 
-// Figma `업무보고 상세 (스켈레톤)`(2021:20919).
+// Figma `업무보고 상세 (스켈레톤)`(2238:20288) — 뒤로가기·요약행 라벨·`첨부자료`·심사 버튼은
+// 실제 UI 이고 서버가 주는 값만 막대다. 뒤로가기는 page 가 그린다.
 export function TaskReportDetailSkeleton() {
   return (
     <SkeletonStatus>
-      <BackLinkSkeleton />
       <Meta>
-        <Skeleton width={70} height={20} />
+        <MetaLabel>우선순위:</MetaLabel>
         <Skeleton width={40} height={40} />
-        <Skeleton width={30} height={20} />
+        <MetaLabel>상태:</MetaLabel>
         <Skeleton width={80} height={40} />
         <Skeleton width={130} height={20} />
         <Skeleton width={220} height={20} />
@@ -26,19 +25,37 @@ export function TaskReportDetailSkeleton() {
           <Skeleton width="80%" height={20} />
         </SkeletonCard>
         <SkeletonCard>
-          <Skeleton width={70} height={18} />
+          <CardTitle>첨부자료</CardTitle>
           <AttachmentChipsSkeleton />
         </SkeletonCard>
       </Cards>
       <Actions>
-        <Outline>
-          <Skeleton width={76} height={18} />
-        </Outline>
-        <Skeleton width={120} height={60} radius={12} />
+        <RejectButton type="button" disabled>
+          반려하기
+        </RejectButton>
+        <ApproveButton type="button" disabled>
+          승인하기
+        </ApproveButton>
       </Actions>
     </SkeletonStatus>
   )
 }
+
+// 실제 요약행(`TaskReportMetaRow`)과 같은 라벨.
+const MetaLabel = styled.span`
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.2;
+`
+
+const CardTitle = styled.h2`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+`
 
 const Meta = styled.div`
   display: flex;
@@ -61,11 +78,23 @@ const Actions = styled.div`
   margin-top: 64px;
 `
 
-const Outline = styled.div`
-  display: flex;
+// 실제 심사 버튼(`TaskReportReviewActions`)과 같은 모양. 조회 중에는 누를 수 없다.
+const ReviewButton = styled.button`
   height: 60px;
-  align-items: center;
-  padding: 0 24px;
-  border: 1px solid ${({ theme }) => theme.colors.dialogBorder};
+  padding: 0 32px;
   border-radius: 12px;
+  font-size: 20px;
+  font-weight: 600;
+`
+
+const RejectButton = styled(ReviewButton)`
+  border: 1px solid ${({ theme }) => theme.colors.danger};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.danger};
+`
+
+const ApproveButton = styled(ReviewButton)`
+  border: 0;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
 `
