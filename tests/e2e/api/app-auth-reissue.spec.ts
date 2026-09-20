@@ -144,8 +144,45 @@ test('S7: 재시도한 요청이 또 401 이면 재발급을 반복하지 않는
   expect(await readStorage(page, 'accessToken')).toBeNull()
 })
 
-test('S8: 403 은 재발급 없이 즉시 세션을 비운다', async ({ page }) => {
-  const reissue = trackReissue(page, { status: 200, body: {} })
+// 서버는 만료된 토큰에 403(빈 본문)을 준다. 그래서 403 도 재발급을 시도한다.
+test('S8: 403 이면 재발급 후 원 요청을 재시도한다', async ({ page }) => {
+  const reissue = trackReissue(page, {
+    status: 200,
+    body: { access_token: 'new-access', refresh_token: 'new-refresh' },
+  })
+  let calls = 0
+  await page.route(noticeListApiPath, async (route) => {
+    calls += 1
+    if (calls === 1) {
+      await route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify(errorBody(403, '만료된 토큰입니다.')),
+      })
+      return
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    })
+  })
+
+  await page.goto('/notices/list')
+
+  // 재발급 → 재시도가 끝날 때까지 기다린다(URL 은 진입 때부터 같아 기준이 못 된다).
+  await expect.poll(() => reissue.count()).toBe(1)
+  await expect.poll(() => readStorage(page, 'accessToken')).toBe('new-access')
+  await expect(page).toHaveURL(/\/notices\/list$/)
+  // 재시도 요청은 토큰 저장 직후에 나가므로 기록될 때까지 기다린다.
+  await expect.poll(() => calls).toBeGreaterThan(1)
+})
+
+test('S8b: 재발급해도 다시 403 이면 세션을 비운다', async ({ page }) => {
+  const reissue = trackReissue(page, {
+    status: 200,
+    body: { access_token: 'new-access', refresh_token: 'new-refresh' },
+  })
   await page.route(noticeListApiPath, async (route) => {
     await route.fulfill({
       status: 403,
@@ -157,7 +194,7 @@ test('S8: 403 은 재발급 없이 즉시 세션을 비운다', async ({ page })
   await page.goto('/notices/list')
 
   await expect(page).toHaveURL(/\/login$/)
-  expect(reissue.count()).toBe(0)
+  expect(reissue.count()).toBe(1)
   expect(await readStorage(page, 'accessToken')).toBeNull()
   expect(await readStorage(page, 'refreshToken')).toBeNull()
 })

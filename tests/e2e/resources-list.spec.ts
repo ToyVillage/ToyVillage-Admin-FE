@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { mockDocumentApi } from './support/document-api'
 
-// 승인된 시나리오(resources-list.approved.json: S1~S7)를 변환한 것.
+// 승인된 시나리오(resources-list.approved.json: S1~S9)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 자료실 API 는 page.route mock(`support/document-api`)을 쓴다. 실제 서버는 호출하지 않는다.
 
@@ -62,4 +62,33 @@ test('S7: 검색 시 1페이지로 리셋', async ({ page }) => {
   await expect(page.getByTestId('resource-row').first()).toContainText(
     '근무지침요령 1',
   )
+})
+
+test('S8: 행 케밥에 수정·삭제가 있고 수정으로 이동한다', async ({ page }) => {
+  await page.goto('/notices/resources')
+  await page.getByRole('button', { name: '근무지침요령 1 관리 메뉴' }).click()
+
+  await expect(page.getByRole('menuitem', { name: '수정' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: '삭제' })).toBeVisible()
+
+  await page.getByRole('menuitem', { name: '수정' }).click()
+  await expect(page).toHaveURL(/\/notices\/resources\/1\/edit$/)
+})
+
+test('S9: 오래된순 정렬 → ASC 로 다시 조회한다', async ({ page }) => {
+  const orders: (string | null)[] = []
+  await page.route(/\/documents(\?.*)?$/, async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback()
+    orders.push(new URL(route.request().url()).searchParams.get('orderDirection'))
+    await route.fallback()
+  })
+
+  await page.goto('/notices/resources')
+  await expect(page.getByTestId('resource-row').first()).toBeVisible()
+
+  await page.getByRole('button', { name: '자료 날짜 정렬' }).click()
+  await page.getByRole('menuitemradio', { name: '오래된순' }).click()
+
+  await expect.poll(() => orders.at(-1)).toBe('ASC')
+  await expect(page).toHaveURL(/sort=oldest/)
 })

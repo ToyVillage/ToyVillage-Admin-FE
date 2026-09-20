@@ -1,6 +1,6 @@
 {
   "feature": "resource-edit",
-  "approvedAt": "2026-09-19T16:43:25.172Z",
+  "approvedAt": "2026-09-20T04:48:02.669Z",
   "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
@@ -13,8 +13,9 @@
     "S8",
     "S9",
     "S10",
-    "S11"
+    "S11",
+    "S12"
   ],
-  "scenarioHash": "2fc38c42c7aed578c8d3c679a126b13c8fdd4229a0f1923673a826225223167f",
-  "e2eHash": "99a0f7316b083a4605c4c2e883b25be47aa81bd936d80e3c192fccb15e32141c"
+  "scenarioHash": "88be3af8427bb49fc78123818df739badf4b44244e4e6f040c145c0a9fb058b1",
+  "e2eHash": "3fdab86965257ca36bdda2a6959018b46a3c916579cd4946da5c8eea0f10ebf5"
 }
