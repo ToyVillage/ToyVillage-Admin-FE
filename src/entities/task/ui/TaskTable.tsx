@@ -24,6 +24,8 @@ interface TaskTableProps {
    * entities 인 이 표는 렌더만 위임받는다. 미지정 시 액션 컬럼을 만들지 않는다.
    */
   renderRowAction?: (task: TaskListItem) => ReactNode
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 interface TaskTableRow extends DataTableRow {
@@ -68,7 +70,12 @@ const baseColumns: DataTableColumn[] = [
       )
     },
   },
-  { key: 'title', header: '제목', width: 245, render: renderPlainCell('title') },
+  {
+    key: 'title',
+    header: '제목',
+    width: 245,
+    render: renderPlainCell('title'),
+  },
   {
     key: 'status',
     header: '상태',
@@ -106,6 +113,7 @@ export function TaskTable({
   emptyLabel,
   today,
   renderRowAction,
+  loading,
 }: TaskTableProps) {
   const baseline = today ?? todayString()
   const taskById = new Map(tasks.map((task) => [task.id, task]))
@@ -130,24 +138,23 @@ export function TaskTable({
 
   return (
     <DataTable
-      rows={tasks.map(
-        (task): TaskTableRow => ({
-          id: task.id,
-          assigneeName: task.assigneeName,
-          assigneeExtraCount: task.assigneeExtraCount,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          dueDate: task.dueDate,
-          overdue: task.dueDate < baseline,
-        }),
-      )}
+      rows={tasks.map((task): TaskTableRow => ({
+        id: task.id,
+        assigneeName: task.assigneeName,
+        assigneeExtraCount: task.assigneeExtraCount,
+        title: task.title,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        overdue: task.dueDate < baseline,
+      }))}
       columns={columns}
       onRowClick={onRowClick}
       rowTestId="task-row"
       pagination={pagination}
       emptyLabel={emptyLabel}
       appearance={appearance}
+      loading={loading}
     />
   )
 }

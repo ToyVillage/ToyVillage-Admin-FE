@@ -21,6 +21,8 @@ interface ObservationTableProps {
   /** 행 케밥. 메뉴 열림·이동·삭제는 페이지가 소유한다. */
   renderRowAction: (observation: ObservationListItem) => ReactNode
   emptyLabel: ReactNode
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 interface ObservationTableRow extends DataTableRow {
@@ -46,6 +48,7 @@ export function ObservationTable({
   renderAttachments,
   renderRowAction,
   emptyLabel,
+  loading,
 }: ObservationTableProps) {
   const observationById = new Map(
     rows.map((observation) => [observation.id, observation]),
@@ -121,6 +124,7 @@ export function ObservationTable({
           pagination={{ page, pageCount, onChange: onPageChange }}
           emptyLabel={emptyLabel}
           appearance={appearance}
+          loading={loading}
         />
       </TableFrame>
     </TableScroll>

@@ -13,6 +13,8 @@ interface ResourceTableProps {
   pagination?: DataTablePagination
   emptyLabel?: string
   emptyMinHeight?: number
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Resource → DataTable row 매핑. 표현은 shared/ui/DataTable 재사용.
@@ -23,6 +25,7 @@ export function ResourceTable({
   pagination,
   emptyLabel,
   emptyMinHeight,
+  loading,
 }: ResourceTableProps) {
   return (
     <DataTable
@@ -38,6 +41,7 @@ export function ResourceTable({
       pagination={pagination}
       emptyLabel={emptyLabel}
       emptyMinHeight={emptyMinHeight}
+      loading={loading}
     />
   )
 }

@@ -1,46 +1,53 @@
 import styled from '@emotion/styled'
-import { Skeleton, SkeletonStatus, TableSkeleton } from '@/shared/ui'
+import { FeedHistoryTable } from '@/entities/feed'
+import {
+  FieldSkeleton,
+  SectionHeader,
+  ShortcutButton,
+  Skeleton,
+  SkeletonStatus,
+} from '@/shared/ui'
 
-// Figma `먹이 급여 상세 (스켈레톤)`(2021:22217). 뒤로가기는 페이지가 그린다.
+// Figma `먹이 급여 상세 (스켈레톤)`(2238:20833) — 뒤로가기·필드 라벨·`급여 이력`·이력 표 헤더·
+// `관찰 및 특이사항 보러가기` 는 실제 UI 이고 서버가 주는 값만 막대다. 뒤로가기는 page 가 그린다.
 export function FeedDetailSkeleton() {
   return (
     <SkeletonStatus>
       <Record>
         <Skeleton width={180} height={180} radius={12} />
         <Info>
-          <Row>
+          <Titles>
             <Skeleton width={90} height={28} />
             <Skeleton width={90} height={28} />
-          </Row>
-          <Row>
-            <Skeleton width={60} height={18} />
-            <Skeleton width={180} height={18} />
-          </Row>
-          <Row>
-            <Skeleton width={60} height={18} />
-            <Skeleton width={40} height={18} />
-          </Row>
-          <Row>
-            <Skeleton width={60} height={18} />
-            <Skeleton width={320} height={18} />
-          </Row>
+          </Titles>
+          <Fields>
+            <Row>
+              <FieldSkeleton label="급여날짜" value={180} />
+              <FieldSkeleton label="먹이 종류" value={40} />
+            </Row>
+            <Row>
+              <FieldSkeleton label="급여시간" value={90} />
+              <FieldSkeleton label="급여량" value={40} />
+            </Row>
+            <Row>
+              <FieldSkeleton label="급여자" value={70} />
+              <FieldSkeleton label="특이사항" value={320} />
+            </Row>
+          </Fields>
         </Info>
-        <Skeleton width={260} height={56} radius={12} />
+        <Actions>
+          <ShortcutButton disabled>관찰 및 특이사항 보러가기</ShortcutButton>
+        </Actions>
       </Record>
-      <SectionHeader>
-        <Skeleton width={120} height={24} />
-        <Skeleton width={30} height={20} />
-      </SectionHeader>
+
+      <SectionHeader title="급여 이력" />
+
       <TableScroll>
-        <TableSkeleton
-          appearance={{ offsetTop: 20, dividerColor: 'textGuide' }}
-          columns={[
-            { width: 280, bar: 170, barHeight: 18 },
-            { width: 200, bar: 40, barHeight: 18 },
-            { width: 260, bar: 110, barHeight: 18 },
-            { bar: 360, barHeight: 18 },
-          ]}
-          rows={3}
+        <FeedHistoryTable
+          records={[]}
+          emptyLabel=""
+          onSelect={() => {}}
+          loading
         />
       </TableScroll>
     </SkeletonStatus>
@@ -62,6 +69,23 @@ const Record = styled.div`
   }
 `
 
+const Titles = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`
+
+const Fields = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`
+
+const Actions = styled.div`
+  display: flex;
+  align-items: flex-start;
+`
+
 const Info = styled.div`
   display: flex;
   min-width: 0;
@@ -80,11 +104,4 @@ const Row = styled.div`
 const TableScroll = styled.div`
   width: 100%;
   overflow-x: auto;
-`
-
-const SectionHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 60px;
 `

@@ -1,16 +1,17 @@
 import styled from '@emotion/styled'
 import { Skeleton, SkeletonCard, SkeletonStatus } from '@/shared/ui'
 
-const FIELDS = 2
+const FIELDS = ['영업 시작', '영업 종료']
 
-// Figma `운영시간 수정 (스켈레톤)`(2021:22659) — 영업 시작·종료 카드와 저장 버튼 자리.
+// Figma `운영시간 수정 (스켈레톤)`(2238:21904) — 카드 라벨·오전/오후·`저장하기` 는 실제 UI 이고
+// 서버가 주는 시각만 막대다.
 export function OperatingHoursFormSkeleton() {
   return (
     <SkeletonStatus>
       <Fields>
-        {Array.from({ length: FIELDS }, (_, index) => (
-          <SkeletonCard key={index}>
-            <Skeleton width={70} height={18} />
+        {FIELDS.map((label) => (
+          <SkeletonCard key={label}>
+            <FieldLabel>{label}</FieldLabel>
             <Inputs>
               <Box>
                 <Skeleton width={36} height={18} />
@@ -18,20 +19,49 @@ export function OperatingHoursFormSkeleton() {
               <Box>
                 <Skeleton width={36} height={18} />
               </Box>
-              <Stepper>
-                <Skeleton width={14} height={10} />
-                <Skeleton width={14} height={10} />
-              </Stepper>
+              <Meridiem>
+                <MeridiemOption>오전</MeridiemOption>
+                <MeridiemOption>오후</MeridiemOption>
+              </Meridiem>
             </Inputs>
           </SkeletonCard>
         ))}
       </Fields>
       <Footer>
-        <Skeleton width={120} height={56} radius={12} />
+        <SaveButton type="button" disabled>
+          저장하기
+        </SaveButton>
       </Footer>
     </SkeletonStatus>
   )
 }
+
+// 실제 `OperatingTimeField` 와 같은 라벨·오전/오후 칸.
+const FieldLabel = styled.span`
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: underline;
+`
+
+const MeridiemOption = styled.span`
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+`
+
+const SaveButton = styled.button`
+  height: 56px;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
+  font-size: 18px;
+  font-weight: 600;
+`
 
 const Fields = styled.div`
   display: grid;
@@ -59,7 +89,7 @@ const Box = styled.div`
   background: ${({ theme }) => theme.colors.background};
 `
 
-const Stepper = styled.div`
+const Meridiem = styled.div`
   display: flex;
   width: 44px;
   flex-direction: column;

@@ -16,8 +16,12 @@ import {
   type TeamMember,
 } from '@/entities/team'
 import { AddTeamDialog, AddTeamMemberDialog } from '@/features/team-settings'
-import { DeleteConfirmationDialog, Toast, type ToastVariant } from '@/shared/ui'
-import { TeamSettingsSkeleton } from './ui/TeamSettingsSkeleton'
+import {
+  DeleteConfirmationDialog,
+  SkeletonStatus,
+  Toast,
+  type ToastVariant,
+} from '@/shared/ui'
 
 type OpenDialog = 'add-team' | 'add-member' | 'delete-team' | null
 
@@ -177,7 +181,9 @@ export function TeamSettingsPage() {
   // 팀원 추가 모달에는 그 팀에 아직 없는 직원만 올린다.
   const memberCandidates: TeamMember[] = selectedTeam
     ? employees
-        .filter((employee) => !members.some((member) => member.id === employee.id))
+        .filter(
+          (employee) => !members.some((member) => member.id === employee.id),
+        )
         .map((employee) => ({
           id: employee.id,
           name: employee.name,
@@ -196,16 +202,6 @@ export function TeamSettingsPage() {
     )
   }
 
-  if (teamsQuery.isPending) {
-    return (
-      <Page>
-        <Content>
-          <TeamSettingsSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   return (
     <Page>
       <Content>
@@ -220,7 +216,22 @@ export function TeamSettingsPage() {
             selectedId={selectedTeam?.id ?? null}
             onSelect={setSelectedId}
             onAddClick={() => setDialog('add-team')}
+            loading={teamsQuery.isPending}
           />
+
+          {teamsQuery.isPending && (
+            <SkeletonStatus>
+              <TeamDetailPanel
+                team={null}
+                members={[]}
+                membersPending
+                onRename={() => {}}
+                onDeleteClick={() => {}}
+                onAddMemberClick={() => {}}
+                onRemoveMember={() => {}}
+              />
+            </SkeletonStatus>
+          )}
 
           {selectedTeam && membersQuery.isError && (
             <PanelStatus role="alert">

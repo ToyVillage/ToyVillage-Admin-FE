@@ -20,6 +20,8 @@ interface IndividualTableProps {
   emptyLabel?: ReactNode
   /** 행 우측 케밥 메뉴. 메뉴 동작(이동·삭제)은 페이지가 소유한다. */
   renderRowAction: (individual: IndividualListItem) => ReactNode
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 interface IndividualTableRow extends DataTableRow {
@@ -68,6 +70,7 @@ export function IndividualTable({
   pagination,
   emptyLabel,
   renderRowAction,
+  loading,
 }: IndividualTableProps) {
   const individualById = new Map(
     individuals.map((individual) => [individual.id, individual]),
@@ -106,6 +109,7 @@ export function IndividualTable({
           pagination={pagination}
           emptyLabel={emptyLabel}
           appearance={appearance}
+          loading={loading}
         />
       </TableFrame>
     </TableScroll>

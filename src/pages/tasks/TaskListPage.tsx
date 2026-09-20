@@ -17,7 +17,6 @@ import {
   type ToastVariant,
 } from '@/shared/ui'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
-import { TaskListSkeleton } from './ui/TaskListSkeleton'
 
 const TABLE_PAGE_SIZE = 10
 
@@ -87,11 +86,7 @@ export function TaskListPage() {
   }, [])
 
   const status = tabStatuses[active]
-  const {
-    data,
-    isPending,
-    isError,
-  } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: ['tasks', 'list', { page, size: TABLE_PAGE_SIZE, status }],
     queryFn: () => getTasks({ page: page - 1, size: TABLE_PAGE_SIZE, status }),
     placeholderData: (previousData) => previousData,
@@ -153,16 +148,6 @@ export function TaskListPage() {
     })
   }
 
-  if (isPending) {
-    return (
-      <Page>
-        <Content>
-          <TaskListSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   if (isError) {
     return (
       <StatePage>
@@ -187,13 +172,18 @@ export function TaskListPage() {
         <CategoryTabs categories={tabs} active={active} onSelect={setActive} />
 
         <TaskTable
+          loading={isPending}
           tasks={tasks}
           onRowClick={(id) =>
             navigate(`/tasks/${id}`, {
               state: { listSearch: location.search },
             })
           }
-          pagination={{ page: Math.min(page, pageCount), pageCount, onChange: setPage }}
+          pagination={{
+            page: Math.min(page, pageCount),
+            pageCount,
+            onChange: setPage,
+          }}
           emptyLabel="등록된 업무가 없습니다."
           renderRowAction={(task) => (
             <RowActionMenu

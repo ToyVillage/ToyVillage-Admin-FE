@@ -95,6 +95,7 @@ export function ObservationDetailPage() {
     return (
       <Page>
         <Content>
+          <BackLink to={individualPath} />
           <ObservationDetailSkeleton />
         </Content>
       </Page>

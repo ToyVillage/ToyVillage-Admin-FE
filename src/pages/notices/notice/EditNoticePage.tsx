@@ -79,6 +79,7 @@ export function EditNoticePage() {
     return (
       <Page>
         <Content>
+          <ListBackLink to="/notices/list" />
           <NoticeEditSkeleton />
         </Content>
       </Page>

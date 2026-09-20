@@ -41,7 +41,14 @@ export function EditIndividualPage() {
   }, [allowNavigation, detailPath, navigate])
 
   if (speciesQuery.isPending || individualQuery.isPending) {
-    return <FormPageSkeleton cards={4} photo />
+    return (
+      <FormPageSkeleton
+        backTo={detailPath}
+        title="개체 수정"
+        labels={['개체명', '성별', '출생연도', '기타정보']}
+        photo
+      />
+    )
   }
 
   if (

@@ -60,6 +60,7 @@ export function TaskReportDetailPage() {
     return (
       <Page>
         <Content>
+          <DetailBackLink to={returnTo} />
           <TaskReportDetailSkeleton />
         </Content>
       </Page>
@@ -122,7 +123,10 @@ export function TaskReportDetailPage() {
             }
             onError={(action) => {
               toastIdRef.current += 1
-              setErrorToast({ result: `${action}-error`, id: toastIdRef.current })
+              setErrorToast({
+                result: `${action}-error`,
+                id: toastIdRef.current,
+              })
             }}
           />
         )}
