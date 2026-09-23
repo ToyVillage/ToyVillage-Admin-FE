@@ -13,7 +13,7 @@ import { DateField, ErrorDialog, ValidationDialog } from '@/shared/ui'
 type ValidationError = 'date' | 'title' | 'range'
 
 const validationMessages: Record<ValidationError, string> = {
-  date: '휴관일을 입력해 주세요',
+  date: '휴무일을 입력해 주세요',
   title: '제목을 입력해 주세요',
   range: '종료일은 시작일과 같거나 이후여야 합니다',
 }

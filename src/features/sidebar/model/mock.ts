@@ -17,7 +17,7 @@ export const mockSidebarGroups: SidebarGroup[] = [
     icon: 'megaphone',
     items: [
       { id: 'notice-list', label: '공지사항', to: '/notices/list' },
-      { id: 'notice-guide', label: '휴관일 관리', to: '/notices/guide' },
+      { id: 'notice-guide', label: '휴무일 관리', to: '/notices/guide' },
       { id: 'notice-resources', label: '자료실', to: '/notices/resources' },
       {
         id: 'notice-reservations',

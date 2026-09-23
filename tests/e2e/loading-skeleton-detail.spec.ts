@@ -34,7 +34,7 @@ async function holdRoute(page: Page, pattern: RegExp) {
 
 const screens = [
   { id: 'S1', name: '공지사항 상세', path: '/notices/list/1' },
-  { id: 'S2', name: '휴관일 상세', path: '/notices/guide/1' },
+  { id: 'S2', name: '휴무일 상세', path: '/notices/guide/1' },
   { id: 'S3', name: '업무 상세', path: '/tasks/1' },
   { id: 'S4', name: '업무보고 상세', path: '/task-reports/1' },
   { id: 'S5', name: '업무일지 상세', path: '/work-logs/1' },
@@ -48,7 +48,7 @@ const screens = [
     path: '/species/1/individuals/1/observations/1',
   },
   { id: 'S11', name: '공지사항 수정', path: '/notices/list/1/edit' },
-  { id: 'S12', name: '휴관일 수정', path: '/notices/guide/1/edit' },
+  { id: 'S12', name: '휴무일 수정', path: '/notices/guide/1/edit' },
   { id: 'S13', name: '운영시간 수정', path: '/notices/guide/hours/2026-09-20' },
   { id: 'S14', name: '자료실 수정', path: '/notices/resources/1/edit' },
   { id: 'S15', name: '단체예약 수정', path: '/notices/reservations/1' },

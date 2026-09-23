@@ -32,7 +32,7 @@ test('S1: 날짜별 정상 조회 결과를 상세 화면에 표시한다', asyn
       body: JSON.stringify([
         {
           id: 1,
-          title: '정기 휴관',
+          title: '정기 휴무',
           startCloseTime: '2026-07-13',
           endCloseTime: '2026-07-13',
         },
@@ -45,7 +45,7 @@ test('S1: 날짜별 정상 조회 결과를 상세 화면에 표시한다', asyn
   await expect(
     page.getByRole('heading', { name: '7월 13일 영업시간' }),
   ).toBeVisible()
-  await expect(page.getByText('휴관 일정: 정기 휴관')).toBeVisible()
+  await expect(page.getByText('휴무 일정: 정기 휴무')).toBeVisible()
   expect(requests).toHaveLength(1)
 
   const request = new URL(requests[0])
@@ -70,7 +70,7 @@ test('S2: 빈 결과는 오류 없이 기존 상세 UI를 표시한다', async (
   await expect(
     page.getByRole('heading', { name: '7월 14일 영업시간' }),
   ).toBeVisible()
-  await expect(page.getByText('휴관 일정:')).toHaveCount(0)
+  await expect(page.getByText('휴무 일정:')).toHaveCount(0)
   await expect(page.getByRole('button', { name: '저장하기' })).toBeVisible()
 })
 
@@ -82,7 +82,7 @@ test('S3: HTTP 404를 빈 결과로 해석하지 않는다', async ({ page }) =>
       status: 404,
       contentType: 'application/json',
       body: JSON.stringify({
-        message: '해당 휴관일을 찾을 수 없습니다.',
+        message: '해당 휴무일을 찾을 수 없습니다.',
         status: 404,
         timestamp: '2026-07-31T12:00:00',
         description: '정의되지 않은 서버 응답',
@@ -93,7 +93,7 @@ test('S3: HTTP 404를 빈 결과로 해석하지 않는다', async ({ page }) =>
   await page.goto('/notices/guide/hours/2026-07-13')
 
   await expect(page.getByRole('alert')).toHaveText(
-    '휴관일을 불러오지 못했습니다. 다시 시도해 주세요.',
+    '휴무일을 불러오지 못했습니다. 다시 시도해 주세요.',
   )
   await expect(page.getByRole('button', { name: '저장하기' })).toHaveCount(0)
 })
@@ -117,7 +117,7 @@ test('S4: 서버 오류를 빈 배열로 숨기지 않는다', async ({ page }) 
   await page.goto('/notices/guide/hours/2026-07-13')
 
   await expect(page.getByRole('alert')).toHaveText(
-    '휴관일을 불러오지 못했습니다. 다시 시도해 주세요.',
+    '휴무일을 불러오지 못했습니다. 다시 시도해 주세요.',
   )
   await expect(page.getByRole('button', { name: '저장하기' })).toHaveCount(0)
 })
@@ -145,7 +145,7 @@ test('S6: Contract 필수 필드가 누락된 응답을 거부한다', async ({ 
       body: JSON.stringify([
         {
           id: 1,
-          title: '잘못된 휴관',
+          title: '잘못된 휴무',
           startCloseTime: '2026-07-13',
         },
       ]),
@@ -155,8 +155,8 @@ test('S6: Contract 필수 필드가 누락된 응답을 거부한다', async ({ 
   await page.goto('/notices/guide/hours/2026-07-13')
 
   await expect(page.getByRole('alert')).toHaveText(
-    '휴관일을 불러오지 못했습니다. 다시 시도해 주세요.',
+    '휴무일을 불러오지 못했습니다. 다시 시도해 주세요.',
   )
-  await expect(page.getByText('잘못된 휴관')).toHaveCount(0)
+  await expect(page.getByText('잘못된 휴무')).toHaveCount(0)
   await expect(page.getByRole('button', { name: '저장하기' })).toHaveCount(0)
 })

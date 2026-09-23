@@ -146,13 +146,13 @@ test('S8: 재사용 API 응답을 카드에 표시한다', async ({ page }) => {
       closeDays: [
         {
           id: 1,
-          title: '추석 휴관',
+          title: '추석 휴무',
           startCloseTime: '2026-09-24',
           endCloseTime: '2026-09-26',
         },
         {
           id: 2,
-          title: '지난달 휴관',
+          title: '지난달 휴무',
           startCloseTime: '2026-08-10',
           endCloseTime: '2026-08-10',
         },
@@ -171,10 +171,10 @@ test('S8: 재사용 API 응답을 카드에 표시한다', async ({ page }) => {
   await expect(workLog.first()).toContainText('사육장점검일지')
   await expect(workLog.first()).toContainText('박도윤')
 
-  const holidays = section(page, '휴관일 관리').getByRole('listitem')
+  const holidays = section(page, '휴무일 관리').getByRole('listitem')
   await expect(holidays).toHaveCount(1)
   await expect(holidays.first()).toContainText('9월 24일 ~ 9월 26일')
-  await expect(holidays.first()).toContainText('추석 휴관')
+  await expect(holidays.first()).toContainText('추석 휴무')
 })
 
 for (const endpoint of ['closeDays', 'workReports', 'workLogs'] as const) {
@@ -194,7 +194,7 @@ const detailData = {
   closeDays: [
     {
       id: 1,
-      title: '추석 휴관',
+      title: '추석 휴무',
       startCloseTime: '2026-09-24',
       endCloseTime: '2026-09-26',
     },
@@ -221,7 +221,7 @@ const detailData = {
 }
 
 for (const { title, text, url } of [
-  { title: '휴관일 관리', text: '추석 휴관', url: /\/notices\/guide\/1$/ },
+  { title: '휴무일 관리', text: '추석 휴무', url: /\/notices\/guide\/1$/ },
   {
     title: '업무보고',
     text: '9월 정기 안전점검',

@@ -30,7 +30,7 @@ const kpiCards = [
 ]
 
 const sections = [
-  { title: '휴관일 관리', url: /\/notices\/guide$/ },
+  { title: '휴무일 관리', url: /\/notices\/guide$/ },
   { title: '전체 업무', url: /\/tasks$/ },
   { title: '먹이 급여 관리', url: /\/feeds$/ },
   { title: '관찰 및 특이사항', url: /\/species$/ },
@@ -106,17 +106,17 @@ test('S6: 전체 업무 집계', async ({ page }) => {
   await expect(rows.nth(2)).toHaveText('지연6')
 })
 
-test('S7: 휴관일 표시', async ({ page }) => {
+test('S7: 휴무일 표시', async ({ page }) => {
   await open(page)
-  const card = section(page, '휴관일 관리')
+  const card = section(page, '휴무일 관리')
 
   await expect(card.getByRole('table', { name: '2026년 09월' })).toBeVisible()
   for (const day of [9, 14, 15]) {
     await expect(
-      card.getByLabel(`${day}일 휴관일`, { exact: true }),
+      card.getByLabel(`${day}일 휴무일`, { exact: true }),
     ).toBeVisible()
   }
-  await expect(card.getByLabel('10일 휴관일', { exact: true })).toHaveCount(0)
+  await expect(card.getByLabel('10일 휴무일', { exact: true })).toHaveCount(0)
 
   const rows = card.getByRole('listitem')
   await expect(rows).toHaveCount(3)
@@ -176,7 +176,7 @@ test('S11: 빈 데이터', async ({ page }) => {
   })
 
   for (const text of [
-    '이번 달 휴관일이 없습니다.',
+    '이번 달 휴무일이 없습니다.',
     '최근 먹이 급여 기록이 없습니다.',
     '최근 관찰 기록이 없습니다.',
     '최근 업무보고가 없습니다.',

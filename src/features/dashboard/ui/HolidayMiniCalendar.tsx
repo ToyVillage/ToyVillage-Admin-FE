@@ -64,7 +64,7 @@ export function HolidayMiniCalendar({
                     $closed={closed}
                     $joinsPrev={joinsPrev}
                     $joinsNext={joinsNext}
-                    aria-label={closed ? `${day}일 휴관일` : undefined}
+                    aria-label={closed ? `${day}일 휴무일` : undefined}
                   >
                     {day}
                   </Day>

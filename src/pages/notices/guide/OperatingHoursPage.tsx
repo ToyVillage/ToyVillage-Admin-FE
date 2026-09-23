@@ -45,11 +45,11 @@ function OperatingHoursDetail({ date }: { date: string }) {
           </ScheduleSummary>
         ) : isError ? (
           <QueryStatus role="alert">
-            휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
+            휴무일을 불러오지 못했습니다. 다시 시도해 주세요.
           </QueryStatus>
         ) : (
           firstSchedule && (
-            <ScheduleSummary>휴관 일정: {firstSchedule.title}</ScheduleSummary>
+            <ScheduleSummary>휴무 일정: {firstSchedule.title}</ScheduleSummary>
           )
         )}
         {/* 영업시간은 휴관일 조회와 독립적으로 보이고, 저장은 휴관일 조회가 성공했을 때만 연다(CLOSE_DAT_QUERY_BY_DATE S3·S4·S6). */}

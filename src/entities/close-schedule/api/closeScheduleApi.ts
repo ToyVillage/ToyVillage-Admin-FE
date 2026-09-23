@@ -21,7 +21,7 @@ export async function deleteCloseSchedule({
   id,
 }: CloseDateDeleteRequest): Promise<void> {
   if (!Number.isSafeInteger(id) || id <= 0) {
-    throw new Error('휴관일 삭제 요청 ID가 올바르지 않습니다.')
+    throw new Error('휴무일 삭제 요청 ID가 올바르지 않습니다.')
   }
 
   // 서버 성공 status 는 Contract 의 201 과 다를 수 있다. axios 가 성공으로 본
@@ -37,18 +37,18 @@ export async function updateCloseSchedule({
   input: CreateCloseScheduleInput
 }): Promise<CloseDateUpdateResponse> {
   if (!Number.isSafeInteger(id) || id <= 0) {
-    throw new Error('휴관일 수정 요청 ID가 올바르지 않습니다.')
+    throw new Error('휴무일 수정 요청 ID가 올바르지 않습니다.')
   }
 
   const request: CloseDateUpdateRequest = toCloseDateRequest(input)
   const { data, status } = await api.put<unknown>(`/close-day/${id}`, request)
 
   if (status !== 200 && status !== 201) {
-    throw new Error('휴관일 수정 응답 상태가 올바르지 않습니다.')
+    throw new Error('휴무일 수정 응답 상태가 올바르지 않습니다.')
   }
 
   if (!isCloseDateMessageResponse(data)) {
-    throw new Error('휴관일 수정 응답 형식이 올바르지 않습니다.')
+    throw new Error('휴무일 수정 응답 형식이 올바르지 않습니다.')
   }
 
   return data
@@ -58,11 +58,11 @@ export async function getCloseSchedules(): Promise<CloseSchedule[]> {
   const { data, status } = await api.get<unknown>('/close-day')
 
   if (status !== 200) {
-    throw new Error('휴관일 조회 응답 상태가 올바르지 않습니다.')
+    throw new Error('휴무일 조회 응답 상태가 올바르지 않습니다.')
   }
 
   if (!isCloseDateQueryAllResponse(data)) {
-    throw new Error('휴관일 조회 응답 형식이 올바르지 않습니다.')
+    throw new Error('휴무일 조회 응답 형식이 올바르지 않습니다.')
   }
 
   return data.map(toCloseSchedule)
@@ -72,7 +72,7 @@ export async function getCloseSchedulesByDate({
   date,
 }: CloseDateQueryByDateRequest): Promise<CloseSchedule[]> {
   if (!isDateKey(date)) {
-    throw new Error('휴관일 날짜별 조회 요청 날짜가 올바르지 않습니다.')
+    throw new Error('휴무일 날짜별 조회 요청 날짜가 올바르지 않습니다.')
   }
 
   const { data, status } = await api.get<unknown>('/close-day', {
@@ -80,11 +80,11 @@ export async function getCloseSchedulesByDate({
   })
 
   if (status !== 200) {
-    throw new Error('휴관일 날짜별 조회 응답 상태가 올바르지 않습니다.')
+    throw new Error('휴무일 날짜별 조회 응답 상태가 올바르지 않습니다.')
   }
 
   if (!isCloseDateQueryAllResponse(data)) {
-    throw new Error('휴관일 날짜별 조회 응답 형식이 올바르지 않습니다.')
+    throw new Error('휴무일 날짜별 조회 응답 형식이 올바르지 않습니다.')
   }
 
   return data.map(toCloseSchedule)
@@ -102,15 +102,15 @@ function toCloseDateRequest(
   const title = input.title.trim()
 
   if (!title) {
-    throw new Error('휴관일 제목이 올바르지 않습니다.')
+    throw new Error('휴무일 제목이 올바르지 않습니다.')
   }
 
   if (!isDateKey(input.startDate) || !isDateKey(input.endDate)) {
-    throw new Error('휴관일 생성 요청 날짜가 올바르지 않습니다.')
+    throw new Error('휴무일 생성 요청 날짜가 올바르지 않습니다.')
   }
 
   if (input.startDate > input.endDate) {
-    throw new Error('휴관일 종료일은 시작일과 같거나 이후여야 합니다.')
+    throw new Error('휴무일 종료일은 시작일과 같거나 이후여야 합니다.')
   }
 
   return {

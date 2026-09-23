@@ -136,8 +136,8 @@ export function NoticeGuidePage() {
       <Content>
         <Header>
           <div>
-            <Title>휴관일 관리</Title>
-            <Subtitle>토이빌리지의 휴관 일정 확인 및 조율</Subtitle>
+            <Title>휴무일 관리</Title>
+            <Subtitle>토이빌리지의 휴무 일정 확인 및 조율</Subtitle>
           </div>
           <CreateCloseScheduleButton />
         </Header>
@@ -174,14 +174,14 @@ export function NoticeGuidePage() {
                   key={day.key}
                   to={`/notices/guide/hours/${day.key}`}
                   aria-label={`${formatFullDate(day.date)}${
-                    day.schedules.length > 0 ? ' 휴관 일정 있음' : ''
+                    day.schedules.length > 0 ? ' 휴무 일정 있음' : ''
                   }`}
                 >
                   <DayNumber $muted={!day.inMonth}>
                     {day.date.getDate()}
                   </DayNumber>
                   {day.schedules.length > 0 && (
-                    <ClosedMarker aria-hidden="true">휴관</ClosedMarker>
+                    <ClosedMarker aria-hidden="true">휴무</ClosedMarker>
                   )}
                 </DayCell>
               ))}
@@ -191,7 +191,7 @@ export function NoticeGuidePage() {
           <Aside>
             {isPending ? (
               <SkeletonStatus>
-                <CardList aria-label="휴관 일정 목록">
+                <CardList aria-label="휴무 일정 목록">
                   {loadingCardWidths.map(([dateWidth, titleWidth], index) => (
                     <CardItem key={index}>
                       <LoadingCard>
@@ -204,15 +204,15 @@ export function NoticeGuidePage() {
               </SkeletonStatus>
             ) : isError ? (
               <QueryStatus role="alert">
-                휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
+                휴무일을 불러오지 못했습니다. 다시 시도해 주세요.
               </QueryStatus>
             ) : monthSchedules.length > 0 ? (
-              <CardList aria-label="휴관 일정 목록">
+              <CardList aria-label="휴무 일정 목록">
                 {monthSchedules.map((schedule) => (
                   <CardItem key={schedule.id}>
                     <ScheduleCard
                       to={`/notices/guide/${schedule.id}`}
-                      aria-label={`${schedule.title} 휴관 일정 상세`}
+                      aria-label={`${schedule.title} 휴무 일정 상세`}
                     >
                       <CardDate>{formatScheduleRange(schedule)}</CardDate>
                       <CardTitle>{schedule.title}</CardTitle>
@@ -250,7 +250,7 @@ export function NoticeGuidePage() {
                 ))}
               </CardList>
             ) : (
-              <EmptyState>아직 추가된 휴관일이 없습니다</EmptyState>
+              <EmptyState>아직 추가된 휴무일이 없습니다</EmptyState>
             )}
           </Aside>
         </MainGrid>

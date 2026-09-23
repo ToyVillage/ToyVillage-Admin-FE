@@ -55,7 +55,7 @@ test('S2: 동시에 401 이 나도 재발급은 한 번만 호출한다', async 
     body: { access_token: 'a2', refresh_token: 'r2' },
     delayMs: 250,
   })
-  // 운영안내 상세는 휴관일과 영업시간을 동시에 부른다. 둘 다 첫 토큰에 401 을 준다.
+  // 운영안내 상세는 휴무일과 영업시간을 동시에 부른다. 둘 다 첫 토큰에 401 을 준다.
   const closeDay = trackUnauthorizedOnce(page, closeDayApiPath, '[]')
   const openTime = trackUnauthorizedOnce(
     page,
