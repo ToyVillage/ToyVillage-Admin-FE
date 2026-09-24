@@ -40,7 +40,7 @@ export function HolidayList({
     )
   }
 
-  if (schedules.length === 0) return <Empty>이번 달 휴관일이 없습니다.</Empty>
+  if (schedules.length === 0) return <Empty>이번 달 휴무일이 없습니다.</Empty>
 
   return (
     <List>

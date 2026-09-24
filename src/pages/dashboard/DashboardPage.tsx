@@ -141,7 +141,7 @@ export function DashboardPage() {
 
             <WideRow>
               <TallCard
-                title="휴관일 관리"
+                title="휴무일 관리"
                 icon={dashboardIcons.title.holiday}
                 to="/notices/guide"
               >
@@ -254,7 +254,7 @@ export function DashboardPage() {
 
             <WideRow>
               <TallCard
-                title="휴관일 관리"
+                title="휴무일 관리"
                 icon={dashboardIcons.title.holiday}
                 to="/notices/guide"
               >

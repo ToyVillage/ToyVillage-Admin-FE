@@ -23,7 +23,7 @@ async function expectSkeleton(page: Page) {
 const screens = [
   { id: 'S1', name: '대시보드', path: '/' },
   { id: 'S2', name: '공지사항 목록', path: '/notices/list' },
-  { id: 'S3', name: '휴관일 관리', path: '/notices/guide' },
+  { id: 'S3', name: '휴무일 관리', path: '/notices/guide' },
   { id: 'S4', name: '자료실 목록', path: '/notices/resources' },
   { id: 'S5', name: '단체예약 목록', path: '/notices/reservations' },
   { id: 'S6', name: '업무관리 목록', path: '/tasks' },

@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test('S1: Contract body로 휴관일을 한 번 생성하고 갱신된 목록으로 이동한다', async ({
+test('S1: Contract body로 휴무일을 한 번 생성하고 갱신된 목록으로 이동한다', async ({
   page,
 }) => {
   let createRequestCount = 0
@@ -26,20 +26,20 @@ test('S1: Contract body로 휴관일을 한 번 생성하고 갱신된 목록으
       return
     }
 
-    await fulfillCloseScheduleList(route, 'API 생성 휴관일')
+    await fulfillCloseScheduleList(route, 'API 생성 휴무일')
   })
 
   await page.goto('/notices/guide/create')
-  await fillCloseSchedule(page, '2026-07-10', '2026-07-11', ' API 생성 휴관일 ')
+  await fillCloseSchedule(page, '2026-07-10', '2026-07-11', ' API 생성 휴무일 ')
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
-  await expect(page.getByText('API 생성 휴관일')).toBeVisible()
+  await expect(page.getByText('API 생성 휴무일')).toBeVisible()
   expect(createRequestCount).toBe(1)
   expect(createRequestHeaders['content-type']).toContain('application/json')
   expect(createRequestHeaders.authorization).toMatch(/^Bearer /)
   expect(createRequestBody).toEqual({
-    title: 'API 생성 휴관일',
+    title: 'API 생성 휴무일',
     startCloseTime: '2026-07-10',
     endCloseTime: '2026-07-11',
   })
@@ -56,14 +56,14 @@ test('S2: HTTP 400이면 입력을 보존하고 다시 제출할 수 있다', as
   })
 
   await page.goto('/notices/guide/create')
-  await fillCloseSchedule(page, '2026-07-10', '2026-07-11', '검증 오류 휴관일')
+  await fillCloseSchedule(page, '2026-07-10', '2026-07-11', '검증 오류 휴무일')
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expectCreateFailure(
     page,
     '2026-07-10',
     '2026-07-11',
-    '검증 오류 휴관일',
+    '검증 오류 휴무일',
   )
   await page.getByRole('button', { name: '생성하기' }).click()
   await expect.poll(() => createRequestCount).toBe(2)
@@ -77,14 +77,14 @@ test('S3: HTTP 500이면 입력을 보존하고 목록으로 이동하지 않는
   })
 
   await page.goto('/notices/guide/create')
-  await fillCloseSchedule(page, '2026-07-10', '2026-07-11', '서버 오류 휴관일')
+  await fillCloseSchedule(page, '2026-07-10', '2026-07-11', '서버 오류 휴무일')
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expectCreateFailure(
     page,
     '2026-07-10',
     '2026-07-11',
-    '서버 오류 휴관일',
+    '서버 오류 휴무일',
   )
 })
 
@@ -93,7 +93,7 @@ test('S4: HTTP 200이면 성공 응답 body와 무관하게 생성 성공으로 
 }) => {
   await page.route(apiPath, async (route) => {
     if (route.request().method() !== 'POST') {
-      await fulfillCloseScheduleList(route, '응답 body 호환 휴관일')
+      await fulfillCloseScheduleList(route, '응답 body 호환 휴무일')
       return
     }
 
@@ -109,12 +109,12 @@ test('S4: HTTP 200이면 성공 응답 body와 무관하게 생성 성공으로 
     page,
     '2026-07-10',
     '2026-07-11',
-    '응답 body 호환 휴관일',
+    '응답 body 호환 휴무일',
   )
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
-  await expect(page.getByText('응답 body 호환 휴관일')).toBeVisible()
+  await expect(page.getByText('응답 body 호환 휴무일')).toBeVisible()
 })
 
 test('S5: pending 중 중복 제출을 막고 생성 상태를 표시한다', async ({
@@ -134,11 +134,11 @@ test('S5: pending 중 중복 제출을 막고 생성 상태를 표시한다', as
       return
     }
 
-    await fulfillCloseScheduleList(route, '중복 방지 휴관일')
+    await fulfillCloseScheduleList(route, '중복 방지 휴무일')
   })
 
   await page.goto('/notices/guide/create')
-  await fillCloseSchedule(page, '2026-07-10', '2026-07-11', '중복 방지 휴관일')
+  await fillCloseSchedule(page, '2026-07-10', '2026-07-11', '중복 방지 휴무일')
   await page.getByRole('button', { name: '생성하기' }).evaluate((button) => {
     const form = button.closest('form')
     form?.dispatchEvent(
@@ -168,7 +168,7 @@ test('S6: 잘못된 입력은 API 호출 전에 차단한다', async ({ page }) 
   await page.goto('/notices/guide/create')
   await page.getByRole('button', { name: '생성하기' }).click()
   await expect(page.getByRole('alertdialog')).toContainText(
-    '휴관일을 입력해 주세요',
+    '휴무일을 입력해 주세요',
   )
   await page.getByRole('button', { name: '확인' }).click()
 
