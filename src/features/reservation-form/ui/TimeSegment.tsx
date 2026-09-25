@@ -7,7 +7,7 @@ import styled from '@emotion/styled'
 import { appendClockDigit } from '../model/format'
 
 interface TimeSegmentProps {
-  /** 스크린리더용 접두사(예: `방문 시간을 선택해주세요 입장시간`). */
+  /** 스크린리더용 접두사(예: `방문 시간을 입력해주세요 입장시간`). */
   ariaPrefix: string
   /** 24시간제 원시 자릿수(최대 4). 빈 값이면 `00 : 00`을 흐리게 보인다. */
   time: string

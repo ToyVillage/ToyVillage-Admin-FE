@@ -148,7 +148,7 @@ export function ReservationForm({
             onChange={(v) => set('visitDate', v)}
           />
           <TimeRangeField
-            label="방문 시간을 선택해주세요"
+            label="방문 시간을 입력해주세요"
             required
             error={errors.visitTime ?? errors.exitTime}
             enterTime={value.visitTime}
@@ -184,7 +184,7 @@ export function ReservationForm({
             onChange={(v) => set('surveyDate', v)}
           />
           <TimeRangeField
-            label="사전답사 시간을 선택해주세요"
+            label="사전답사 시간을 입력해주세요"
             required
             error={errors.surveyEnterTime ?? errors.surveyExitTime}
             enterTime={value.surveyEnterTime}
