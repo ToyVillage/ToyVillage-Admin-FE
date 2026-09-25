@@ -45,7 +45,6 @@ export {
   type ReservationUpdateResponse,
 } from './api/updateReservation'
 export { ReservationTable } from './ui/ReservationTable'
-export { ReservationInfoCard } from './ui/ReservationInfoCard'
 export {
   getAdminReservations,
   reservationStatusToCode,
