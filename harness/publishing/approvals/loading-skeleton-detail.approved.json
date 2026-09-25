@@ -1,7 +1,7 @@
 {
   "feature": "loading-skeleton-detail",
-  "approvedAt": "2026-09-19T15:03:30.928Z",
-  "approvedBy": "yunho09",
+  "approvedAt": "2026-09-20T06:16:11.370Z",
+  "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
     "S2",
@@ -25,6 +25,6 @@
     "S20",
     "S21"
   ],
-  "scenarioHash": "02b94e5188cc259a2f50e7c846916335abc0e287e11030eefb3c4006540424e7",
-  "e2eHash": "46d0929170d22cc234995a624795f38e31462ec780784d7eb8eb81111557f88f"
+  "scenarioHash": "fc0048f42bbbeff9134216855eeca350cc139b22d831d55ff765a3e6057399aa",
+  "e2eHash": "2cb0da5a3e5284eab074eaded61134924d1241c68c5d08215bae478a97cdb9e5"
 }
