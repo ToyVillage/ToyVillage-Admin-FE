@@ -56,8 +56,8 @@ paths: src/shared/ui, src/pages
   | 공지사항 수정 | `/notices/list/:id/edit` | `2021:22388` |
   | 휴관일 수정 | `/notices/guide/:id/edit` | `2021:22592` |
   | 운영시간 수정 | `/notices/guide/hours/:date` | `2021:22659` |
-  | 자료실 수정 | `/notices/resources/:id` | `2021:22750` |
-  | 단체예약 수정 | `/notices/reservations/:id` | `2021:22902` |
+  | 자료실 수정 | `/notices/resources/:id/edit` | `2021:22750` |
+  | 단체예약 수정 | `/notices/reservations/:id/edit` | `2021:22902` |
   | 종 수정 | `/species/:speciesId/edit` | `2021:23902` |
   | 개체 수정 | `/species/:speciesId/individuals/:individualId/edit` | `2021:24145` |
   | 관찰 수정 | `/species/.../observations/:observationId/edit` | `2021:24307` |
@@ -72,6 +72,7 @@ paths: src/shared/ui, src/pages
 
 ## 비고
 
-- 자료실·단체예약은 상세 경로가 곧 수정 폼이라 `수정` 프레임만 쓰고 `자료실 상세`(`2021:20123`)·`단체예약 상세`(`2021:20242`)는 대응 화면이 없다.
+- 2026-09-20: 자료실·단체예약이 `읽기 전용 상세(/:id)` 와 `수정(/:id/edit)` 으로 나뉘었다. 스켈레톤은 **수정 화면에만** 쓴다.
+  읽기 전용 상세는 같은 레이아웃의 빈 카드/빈 폼을 그대로 두어 값이 도착해도 박스가 튀지 않게 한다(개발자 결정) — `자료실 상세`(`2021:20123`)·`단체예약 상세`(`2021:20242`) 스켈레톤 프레임은 계속 쓰지 않는다.
 - `업무일지 양식 수정`(`2021:23425`)·`업무일지 구역 수정`(`2021:23689`)은 조회하는 수정 화면이 없어 제외한다.
 - 업무 수정(`/tasks/:id/edit`)은 Figma 스켈레톤 프레임이 없어 이번 범위에서 제외한다.
