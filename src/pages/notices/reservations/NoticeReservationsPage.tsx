@@ -148,6 +148,14 @@ export function NoticeReservationsPage() {
 
   const currentPage = Math.min(page, pageCount)
 
+  // 삭제·필터로 전체 페이지 수가 줄어 URL 의 page 가 범위를 벗어나면 마지막 페이지로
+  // 되돌려 빈 페이지에 고착되지 않게 한다.
+  useEffect(() => {
+    if (data && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, page, pageCount])
+
   // 상태 필터를 바꾸면 검색어를 초기화한다(다른 상태에서 이전 검색어로 빈 결과가 뜨는 혼란 방지).
   function handleStatusSelect(next: ReservationStatus) {
     if (next === active) return
