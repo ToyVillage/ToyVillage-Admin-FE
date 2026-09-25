@@ -3,6 +3,7 @@ export {
   emptyReservationFormValue,
   type ReservationFormValue,
   type ReservationFormErrors,
+  type ReservationFormCompletion,
 } from './model/types'
 export { validateReservationForm, scrollToFirstError } from './model/validation'
 export { formatMoney, clock24ToRawDigits } from './model/format'
