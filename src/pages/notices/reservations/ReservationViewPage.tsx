@@ -29,7 +29,7 @@ export function ReservationViewPage() {
     gcTime: 0,
   })
 
-  const { data: employees } = useQuery({
+  const { data: employees, isSuccess: isEmployeesSuccess } = useQuery({
     queryKey: ['reservations', id, 'employees'],
     queryFn: () => getReservationEmployees({ reservationId: Number(id) }),
     enabled: Boolean(id),
@@ -62,7 +62,8 @@ export function ReservationViewPage() {
         <ReservationBackLink to={listPath} />
         <ReservationReadonlyForm
           value={value}
-          assigned={employees?.assigned ?? []}
+          // 조회 중·실패면 undefined — 성공 응답일 때만 `미배정` 안내를 띄운다.
+          assigned={isEmployeesSuccess ? employees.assigned : undefined}
         />
       </Content>
     </Page>

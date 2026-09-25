@@ -62,7 +62,11 @@ export function ReservationEditPage() {
   }
 
   // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. 전원 반환(서버 검색 없음).
-  const { data: employees } = useQuery({
+  const {
+    data: employees,
+    isError: isEmployeesError,
+    refetch: refetchEmployees,
+  } = useQuery({
     queryKey: ['reservations', id, 'employees'],
     queryFn: () => getReservationEmployees({ reservationId: Number(id) }),
     enabled: Boolean(id),
@@ -182,6 +186,8 @@ export function ReservationEditPage() {
     // appAdminIds 가 빈 목록으로 나가 기존 배정을 전부 지운다 → 조회 성공 전까지 저장을 막는다.
     if (assignedIds === null) {
       setFailedToast(failureToastMessage.permission)
+      // 조회 실패(빈 배정과 다르다)면 다시 불러온다. 성공하면 배정이 시드돼 다음 저장이 통과한다.
+      if (isEmployeesError) void refetchEmployees()
       return
     }
     const nextErrors = validateReservationForm(formValue)

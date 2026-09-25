@@ -9,8 +9,11 @@ import { ReservationFormSection } from './ReservationFormSection'
 
 interface ReservationReadonlyFormProps {
   value: ReservationFormValue
-  /** 배정된 담당자. 읽기 전용이라 `배정가능` 목록은 보여주지 않는다. */
-  assigned: Staff[]
+  /**
+   * 배정된 담당자. 읽기 전용이라 `배정가능` 목록은 보여주지 않는다.
+   * 조회 중이거나 실패했으면 `undefined` — 빈 배열(미배정)과 구분해 안내 문구를 띄우지 않는다.
+   */
+  assigned?: Staff[]
 }
 
 type SectionKey = 'counsel' | 'visit' | 'survey' | 'permission'
@@ -132,13 +135,13 @@ export function ReservationReadonlyForm({
 
       <ReservationFormSection
         title="페이지 권한"
-        complete={assigned.length > 0}
+        complete={(assigned?.length ?? 0) > 0}
         collapsed={collapsed.permission}
         onToggle={() => toggle('permission')}
       >
         <Group>
           <GroupLabel>배정됨</GroupLabel>
-          {assigned.length === 0 ? (
+          {!assigned ? null : assigned.length === 0 ? (
             <EmptyNote>
               아직 배정된 담당자가 없습니다. <strong>배정 가능</strong> 목록에서
               담당자를 추가해주세요.
