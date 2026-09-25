@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   getReservation,
   getReservationEmployees,
-  isReservationNotFoundError,
   updateReservation,
   type Staff,
 } from '@/entities/reservation'
@@ -47,8 +46,7 @@ export function ReservationEditPage() {
   const {
     data: reservation,
     isPending,
-    isError: isReservationError,
-    error: reservationError,
+    isError,
   } = useQuery({
     queryKey: ['reservations', id],
     queryFn: () => getReservation({ id: Number(id) }),
@@ -62,6 +60,12 @@ export function ReservationEditPage() {
     setHydratedId(id)
     setValue(toReservationFormValue(reservation))
   }
+
+  // 잘못된 id·404·조회 실패. 별도 화면은 디자인에 없어 목록으로 되돌린다.
+  useEffect(() => {
+    if (!isError) return
+    navigate(listPath, { replace: true })
+  }, [isError, listPath, navigate])
 
   // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. 전원 반환(서버 검색 없음).
   const { data: employees, isError: isEmployeesError } = useQuery({
@@ -166,30 +170,8 @@ export function ReservationEditPage() {
     return (
       <Page>
         <Content>
-          <ReservationBackLink />
-          <ReservationEditSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
-  // 조회가 끝났는데 데이터가 없을 때만 상태 화면을 띄운다.
-  // 404(존재하지 않는 예약)만 '찾을 수 없음'이고, 그 외 오류(500·네트워크)는 조회 실패로
-  // 구분해 안내한다 — 실패를 '없음'으로 오인시키지 않는다.
-  if (!isPending && !reservation) {
-    const notFound =
-      !isReservationError || isReservationNotFoundError(reservationError)
-    return (
-      <Page>
-        <Content>
           <ReservationBackLink to={listPath} />
-          {notFound ? (
-            <NotFound>예약을 찾을 수 없습니다.</NotFound>
-          ) : (
-            <ErrorAlert role="alert">
-              단체예약을 불러오지 못했습니다. 다시 시도해 주세요.
-            </ErrorAlert>
-          )}
+          <ReservationEditSkeleton />
         </Content>
       </Page>
     )
@@ -288,12 +270,4 @@ const SaveButton = styled.button`
     outline: 2px solid ${({ theme }) => theme.colors.accent};
     outline-offset: 3px;
   }
-`
-
-const NotFound = styled.p`
-  margin: 48px 0 0;
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 28px;
-  font-weight: 600;
-  text-align: center;
 `
