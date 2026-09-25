@@ -7,6 +7,7 @@ export {
 export { validateReservationForm, scrollToFirstError } from './model/validation'
 export { formatMoney, clock24ToRawDigits } from './model/format'
 export { toCreateReservationRequest } from './model/toCreateRequest'
+export { toReservationFormValue } from './model/toFormValue'
 export {
   mockAssignableStaff,
   createReservationMock,

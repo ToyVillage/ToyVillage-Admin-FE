@@ -8,16 +8,14 @@ import {
   getReservationEmployees,
   isReservationNotFoundError,
   updateReservation,
-  type ReservationDetail,
   type Staff,
 } from '@/entities/reservation'
 import {
   ReservationForm,
-  clock24ToRawDigits,
   emptyReservationFormValue,
-  formatMoney,
   scrollToFirstError,
   toCreateReservationRequest,
+  toReservationFormValue,
   validateReservationForm,
   type ReservationFormErrors,
   type ReservationFormValue,
@@ -37,38 +35,6 @@ function serverMessage(error: unknown): string {
     return (data as { message: string }).message
   }
   return '요청 처리에 실패했습니다. 다시 시도해 주세요.'
-}
-
-// 조회한 상세 → 폼 값. 초기값을 폼 입력 계약에 맞춰 서식한다:
-// 금액 콤마, 시간은 24시간제 raw 자릿수, 사전답사 섹션 포함.
-function toFormValue(detail: ReservationDetail): ReservationFormValue {
-  const visit = clock24ToRawDigits(detail.reserveTime)
-  const exit = clock24ToRawDigits(detail.reserveTimeEnd)
-  const surveyEnter = clock24ToRawDigits(detail.surveyEnterTime ?? '')
-  const surveyExit = clock24ToRawDigits(detail.surveyExitTime ?? '')
-  return {
-    ...emptyReservationFormValue,
-    groupName: detail.groupName,
-    region: detail.regionDetail || detail.region,
-    counselDate: detail.consultDate,
-    reserverName: detail.reserverName,
-    representativeContact: detail.guideContact,
-    // 숫자 0(무료 입장료·0명 등)도 유효값이므로 truthy가 아닌 존재 여부로 판단한다.
-    headcount: detail.headcount != null ? String(detail.headcount) : '',
-    guideCount: detail.guideCount != null ? String(detail.guideCount) : '',
-    admissionFee:
-      detail.admissionFee != null
-        ? formatMoney(String(detail.admissionFee))
-        : '',
-    visitDate: detail.reserveDate,
-    visitTime: visit,
-    exitTime: exit,
-    // 사전답사 섹션 초기값(visitSite*).
-    surveyCount: detail.surveyCount != null ? String(detail.surveyCount) : '',
-    surveyDate: detail.surveyDate ?? '',
-    surveyEnterTime: surveyEnter,
-    surveyExitTime: surveyExit,
-  }
 }
 
 export function ReservationDetailPage() {
@@ -104,7 +70,7 @@ export function ReservationDetailPage() {
   const [hydratedId, setHydratedId] = useState<string | null>(null)
   if (reservation && hydratedId !== id) {
     setHydratedId(id)
-    setValue(toFormValue(reservation))
+    setValue(toReservationFormValue(reservation))
   }
 
   // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. 전원 반환(서버 검색 없음).
