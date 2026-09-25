@@ -1,4 +1,5 @@
 export { ReservationForm } from './ui/ReservationForm'
+export { ReservationReadonlyForm } from './ui/ReservationReadonlyForm'
 export {
   emptyReservationFormValue,
   type ReservationFormValue,
