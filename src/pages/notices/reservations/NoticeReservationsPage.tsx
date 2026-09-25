@@ -1,15 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ReservationTable,
+  deleteReservation,
   getAdminReservations,
   reservationStatusToCode,
   type ReservationSortCode,
   type ReservationStatus,
 } from '@/entities/reservation'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
+import {
+  DeleteConfirmationDialog,
+  Toast,
+  useFocusFrame,
+  type ToastVariant,
+} from '@/shared/ui'
+import { deleteToastMessage } from './model/toast'
+import { serverMessage } from './model/serverMessage'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 import { ReservationListSkeleton } from './ui/ReservationListSkeleton'
 
@@ -51,6 +60,21 @@ export function NoticeReservationsPage() {
   // 조회 조건(상태·검색어·정렬·페이지)은 URL 이 소유한다.
   // 상세에 다녀오거나 새로고침해도 걸어둔 조건이 그대로 남는다.
   const { values, update } = useListSearchParams(listParamDefaults)
+  const queryClient = useQueryClient()
+  // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [localToast, setLocalToast] = useState<{
+    variant: ToastVariant
+    message: string
+  } | null>(null)
+  const deletingRef = useRef(false)
+  // 행별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
+  const kebabTriggersRef = useRef(new Map<string, HTMLButtonElement>())
+  const focusFrame = useFocusFrame()
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteReservation(Number(id)),
+  })
   const active: ReservationStatus =
     values.status === 'approved' || values.status === 'rejected'
       ? values.status
@@ -114,6 +138,44 @@ export function NoticeReservationsPage() {
     update({ status: next, keyword: '', page: '1' })
   }
 
+  function focusKebabTrigger(id: string) {
+    // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
+    focusFrame(() => kebabTriggersRef.current.get(id))
+  }
+
+  function handleDelete() {
+    if (!deleteTargetId || deletingRef.current || deleteMutation.isPending) {
+      return
+    }
+
+    deletingRef.current = true
+    const targetId = deleteTargetId
+    deleteMutation.mutate(targetId, {
+      onSuccess: async () => {
+        // 목록만 무효화한다. 상세 쿼리까지 넓히면 삭제된 id 를 다시 GET 해 404 가 난다.
+        await queryClient.invalidateQueries({
+          queryKey: ['reservations', 'list'],
+        })
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        setLocalToast({
+          variant: 'success',
+          message: deleteToastMessage.success,
+        })
+      },
+      onError: (error) => {
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        setLocalToast({
+          variant: 'error',
+          // 서버가 사유를 주면 그 문장을, 없으면 Figma 기본 문구를 보인다.
+          message: serverMessage(error, deleteToastMessage.failure),
+        })
+        focusKebabTrigger(targetId)
+      },
+    })
+  }
+
   if (isPending) {
     return (
       <Page>
@@ -159,6 +221,21 @@ export function NoticeReservationsPage() {
               state: { listSearch: location.search },
             })
           }
+          onEdit={(id) =>
+            navigate(`/notices/reservations/${id}/edit`, {
+              state: { listSearch: location.search },
+            })
+          }
+          onDelete={(id) => {
+            setOpenKebabId(null)
+            setDeleteTargetId(id)
+          }}
+          openKebabId={openKebabId}
+          onOpenKebabChange={setOpenKebabId}
+          onKebabTriggerRef={(id, node) => {
+            if (node) kebabTriggersRef.current.set(id, node)
+            else kebabTriggersRef.current.delete(id)
+          }}
           search={{
             value: query,
             onChange: setQuery,
@@ -179,6 +256,26 @@ export function NoticeReservationsPage() {
           }
         />
       </Content>
+
+      {deleteTargetId && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={() => {
+            const targetId = deleteTargetId
+            setDeleteTargetId(null)
+            focusKebabTrigger(targetId)
+          }}
+          onConfirm={handleDelete}
+        />
+      )}
+
+      {localToast && (
+        <Toast
+          variant={localToast.variant}
+          message={localToast.message}
+          onDismiss={() => setLocalToast(null)}
+        />
+      )}
     </Page>
   )
 }
