@@ -10,6 +10,7 @@ import {
   type ReservationSortCode,
   type ReservationStatus,
 } from '@/entities/reservation'
+import type { ReservationFormCompletion } from '@/features/reservation-form'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
 import {
   DeleteConfirmationDialog,
@@ -17,7 +18,7 @@ import {
   useFocusFrame,
   type ToastVariant,
 } from '@/shared/ui'
-import { deleteToastMessage } from './model/toast'
+import { deleteToastMessage, successToastMessage } from './model/toast'
 import { serverMessage } from './model/serverMessage'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 import { ReservationListSkeleton } from './ui/ReservationListSkeleton'
@@ -95,6 +96,23 @@ export function NoticeReservationsPage() {
     )
     return () => clearTimeout(timer)
   }, [query, debouncedKeyword, update])
+
+  // 생성·수정 화면에서 넘겨받은 결과로 토스트를 띄운다. 첫 렌더에서 값을 읽어 두고
+  // 이동 state 는 지운다 — 새로고침이나 뒤로가기로 같은 토스트가 다시 뜨지 않게 한다.
+  const completion = (
+    location.state as { toast?: ReservationFormCompletion } | null
+  )?.toast
+  const [toastMessage, setToastMessage] = useState<string | null>(
+    completion ? successToastMessage[completion] : null,
+  )
+  useEffect(() => {
+    if (!completion) return
+
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: null,
+    })
+  }, [completion, location.pathname, location.search, navigate])
 
   function setSort(next: ReservationSort) {
     update({ sort: next, page: '1' })
@@ -274,6 +292,14 @@ export function NoticeReservationsPage() {
           variant={localToast.variant}
           message={localToast.message}
           onDismiss={() => setLocalToast(null)}
+        />
+      )}
+
+      {!localToast && toastMessage && (
+        <Toast
+          variant="success"
+          message={toastMessage}
+          onDismiss={() => setToastMessage(null)}
         />
       )}
     </Page>
