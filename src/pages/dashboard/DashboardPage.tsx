@@ -22,7 +22,7 @@ import {
   TaskStatusDonut,
   toIsoDay,
 } from '@/features/dashboard'
-import { DashboardSkeleton } from './ui/DashboardSkeleton'
+import { SkeletonStatus } from '@/shared/ui'
 
 const LIST_LIMIT = 3
 // 대시보드 목록 API·업무보고·업무일지 목록은 page 가 1부터다.
@@ -95,10 +95,108 @@ export function DashboardPage() {
       !taskReports ||
       !workLogs)
   ) {
+    // Figma `대시보드 (스켈레톤)`(2238:22610) — 제목·주간 칩·카드 제목·아이콘·`자세히 보기`·
+    // 미니 달력·상태 배지는 실제 UI 그대로이고 서버가 주는 수치·목록만 막대다.
     return (
       <Page>
         <Content>
-          <DashboardSkeleton />
+          <Header>
+            <Title>대시보드</Title>
+            <ChipSlot>
+              <DashboardWeekChip today={now} />
+            </ChipSlot>
+          </Header>
+
+          <SkeletonStatus>
+            <KpiGrid>
+              <DashboardKpiCard
+                label="먹이 급여 기록"
+                value={0}
+                icon={dashboardIcons.kpi.feed}
+                to="/feeds"
+                loading
+              />
+              <DashboardKpiCard
+                label="관찰 및 특이사항"
+                value={0}
+                icon={dashboardIcons.kpi.animal}
+                to="/species"
+                loading
+              />
+              <DashboardKpiCard
+                label="업무보고"
+                value={0}
+                icon={dashboardIcons.kpi.report}
+                to="/task-reports"
+                loading
+              />
+              <DashboardKpiCard
+                label="작성된 일지"
+                value={0}
+                icon={dashboardIcons.kpi.workLog}
+                to="/work-logs"
+                loading
+              />
+            </KpiGrid>
+
+            <WideRow>
+              <TallCard
+                title="휴무일 관리"
+                icon={dashboardIcons.title.holiday}
+                to="/notices/guide"
+              >
+                <HolidayBody>
+                  <HolidayMiniCalendar
+                    year={year}
+                    month={month}
+                    schedules={[]}
+                  />
+                  <HolidayList schedules={[]} loading />
+                </HolidayBody>
+              </TallCard>
+              <TallCard
+                title="전체 업무"
+                icon={dashboardIcons.title.task}
+                to="/tasks"
+              >
+                <TaskStatusDonut
+                  counts={{ COMPLETED: 0, IN_PROGRESS: 0, EXPIRED: 0 }}
+                  loading
+                />
+              </TallCard>
+            </WideRow>
+
+            <HalfRow>
+              <ListCard
+                title="먹이 급여 관리"
+                icon={dashboardIcons.title.feed}
+                to="/feeds"
+              >
+                <DashboardListRows rows={[]} emptyText="" loading />
+              </ListCard>
+              <ListCard
+                title="관찰 및 특이사항"
+                icon={dashboardIcons.title.animal}
+                to="/species"
+              >
+                <DashboardListRows rows={[]} emptyText="" loading />
+              </ListCard>
+              <ListCard
+                title="업무보고"
+                icon={dashboardIcons.title.report}
+                to="/task-reports"
+              >
+                <DashboardListRows rows={[]} emptyText="" loading />
+              </ListCard>
+              <ListCard
+                title="업무일지관리"
+                icon={dashboardIcons.title.workLog}
+                to="/work-logs"
+              >
+                <DashboardListRows rows={[]} emptyText="" loading />
+              </ListCard>
+            </HalfRow>
+          </SkeletonStatus>
         </Content>
       </Page>
     )
@@ -156,7 +254,7 @@ export function DashboardPage() {
 
             <WideRow>
               <TallCard
-                title="휴관일 관리"
+                title="휴무일 관리"
                 icon={dashboardIcons.title.holiday}
                 to="/notices/guide"
               >

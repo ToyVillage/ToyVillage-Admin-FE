@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
 import { Link } from 'react-router-dom'
+import { Skeleton } from '@/shared/ui'
 
 export interface DashboardListRow {
   key: string
@@ -13,10 +14,33 @@ export interface DashboardListRow {
 interface DashboardListRowsProps {
   rows: DashboardListRow[]
   emptyText: string
+  // 첫 조회 중. 행 값 자리만 막대로 채운다(Figma 2238:22610).
+  loading?: boolean
 }
 
+const LOADING_ROW_WIDTHS = [220, 160, 120]
+
 // Figma 최근 목록 카드의 `row`(h60) — 좌측 주 텍스트 · 우측 보조 값.
-export function DashboardListRows({ rows, emptyText }: DashboardListRowsProps) {
+export function DashboardListRows({
+  rows,
+  emptyText,
+  loading = false,
+}: DashboardListRowsProps) {
+  if (loading) {
+    return (
+      <List>
+        {LOADING_ROW_WIDTHS.map((width, index) => (
+          <Row key={index}>
+            <LoadingRow>
+              <Skeleton width={width} height={18} />
+              <Skeleton width={80} height={16} />
+            </LoadingRow>
+          </Row>
+        ))}
+      </List>
+    )
+  }
+
   if (rows.length === 0) return <Empty>{emptyText}</Empty>
 
   return (
@@ -43,6 +67,13 @@ const List = styled.ul`
   margin: 0;
   padding: 0;
   list-style: none;
+`
+
+const LoadingRow = styled.div`
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
 `
 
 const Row = styled.li`

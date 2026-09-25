@@ -18,27 +18,39 @@ interface TaskReportTableProps {
   emptyLabel?: string
   /** 행 우측 액션 셀(케밥 메뉴). 넘기지 않으면 액션 컬럼을 그리지 않는다. */
   renderRowAction?: (report: TaskReportListItem) => ReactNode
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 interface TaskReportTableRow extends DataTableRow {
+  title: string
   assigneeName: string
   reviewStatus: TaskReportReviewStatus
   priority: TaskPriority
   dueDate: string
 }
 
-// Figma `report list`(yot 141:9720). 컬럼 폭 300/320/300/320 + 액션 80.
+// Figma `report list`(yot 141:9720). 컬럼 폭 440/200/200/180/220 + 액션 80.
 const baseColumns: DataTableColumn[] = [
+  {
+    key: 'title',
+    header: '제목',
+    width: 440,
+    // 칸을 넘는 제목은 한 줄로 말줄임한다.
+    render: (row) => (
+      <TitleCell>{(row as TaskReportTableRow).title}</TitleCell>
+    ),
+  },
   {
     key: 'assigneeName',
     header: '담당자',
-    width: 300,
+    width: 200,
     render: renderPlainCell('assigneeName'),
   },
   {
     key: 'reviewStatus',
     header: '상태',
-    width: 320,
+    width: 200,
     render: (row) => (
       <TaskReportReviewBadge
         status={(row as TaskReportTableRow).reviewStatus}
@@ -48,7 +60,7 @@ const baseColumns: DataTableColumn[] = [
   {
     key: 'priority',
     header: '우선순위',
-    width: 300,
+    width: 180,
     // Figma `common / 뱃지 / 우선순위` 는 업무관리 목록과 같은 컴포넌트다.
     render: (row) => (
       <TaskPriorityBadge priority={(row as TaskReportTableRow).priority} />
@@ -57,7 +69,7 @@ const baseColumns: DataTableColumn[] = [
   {
     key: 'dueDate',
     header: '완료기한',
-    width: 320,
+    width: 220,
     render: renderPlainCell('dueDate'),
   },
 ]
@@ -82,6 +94,7 @@ export function TaskReportTable({
   pagination,
   emptyLabel,
   renderRowAction,
+  loading,
 }: TaskReportTableProps) {
   const reportById = new Map(reports.map((report) => [report.id, report]))
   const columns: DataTableColumn[] = renderRowAction
@@ -107,6 +120,7 @@ export function TaskReportTable({
     <DataTable
       rows={reports.map((report): TaskReportTableRow => ({
         id: report.id,
+        title: report.title,
         assigneeName: report.assigneeName,
         reviewStatus: report.reviewStatus,
         priority: report.priority,
@@ -118,6 +132,7 @@ export function TaskReportTable({
       pagination={pagination}
       emptyLabel={emptyLabel}
       appearance={appearance}
+      loading={loading}
     />
   )
 }
@@ -132,4 +147,11 @@ const PlainCell = styled.span`
   color: ${({ theme }) => theme.colors.text};
   font-size: 22px;
   font-weight: 500;
+`
+
+const TitleCell = styled(PlainCell)`
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `

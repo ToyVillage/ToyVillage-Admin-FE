@@ -1,5 +1,6 @@
 import styled from '@emotion/styled'
 import { Link } from 'react-router-dom'
+import { Skeleton } from '@/shared/ui'
 import type { DashboardCloseSchedule } from '../model/types'
 import { formatCloseScheduleRange } from '../model/format'
 
@@ -7,11 +8,39 @@ interface HolidayListProps {
   schedules: DashboardCloseSchedule[]
   /** 있으면 행 전체가 휴관일 상세 링크가 된다. */
   getScheduleHref?: (schedule: DashboardCloseSchedule) => string
+  // 첫 조회 중. 일정 값 자리만 막대로 채운다(Figma 2238:22610).
+  loading?: boolean
 }
 
+const LOADING_ROWS: [number, number][] = [
+  [80, 70],
+  [180, 140],
+  [80, 70],
+]
+
 // Figma `holiday list`(1906:17458). 호출하는 쪽이 이번 달 휴관일을 정렬·자른 뒤 넘긴다.
-export function HolidayList({ schedules, getScheduleHref }: HolidayListProps) {
-  if (schedules.length === 0) return <Empty>이번 달 휴관일이 없습니다.</Empty>
+export function HolidayList({
+  schedules,
+  getScheduleHref,
+  loading = false,
+}: HolidayListProps) {
+  if (loading) {
+    return (
+      <List>
+        {LOADING_ROWS.map(([rangeWidth, titleWidth], index) => (
+          <Row key={index}>
+            <Accent aria-hidden="true" />
+            <Text>
+              <Skeleton width={rangeWidth} height={18} />
+              <Skeleton width={titleWidth} height={14} />
+            </Text>
+          </Row>
+        ))}
+      </List>
+    )
+  }
+
+  if (schedules.length === 0) return <Empty>이번 달 휴무일이 없습니다.</Empty>
 
   return (
     <List>

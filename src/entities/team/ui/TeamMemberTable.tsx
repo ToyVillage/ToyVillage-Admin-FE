@@ -1,5 +1,9 @@
 import styled from '@emotion/styled'
+import { Skeleton } from '@/shared/ui'
 import type { TeamMember } from '../model/types'
+
+// Figma 스켈레톤(2238:18812) 팀원 행 막대 폭.
+const loadingRowWidths = [72, 72, 72, 72, 72]
 
 interface TeamMemberTableProps {
   members: TeamMember[]
@@ -41,6 +45,18 @@ export function TeamMemberTable({
       </Head>
       <Divider />
       <Rows>
+        {pending &&
+          members.length === 0 &&
+          loadingRowWidths.map((width, index) => (
+            <Row key={index}>
+              <NameCell>
+                <Skeleton width={width} height={20} />
+              </NameCell>
+              <PositionCell>
+                <Skeleton width={44} height={20} />
+              </PositionCell>
+            </Row>
+          ))}
         {members.map((member) => (
           <Row key={member.id} data-testid="team-member-row">
             <NameCell>

@@ -17,6 +17,8 @@ interface WorkLogFormTableProps {
   onOpenKebabChange: (id: string | null) => void
   pagination?: DataTablePagination
   emptyLabel: string
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Figma `479:14491` 의 열 구성. `항목`(600~760) 열은 헤더도 셀도 비어 있는
@@ -24,7 +26,13 @@ interface WorkLogFormTableProps {
 const emptyColumns: DataTableColumn[] = [
   { key: 'name', header: '양식', width: 760 },
   { key: 'authorName', header: '작성자', width: 200, paddingX: 24 },
-  { key: 'date', header: '날짜', width: 360, paddingX: 24, render: renderDateCell },
+  {
+    key: 'date',
+    header: '날짜',
+    width: 360,
+    paddingX: 24,
+    render: renderDateCell,
+  },
 ]
 
 export function WorkLogFormTable({
@@ -35,6 +43,7 @@ export function WorkLogFormTable({
   onOpenKebabChange,
   pagination,
   emptyLabel,
+  loading,
 }: WorkLogFormTableProps) {
   const columns: DataTableColumn[] =
     forms.length === 0
@@ -58,9 +67,7 @@ export function WorkLogFormTable({
             render: (row) => (
               <KebabMenu
                 open={openKebabId === row.id}
-                onOpenChange={(open) =>
-                  onOpenKebabChange(open ? row.id : null)
-                }
+                onOpenChange={(open) => onOpenKebabChange(open ? row.id : null)}
                 ariaLabel={`${String(row.name)} 관리 메뉴`}
                 items={[
                   {
@@ -76,20 +83,19 @@ export function WorkLogFormTable({
 
   return (
     <DataTable
-      rows={forms.map(
-        (form): DataTableRow => ({
-          id: form.id,
-          name: form.name,
-          authorName: form.authorName,
-          date: formatWorkLogDate(form.date),
-        }),
-      )}
+      rows={forms.map((form): DataTableRow => ({
+        id: form.id,
+        name: form.name,
+        authorName: form.authorName,
+        date: formatWorkLogDate(form.date),
+      }))}
       columns={columns}
       onRowClick={onRowClick}
       rowTestId="work-log-form-row"
       pagination={pagination}
       emptyLabel={emptyLabel}
       emptyMinHeight={500}
+      loading={loading}
     />
   )
 }

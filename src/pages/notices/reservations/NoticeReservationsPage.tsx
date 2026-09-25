@@ -21,7 +21,6 @@ import {
 import { deleteToastMessage, successToastMessage } from './model/toast'
 import { serverMessage } from './model/serverMessage'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
-import { ReservationListSkeleton } from './ui/ReservationListSkeleton'
 
 // 한 페이지에 노출할 예약 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
 const PAGE_SIZE = 10
@@ -202,16 +201,6 @@ export function NoticeReservationsPage() {
     })
   }
 
-  if (isPending) {
-    return (
-      <Page>
-        <Content>
-          <ReservationListSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   return (
     <Page>
       <Content>
@@ -231,6 +220,7 @@ export function NoticeReservationsPage() {
             counts={counts}
             active={active}
             onSelect={handleStatusSelect}
+            loading={isPending}
           />
           <CreateButton
             type="button"
@@ -241,6 +231,7 @@ export function NoticeReservationsPage() {
         </StatusRow>
 
         <ReservationTable
+          loading={isPending}
           reservations={pageReservations}
           onRowClick={(id) =>
             navigate(`/notices/reservations/${id}`, {

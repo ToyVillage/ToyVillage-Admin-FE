@@ -19,7 +19,6 @@ import {
   toIsoDate,
   type CalendarDate,
 } from '@/shared/lib'
-import { FeedTableSkeleton } from './ui/FeedTableSkeleton'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 10
@@ -81,8 +80,7 @@ export function FeedListPage() {
     // 조건의 행이 남아 있으면 그 행을 눌러 엉뚱한 상세로 들어갈 수 있다.
     placeholderData: (previousData, previousQuery) => {
       const previousFilter = previousQuery?.queryKey[2] as
-        | { date: string; species: AnimalSpecies | null }
-        | undefined
+        { date: string; species: AnimalSpecies | null } | undefined
       if (!previousFilter) return undefined
       if (previousFilter.date !== isoDate) return undefined
       if (previousFilter.species !== species) return undefined
@@ -130,35 +128,29 @@ export function FeedListPage() {
         <CategoryTabs categories={tabs} active={tab} onSelect={setTab} />
 
         <TableArea data-testid="feed-table-scroll">
-          {feedsQuery.isPending ? (
-            <FeedTableSkeleton />
-          ) : (
-            <FeedTable
-              feeds={feeds}
-              // 상세의 뒤로가기와 분류 뱃지가 이 조회 조건을 쓴다.
-              onRowClick={(id) =>
-                navigate(`/feeds/${id}`, {
-                  state: { listSearch: location.search, species },
-                })
-              }
-              pagination={pagination}
-              emptyLabel="해당 날짜에 급여 내역이 없습니다."
-            />
-          )}
+          <FeedTable
+            feeds={feeds}
+            loading={feedsQuery.isPending}
+            // 상세의 뒤로가기와 분류 뱃지가 이 조회 조건을 쓴다.
+            onRowClick={(id) =>
+              navigate(`/feeds/${id}`, {
+                state: { listSearch: location.search, species },
+              })
+            }
+            pagination={pagination}
+            emptyLabel="해당 날짜에 급여 내역이 없습니다."
+          />
         </TableArea>
       </Content>
     </Page>
   )
 }
 
-
-
 // 알 수 없는 값은 기본 탭으로 본다.
 function readTab(params: URLSearchParams): string {
   const value = params.get('tab')
   return value && tabs.includes(value) ? value : allTabLabel
 }
-
 
 const StatePage = styled.main`
   display: grid;

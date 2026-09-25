@@ -13,6 +13,8 @@ interface FeedTableProps {
   onRowClick: (id: string) => void
   pagination?: DataTablePagination
   emptyLabel: string
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Figma `748:14291` 의 열 구성. 케밥 열은 디자인에서 가려져 있어 만들지 않고,
@@ -60,20 +62,19 @@ export function FeedTable({
   onRowClick,
   pagination,
   emptyLabel,
+  loading,
 }: FeedTableProps) {
   return (
     <DataTable
-      rows={feeds.map(
-        (feed): DataTableRow => ({
-          id: feed.id,
-          animalKind: feed.animalType,
-          animalName: feed.animalName,
-          feed: formatFeedLabel(feed.feedType, feed.feedAmount),
-          feeder: feed.feederName,
-          fedDate: formatFedDate(feed.fedDate),
-          fedTime: feed.fedTime,
-        }),
-      )}
+      rows={feeds.map((feed): DataTableRow => ({
+        id: feed.id,
+        animalKind: feed.animalType,
+        animalName: feed.animalName,
+        feed: formatFeedLabel(feed.feedType, feed.feedAmount),
+        feeder: feed.feederName,
+        fedDate: formatFedDate(feed.fedDate),
+        fedTime: feed.fedTime,
+      }))}
       columns={columns}
       onRowClick={onRowClick}
       rowTestId="feed-row"
@@ -81,6 +82,7 @@ export function FeedTable({
       emptyLabel={emptyLabel}
       emptyMinHeight={500}
       appearance={appearance}
+      loading={loading}
     />
   )
 }

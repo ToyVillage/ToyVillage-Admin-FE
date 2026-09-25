@@ -3,7 +3,7 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 const closeScheduleApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 const closeScheduleDetailApiPath =
   /^https:\/\/[^/]+\/close-day\/[^/?]+(?:\?.*)?$/
-const targetTitle = '삭제 대상 휴관일'
+const targetTitle = '삭제 대상 휴무일'
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test('S1: 카드 케밥에서 휴관일을 한 번 삭제하고 목록을 갱신한다', async ({
+test('S1: 카드 케밥에서 휴무일을 한 번 삭제하고 목록을 갱신한다', async ({
   page,
 }) => {
   let listRequestCount = 0
@@ -83,7 +83,7 @@ test('S4: HTTP 404이면 삭제 성공으로 처리하지 않는다', async ({ p
   await mockDeleteError(
     page,
     404,
-    '해당 휴관일을 찾을수없습니다.',
+    '해당 휴무일을 찾을수없습니다.',
     undefined,
     999,
   )
@@ -154,7 +154,7 @@ test('S7: HTTP 201 body가 Contract와 달라도 삭제 성공으로 처리한�
 
 test('S8: HTTP 200도 삭제 성공으로 처리한다', async ({ page }) => {
   await mockDeleteResponse(page, 200, {
-    message: '휴관일이 삭제되었습니다.',
+    message: '휴무일이 삭제되었습니다.',
   })
 
   await page.goto('/notices/guide')
@@ -272,7 +272,7 @@ async function mockDeleteResponse(
   })
 }
 
-// 휴관일 관리는 오늘이 속한 달의 카드를 보여 주므로 이번 달 날짜로 만든다.
+// 휴무일 관리는 오늘이 속한 달의 카드를 보여 주므로 이번 달 날짜로 만든다.
 function thisMonthDate(day: number) {
   const now = new Date()
   const month = String(now.getMonth() + 1).padStart(2, '0')
@@ -303,6 +303,6 @@ async function fulfillDeleteSuccess(route: Route) {
   await route.fulfill({
     status: 201,
     contentType: 'application/json',
-    body: JSON.stringify({ message: '휴관일이 삭제되었습니다.' }),
+    body: JSON.stringify({ message: '휴무일이 삭제되었습니다.' }),
   })
 }

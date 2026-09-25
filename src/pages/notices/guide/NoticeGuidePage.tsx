@@ -11,14 +11,24 @@ import { CreateCloseScheduleButton } from '@/features/create-close-schedule'
 import {
   DeleteConfirmationDialog,
   KebabMenu,
+  Skeleton,
+  SkeletonStatus,
   Toast,
   useFocusFrame,
   type ToastVariant,
 } from '@/shared/ui'
 import arrowIcon from './ui/assets/arrow.svg'
-import { CloseScheduleSkeleton } from './ui/CloseScheduleSkeleton'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+// Figma 스켈레톤(2238:17359) 휴관일 카드 — 날짜·제목 두 줄.
+const loadingCardWidths: [number, number][] = [
+  [180, 240],
+  [160, 200],
+  [180, 260],
+  [150, 220],
+  [170, 210],
+]
 
 interface NoticeGuideLocationState {
   toast?: 'create-success'
@@ -121,23 +131,13 @@ export function NoticeGuidePage() {
     focusKebabTrigger(targetId)
   }
 
-  if (isPending) {
-    return (
-      <Page>
-        <Content>
-          <CloseScheduleSkeleton weeks={calendarDays.length / 7} />
-        </Content>
-      </Page>
-    )
-  }
-
   return (
     <Page>
       <Content>
         <Header>
           <div>
-            <Title>휴관일 관리</Title>
-            <Subtitle>토이빌리지의 휴관 일정 확인 및 조율</Subtitle>
+            <Title>휴무일 관리</Title>
+            <Subtitle>토이빌리지의 휴무 일정 확인 및 조율</Subtitle>
           </div>
           <CreateCloseScheduleButton />
         </Header>
@@ -174,14 +174,14 @@ export function NoticeGuidePage() {
                   key={day.key}
                   to={`/notices/guide/hours/${day.key}`}
                   aria-label={`${formatFullDate(day.date)}${
-                    day.schedules.length > 0 ? ' 휴관 일정 있음' : ''
+                    day.schedules.length > 0 ? ' 휴무 일정 있음' : ''
                   }`}
                 >
                   <DayNumber $muted={!day.inMonth}>
                     {day.date.getDate()}
                   </DayNumber>
                   {day.schedules.length > 0 && (
-                    <ClosedMarker aria-hidden="true">휴관</ClosedMarker>
+                    <ClosedMarker aria-hidden="true">휴무</ClosedMarker>
                   )}
                 </DayCell>
               ))}
@@ -189,17 +189,30 @@ export function NoticeGuidePage() {
           </CalendarSection>
 
           <Aside>
-            {isError ? (
+            {isPending ? (
+              <SkeletonStatus>
+                <CardList aria-label="휴무 일정 목록">
+                  {loadingCardWidths.map(([dateWidth, titleWidth], index) => (
+                    <CardItem key={index}>
+                      <LoadingCard>
+                        <Skeleton width={dateWidth} height={20} />
+                        <Skeleton width={titleWidth} height={24} />
+                      </LoadingCard>
+                    </CardItem>
+                  ))}
+                </CardList>
+              </SkeletonStatus>
+            ) : isError ? (
               <QueryStatus role="alert">
-                휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
+                휴무일을 불러오지 못했습니다. 다시 시도해 주세요.
               </QueryStatus>
             ) : monthSchedules.length > 0 ? (
-              <CardList aria-label="휴관 일정 목록">
+              <CardList aria-label="휴무 일정 목록">
                 {monthSchedules.map((schedule) => (
                   <CardItem key={schedule.id}>
                     <ScheduleCard
                       to={`/notices/guide/${schedule.id}`}
-                      aria-label={`${schedule.title} 휴관 일정 상세`}
+                      aria-label={`${schedule.title} 휴무 일정 상세`}
                     >
                       <CardDate>{formatScheduleRange(schedule)}</CardDate>
                       <CardTitle>{schedule.title}</CardTitle>
@@ -237,7 +250,7 @@ export function NoticeGuidePage() {
                 ))}
               </CardList>
             ) : (
-              <EmptyState>아직 추가된 휴관일이 없습니다</EmptyState>
+              <EmptyState>아직 추가된 휴무일이 없습니다</EmptyState>
             )}
           </Aside>
         </MainGrid>
@@ -532,6 +545,16 @@ const CardList = styled.div`
 
 const CardItem = styled.div`
   position: relative;
+`
+
+// 조회 중 휴관일 카드. 실제 카드(ScheduleCard)와 같은 여백·모서리를 쓴다.
+const LoadingCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 40px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
 `
 
 // 케밥은 카드 오른쪽 40px, 세로 중앙(Figma 246:12915). 메뉴가 뒤따르는 카드 위에 그려지도록

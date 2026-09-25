@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
+import { Skeleton } from '@/shared/ui'
 import type { Team, TeamMember } from '../model/types'
 import { TeamMemberTable } from './TeamMemberTable'
 
 interface TeamDetailPanelProps {
-  team: Team
+  /** 조회 중에는 아직 고른 팀이 없어 `null` 이다. */
+  team: Team | null
   /** 팀원 목록. 멤버 조회와 직원 목록을 합친 결과를 화면에서 넘긴다. */
   members: TeamMember[]
   /** 멤버 조회 중. 아직 모르는 목록을 `팀원 없음` 으로 단정하지 않기 위해 쓴다. */
@@ -27,15 +29,15 @@ export function TeamDetailPanel({
   onRemoveMember,
 }: TeamDetailPanelProps) {
   const [editing, setEditing] = useState(false)
-  const [draftName, setDraftName] = useState(team.name)
+  const [draftName, setDraftName] = useState(team?.name ?? '')
   const inputRef = useRef<HTMLInputElement>(null)
 
   // 다른 팀으로 바꾸면 수정 모드를 풀고 편집 중이던 이름은 버린다.
-  const [prevTeamId, setPrevTeamId] = useState(team.id)
-  if (prevTeamId !== team.id) {
-    setPrevTeamId(team.id)
+  const [prevTeamId, setPrevTeamId] = useState(team?.id ?? null)
+  if (prevTeamId !== (team?.id ?? null)) {
+    setPrevTeamId(team?.id ?? null)
     setEditing(false)
-    setDraftName(team.name)
+    setDraftName(team?.name ?? '')
   }
 
   useEffect(() => {
@@ -49,12 +51,12 @@ export function TeamDetailPanel({
   const canSave = draftName.trim().length > 0
 
   function startEditing() {
-    setDraftName(team.name)
+    setDraftName(team?.name ?? '')
     setEditing(true)
   }
 
   function cancelEditing() {
-    setDraftName(team.name)
+    setDraftName(team?.name ?? '')
     setEditing(false)
   }
 
@@ -80,7 +82,9 @@ export function TeamDetailPanel({
     <Panel>
       <Header>
         <TitleRow>
-          {editing ? (
+          {team == null ? (
+            <Skeleton width={188} height={26} />
+          ) : editing ? (
             <NameInput
               ref={inputRef}
               value={draftName}
@@ -104,10 +108,18 @@ export function TeamDetailPanel({
               </>
             ) : (
               <>
-                <GhostButton type="button" onClick={startEditing}>
+                <GhostButton
+                  type="button"
+                  disabled={team == null}
+                  onClick={startEditing}
+                >
                   팀명 변경
                 </GhostButton>
-                <DangerButton type="button" onClick={onDeleteClick}>
+                <DangerButton
+                  type="button"
+                  disabled={team == null}
+                  onClick={onDeleteClick}
+                >
                   팀 삭제
                 </DangerButton>
               </>
@@ -121,7 +133,11 @@ export function TeamDetailPanel({
       <SectionHeaderRow>
         <LabelGroup>
           <SectionLabel>팀원</SectionLabel>
-          <SectionCount>{membersPending ? '' : `${members.length}명`}</SectionCount>
+          {membersPending ? (
+            <Skeleton width={30} height={18} />
+          ) : (
+            <SectionCount>{`${members.length}명`}</SectionCount>
+          )}
         </LabelGroup>
         <AddMemberButton
           type="button"

@@ -142,11 +142,11 @@ test('S9: 시간 입력에서 Enter로 저장', async ({ page }) => {
   await expect(page.getByLabel('영업 종료 분')).toHaveValue('30')
 })
 
-test('S10: 잘못된 날짜 URL → 휴관일 관리로 replace 이동', async ({ page }) => {
+test('S10: 잘못된 날짜 URL → 휴무일 관리로 replace 이동', async ({ page }) => {
   await page.goto('/notices/guide/hours/2026-02-30')
 
   await expect(page).toHaveURL('/notices/guide')
-  await expect(page.getByRole('heading', { name: '휴관일 관리' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '휴무일 관리' })).toBeVisible()
 })
 
 test('S11: 저장 버튼 반복 클릭 → 저장 요청 한 번만 실행', async ({ page }) => {

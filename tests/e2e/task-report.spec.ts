@@ -48,11 +48,19 @@ test('S1: 목록 진입 기본 상태', async ({ page }) => {
 test('S2: 컬럼 표시 확인', async ({ page }) => {
   await page.goto('/task-reports')
 
-  for (const header of ['담당자', '상태', '우선순위', '완료기한']) {
-    await expect(page.getByText(header, { exact: true }).first()).toBeVisible()
+  const headers = ['제목', '담당자', '상태', '우선순위', '완료기한']
+  const positions: number[] = []
+  for (const header of headers) {
+    const cell = page.getByText(header, { exact: true }).first()
+    await expect(cell).toBeVisible()
+    positions.push((await cell.boundingBox())?.x ?? -1)
   }
-  await expect(page.getByText('제목', { exact: true })).toHaveCount(0)
+  // 헤더는 제목 → 담당자 → 상태 → 우선순위 → 완료기한 순서다.
+  expect(positions).toEqual([...positions].sort((a, b) => a - b))
   await expect(page.getByText('공개범위', { exact: true })).toHaveCount(0)
+
+  // 각 행의 제목 칸에 보고 제목이 보인다.
+  await expect(rows(page).first()).toContainText(mockWorkReports[0].title)
 })
 
 test('S3: 탭 라벨에 건수 표시', async ({ page }) => {

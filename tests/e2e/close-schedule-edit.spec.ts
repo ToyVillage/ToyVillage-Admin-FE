@@ -7,12 +7,12 @@ import {
 
 // 승인된 시나리오(close-schedule-edit.approved.json: S1~S8)를 변환한 것.
 // 승인 후에는 시나리오를 재도출하지 않고 실패 시 프로덕션 코드를 수정한다.
-// 휴관일 API 는 page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
+// 휴무일 API 는 page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
 
 const editPath = '/notices/guide/1/edit'
 const cardMenu = '토이빌리지 동물 정기검진 메뉴'
 
-test('S1: 오른쪽 휴관 일정 카드 케밥 수정 → 해당 일정 수정 화면 이동', async ({
+test('S1: 오른쪽 휴무 일정 카드 케밥 수정 → 해당 일정 수정 화면 이동', async ({
   page,
 }) => {
   await mockCloseDayApi(page)
@@ -46,7 +46,7 @@ test('S3: 유효한 값 수정 → 동일 ID 카드 하나에 수정값 반영',
 
   await expect(page).toHaveURL('/notices/guide')
   const editedCard = page.getByRole('link', {
-    name: '수정된 정기검진 휴관 일정 상세',
+    name: '수정된 정기검진 휴무 일정 상세',
   })
   await expect(editedCard).toHaveCount(1)
   const month = new Date().getMonth() + 1
@@ -66,7 +66,7 @@ test('S4: 잘못된 입력 → 수정하지 않고 오류 dialog 표시', async 
   await page.getByLabel('시작일').fill('')
   await page.getByRole('button', { name: '저장하기' }).click()
   await expect(page.getByRole('alertdialog')).toContainText(
-    '휴관일을 입력해 주세요',
+    '휴무일을 입력해 주세요',
   )
   await page.getByRole('button', { name: '확인' }).click()
 
@@ -87,14 +87,14 @@ test('S4: 잘못된 입력 → 수정하지 않고 오류 dialog 표시', async 
   expect(putCount).toBe(0)
 })
 
-test('S5: 존재하지 않는 일정 ID → 휴관일 관리로 replace 이동', async ({
+test('S5: 존재하지 않는 일정 ID → 휴무일 관리로 replace 이동', async ({
   page,
 }) => {
   await mockCloseDayApi(page)
   await page.goto('/notices/guide/999/edit')
 
   await expect(page).toHaveURL('/notices/guide')
-  await expect(page.getByRole('heading', { name: '휴관일 관리' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '휴무일 관리' })).toBeVisible()
 })
 
 test('S6: 수정 실패 → URL과 입력값 유지', async ({ page }) => {
@@ -141,7 +141,7 @@ test('S7: 키보드만으로 케밥 수정 진입·제목 편집·수정 저장'
 
   await expect(page).toHaveURL('/notices/guide')
   await expect(
-    page.getByRole('link', { name: '키보드 수정 일정 휴관 일정 상세' }),
+    page.getByRole('link', { name: '키보드 수정 일정 휴무 일정 상세' }),
   ).toHaveCount(1)
 })
 

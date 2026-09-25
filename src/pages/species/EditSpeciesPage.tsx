@@ -37,7 +37,14 @@ export function EditSpeciesPage() {
   }, [allowNavigation, navigate, speciesId])
 
   if (isPending) {
-    return <FormPageSkeleton cards={4} photo />
+    return (
+      <FormPageSkeleton
+        backTo={`/species/${speciesId}`}
+        title="종 수정"
+        labels={['국명', '영문명', '분류군', '세부 분류']}
+        photo
+      />
+    )
   }
 
   if (isError && !isNotFoundError(error)) {

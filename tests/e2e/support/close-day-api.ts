@@ -1,6 +1,6 @@
 import type { Page, Route } from '@playwright/test'
 
-// 휴관일 관리 화면(목록·수정)이 쓰는 API mock.
+// 휴무일 관리 화면(목록·수정)이 쓰는 API mock.
 // 대상: GET·POST /close-day, PUT·DELETE /close-day/{id}.
 // 실제 서버는 호출하지 않는다. 생성·삭제·수정은 mock 목록에 반영해 재조회 결과가 바뀐다.
 
@@ -91,7 +91,7 @@ export async function mockCloseDayApi(
     const index = store.findIndex((item) => item.id === id)
 
     if (index < 0) {
-      await json(route, 404, { message: '해당 휴관일을 찾을수없습니다.' })
+      await json(route, 404, { message: '해당 휴무일을 찾을수없습니다.' })
       return
     }
 
@@ -103,7 +103,7 @@ export async function mockCloseDayApi(
       }
       store.splice(index, 1)
       // CLOSE_DAT_DELETE 의 성공 status 는 201 이다.
-      await json(route, 201, { message: '휴관일 삭제가 완료되었습니다.' })
+      await json(route, 201, { message: '휴무일 삭제가 완료되었습니다.' })
       return
     }
 
@@ -114,7 +114,7 @@ export async function mockCloseDayApi(
       }
       const body = request.postDataJSON() as Omit<MockCloseDay, 'id'>
       store[index] = { id, ...body }
-      await json(route, 200, { message: '휴관일 수정이 완료되었습니다.' })
+      await json(route, 200, { message: '휴무일 수정이 완료되었습니다.' })
       return
     }
 

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { mockCloseDayApi } from './support/close-day-api'
 
-// 휴관일 API 는 page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
+// 휴무일 API 는 page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
 // 생성 요청(POST /close-day) 본문을 기록해 전송 여부와 횟수를 확인한다.
 let createRequests: unknown[]
 
@@ -32,7 +32,7 @@ test('S3: 날짜 필수 검증', async ({ page }) => {
   await page.getByRole('button', { name: '생성하기' }).click()
 
   const dialog = page.getByRole('alertdialog')
-  await expect(dialog).toContainText('휴관일을 입력해 주세요')
+  await expect(dialog).toContainText('휴무일을 입력해 주세요')
   await expect(dialog.getByRole('button', { name: '확인' })).toBeFocused()
 })
 
@@ -71,12 +71,12 @@ test('S7: 유효한 값으로 생성하면 목록에서 확인할 수 있다', a
   const targetDate = currentMonthDate()
   await page.getByLabel('시작일').fill(targetDate)
   await page.getByLabel('종료일').fill(targetDate)
-  await page.getByLabel(/제목/).fill('새 휴관 일정')
+  await page.getByLabel(/제목/).fill('새 휴무 일정')
   await page.getByRole('button', { name: '생성하기' }).click()
 
   await expect(page).toHaveURL(/\/notices\/guide$/)
   await expect(page.getByText('데이터 생성에 성공했습니다')).toBeVisible()
-  await expect(page.getByText('새 휴관 일정')).toHaveCount(1)
+  await expect(page.getByText('새 휴무 일정')).toHaveCount(1)
   expect(createRequests).toHaveLength(1)
 })
 
@@ -86,7 +86,7 @@ test('S8: 저장 실패 시 입력을 보존하고 재시도할 수 있다', asy
 
   await page.getByLabel('시작일').fill('2026-07-18')
   await page.getByLabel('종료일').fill('2026-07-19')
-  await page.getByLabel(/제목/).fill('보존할 휴관 일정')
+  await page.getByLabel(/제목/).fill('보존할 휴무 일정')
   await page.getByRole('button', { name: '생성하기' }).click()
 
   const dialog = page.getByRole('alertdialog')
@@ -97,7 +97,7 @@ test('S8: 저장 실패 시 입력을 보존하고 재시도할 수 있다', asy
   await expect(page).toHaveURL(/\/notices\/guide\/create$/)
   await expect(page.getByLabel('시작일')).toHaveValue('2026-07-18')
   await expect(page.getByLabel('종료일')).toHaveValue('2026-07-19')
-  await expect(page.getByLabel(/제목/)).toHaveValue('보존할 휴관 일정')
+  await expect(page.getByLabel(/제목/)).toHaveValue('보존할 휴무 일정')
   await expect(page.getByRole('button', { name: '생성하기' })).toBeEnabled()
 })
 

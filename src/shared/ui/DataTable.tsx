@@ -5,6 +5,9 @@ import searchIcon from './assets/search.svg'
 import filterIcon from './assets/filter.svg'
 import chevronIcon from './assets/chevron-left.svg'
 import { dataTableDefaultAppearance } from './dataTableAppearance'
+import { motionDuration, motionEasing } from './motion'
+import { Skeleton } from './Skeleton'
+import { SkeletonStatus } from './SkeletonStatus'
 
 // Figma 체크박스 박스 아이콘(assets/checkbox.svg)을 인라인 data URI로 사용해
 // 에셋 URL 로딩과 무관하게 항상 렌더되도록 한다.
@@ -70,6 +73,8 @@ export interface DataTableColumn {
   align?: 'start' | 'center'
   variant?: DataTableCellVariant
   render?: (row: DataTableRow) => ReactNode
+  // 조회 중 이 열에 놓을 막대 폭(px). 생략 시 열 폭에서 계산한다.
+  loadingBar?: number
 }
 
 // 헤더행 아래에 들어가는 검색바(Figma list 컴포넌트). 상태·필터는 페이지가 소유하고
@@ -128,7 +133,8 @@ function buildPageItems(page: number, pageCount: number): PageItem[] {
 
   // 한쪽 끝에 붙어 있으면 그쪽은 생략 없이 이어 보여준다.
   if (!hasLeftGap) return [...pageRange(1, 5), 'gap-end', pageCount]
-  if (!hasRightGap) return [1, 'gap-start', ...pageRange(pageCount - 4, pageCount)]
+  if (!hasRightGap)
+    return [1, 'gap-start', ...pageRange(pageCount - 4, pageCount)]
 
   return [1, 'gap-start', ...pageRange(left, right), 'gap-end', pageCount]
 }
@@ -165,6 +171,10 @@ interface DataTableProps {
   emptyLabel?: ReactNode
   emptyMinHeight?: number
   appearance?: DataTableAppearance
+  // 첫 조회 중. 헤더 라벨·검색바·페이지 화살표는 실제 UI 그대로 두고 값 자리만 막대로 채운다.
+  loading?: boolean
+  // 조회 중 그릴 행 수. 생략 시 3.
+  loadingRows?: number
 }
 
 export function DataTable({
@@ -179,6 +189,8 @@ export function DataTable({
   emptyLabel,
   emptyMinHeight,
   appearance,
+  loading = false,
+  loadingRows = 3,
 }: DataTableProps) {
   const look = { ...dataTableDefaultAppearance, ...appearance }
   const [sortOpen, setSortOpen] = useState(false)
@@ -214,6 +226,24 @@ export function DataTable({
   }, [sortOpen])
 
   // Figma 는 계열에 따라 페이지네이션을 카드 안(공지·자료실)과 밖(업무·업무보고서)에 둔다.
+  // 페이지네이션을 쓰는 표에서만 번호 자리를 그린다(급여 이력처럼 없는 표는 그대로 둔다).
+  const loadingPaginationNode =
+    loading && pagination ? (
+      <Pagination $placement={look.paginationPlacement}>
+        <PageNav type="button" aria-label="이전 페이지" disabled>
+          <ChevronIcon src={chevronIcon} alt="" />
+        </PageNav>
+        <PageList>
+          {Array.from({ length: 3 }, (_, index) => (
+            <Skeleton key={index} width={14} height={14} />
+          ))}
+        </PageList>
+        <PageNav type="button" aria-label="다음 페이지" disabled>
+          <ChevronIcon src={chevronIcon} alt="" $flip />
+        </PageNav>
+      </Pagination>
+    ) : null
+
   const paginationNode =
     pagination && pagination.pageCount > 1 ? (
       <Pagination $placement={look.paginationPlacement}>
@@ -256,7 +286,7 @@ export function DataTable({
       </Pagination>
     ) : null
 
-  return (
+  const table = (
     <>
       <Table $offsetTop={look.offsetTop} $bordered={look.bordered}>
         <Header $height={look.headerHeight} $background={look.headerBackground}>
@@ -296,6 +326,7 @@ export function DataTable({
                     value={search.value}
                     placeholder={search.placeholder}
                     aria-label={search.ariaLabel ?? '검색'}
+                    disabled={loading}
                     onChange={(e) => search.onChange(e.target.value)}
                   />
                 </>
@@ -307,6 +338,7 @@ export function DataTable({
                     aria-label={sort.ariaLabel ?? '날짜 정렬'}
                     aria-haspopup="menu"
                     aria-expanded={sortOpen}
+                    disabled={loading}
                     onClick={() => setSortOpen((open) => !open)}
                   >
                     <FilterIcon src={filterIcon} alt="" aria-hidden="true" />
@@ -335,7 +367,31 @@ export function DataTable({
           </ControlRow>
         )}
 
-        {rows.length === 0 && emptyLabel ? (
+        {loading ? (
+          Array.from({ length: loadingRows }, (_, rowIndex) => (
+            <Row
+              key={rowIndex}
+              $height={look.rowHeight}
+              $dividerColor={look.dividerColor}
+              $dividerInset={look.dividerInset}
+              $clickable={false}
+            >
+              {selection && <SelectCell />}
+              {columns.map((column) => (
+                <Cell
+                  key={column.key}
+                  $width={column.width}
+                  $paddingX={column.paddingX}
+                  $align={resolveAlign(column.align, look.align)}
+                >
+                  {column.variant !== 'action' && (
+                    <Skeleton width={loadingBarWidth(column)} height={21} />
+                  )}
+                </Cell>
+              ))}
+            </Row>
+          ))
+        ) : rows.length === 0 && emptyLabel ? (
           <EmptyRow role="status" $minHeight={emptyMinHeight}>
             {emptyLabel}
           </EmptyRow>
@@ -415,11 +471,22 @@ export function DataTable({
           ))
         )}
 
-        {look.paginationPlacement === 'inside' && paginationNode}
+        {look.paginationPlacement === 'inside' &&
+          (loading ? loadingPaginationNode : paginationNode)}
       </Table>
-      {look.paginationPlacement === 'outside' && paginationNode}
+      {look.paginationPlacement === 'outside' &&
+        (loading ? loadingPaginationNode : paginationNode)}
     </>
   )
+
+  return loading ? <SkeletonStatus>{table}</SkeletonStatus> : table
+}
+
+// 조회 중 셀 막대 폭. 열이 지정하면 그 값, 아니면 열 폭의 절반(고정폭) 또는 기본 240.
+function loadingBarWidth(column: DataTableColumn): number {
+  if (column.loadingBar != null) return column.loadingBar
+  if (column.width == null) return 240
+  return Math.max(40, Math.round(column.width / 2))
 }
 
 // 열이 정렬을 지정하면 그 값이 표 외형(appearance)의 정렬을 덮어쓴다.
@@ -554,6 +621,7 @@ const SortOption = styled.button`
   font-size: 20px;
   font-weight: 500;
   cursor: pointer;
+  transition: background ${motionDuration.color}ms ${motionEasing.enter};
 
   /* 현재 선택된 정렬을 강조해 어떤 정렬인지 보이게 한다. */
   &[aria-checked='true'] {

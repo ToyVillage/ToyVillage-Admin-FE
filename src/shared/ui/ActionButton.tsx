@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react'
 import styled from '@emotion/styled'
+import { motionDuration, motionEasing } from './motion'
 
 interface ActionButtonProps extends ComponentPropsWithoutRef<'button'> {
   // Figma 의 검은 버튼은 대부분 hug 높이(61px)지만, 구역 설정 행의 `생성`·`추가` 는
@@ -31,6 +32,7 @@ const Button = styled.button<{ $height?: number }>`
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
+  transition: opacity ${motionDuration.color}ms ${motionEasing.enter};
 
   &:disabled {
     cursor: not-allowed;

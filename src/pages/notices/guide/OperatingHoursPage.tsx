@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Navigate, useParams } from 'react-router-dom'
 import { getCloseSchedulesByDate } from '@/entities/close-schedule'
 import { OperatingHoursForm } from '@/features/edit-operating-hours'
+import { Skeleton } from '@/shared/ui'
 import { GuideBackLink } from './ui/GuideBackLink'
 
 export function OperatingHoursPage() {
@@ -39,14 +40,16 @@ function OperatingHoursDetail({ date }: { date: string }) {
         <Title>{formatTitle(date)}</Title>
         {isPending ? (
           // 조회 중 status 는 영업시간 스켈레톤 하나만 둔다(중복 알림 방지).
-          <QueryStatus>휴관일을 조회하는 중입니다.</QueryStatus>
+          <ScheduleSummary>
+            <Skeleton width={260} height={20} />
+          </ScheduleSummary>
         ) : isError ? (
           <QueryStatus role="alert">
-            휴관일을 불러오지 못했습니다. 다시 시도해 주세요.
+            휴무일을 불러오지 못했습니다. 다시 시도해 주세요.
           </QueryStatus>
         ) : (
           firstSchedule && (
-            <ScheduleSummary>휴관 일정: {firstSchedule.title}</ScheduleSummary>
+            <ScheduleSummary>휴무 일정: {firstSchedule.title}</ScheduleSummary>
           )
         )}
         {/* 영업시간은 휴관일 조회와 독립적으로 보이고, 저장은 휴관일 조회가 성공했을 때만 연다(CLOSE_DAT_QUERY_BY_DATE S3·S4·S6). */}

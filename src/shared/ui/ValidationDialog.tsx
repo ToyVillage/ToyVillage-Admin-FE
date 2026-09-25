@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
+import { fadeIn, motionDuration, motionEasing, popIn } from './motion'
 
 interface ValidationDialogProps {
   message: string
@@ -60,6 +61,7 @@ const Overlay = styled.div`
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.5);
+  animation: ${fadeIn} ${motionDuration.overlay}ms ${motionEasing.enter} both;
 `
 
 const Dialog = styled.div`
@@ -71,6 +73,7 @@ const Dialog = styled.div`
   padding: 40px 20px 20px;
   border-radius: 20px;
   background: ${({ theme }) => theme.colors.surface};
+  animation: ${popIn} ${motionDuration.overlay}ms ${motionEasing.enter} both;
 `
 
 const Message = styled.p`

@@ -34,7 +34,7 @@ async function holdRoute(page: Page, pattern: RegExp) {
 
 const screens = [
   { id: 'S1', name: '공지사항 상세', path: '/notices/list/1' },
-  { id: 'S2', name: '휴관일 상세', path: '/notices/guide/1' },
+  { id: 'S2', name: '휴무일 상세', path: '/notices/guide/1' },
   { id: 'S3', name: '업무 상세', path: '/tasks/1' },
   { id: 'S4', name: '업무보고 상세', path: '/task-reports/1' },
   { id: 'S5', name: '업무일지 상세', path: '/work-logs/1' },
@@ -48,7 +48,7 @@ const screens = [
     path: '/species/1/individuals/1/observations/1',
   },
   { id: 'S11', name: '공지사항 수정', path: '/notices/list/1/edit' },
-  { id: 'S12', name: '휴관일 수정', path: '/notices/guide/1/edit' },
+  { id: 'S12', name: '휴무일 수정', path: '/notices/guide/1/edit' },
   { id: 'S13', name: '운영시간 수정', path: '/notices/guide/hours/2026-09-20' },
   { id: 'S14', name: '자료실 수정', path: '/notices/resources/1/edit' },
   { id: 'S15', name: '단체예약 수정', path: '/notices/reservations/1/edit' },
@@ -110,4 +110,37 @@ test('S21: 조회 실패 → 스켈레톤 대신 기존 오류 표시', async ({
     timeout: 15_000,
   })
   await expect(page.getByRole('status', { name: '불러오는 중' })).toHaveCount(0)
+})
+
+test('S22: 상세 조회 중에도 정적 UI는 실제 UI로 보인다', async ({ page }) => {
+  await stallApi(page)
+  await page.goto('/notices/list/1')
+  await expectSkeleton(page)
+
+  await expect(page.getByRole('link', { name: '뒤로가기' })).toBeVisible()
+  for (const label of ['분류', '날짜', '첨부자료']) {
+    await expect(page.getByText(label, { exact: true })).toBeVisible()
+  }
+})
+
+test('S23: 수정 조회 중에도 폼 라벨은 실제 UI로 보인다', async ({ page }) => {
+  await stallApi(page)
+  await page.goto('/notices/list/1/edit')
+  await expectSkeleton(page)
+
+  for (const label of ['제목', '분류', '첨부자료']) {
+    await expect(page.getByText(label, { exact: true })).toBeVisible()
+  }
+  await expect(page.getByText('상세 업무 내용')).toBeVisible()
+})
+
+test('S24: 자료실 상세 조회 중 스켈레톤', async ({ page }) => {
+  await stallApi(page)
+  await page.goto('/notices/resources/1')
+  await expectSkeleton(page)
+
+  await expect(page.getByRole('link', { name: '뒤로가기' })).toBeVisible()
+  for (const label of ['분류', '날짜', '첨부자료']) {
+    await expect(page.getByText(label, { exact: true })).toBeVisible()
+  }
 })

@@ -23,6 +23,8 @@ interface ReservationTableProps {
   sort?: DataTableSort
   pagination?: DataTablePagination
   emptyLabel?: string
+  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  loading?: boolean
 }
 
 // Reservation → DataTable row 매핑. Figma `단체예약 · 목록`(yot 417:13157) 헤더 폭:
@@ -40,6 +42,7 @@ export function ReservationTable({
   sort,
   pagination,
   emptyLabel,
+  loading,
 }: ReservationTableProps) {
   const columns: DataTableColumn[] = [
     { key: 'consultDate', header: '상담일', width: 205, variant: 'text' },
@@ -99,6 +102,7 @@ export function ReservationTable({
       pagination={pagination}
       emptyLabel={emptyLabel}
       emptyMinHeight={320}
+      loading={loading}
     />
   )
 }

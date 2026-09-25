@@ -21,7 +21,6 @@ import {
 } from '@/shared/ui'
 import type { ResourceFormCompletion } from '@/features/create-resource'
 import { FileTypeTabs } from './ui/FileTypeTabs'
-import { ResourceListSkeleton } from './ui/ResourceListSkeleton'
 
 // 한 페이지당 자료 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
 const PAGE_SIZE = 10
@@ -189,16 +188,6 @@ export function ResourceListPage() {
     })
   }
 
-  if (isPending) {
-    return (
-      <Page>
-        <Content>
-          <ResourceListSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   return (
     <Page>
       <Content>
@@ -217,6 +206,7 @@ export function ResourceListPage() {
         />
 
         <ResourceTable
+          loading={isPending}
           resources={resources}
           onRowClick={(id) =>
             navigate(`/notices/resources/${id}`, {
