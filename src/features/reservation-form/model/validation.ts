@@ -24,7 +24,7 @@ const requiredFields: { key: keyof ReservationFormValue; kind: FieldKind }[] = [
 const messageByKind: Record<FieldKind, string> = {
   text: '내용을 입력해주세요!',
   date: '날짜를 선택해주세요!',
-  time: '시간을 선택해주세요!',
+  time: '시간을 입력해주세요!',
 }
 
 // 섹션별 필수 키(완료 배지 판정용).
@@ -32,8 +32,21 @@ export const sectionRequiredKeys: Record<
   'counsel' | 'visit' | 'survey',
   (keyof ReservationFormValue)[]
 > = {
-  counsel: ['groupName', 'region', 'counselDate', 'reserverName', 'representativeContact'],
-  visit: ['headcount', 'guideCount', 'admissionFee', 'visitDate', 'visitTime', 'exitTime'],
+  counsel: [
+    'groupName',
+    'region',
+    'counselDate',
+    'reserverName',
+    'representativeContact',
+  ],
+  visit: [
+    'headcount',
+    'guideCount',
+    'admissionFee',
+    'visitDate',
+    'visitTime',
+    'exitTime',
+  ],
   survey: ['surveyCount', 'surveyDate', 'surveyEnterTime', 'surveyExitTime'],
 }
 
@@ -105,5 +118,7 @@ export function isSectionComplete(
   value: ReservationFormValue,
   section: keyof typeof sectionRequiredKeys,
 ): boolean {
-  return sectionRequiredKeys[section].every((key) => value[key].trim().length > 0)
+  return sectionRequiredKeys[section].every(
+    (key) => value[key].trim().length > 0,
+  )
 }

@@ -41,12 +41,12 @@ const codeToLabel: Record<string, Item['status']> = {
   VISIT_COMPLETED: '방문 완료',
 }
 
-function countBy(status: Item['status']): number {
-  return dataset.filter((item) => item.status === status).length
+function countBy(rows: Item[], status: Item['status']): number {
+  return rows.filter((item) => item.status === status).length
 }
 
 // 요청 파라미터로 서버처럼 필터/정렬/페이지 처리해 API 응답 형태로 만든다.
-function buildBody(url: URL) {
+function buildBody(url: URL, rows: Item[] = dataset) {
   const status = url.searchParams.get('status')
   const title = (url.searchParams.get('title') ?? '').trim()
   const sort = url.searchParams.get('sort') ?? 'RESERVATION_DATE'
@@ -55,7 +55,7 @@ function buildBody(url: URL) {
   const size = Number(url.searchParams.get('size') ?? '10')
 
   const label = status ? codeToLabel[status] : undefined
-  let items = label ? dataset.filter((i) => i.status === label) : dataset
+  let items = label ? rows.filter((i) => i.status === label) : rows
   if (title) items = items.filter((i) => i.title.includes(title))
 
   const key = sort === 'COUNSEL_DATE' ? 'counselDate' : 'reservationDate'
@@ -69,9 +69,9 @@ function buildBody(url: URL) {
   const content = sorted.slice(start, start + size)
 
   return {
-    beforeVisitSite: countBy('사전답사 전'),
-    doneVisitSite: countBy('사전답사 완료'),
-    doneVisit: countBy('방문 완료'),
+    beforeVisitSite: countBy(rows, '사전답사 전'),
+    doneVisitSite: countBy(rows, '사전답사 완료'),
+    doneVisit: countBy(rows, '방문 완료'),
     reservationAdminQueryListObjectResponse: {
       content,
       pageable: { pageNumber: page, pageSize: size, offset: start, paged: true, unpaged: false },
@@ -87,13 +87,32 @@ function buildBody(url: URL) {
   }
 }
 
-async function routeList(page: Page) {
+// `rows` 를 넘기면 매 요청마다 그 시점의 목록으로 응답한다(삭제 후 재조회 검증용).
+async function routeList(page: Page, rows: () => Item[] = () => dataset) {
   await page.route(/^https:\/\/[^/]+\/reservation\?/, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(buildBody(new URL(route.request().url()))),
+      body: JSON.stringify(buildBody(new URL(route.request().url()), rows())),
+    })
+  })
+}
+
+// 삭제 라우트. `ok` 가 false 면 서버 오류로 응답해 실패 토스트를 검증한다.
+// 실패 응답에 message 를 넣지 않는다 — 서버 사유가 없을 때의 Figma 기본 문구를 본다.
+async function routeDelete(
+  page: Page,
+  ok = true,
+  onDeleted?: (id: number) => void,
+) {
+  await page.route(/^https:\/\/[^/]+\/reservation\/\d+$/, async (route) => {
+    if (route.request().method() !== 'DELETE') return route.fallback()
+    if (ok) onDeleted?.(Number(new URL(route.request().url()).pathname.split('/').pop()))
+    await route.fulfill({
+      status: ok ? 200 : 500,
+      contentType: 'application/json',
+      body: JSON.stringify(ok ? { message: '삭제되었습니다' } : {}),
     })
   })
 }
@@ -114,6 +133,12 @@ test('S1: 리스트 표시', async ({ page }) => {
   await expect(page.getByTestId('reservation-row').first()).toBeVisible()
   // 사전답사 전 11건 → 2페이지.
   await expect(page.getByRole('button', { name: '2 페이지' })).toBeVisible()
+
+  // 개편으로 사라진 것들: 행 체크박스와 일괄 `페이지 권한주기` 버튼.
+  await expect(page.getByRole('checkbox')).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: '페이지 권한주기' }),
+  ).toHaveCount(0)
 })
 
 test('S2: 상태 필터 (방문 완료)', async ({ page }) => {
@@ -159,6 +184,9 @@ test('S4: 정렬 (상담일순 → 예약일순)', async ({ page }) => {
   await expect(page.getByTestId('reservation-row').first()).toContainText(
     '행복유치원',
   )
+  await expect(page.getByRole('menuitemradio', { name: '예약일순' })).toHaveCount(
+    0,
+  )
 })
 
 test('S5: 행 클릭 → 상세 이동', async ({ page }) => {
@@ -168,33 +196,60 @@ test('S5: 행 클릭 → 상세 이동', async ({ page }) => {
   await expect(page).toHaveURL(/\/notices\/reservations\/\d+$/)
 })
 
-test('S6: 단체예약 생성하기 → 생성 페이지 이동', async ({ page }) => {
-  await routeList(page)
-  await page.goto('/notices/reservations')
-  await page.getByRole('button', { name: '단체예약 생성하기' }).click()
-  await expect(page).toHaveURL(/\/notices\/reservations\/create$/)
-})
-
-test('S7: 페이지네이션·리셋', async ({ page }) => {
+test('S6: 행 케밥 메뉴는 한 번에 하나만 열린다', async ({ page }) => {
   await routeList(page)
   await page.goto('/notices/reservations')
 
-  await page.getByRole('button', { name: '2 페이지' }).click()
-  await expect(page.getByRole('button', { name: '2 페이지' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  )
+  await page.getByRole('button', { name: '대구어린이집 관리 메뉴' }).click()
+  await expect(page.getByRole('menuitem', { name: '수정' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: '삭제' })).toBeVisible()
 
-  // 정렬 변경 시 1페이지로 리셋
-  await page.getByRole('button', { name: '예약 정렬' }).click()
-  await page.getByRole('menuitemradio', { name: '예약일순' }).click()
-  await expect(page.getByRole('button', { name: '1 페이지' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  )
+  await page.getByRole('button', { name: '행복유치원 관리 메뉴' }).click()
+  await expect(
+    page.getByRole('menu', { name: '대구어린이집 관리 메뉴' }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('menu', { name: '행복유치원 관리 메뉴' }),
+  ).toBeVisible()
 })
 
-test('S8: 데이터 없음 빈 상태', async ({ page }) => {
+test('S7: 케밥 수정 → 수정 페이지 이동', async ({ page }) => {
+  await routeList(page)
+  await page.goto('/notices/reservations')
+
+  await page.getByRole('button', { name: '대구어린이집 관리 메뉴' }).click()
+  await page.getByRole('menuitem', { name: '수정' }).click()
+  await expect(page).toHaveURL(/\/notices\/reservations\/1\/edit$/)
+})
+
+test('S8: 케밥 삭제 → 확인 모달 → 성공·실패 토스트', async ({ page }) => {
+  // 삭제에 성공하면 서버 목록에서도 빠진다.
+  let rows = dataset
+  await routeList(page, () => rows)
+  await routeDelete(page, true, (id) => {
+    rows = rows.filter((item) => item.id !== id)
+  })
+  await page.goto('/notices/reservations')
+
+  await page.getByRole('button', { name: '대구어린이집 관리 메뉴' }).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
+
+  await expect(page.getByText('정말 삭제하시겠습니까?')).toBeVisible()
+  await page.getByRole('button', { name: '확인' }).click()
+  await expect(page.getByText('데이터 삭제에 성공했습니다')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '대구어린이집 관리 메뉴' }),
+  ).toHaveCount(0)
+
+  // 서버가 실패로 응답하면 실패 토스트를 보인다.
+  await routeDelete(page, false)
+  await page.getByRole('button', { name: '행복유치원 관리 메뉴' }).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
+  await page.getByRole('button', { name: '확인' }).click()
+  await expect(page.getByText('데이터 삭제에 실패했습니다')).toBeVisible()
+})
+
+test('S9: 데이터 없음 빈 상태', async ({ page }) => {
   // 전체가 빈 응답(카운트·목록 모두 0).
   await page.route(/^https:\/\/[^/]+\/reservation\?/, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
@@ -224,4 +279,38 @@ test('S8: 데이터 없음 빈 상태', async ({ page }) => {
 
   await expect(page.getByText('아직 단체예약이 없습니다')).toBeVisible()
   await expect(page.getByTestId('reservation-row')).toHaveCount(0)
+})
+
+test('S10: 페이지네이션·리셋', async ({ page }) => {
+  await routeList(page)
+  await page.goto('/notices/reservations')
+
+  await page.getByRole('button', { name: '2 페이지' }).click()
+  await expect(page.getByRole('button', { name: '2 페이지' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  )
+
+  // 정렬 변경 시 1페이지로 리셋
+  await page.getByRole('button', { name: '예약 정렬' }).click()
+  await page.getByRole('menuitemradio', { name: '예약일순' }).click()
+  await expect(page.getByRole('button', { name: '1 페이지' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  )
+})
+
+test('S11: 생성 복귀 토스트는 한 번만 뜬다', async ({ page }) => {
+  await routeList(page)
+  await page.goto('/notices/reservations')
+  // 생성 화면이 넘기는 이동 state 를 그대로 재현한다.
+  await page.evaluate(() => {
+    window.history.replaceState({ usr: { toast: 'created' } }, '')
+  })
+  await page.reload()
+
+  await expect(page.getByText('데이터 생성에 성공했습니다')).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByText('데이터 생성에 성공했습니다')).toHaveCount(0)
 })

@@ -1,15 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ReservationTable,
+  deleteReservation,
   getAdminReservations,
   reservationStatusToCode,
   type ReservationSortCode,
   type ReservationStatus,
 } from '@/entities/reservation'
+import type { ReservationFormCompletion } from '@/features/reservation-form'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
+import {
+  DeleteConfirmationDialog,
+  Toast,
+  useFocusFrame,
+  type ToastVariant,
+} from '@/shared/ui'
+import { deleteToastMessage, successToastMessage } from './model/toast'
+import { serverMessage } from './model/serverMessage'
 import { ReservationStatusCards } from './ui/ReservationStatusCards'
 
 // 한 페이지에 노출할 예약 수. 서버에 size 로 전달하고 page 이동 시 page 로 재요청한다.
@@ -50,6 +60,21 @@ export function NoticeReservationsPage() {
   // 조회 조건(상태·검색어·정렬·페이지)은 URL 이 소유한다.
   // 상세에 다녀오거나 새로고침해도 걸어둔 조건이 그대로 남는다.
   const { values, update } = useListSearchParams(listParamDefaults)
+  const queryClient = useQueryClient()
+  // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [localToast, setLocalToast] = useState<{
+    variant: ToastVariant
+    message: string
+  } | null>(null)
+  const deletingRef = useRef(false)
+  // 행별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
+  const kebabTriggersRef = useRef(new Map<string, HTMLButtonElement>())
+  const focusFrame = useFocusFrame()
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteReservation(Number(id)),
+  })
   const active: ReservationStatus =
     values.status === 'approved' || values.status === 'rejected'
       ? values.status
@@ -70,6 +95,23 @@ export function NoticeReservationsPage() {
     )
     return () => clearTimeout(timer)
   }, [query, debouncedKeyword, update])
+
+  // 생성·수정 화면에서 넘겨받은 결과로 토스트를 띄운다. 첫 렌더에서 값을 읽어 두고
+  // 이동 state 는 지운다 — 새로고침이나 뒤로가기로 같은 토스트가 다시 뜨지 않게 한다.
+  const completion = (
+    location.state as { toast?: ReservationFormCompletion } | null
+  )?.toast
+  const [toastMessage, setToastMessage] = useState<string | null>(
+    completion ? successToastMessage[completion] : null,
+  )
+  useEffect(() => {
+    if (!completion) return
+
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: null,
+    })
+  }, [completion, location.pathname, location.search, navigate])
 
   function setSort(next: ReservationSort) {
     update({ sort: next, page: '1' })
@@ -105,12 +147,59 @@ export function NoticeReservationsPage() {
 
   const currentPage = Math.min(page, pageCount)
 
+  // 삭제·필터로 전체 페이지 수가 줄어 URL 의 page 가 범위를 벗어나면 마지막 페이지로
+  // 되돌려 빈 페이지에 고착되지 않게 한다.
+  useEffect(() => {
+    if (data && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, page, pageCount])
+
   // 상태 필터를 바꾸면 검색어를 초기화한다(다른 상태에서 이전 검색어로 빈 결과가 뜨는 혼란 방지).
   function handleStatusSelect(next: ReservationStatus) {
     if (next === active) return
 
     setQuery('')
     update({ status: next, keyword: '', page: '1' })
+  }
+
+  function focusKebabTrigger(id: string) {
+    // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
+    focusFrame(() => kebabTriggersRef.current.get(id))
+  }
+
+  function handleDelete() {
+    if (!deleteTargetId || deletingRef.current || deleteMutation.isPending) {
+      return
+    }
+
+    deletingRef.current = true
+    const targetId = deleteTargetId
+    deleteMutation.mutate(targetId, {
+      onSuccess: async () => {
+        // 모달은 목록 재조회를 기다리지 않고 바로 닫는다.
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        // 목록만 무효화한다. 상세 쿼리까지 넓히면 삭제된 id 를 다시 GET 해 404 가 난다.
+        await queryClient.invalidateQueries({
+          queryKey: ['reservations', 'list'],
+        })
+        setLocalToast({
+          variant: 'success',
+          message: deleteToastMessage.success,
+        })
+      },
+      onError: (error) => {
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        setLocalToast({
+          variant: 'error',
+          // 서버가 사유를 주면 그 문장을, 없으면 Figma 기본 문구를 보인다.
+          message: serverMessage(error, deleteToastMessage.failure),
+        })
+        focusKebabTrigger(targetId)
+      },
+    })
   }
 
   return (
@@ -150,6 +239,21 @@ export function NoticeReservationsPage() {
               state: { listSearch: location.search },
             })
           }
+          onEdit={(id) =>
+            navigate(`/notices/reservations/${id}/edit`, {
+              state: { listSearch: location.search },
+            })
+          }
+          onDelete={(id) => {
+            setOpenKebabId(null)
+            setDeleteTargetId(id)
+          }}
+          openKebabId={openKebabId}
+          onOpenKebabChange={setOpenKebabId}
+          onKebabTriggerRef={(id, node) => {
+            if (node) kebabTriggersRef.current.set(id, node)
+            else kebabTriggersRef.current.delete(id)
+          }}
           search={{
             value: query,
             onChange: setQuery,
@@ -170,6 +274,34 @@ export function NoticeReservationsPage() {
           }
         />
       </Content>
+
+      {deleteTargetId && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={() => {
+            const targetId = deleteTargetId
+            setDeleteTargetId(null)
+            focusKebabTrigger(targetId)
+          }}
+          onConfirm={handleDelete}
+        />
+      )}
+
+      {localToast && (
+        <Toast
+          variant={localToast.variant}
+          message={localToast.message}
+          onDismiss={() => setLocalToast(null)}
+        />
+      )}
+
+      {!localToast && toastMessage && (
+        <Toast
+          variant="success"
+          message={toastMessage}
+          onDismiss={() => setToastMessage(null)}
+        />
+      )}
     </Page>
   )
 }

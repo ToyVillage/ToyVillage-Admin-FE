@@ -1,13 +1,13 @@
 # API Test Scenarios — reservations-admin-employee-query-all
 
-대상: `/notices/reservations/:id` (`ReservationDetailPage` 권한 섹션). mock은 `page.route()` 기반, 실제 서버 요청 없음. 상세(`/reservation/{id}`)와 직원(`/reservation/assigned-employee/{reservationId}`) 두 라우트를 건다.
+대상: `/notices/reservations/:id/edit` (`ReservationEditPage` 권한 섹션). mock은 `page.route()` 기반, 실제 서버 요청 없음. 상세(`/reservation/{id}`)와 직원(`/reservation/assigned-employee/{reservationId}`) 두 라우트를 건다.
 
 ## Mock S1 — 배정됨/배정가능 표시
 
 - 목적: 응답의 assigned/assignable를 권한 섹션에 표시한다.
 - Mock request: `GET /api/reservation/assigned-employee/1`
 - Mock response: HTTP 200, `assigned:[{appAdminId:3,name:"이승현"}]`, `assignable:[{appAdminId:7,name:"김직원"}]`
-- 사용자 동작: `/notices/reservations/1` 진입
+- 사용자 동작: `/notices/reservations/1/edit` 진입
 - 기대 결과: 요청 path `/reservation/assigned-employee/1` 확인. 배정됨에 "이승현", 배정가능에 "김직원" 표시.
 
 ## Mock S2 — 이름 검색(프론트 필터)

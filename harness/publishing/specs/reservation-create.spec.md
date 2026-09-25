@@ -18,14 +18,15 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 
 ## 상태와 근거
 
-- Status: Draft (게이트 승인 대기)
+- Status: Draft (게이트 승인 대기 — 2026-09-20 개편 확인)
 - 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). 차이 반영은 #94에서 한다.
 - 2026-09-18: 시간 입력을 새 Figma 컴포넌트 `2098:17385`(시계 아이콘 + `시작 → 종료` 한 박스, 392x66)로 교체했다. 입장·퇴장이 각각 한 필드이던 것을 필드 하나로 합쳐 방문일 2행·사전답사 2행이 각각 1칸씩 줄었다(사전답사는 행 하나가 사라짐). **am/pm 드롭다운을 없애고 24시간제(00:00~23:59) 직접 입력으로 바꿨다** — 개발자 결정, Figma 예시 표기(`10 : 00 PM`)보다 우선한다.
 - 생성 화면(플레이스홀더): yot Figma `1:7667` (섹션 `단체예약 · 폼` `311:12769`)
 - 전체 펼침: `1:7667` / 섹션 접힘·상태 배지: `1:5926`(미완료), `1:5968`(완료) / 검증 에러(인라인): `1:8610` / 날짜 선택: `1:8403` / 참고(am·pm 드롭다운, 배정): `1:8206`
 - 진입: 리스트(`/notices/reservations`)의 `단체예약 생성하기` → `/notices/reservations/create` (신규 라우트·페이지)
-- 생성/수정 페이지는 레이아웃이 동일하며, 수정은 `reservation-edit` spec으로 분리한다.
-- API 미연동(publishing) — 제출은 mock 경계로 둔다. 실제 연동은 별도 `/api` 슬라이스.
+- 2026-09-20: yot `단체예약` 섹션(`300:12763`) 개편을 확인했다. **생성 폼의 구조·필드·검증은 그대로다.** 달라진 것은 (a) 생성 성공/실패를 목록 우상단 토스트로 알린다 (b) 페이지 권한 섹션 하단의 `취소`/`완료` 버튼은 디자인에 없다 (c) 사전답사 섹션에 `상태` 셀렉트는 없다(`1:8206` 은 채택하지 않은 구 변형).
+- 생성/수정 페이지는 레이아웃이 동일하며, 수정은 `reservation-edit` spec으로 분리한다(`/notices/reservations/:id/edit`).
+- API 연동 완료 — 제출은 `POST /reservation`(`createReservation`)을 호출한다.
 
 ## 목적
 
@@ -48,17 +49,19 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 - `인솔자 인원 *` (number, suffix `명`)
 - `입장료를 입력해주세요 *` (number, suffix `원`)
 - `방문일을 선택해주세요 *` (date)
-- `방문 시간을 선택해주세요 *` (입장·퇴장을 한 박스에서 24시간제 직접 입력: `00 : 00` → `00 : 00`)
+- `방문 시간을 입력해주세요 *` (입장·퇴장을 한 박스에서 24시간제 직접 입력: `00 : 00` → `00 : 00`)
 
 ### ③ 사전답사 관련
 - `사전답사 인원 *` (number, suffix `명`)
 - `사전답사일을 선택해주세요 *` (date)
-- `사전답사 시간을 선택해주세요 *` (입장·퇴장 한 박스, 24시간제 직접 입력)
+- `사전답사 시간을 입력해주세요 *` (입장·퇴장 한 박스, 24시간제 직접 입력)
 
 ### ④ 페이지 권한
 - 검색바 (search 아이콘 + ph `이름을 입력해주세요`)
 - `배정팀`: 배정된 직원이 없으면 안내문 `아직 배정된 담당자가 없습니다. 배정 가능 목록에서 담당자를 추가해주세요.`
 - `배정가능`: 직원 행 `{이름} {직급}` + `추가하기`(파랑 pill). 추가 시 해당 직원이 배정팀으로 이동, 배정팀 행에는 `취소하기`(빨강 outline pill)로 해제.
+- 검색 결과가 없으면 `검색 결과가 없습니다`(`1:8026`).
+- 섹션 하단 `취소`/`완료` 버튼은 **없다**.
 
 ## 동작 (source of truth)
 
@@ -66,8 +69,9 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 - 시간 필드는 24시간제 직접 입력이다(드롭다운 없음). 숫자를 왼쪽부터 채우고 Backspace 로 지운다.
   두 자리가 될 수 없는 첫 자리는 0을 앞에 채워 확정한다(`9` → `09`시, `10` 뒤의 `8` → `08`분).
   **화면에 보이는 값이 곧 입력값이다** — `1` 만 눌러 `10 : 00` 이 보이면 10시 00분으로 검증·제출된다.
-- `추가하기`/`취소하기`로 배정팀↔배정가능 이동(mock, 로컬 상태).
-- `생성하기` 클릭 → 필수값 검증. 통과 시 mock 생성 요청 후 `/notices/reservations` 복귀.
+- `추가하기`/`취소하기`로 배정팀↔배정가능 이동(로컬 상태, 제출 시 `appAdminIds` 로 전송).
+- `생성하기` 클릭 → 필수값 검증. 통과 시 생성 요청 후 `/notices/reservations` 로 복귀하고, 목록이 `데이터 생성에 성공했습니다` 토스트를 띄운다. 담당자 배정까지 반영되면 `권한 부여에 성공했습니다` 토스트를 띄운다.
+- 생성 요청이 실패하면 목록으로 이동하지 않고 이 화면에서 `데이터 생성에 실패했습니다` 토스트를 띄운다(배정 반영 실패는 `권한 부여에 실패했습니다`).
 - `뒤로가기` → `/notices/reservations`.
 
 ## 검증 (인라인, 모달 아님)
@@ -75,14 +79,17 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 `생성하기` 클릭 시 빈 필수 필드는 **빨강 테두리 + 필드 하단 빨강 메시지**(error 아이콘)로 표시:
 - text/number: `내용을 입력해주세요!`
 - date: `날짜를 선택해주세요!`
-- time: `시간을 선택해주세요!` (빈 값일 때. 시 00–23·분 00–59 범위를 벗어나면 `시간을 확인해주세요!`)
+- time: `시간을 입력해주세요!` (빈 값일 때. 시 00–23·분 00–59 범위를 벗어나면 `시간을 확인해주세요!`)
 
 필수: 단체명·지역·상담일·예약인 이름·대표자 연락처·총 인원·인솔자 인원·입장료·방문일·방문 입장/퇴장 시간·사전답사 인원·사전답사일·사전답사 입장/퇴장 시간. (페이지 권한 배정은 필수 아님 — 미결 확인)
 
-## 데이터·API 경계 (mock)
+## 데이터·API 경계 (연동 완료)
 
-- 제출 입력 계약(초안): `CreateReservationInput { groupName, region, counselDate, reserverName, representativeContact, headcount, guideCount, admissionFee, visitDate, visitTime, exitTime (24시간제 `HH:mm`), surveyCount, surveyDate, surveyEnterTime, surveyExitTime, assignedStaffIds[] }`
-- mock 생성 → `['reservations']` 무효화 → 목록 복귀. 실제 필드/엔드포인트는 `/api` 슬라이스에서 확정(현재 백엔드 생성 명세 미확인).
+- 제출: `POST /reservation` → `createReservation`. 바디는 `toCreateReservationRequest(formValue, appAdminIds)` 가 만든다.
+  `{ title, location, counselDate, reservationName, leaderPhoneNumber, reservationCount, leaderCount, money, visitDate, visitTime, exitTime, visitSiteCount, visitSiteDate, visitSiteTime, visitSiteExitTime, appAdminIds }`
+  (`reservationDate`/`reservationTime`/`status` 는 서버가 자동 입력하므로 보내지 않는다.)
+- 배정 후보 직원: `GET /reservation/app-admin`(미배정 예약 기준) → `getReservationEmployees`
+- 생성 성공 후 `['reservations','list']` 무효화 → 목록 복귀.
 
 ## 컴포넌트 경계 (design-rules §1)
 
@@ -103,5 +110,5 @@ paths: src/pages/notices/reservations/CreateReservationPage.tsx, src/features/re
 ## 게이트 확정 (개발자 승인, 2026-08-23)
 - 섹션 `완료` 배지 = 해당 섹션의 **필수 필드가 모두 채워졌을 때**, 아니면 `미완료`.
 - date는 **커스텀 캘린더 팝업을 만들지 않고 아이콘만** 노출한다(이번 슬라이스). time/am·pm도 시각 컨트롤 수준.
-- 페이지 권한 배정 직원은 **mock**(백엔드 명세 미기재, item 6 보류). 배정은 필수 아님.
-- 생성 제출은 **mock 경계**(`['reservations']` 무효화 후 목록 복귀). 실제 계약은 `/api` 슬라이스.
+- 페이지 권한 배정은 필수 아님.
+- (2026-09-20 갱신) 생성 제출·배정은 실제 API 연동이 끝났다. mock 경계는 더 이상 없다.

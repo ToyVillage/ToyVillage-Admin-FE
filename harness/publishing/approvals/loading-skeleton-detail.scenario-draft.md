@@ -72,12 +72,12 @@
 
 ### S14: 자료실 수정 조회 중 스켈레톤
 - Given: 자료실 수정 조회 응답을 지연시켰다
-- When: `/notices/resources/:id` 에 진입
+- When: `/notices/resources/:id/edit` 에 진입
 - Then: `불러오는 중` status(`aria-busy=true`) 스켈레톤이 보이고 "불러오는 중" 문구는 보이지 않는다
 
 ### S15: 단체예약 수정 조회 중 스켈레톤
 - Given: 단체예약 수정 조회 응답을 지연시켰다
-- When: `/notices/reservations/:id` 에 진입
+- When: `/notices/reservations/:id/edit` 에 진입
 - Then: `불러오는 중` status(`aria-busy=true`) 스켈레톤이 보이고 "불러오는 중" 문구는 보이지 않는다
 
 ### S16: 종 수정 조회 중 스켈레톤

@@ -1,6 +1,7 @@
 # API Test Scenarios — reservations-admin-update
 
-대상: `/notices/reservations/:id` (`ReservationDetailPage`). 상세(GET)·직원(GET)을 200으로 채워 편집 폼을 렌더하고 저장(PATCH)을 검증한다. mock은 `page.route()` 기반, 실제 서버 요청 없음.
+대상: `/notices/reservations/:id/edit` (`ReservationEditPage`). 상세(GET)·직원(GET)을 200으로 채워 편집 폼을 렌더하고 저장(PATCH)을 검증한다.
+(2026-09-20 디자인 개편: `/:id` 는 읽기 전용 상세이고 수정은 `/:id/edit` 이다.) mock은 `page.route()` 기반, 실제 서버 요청 없음.
 
 ## Mock S1 — 정상 수정 → PATCH 바디·목록 이동
 
@@ -16,7 +17,8 @@
 - Mock request: `PATCH /api/reservation/1`
 - Mock response: HTTP 400 `{ message: "사전답사일은 방문일보다 늦을 수 없습니다.", ... }`
 - 사용자 동작: 저장
-- 기대 결과: 상단 `role="alert"`에 서버 message 표시, 목록 이동 없음.
+- 기대 결과: 실패 토스트(`role="alert"`)에 서버 message 표시, 목록 이동 없음(`/:id/edit` 유지).
+  서버가 message 를 주지 않으면 Figma 기본 문구 `데이터 수정에 실패했습니다`.
 
 ## Staging R1
 

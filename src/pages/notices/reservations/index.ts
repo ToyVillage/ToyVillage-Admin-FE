@@ -1,3 +1,4 @@
 export { NoticeReservationsPage } from './NoticeReservationsPage'
-export { ReservationDetailPage } from './ReservationDetailPage'
+export { ReservationViewPage } from './ReservationViewPage'
+export { ReservationEditPage } from './ReservationEditPage'
 export { CreateReservationPage } from './CreateReservationPage'

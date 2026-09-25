@@ -23,10 +23,14 @@ export function DeleteConfirmationDialog({
   const cancelRef = useRef<HTMLButtonElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
   const pendingRef = useRef(pending)
+  // 호출부가 매 렌더 새 onCancel 을 넘겨도 아래 effect 가 다시 돌지 않게 ref 로 읽는다.
+  // effect 가 다시 돌면 초점이 `취소`로 되돌아가 `확인`에 있던 초점을 빼앗는다.
+  const onCancelRef = useRef(onCancel)
 
   useEffect(() => {
     pendingRef.current = pending
-  }, [pending])
+    onCancelRef.current = onCancel
+  }, [pending, onCancel])
 
   useEffect(() => {
     const appRoot = document.getElementById('root')
@@ -37,7 +41,7 @@ export function DeleteConfirmationDialog({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape' && !pendingRef.current) {
         event.preventDefault()
-        onCancel()
+        onCancelRef.current()
         return
       }
 
@@ -61,7 +65,7 @@ export function DeleteConfirmationDialog({
       appRoot?.removeAttribute('inert')
       appRoot?.removeAttribute('aria-hidden')
     }
-  }, [onCancel])
+  }, [])
 
   return createPortal(
     <Overlay>

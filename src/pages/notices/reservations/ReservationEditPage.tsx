@@ -1,77 +1,33 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
-  deleteReservation,
   getReservation,
   getReservationEmployees,
-  isReservationNotFoundError,
   updateReservation,
-  type ReservationDetail,
   type Staff,
 } from '@/entities/reservation'
 import {
   ReservationForm,
-  clock24ToRawDigits,
   emptyReservationFormValue,
-  formatMoney,
   scrollToFirstError,
   toCreateReservationRequest,
+  toReservationFormValue,
   validateReservationForm,
+  type ReservationFormCompletion,
   type ReservationFormErrors,
   type ReservationFormValue,
 } from '@/features/reservation-form'
-import { DeleteConfirmationDialog } from '@/shared/ui'
+import { Toast } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
 import { ReservationEditSkeleton } from './ui/ReservationEditSkeleton'
+import { failureToastMessage } from './model/toast'
+import { serverMessage } from './model/serverMessage'
 
-// 서버 오류 응답에서 사용자용 message 를 뽑는다(없으면 기본 문구).
-function serverMessage(error: unknown): string {
-  const data = (error as { response?: { data?: unknown } })?.response?.data
-  if (
-    data &&
-    typeof data === 'object' &&
-    typeof (data as Record<string, unknown>).message === 'string'
-  ) {
-    return (data as { message: string }).message
-  }
-  return '요청 처리에 실패했습니다. 다시 시도해 주세요.'
-}
-
-// 조회한 상세 → 폼 값. 초기값을 폼 입력 계약에 맞춰 서식한다:
-// 금액 콤마, 시간은 24시간제 raw 자릿수, 사전답사 섹션 포함.
-function toFormValue(detail: ReservationDetail): ReservationFormValue {
-  const visit = clock24ToRawDigits(detail.reserveTime)
-  const exit = clock24ToRawDigits(detail.reserveTimeEnd)
-  const surveyEnter = clock24ToRawDigits(detail.surveyEnterTime ?? '')
-  const surveyExit = clock24ToRawDigits(detail.surveyExitTime ?? '')
-  return {
-    ...emptyReservationFormValue,
-    groupName: detail.groupName,
-    region: detail.regionDetail || detail.region,
-    counselDate: detail.consultDate,
-    reserverName: detail.reserverName,
-    representativeContact: detail.guideContact,
-    // 숫자 0(무료 입장료·0명 등)도 유효값이므로 truthy가 아닌 존재 여부로 판단한다.
-    headcount: detail.headcount != null ? String(detail.headcount) : '',
-    guideCount: detail.guideCount != null ? String(detail.guideCount) : '',
-    admissionFee:
-      detail.admissionFee != null
-        ? formatMoney(String(detail.admissionFee))
-        : '',
-    visitDate: detail.reserveDate,
-    visitTime: visit,
-    exitTime: exit,
-    // 사전답사 섹션 초기값(visitSite*).
-    surveyCount: detail.surveyCount != null ? String(detail.surveyCount) : '',
-    surveyDate: detail.surveyDate ?? '',
-    surveyEnterTime: surveyEnter,
-    surveyExitTime: surveyExit,
-  }
-}
-
-export function ReservationDetailPage() {
+// `/notices/reservations/:id/edit` — 단체예약 수정(Figma yot 1:7846).
+// 삭제는 이 화면이 아니라 목록 케밥이 맡는다(Figma 417:13157/417:13177).
+export function ReservationEditPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -82,8 +38,7 @@ export function ReservationDetailPage() {
 
   const [value, setValue] = useState<ReservationFormValue | null>(null)
   const [errors, setErrors] = useState<ReservationFormErrors>({})
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [actionError, setActionError] = useState('')
+  const [failedToast, setFailedToast] = useState<string | null>(null)
 
   // 권한 섹션 검색어(서버 검색 없음 → 프론트에서 필터).
   const [permissionQuery, setPermissionQuery] = useState('')
@@ -91,8 +46,7 @@ export function ReservationDetailPage() {
   const {
     data: reservation,
     isPending,
-    isError: isReservationError,
-    error: reservationError,
+    isError,
   } = useQuery({
     queryKey: ['reservations', id],
     queryFn: () => getReservation({ id: Number(id) }),
@@ -104,11 +58,15 @@ export function ReservationDetailPage() {
   const [hydratedId, setHydratedId] = useState<string | null>(null)
   if (reservation && hydratedId !== id) {
     setHydratedId(id)
-    setValue(toFormValue(reservation))
+    setValue(toReservationFormValue(reservation))
   }
 
   // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. 전원 반환(서버 검색 없음).
-  const { data: employees, isError: isEmployeesError } = useQuery({
+  const {
+    data: employees,
+    isError: isEmployeesError,
+    refetch: refetchEmployees,
+  } = useQuery({
     queryKey: ['reservations', id, 'employees'],
     queryFn: () => getReservationEmployees({ reservationId: Number(id) }),
     enabled: Boolean(id),
@@ -122,6 +80,21 @@ export function ReservationDetailPage() {
     setAssignedIds(employees.assigned.map((staff) => staff.id))
   }
   const currentAssignedIds = useMemo(() => assignedIds ?? [], [assignedIds])
+
+  // 배정 id는 직원 조회 API에서 온 실제 숫자 id → 그대로 전송(배정 통째 교체).
+  const appAdminIds = useMemo(
+    () =>
+      currentAssignedIds
+        .map((staffId) => Number(staffId))
+        .filter((n) => Number.isSafeInteger(n) && n > 0),
+    [currentAssignedIds],
+  )
+
+  // 잘못된 id·404·조회 실패. 별도 화면은 디자인에 없어 목록으로 되돌린다.
+  useEffect(() => {
+    if (!isError) return
+    navigate(listPath, { replace: true })
+  }, [isError, listPath, navigate])
 
   // 배정됨 + 배정가능 합집합(중복 제거). 전원 반환된 풀(서버 검색 없음).
   const staffPool = useMemo<Staff[]>(() => {
@@ -165,47 +138,56 @@ export function ReservationDetailPage() {
   const cancelStaff = (staffId: string) =>
     setAssignedIds((prev) => (prev ?? []).filter((sid) => sid !== staffId))
 
-  const saveMutation = useMutation({
-    mutationFn: (next: ReservationFormValue) => {
-      // 배정 id는 직원 조회 API에서 온 실제 숫자 id → 그대로 전송(배정 통째 교체).
-      const appAdminIds = currentAssignedIds
-        .map((staffId) => Number(staffId))
-        .filter((n) => Number.isSafeInteger(n) && n > 0)
-      return updateReservation({
-        id: Number(id),
-        body: toCreateReservationRequest(next, appAdminIds),
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-      navigate(listPath)
-    },
-    onError: (error) => setActionError(serverMessage(error)),
-  })
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteReservation(Number(id)),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-      navigate(listPath)
-    },
-    onError: (error) => {
-      setDeleteOpen(false)
-      setActionError(serverMessage(error))
-    },
-  })
-
   const formValue = value ?? emptyReservationFormValue
 
+  // 값은 그대로 두고 배정만 바꾼 저장이면 `권한 부여` 토스트를 쓴다(Figma 417:13419).
+  function completionKind(
+    next: ReservationFormValue,
+  ): ReservationFormCompletion {
+    if (!reservation || !employees) return 'updated'
+    const initialValue = toReservationFormValue(reservation)
+    const valueChanged = (
+      Object.keys(initialValue) as (keyof ReservationFormValue)[]
+    ).some((key) => initialValue[key] !== next[key])
+    if (valueChanged) return 'updated'
+
+    const initialAssigned = employees.assigned.map((staff) => staff.id)
+    const assignmentChanged =
+      initialAssigned.length !== currentAssignedIds.length ||
+      initialAssigned.some((staffId) => !currentAssignedIds.includes(staffId))
+    return assignmentChanged ? 'permission' : 'updated'
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: (next: ReservationFormValue) =>
+      updateReservation({
+        id: Number(id),
+        body: toCreateReservationRequest(next, appAdminIds),
+      }),
+    onSuccess: async (_data, next) => {
+      const toast = completionKind(next)
+      // 목록만 무효화하고 이 예약의 상세는 따로 지운다. `['reservations']` 로 넓히면
+      // 이미 떠난 화면의 쿼리까지 되살아난다.
+      await queryClient.invalidateQueries({
+        queryKey: ['reservations', 'list'],
+      })
+      await queryClient.invalidateQueries({ queryKey: ['reservations', id] })
+      navigate(listPath, { state: { toast } })
+    },
+    onError: (error, next) =>
+      setFailedToast(
+        serverMessage(error, failureToastMessage[completionKind(next)]),
+      ),
+  })
+
   function handleSave() {
-    setActionError('')
+    setFailedToast(null)
     // 배정 직원 조회가 끝나기 전(또는 실패)에는 현재 배정을 알 수 없다. 이때 저장하면
     // appAdminIds 가 빈 목록으로 나가 기존 배정을 전부 지운다 → 조회 성공 전까지 저장을 막는다.
     if (assignedIds === null) {
-      setActionError(
-        isEmployeesError
-          ? '담당자 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'
-          : '담당자 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.',
-      )
+      setFailedToast(failureToastMessage.permission)
+      // 조회 실패(빈 배정과 다르다)면 다시 불러온다. 성공하면 배정이 시드돼 다음 저장이 통과한다.
+      if (isEmployeesError) void refetchEmployees()
       return
     }
     const nextErrors = validateReservationForm(formValue)
@@ -221,30 +203,8 @@ export function ReservationDetailPage() {
     return (
       <Page>
         <Content>
-          <ReservationBackLink />
-          <ReservationEditSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
-  // 조회가 끝났는데 데이터가 없을 때만 상태 화면을 띄운다.
-  // 404(존재하지 않는 예약)만 '찾을 수 없음'이고, 그 외 오류(500·네트워크)는 조회 실패로
-  // 구분해 안내한다 — 실패를 '없음'으로 오인시키지 않는다.
-  if (!isPending && !reservation) {
-    const notFound =
-      !isReservationError || isReservationNotFoundError(reservationError)
-    return (
-      <Page>
-        <Content>
           <ReservationBackLink to={listPath} />
-          {notFound ? (
-            <NotFound>예약을 찾을 수 없습니다.</NotFound>
-          ) : (
-            <ErrorAlert role="alert">
-              단체예약을 불러오지 못했습니다. 다시 시도해 주세요.
-            </ErrorAlert>
-          )}
+          <ReservationEditSkeleton />
         </Content>
       </Page>
     )
@@ -254,7 +214,6 @@ export function ReservationDetailPage() {
     <Page>
       <Content>
         <ReservationBackLink to={listPath} />
-        {actionError && <ErrorAlert role="alert">{actionError}</ErrorAlert>}
         <ReservationForm
           value={formValue}
           onChange={setValue}
@@ -270,13 +229,6 @@ export function ReservationDetailPage() {
           }}
         />
         <Actions>
-          <DeleteButton
-            type="button"
-            disabled={deleteMutation.isPending}
-            onClick={() => setDeleteOpen(true)}
-          >
-            삭제하기
-          </DeleteButton>
           <SaveButton
             type="button"
             disabled={saveMutation.isPending}
@@ -287,11 +239,11 @@ export function ReservationDetailPage() {
         </Actions>
       </Content>
 
-      {deleteOpen && (
-        <DeleteConfirmationDialog
-          pending={deleteMutation.isPending}
-          onCancel={() => setDeleteOpen(false)}
-          onConfirm={() => deleteMutation.mutate()}
+      {failedToast && (
+        <Toast
+          variant="error"
+          message={failedToast}
+          onDismiss={() => setFailedToast(null)}
         />
       )}
     </Page>
@@ -314,29 +266,21 @@ const Content = styled.div`
   padding-top: 76px;
 `
 
-const ErrorAlert = styled.div`
-  padding: 20px 24px;
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.2;
-`
-
 const Actions = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 16px;
 `
 
-const baseAction = `
+const SaveButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 52px;
   padding: 16px 20px;
+  border: 0;
   border-radius: 8px;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
   cursor: pointer;
   font: inherit;
   font-size: 24px;
@@ -348,38 +292,12 @@ const baseAction = `
   }
 
   &:disabled {
+    background: ${({ theme }) => theme.colors.textGuide};
     cursor: wait;
   }
-`
 
-// 삭제하기: 빨강 아웃라인(bg gray/10) — hover 그림자, disabled 회색.
-const DeleteButton = styled.button`
-  ${baseAction}
-  border: 2px solid ${({ theme }) => theme.colors.danger};
-  background: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.colors.danger};
-
-  &:disabled {
-    border-color: ${({ theme }) => theme.colors.textGuide};
-    color: ${({ theme }) => theme.colors.textGuide};
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 3px;
   }
-`
-
-const SaveButton = styled.button`
-  ${baseAction}
-  border: 0;
-  background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.surface};
-
-  &:disabled {
-    background: ${({ theme }) => theme.colors.textGuide};
-  }
-`
-
-const NotFound = styled.p`
-  margin: 48px 0 0;
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 28px;
-  font-weight: 600;
-  text-align: center;
 `

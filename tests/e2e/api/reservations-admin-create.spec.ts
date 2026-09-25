@@ -42,12 +42,12 @@ async function fillValidForm(page: Page) {
   await page.getByLabel('인솔자 인원').fill('3')
   await page.getByLabel('입장료를 입력해주세요').fill('48000')
   await page.getByLabel('방문일을 선택해주세요').fill('20260820')
-  const visitLabel = '방문 시간을 선택해주세요'
+  const visitLabel = '방문 시간을 입력해주세요'
   await fillTime(page, visitLabel, '입장시간', '1000')
   await fillTime(page, visitLabel, '퇴장시간', '1800')
   await page.getByLabel('사전답사 인원').fill('8')
   await page.getByLabel('사전답사일을 선택해주세요').fill('20260816')
-  const surveyLabel = '사전답사 시간을 선택해주세요'
+  const surveyLabel = '사전답사 시간을 입력해주세요'
   await fillTime(page, surveyLabel, '입장시간', '1000')
   await fillTime(page, surveyLabel, '퇴장시간', '1500')
 }

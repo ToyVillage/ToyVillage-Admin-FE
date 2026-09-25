@@ -42,3 +42,7 @@ export const emptyReservationFormValue: ReservationFormValue = {
   surveyEnterTime: '',
   surveyExitTime: '',
 }
+
+// 생성·수정 화면이 목록으로 돌려보내는 결과. 목록이 이 값으로 토스트를 고른다.
+// `permission` 은 값 변경 없이 담당자 배정만 바뀐 저장이다(Figma `권한 부여에 성공했습니다`).
+export type ReservationFormCompletion = 'created' | 'updated' | 'permission'

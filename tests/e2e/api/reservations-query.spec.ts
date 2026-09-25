@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 
 // 승인된 시나리오(reservations-query.test-scenarios.md: S1~S2)를 mock 으로 변환한 것.
-// 대상: GET /reservation/{id} (RESERVATION_ADMIN_QUERY). 상세 진입 시 편집 폼 초기값으로 매핑된다.
+// 대상: GET /reservation/{id} (RESERVATION_ADMIN_QUERY). 수정 화면(`/:id/edit`) 진입 시
+// 편집 폼 초기값으로 매핑된다(2026-09-20 개편: `/:id` 는 읽기 전용 상세).
 // 실제 서버는 호출하지 않는다.
 
 const detail = {
@@ -49,7 +50,7 @@ test('S1: 상세 조회 성공 → 편집 폼 필드에 매핑 값 채움', asyn
     })
   })
 
-  await page.goto('/notices/reservations/7')
+  await page.goto('/notices/reservations/7/edit')
 
   await expect(page.getByLabel('단체명', { exact: true })).toHaveValue(
     '대덕소프트웨어마이스터고',
@@ -72,10 +73,10 @@ test('S1: 상세 조회 성공 → 편집 폼 필드에 매핑 값 채움', asyn
   )
   // 24h "13:01:00" → 시 13 / 분 01 (24시간제 그대로)
   await expect(
-    page.getByLabel('방문 시간을 선택해주세요 입장시간 시', { exact: true }),
+    page.getByLabel('방문 시간을 입력해주세요 입장시간 시', { exact: true }),
   ).toHaveValue('13')
   await expect(
-    page.getByLabel('방문 시간을 선택해주세요 입장시간 분', { exact: true }),
+    page.getByLabel('방문 시간을 입력해주세요 입장시간 분', { exact: true }),
   ).toHaveValue('01')
 
   // 요청 path 확인
@@ -83,10 +84,11 @@ test('S1: 상세 조회 성공 → 편집 폼 필드에 매핑 값 채움', asyn
   expect(new URL(requestURLs[0]).pathname).toBe('/reservation/7')
 })
 
-test('S2: 404 → 예약을 찾을 수 없습니다', async ({ page }) => {
+test('S2: 404 → 목록으로 되돌린다', async ({ page }) => {
   await routeDetail(page, 404, errorBody(404, '존재하지 않는 단체예약 목록입니다.'))
 
   await page.goto('/notices/reservations/999')
 
-  await expect(page.getByText('예약을 찾을 수 없습니다.')).toBeVisible()
+  // 디자인에 '찾을 수 없음' 화면이 없어 목록으로 돌려보낸다.
+  await expect(page).toHaveURL(/\/notices\/reservations$/)
 })
