@@ -57,7 +57,9 @@ export function TimeSegment({
   function handleChange(part: 'hour' | 'minute', raw: string) {
     const digits = raw.replace(/\D/g, '').slice(0, 2).padStart(2, '0')
     const next =
-      part === 'hour' ? digits + padded.slice(2, 4) : padded.slice(0, 2) + digits
+      part === 'hour'
+        ? digits + padded.slice(2, 4)
+        : padded.slice(0, 2) + digits
 
     // 범위를 벗어난 값(24시·60분)은 반영하지 않는다.
     if (Number(next.slice(0, 2)) > 23 || Number(next.slice(2, 4)) > 59) return

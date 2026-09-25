@@ -32,8 +32,21 @@ export const sectionRequiredKeys: Record<
   'counsel' | 'visit' | 'survey',
   (keyof ReservationFormValue)[]
 > = {
-  counsel: ['groupName', 'region', 'counselDate', 'reserverName', 'representativeContact'],
-  visit: ['headcount', 'guideCount', 'admissionFee', 'visitDate', 'visitTime', 'exitTime'],
+  counsel: [
+    'groupName',
+    'region',
+    'counselDate',
+    'reserverName',
+    'representativeContact',
+  ],
+  visit: [
+    'headcount',
+    'guideCount',
+    'admissionFee',
+    'visitDate',
+    'visitTime',
+    'exitTime',
+  ],
   survey: ['surveyCount', 'surveyDate', 'surveyEnterTime', 'surveyExitTime'],
 }
 
@@ -105,5 +118,7 @@ export function isSectionComplete(
   value: ReservationFormValue,
   section: keyof typeof sectionRequiredKeys,
 ): boolean {
-  return sectionRequiredKeys[section].every((key) => value[key].trim().length > 0)
+  return sectionRequiredKeys[section].every(
+    (key) => value[key].trim().length > 0,
+  )
 }

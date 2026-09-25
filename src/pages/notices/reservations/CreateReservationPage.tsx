@@ -47,7 +47,8 @@ export function CreateReservationPage() {
   const [permissionQuery, setPermissionQuery] = useState('')
   const { data: employees } = useQuery({
     queryKey: ['reservations', 'employees', 'new'],
-    queryFn: () => getReservationEmployees({ reservationId: NEW_RESERVATION_ID }),
+    queryFn: () =>
+      getReservationEmployees({ reservationId: NEW_RESERVATION_ID }),
     retry: false,
   })
 

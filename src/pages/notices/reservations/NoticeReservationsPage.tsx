@@ -55,7 +55,8 @@ export function NoticeReservationsPage() {
     values.status === 'approved' || values.status === 'rejected'
       ? values.status
       : 'pending'
-  const sort: ReservationSort = values.sort === 'reserve' ? 'reserve' : 'consult'
+  const sort: ReservationSort =
+    values.sort === 'reserve' ? 'reserve' : 'consult'
   const page = readPageParam(new URLSearchParams({ page: values.page }))
   const debouncedKeyword = values.keyword
 
@@ -81,7 +82,11 @@ export function NoticeReservationsPage() {
 
   // 서버 사이드 조회: 상태 필터·검색·정렬·페이지를 파라미터로 전달한다.
   const { data, isPending, isError } = useQuery({
-    queryKey: ['reservations', 'list', { status: active, title: debouncedKeyword, sort, page }],
+    queryKey: [
+      'reservations',
+      'list',
+      { status: active, title: debouncedKeyword, sort, page },
+    ],
     queryFn: () =>
       getAdminReservations({
         status: reservationStatusToCode[active],
@@ -168,7 +173,9 @@ export function NoticeReservationsPage() {
           }}
           pagination={{ page: currentPage, pageCount, onChange: setPage }}
           emptyLabel={
-            debouncedKeyword ? '검색결과가 없습니다' : '아직 단체예약이 없습니다'
+            debouncedKeyword
+              ? '검색결과가 없습니다'
+              : '아직 단체예약이 없습니다'
           }
         />
       </Content>
