@@ -40,7 +40,7 @@ async function fillTime(
 async function fillSurvey(page: Page) {
   await page.getByLabel('사전답사 인원').fill('8')
   await page.getByLabel('사전답사일을 선택해주세요').fill('20260816')
-  const surveyLabel = '사전답사 시간을 선택해주세요'
+  const surveyLabel = '사전답사 시간을 입력해주세요'
   await fillTime(page, surveyLabel, '입장시간', '1000') // 10:00
   await fillTime(page, surveyLabel, '퇴장시간', '1500') // 15:00
 }
@@ -81,7 +81,7 @@ test('S1: 저장 → PATCH 바디 매핑 후 목록 이동', async ({ page }) =>
     })
   })
 
-  await page.goto('/notices/reservations/1')
+  await page.goto('/notices/reservations/1/edit')
   await expect(page.getByLabel('단체명', { exact: true })).toHaveValue(
     '대덕소프트웨어마이스터고',
   )
@@ -134,7 +134,7 @@ test('S2: 저장 400 → 서버 message 알림, 이동 없음', async ({ page })
     })
   })
 
-  await page.goto('/notices/reservations/1')
+  await page.goto('/notices/reservations/1/edit')
   await expect(page.getByLabel('단체명', { exact: true })).toHaveValue(
     '대덕소프트웨어마이스터고',
   )
@@ -144,5 +144,5 @@ test('S2: 저장 400 → 서버 message 알림, 이동 없음', async ({ page })
   await expect(page.getByRole('alert')).toHaveText(
     '사전답사일은 방문일보다 늦을 수 없습니다.',
   )
-  await expect(page).toHaveURL(/\/notices\/reservations\/1$/)
+  await expect(page).toHaveURL(/\/notices\/reservations\/1\/edit$/)
 })
