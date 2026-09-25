@@ -2,91 +2,85 @@
 feature: reservations-list
 figma:
   fileKey: P7Jhnu8qV5m9q2QJNzkwAN
-  nodeId: 1:5902
+  nodeId: 417:13157
   relatedNodeIds:
+    - 1:5902
     - 1:6114
     - 1:6133
-    - 417:13157
     - 417:13177
+    - 417:13419
+    - 417:13439
 requires_functional_test: true
-paths: src/pages/notices/reservations, src/entities/reservation, src/features/grant-reservation-access, src/shared/ui/DataTable.tsx
+paths: src/pages/notices/reservations, src/entities/reservation, src/shared/ui/DataTable.tsx, src/shared/ui/KebabMenu.tsx
 ---
 
 # 단체예약 현황 리스트 페이지 행동명세
 
 ## 상태와 근거
 
-- Status: Draft
-- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`)에서 yot로 교체했다(#80). 본문 구조 설명은 구 디자인 기준이며 yot 반영은 #94에서 한다.
-- 리스트 화면 기준: yot Figma `1:5902` ("group reservation", 섹션 `단체예약 · 목록` `311:12767`)
-- 권한 부여 모달: 구 파일 `3414:3724` — yot에는 대응 프레임이 없다. 페이지 권한은 폼의 `페이지 권한` 섹션(`1:8206`)으로 옮겨졌다.
-- 빈 상태(데이터 없음): Figma `1:6114`, 검색 결과 없음: `1:6133`
-- 공통 테이블 프레젠테이션: `src/shared/ui/DataTable.tsx` (notice/resource 목록과 공유) — 이번 슬라이스에서 컬럼 설정 기반으로 일반화한다(아래 참조).
-- 라우트: `src/app/App.tsx`의 `/notices/reservations` (현재 `NoticeReservationsPage` 스텁)
+- Status: Draft (게이트 승인 대기 — 2026-09-20 디자인 개편 반영)
+- 2026-09-17: 기준 Figma를 폐기된 `toyvillage-dev`에서 yot로 교체했다(#80).
+- 2026-09-20: yot `단체예약` 섹션(`300:12763`) 개편을 반영했다. **행 체크박스 다중 선택과 `페이지 권한주기` 버튼·권한 부여 모달이 사라지고, 행마다 케밥(⋮) 메뉴(수정/삭제)가 생겼다.** 삭제는 확인 모달 + 토스트로 목록에서 처리한다. 자료실(`resources-list`)과 같은 목록 패턴이다.
+- 기준 프레임: `417:13157` ("group reservation (kebab open)", 섹션 `단체예약 · 목록` `311:12767`)
+- 기본 목록·정렬 메뉴: `1:5902` / 데이터 없음: `1:6114` / 검색결과 없음: `1:6133` / 삭제 확인 모달: `417:13177`
+- 토스트: `417:13419`, `417:13439`(신규) — 구 프레임 `1:6014`·`1:6039`·`1:6064`·`1:6089` 는 옛 `페이지 권한주기` 버튼이 남아 있어 문구만 참고한다.
+- 공통 테이블 프레젠테이션: `src/shared/ui/DataTable.tsx`(컬럼 설정 기반), 케밥: `src/shared/ui/KebabMenu.tsx`, 삭제 모달: `src/shared/ui/DeleteConfirmationDialog`
+- 라우트: `src/app/App.tsx`의 `/notices/reservations`
 
 ## 목적
 
-운영 관리자가 단체 방문 예약 현황을 상태별로 모니터링하고, 검색·정렬로 원하는 예약을 찾고, 여러 예약을 선택해 접근 권한을 가진 직원을 일괄 지정한다.
+운영 관리자가 단체 방문 예약 현황을 상태별로 모니터링하고, 검색·정렬로 원하는 예약을 찾고, 행에서 바로 수정 화면으로 가거나 예약을 삭제한다.
 
 ## 범위
 
-- 포함: 상태별 카운트 카드(사전답사 전/사전답사 완료/방문 완료)와 상태 필터, 테이블(상담일·예약일·예약시간·단체명/지역·인원), 행 검색, 상담일순/예약일순 정렬, 페이지네이션, 행 클릭 → 상세 이동, 행 체크박스 다중 선택, `페이지 권한주기` → 권한 부여 모달, 데이터 없음 빈 상태
-- 제외: 예약 상세 페이지 본문(별도 슬라이스), 실제 예약/직원 데이터 및 권한 저장 API(이번 슬라이스는 mock), 예약 생성/승인/반려 처리
+- 포함: 상태별 카운트 카드(사전답사 전/사전답사 완료/방문 완료)와 상태 필터, `단체예약 생성하기` 버튼, 테이블(상담일·예약일·예약 시간·단체명/지역·인원·케밥), 행 검색, 상담일순/예약일순 정렬, 페이지네이션, 행 클릭 → 읽기 전용 상세 이동, 케밥 `수정` → 수정 페이지, 케밥 `삭제` → 확인 모달 → 삭제, 생성/수정/삭제 결과 토스트, 데이터 없음·검색결과 없음 빈 상태
+- 제외: 예약 상세/수정 화면 본문(각각 `reservations-detail`·`reservation-edit`), 행 다중 선택과 일괄 권한 부여(개편으로 폐기)
 
-## 화면 구조 (Figma 1:5902)
+## 화면 구조 (Figma 417:13157)
 
-1920px 데스크톱 기준. 좌상단 전역 메뉴 버튼은 기존 사이드바 기능을 재사용한다. 본문은 너비 1320px, 좌우 중앙 정렬이다.
+1920px 데스크톱 기준. 좌상단 전역 메뉴 버튼은 `AppLayout`이 렌더한다. 본문은 너비 1320px, 좌우 중앙 정렬이다.
 
-1. 타이틀: `단체예약 현황` (60px SemiBold) + 부제 `토이빌리지의 단체 방문 일정을 모니터링` (32px, gray/60)
-2. 상태 카운트 카드 3개 (row, gap 21): 각 카드 `w240 · radius24 · padding 12/62 · column gap32`
-   - `사전답사 전` / `사전답사 완료` / `방문 완료` 라벨(22px center)과 각 상태 개수(40px center)
-   - **활성 카드**는 blue-background(`accentBg`) 배경 + blue(`accent`) 숫자, 비활성은 white 배경 + 라벨 gray, 숫자 black. 기본 활성은 `사전답사 전`.
-   - 카드는 카운트 표시 + **상태 필터 탭** 역할을 겸한다(클릭 시 해당 상태로 테이블 필터).
-3. `페이지 권한주기` 버튼 (테이블 우측 상단): gray/100 배경, white 24px SemiBold, radius 53
-4. 테이블 카드 (`w1320 · radius20 · border gray/60 1px`, white surface)
-   - 헤더행(h52, gray/20 배경): 체크박스(라벨 없음) · `상담일`(180) · `예약일`(180) · `예약 시간`(180) · `단체명/지역`(540) · `인원`(240)
-   - 검색바(gray/10, radius44): search 아이콘 + placeholder `제목을 입력해주세요` + 필터 아이콘
-   - 행(h75): 체크박스 + 상담일 + 예약일 + 예약시간 + 단체명(24px)/지역(20px) + 인원(`n명`). 행 사이 divider. 행 클릭 → 상세 이동
-   - 페이지네이션(하단 중앙): 이전/번호/다음, 활성 번호는 blue-background + blue
-5. 정렬 드롭다운(필터 아이콘 클릭 시): `상담일순` / `예약일순` (white, shadow, radius8)
-
-배경·surface·텍스트·blue 강조는 기존 theme를 재사용한다. 카운트 카드 라벨색(gray/50·gray/70)과 테이블 헤더(gray/20)는 신규 의미 토큰 후보(게이트에서 명명).
+1. 타이틀 @300,124: `단체예약 현황` (60px SemiBold) + 부제 `토이빌리지의 단체 방문 일정을 모니터링` (32px, gray/60)
+2. 상태 카운트 카드 3개 @300,278 (row, gap 21): 각 카드 `w240 · h130 · radius24 · padding 12/62 · column gap32`, white surface
+   - `사전답사 전` / `사전답사 완료` / `방문 완료` 라벨(22px center, gray/70)과 각 상태 개수(40px center, black)
+   - 카드는 카운트 표시 + **상태 필터 탭** 역할을 겸한다. 활성 카드는 blue-background(`accentBg`) 배경 + blue(`accent`) 숫자다.
+     ※ yot 컴포넌트(`reservation / 진행 단계 요약` 145:14232)에는 선택 변형이 없지만, **필터와 활성 강조는 유지한다(개발자 결정 2026-09-20).**
+3. `단체예약 생성하기` 버튼 @1416,355 (카드행 우측): gray/100 배경, white 24px SemiBold, radius 53, padding 12/16 → `/notices/reservations/create`
+4. 테이블 카드 @300,440 (`w1320 · h520 · radius20 · border gray/60 1px`, white surface)
+   - 헤더행(h52, gray/20 배경), 좌우 32 인셋 · 셀 padding 11/40:
+     `상담일`(205) · `예약일`(200) · `예약 시간`(180) · `단체명/지역`(389) · `인원`(202) · 케밥 열(80, 헤더 라벨 없음)
+   - **체크박스 열은 없다.**
+   - 검색바(@40,76 · w1240 · h60 · gray/10 · radius44): search 아이콘 + placeholder `제목을 입력해주세요` + 우측 필터 아이콘
+   - 행(h75): 상담일 + 예약일 + 예약 시간 + 단체명(24px)/지역(20px) + 인원(`n명`) + 케밥(⋮). 행 사이 divider(gray/60 1px, x40 w1240)
+   - 페이지네이션(하단 중앙 @548,464): 이전/번호/다음, 활성 번호는 blue-background + blue
+5. 정렬 드롭다운(필터 아이콘 클릭 시, `417:13161` @1444,571 w120): `상담일순` / `예약일순` (white, shadow, radius8)
+6. 행 케밥 메뉴(`417:13172`, 컴포넌트 `kebab menu` 141:9597 `수정·삭제` 변형): w180, white, border gray/20, radius12, shadow, 항목 h48 padding 12/20 — `수정`(gray/100 20px) / `삭제`(red `#FF3131` 20px)
+7. 삭제 확인 모달(`417:13177`): 공용 `DeleteConfirmationDialog` — `정말 삭제하시겠습니까?` / `삭제하신 뒤에는 영구삭제되며 복구 할 수 없습니다` / `취소`·`확인`
+8. 토스트(우상단): 성공 = 초록 체크, 실패 = 빨강 느낌표
+   - `데이터 생성에 성공했습니다` / `데이터 생성에 실패했습니다`
+   - `데이터 삭제에 성공했습니다` / `데이터 삭제에 실패했습니다`
+   - `권한 부여에 성공했습니다` / `권한 부여에 실패했습니다`
+   - 수정 성공 문구는 Figma에 노드가 없어 같은 규칙으로 `데이터 수정에 성공했습니다`를 쓴다(개발자 결정, `resources-list`와 동일).
 
 ## 동작 (source of truth)
 
-- 상태 카드 클릭 → 해당 상태(`pending`/`approved`/`rejected`)로 테이블을 필터하고, 그 카드가 활성 표시된다. 카운트는 상태별 전체 개수를 표시한다.
-- 검색어 입력 → 단체명/지역 기준으로 현재 상태 목록을 필터한다. 결과가 없으면 빈 상태 메시지.
-- 필터 아이콘 클릭 → `상담일순`/`예약일순` 메뉴 표시. 선택 시 해당 날짜 기준 정렬(기본 최신 우선). 바깥 클릭·Escape로 닫힌다.
-- 행 클릭(또는 Enter/Space) → `/notices/reservations/:id` 상세로 이동한다.
-- 행 체크박스 토글 → 선택 상태 갱신. 헤더 체크박스로 현재 페이지 전체 토글.
-- `페이지 권한주기` 클릭 → 선택된 예약이 없으면 안내(검증 모달), 있으면 권한 부여 모달을 연다.
-- 페이지네이션 → 현재 필터/정렬 결과를 PAGE_SIZE로 나눠 페이지 이동. 상태·검색 변경 시 1페이지로 리셋.
+- 상태 카드 클릭 → 해당 상태(`pending`/`approved`/`rejected`)로 테이블을 필터하고 그 카드가 활성 표시된다. 카운트는 필터와 무관한 상태별 전체 개수다. 상태를 바꾸면 검색어를 비우고 1페이지로 간다.
+- 검색어 입력 → 디바운스 후 서버에 `title`로 질의한다. 결과가 없으면 `검색결과가 없습니다`.
+- 필터 아이콘 클릭 → `상담일순`/`예약일순` 메뉴. 선택 시 해당 기준으로 정렬하고 1페이지로 간다. 바깥 클릭·Escape로 닫힌다.
+- 행 클릭(또는 Enter/Space) → `/notices/reservations/:id`(읽기 전용 상세)로 이동한다. 이동 state 로 현재 조회 조건(`listSearch`)을 넘겨 뒤로가기에서 복원한다.
+- 케밥(⋮) 클릭 → 해당 행 메뉴가 열린다. **동시에 하나만 열린다.** 바깥 클릭·Escape로 닫힌다. 케밥 클릭은 행 클릭으로 전파되지 않는다.
+- 케밥 `수정` → `/notices/reservations/:id/edit` 로 이동한다(`listSearch` 동반).
+- 케밥 `삭제` → 메뉴를 닫고 삭제 확인 모달을 연다. `확인` → 삭제 요청. 성공하면 `['reservations','list']` 만 무효화하고 `데이터 삭제에 성공했습니다` 토스트를 띄운다. 실패하면 `데이터 삭제에 실패했습니다` 토스트를 띄우고 초점을 해당 행 케밥 버튼으로 되돌린다. `취소`/Escape도 초점을 되돌린다.
+- 생성·수정 화면에서 돌아오면 이동 state 의 결과값으로 토스트를 한 번만 띄운다(state 는 즉시 제거해 새로고침·뒤로가기에서 다시 뜨지 않게 한다).
+- 페이지네이션 → 서버 사이드. 상태·검색·정렬 변경 시 1페이지로 리셋한다. 삭제로 전체 페이지 수가 줄어 현재 page 가 범위를 넘으면 마지막 페이지로 되돌린다.
 
-## 권한 부여 모달 (구 파일 3414:3724, yot 대응 없음)
+## 빈 상태
 
-- 진입: 하나 이상 선택 + `페이지 권한주기`.
-- 구조: 제목 `권한 줄 직원을 선택해주세요`, 직원 이름 검색바(placeholder `검색할 직원 이름 입력`), 직원 목록(각 행: 아바타 + `{이름} 사원` + `추가`/`추가 완료` 토글 버튼), 하단 `취소`/`확인`.
-- `추가`(blue 채움) 클릭 → `추가 완료`(blue 외곽선) 토글로 해당 직원을 선택/해제한다.
-- 확인 시 mock 저장 경계만 호출하고(실 API 없음), 모달을 닫고 예약 선택을 초기화한다. 취소/Escape는 변경 없이 닫는다.
-- 접근성: `role="dialog"`, modal, 포커스 트랩, 호출 control 복귀.
+- 데이터 없음(`1:6114`): 테이블 카드(헤더 + 검색바)는 유지하고 본문에 `아직 단체예약이 없습니다`를 표시한다.
+- 검색 결과 없음(`1:6133`): 같은 자리에 `검색결과가 없습니다`.
+- 두 상태 모두 상태 카드와 `단체예약 생성하기` 버튼은 그대로 보인다.
 
-## 빈 상태 (Figma 1:6114)
-
-- 예약 데이터가 없으면 테이블 카드(헤더 + 검색바)는 유지하고 본문에 `아직 단체예약이 없습니다`를 표시한다. 검색 결과 없음(`검색결과가 없습니다`)과 문구로 구분한다.
-- 데이터가 없을 때는 `페이지 권한주기` 버튼을 숨긴다.
-
-## 공유 컴포넌트 일반화 — `DataTable`
-
-현재 `DataTable`은 고정 3컬럼(분류/제목/날짜) + 최신순/오래된순 정렬 전용이다. 예약 테이블을 위해 **컬럼 설정 기반**으로 일반화하고, 기존 소비처(NoticeTable·ResourceTable)도 새 API로 마이그레이션한다(재사용 용이). 렌더 결과·기존 동작은 보존한다.
-
-- `columns: { key, header, width, align?, render?(row) }[]` — 컬럼을 데이터로 기술
-- `rows: ({ id: string } & Record<string, ReactNode>)[]`
-- `selection?: { selectedIds, onToggle, onToggleAll }` — 지정 시 체크박스 컬럼 추가
-- `sort?: { value, options: { value, label }[], onChange, ariaLabel }` — 정렬 옵션 라벨을 주입(기존 하드코딩 `최신순/오래된순` 제거, notice가 옵션으로 전달)
-- 기존 `search`·`pagination`·`emptyLabel`·`onRowClick`·`rowTestId`는 유지
-- notice/resource는 기존과 동일한 헤더·pill·행 텍스트·정렬 라벨을 렌더하도록 컬럼/옵션을 구성 → 해당 목록의 승인·동결 시나리오 불변
-
-## 데이터와 API 경계 (mock)
+## 데이터와 API 경계 (연동 완료)
 
 ```ts
 type ReservationStatus = 'pending' | 'approved' | 'rejected'
@@ -96,45 +90,43 @@ interface Reservation {
   consultDate: string   // 상담일 2026.07.02
   reserveDate: string   // 예약일 2026.07.13
   reserveTime: string   // 예약 시간 13 : 01 (Figma 표기)
-  groupName: string     // 단체명 대구어린이집
+  groupName: string     // 단체명 대구유치원
   region: string        // 지역 대구광역시
-  headcount: number      // 인원 18
+  headcount: number     // 인원 18
 }
-interface Staff { id: string; name: string }
 ```
 
-- 조회 후보: `GET /reservations`(상태·검색·정렬·페이지 쿼리), 단건 `GET /reservations/:id`
-- 권한 후보: `POST /reservations/access` { reservationIds, staffIds }
-- query key: `['reservations']`
-- 현재 슬라이스는 localStorage/in-memory mock으로 대체한다. 실제 API 연결·권한 저장은 별도 `/api` 슬라이스에서 확정한다.
+- 목록: `GET /reservation` (`status`·`title`·`sort`·`page`·`size`) → `getAdminReservations` (`api/reservations-admin-query-all`)
+- 삭제: `DELETE /reservation/{id}` → `deleteReservation` (`api/reservations-admin-delete`)
+- query key: 목록 `['reservations','list', {...}]`, 상세 `['reservations', id]`
+- **삭제 후에는 `['reservations','list']` 만 무효화한다.** `['reservations']` 로 넓히면 삭제된 id 의 상세를 다시 GET 해 404 가 난다.
 
 ## 접근성
 
-- 상태 카드는 라디오/탭 semantics(선택 상태 노출)로 제공한다.
-- 검색 input은 프로그램적 label, 정렬 메뉴는 `menu`/`menuitemradio`.
-- 행은 키보드로 활성화 가능(Enter/Space)한 링크 역할. 체크박스는 `${단체명} 선택` 이름.
-- 권한 모달은 `role="dialog"`, modal semantics, 포커스 트랩, 호출 control 복귀.
-- focus-visible은 색만이 아닌 outline으로 표현한다.
+- 상태 카드는 `aria-pressed` 로 선택 상태를 노출한다.
+- 검색 input 은 프로그램적 label, 정렬 메뉴는 `menu`/`menuitemradio`.
+- 행은 키보드로 활성화 가능(Enter/Space)하다.
+- 케밥 버튼은 `${단체명} 관리 메뉴` 이름과 `aria-expanded` 를 갖고, 메뉴는 Escape 로 닫히며 초점이 버튼으로 돌아온다.
+- 삭제 모달은 `role="dialog"`, modal semantics, 포커스 트랩, 호출 control 복귀.
+- focus-visible 은 색만이 아닌 outline 으로 표현한다.
 
 ## 반응형
 
-- 980px 이하에서 카드·테이블 padding과 타이틀 크기를 줄이고, 테이블은 가로 스크롤 없이 조작 가능해야 한다.
+- 980px 이하에서 카드·테이블 padding 과 타이틀 크기를 줄이고, 테이블은 가로 스크롤 없이 조작 가능해야 한다.
 
 ## 기능 테스트 수용 기준
 
-- S1: 리스트 진입 → 타이틀, 상태 카드 3개(각 카운트), `페이지 권한주기` 버튼, 테이블(헤더·검색·행), 페이지네이션이 보인다.
+- S1: 리스트 진입 → 타이틀, 상태 카드 3개(각 카운트), `단체예약 생성하기` 버튼, 테이블(헤더 상담일·예약일·예약 시간·단체명/지역·인원 + 검색바 + 행), 페이지네이션이 보인다. 체크박스와 `페이지 권한주기` 버튼은 **없다**.
 - S2: 상태 카드(예: 방문 완료) 클릭 → 그 상태만 테이블에 표시되고 카드가 활성 표시된다.
-- S3: 검색어 입력 → 단체명/지역이 일치하는 행만 남고, 없으면 빈 상태 메시지.
-- S4: 필터 아이콘 → `상담일순`/`예약일순` 메뉴, 선택 시 해당 기준으로 정렬된다.
+- S3: 검색어 입력 → 일치하는 행만 남고, 없으면 `검색결과가 없습니다`.
+- S4: 필터 아이콘 → `상담일순`/`예약일순` 메뉴, 선택 시 해당 기준으로 정렬되고 메뉴가 닫힌다.
 - S5: 행 클릭 → `/notices/reservations/:id`로 이동한다.
-- S6: 행 체크박스 선택 후 `페이지 권한주기` → 권한 부여 모달이 열린다.
-- S7: 선택 없이 `페이지 권한주기` → 선택 필요 안내 모달을 표시한다.
-- S8: 권한 모달에서 직원 선택 + 확인 → 모달이 닫히고 선택이 초기화된다. 취소/Escape → 변경 없이 닫힌다.
-- S9: 데이터가 없을 때 → 빈 상태를 표시한다.
-- S10: 페이지네이션 이동, 상태·검색 변경 시 1페이지로 리셋된다.
+- S6: 행 케밥 클릭 → `수정`/`삭제` 메뉴가 열리고, 다른 행 케밥을 열면 앞 메뉴는 닫힌다.
+- S7: 케밥 `수정` → `/notices/reservations/:id/edit`로 이동한다.
+- S8: 케밥 `삭제` → 확인 모달 → `확인` → 목록에서 사라지고 `데이터 삭제에 성공했습니다` 토스트가 뜬다. 삭제 요청이 실패하면 `데이터 삭제에 실패했습니다` 토스트가 뜬다.
+- S9: 데이터가 없을 때 → `아직 단체예약이 없습니다` 빈 상태를 표시한다.
+- S10: 페이지네이션 이동, 상태·검색·정렬 변경 시 1페이지로 리셋된다.
 
 ## 미결 사항
 
-- [ ] 권한 모달(구 `3414:3724`, yot 없음) 존폐·빈 상태(`1:6114`)의 정확한 시각/카피 — #94에서 확정
-- [ ] 예약 상세 페이지(`/notices/reservations/:id`) 본문 — 별도 슬라이스
-- [ ] 실제 예약/직원/권한 API 계약 — `/api` 슬라이스
+- 없음 (권한 부여 모달은 개편으로 폐기 — `src/features/grant-reservation-access` 제거)
