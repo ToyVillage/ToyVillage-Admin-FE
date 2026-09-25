@@ -15,15 +15,15 @@ import {
   toCreateReservationRequest,
   toReservationFormValue,
   validateReservationForm,
+  type ReservationFormCompletion,
   type ReservationFormErrors,
   type ReservationFormValue,
 } from '@/features/reservation-form'
+import { Toast } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
-import { serverMessage } from './model/serverMessage'
 import { ReservationEditSkeleton } from './ui/ReservationEditSkeleton'
-
-// 서버가 사유를 주지 않았을 때 보일 기본 문구.
-const FALLBACK = '요청 처리에 실패했습니다. 다시 시도해 주세요.'
+import { failureToastMessage } from './model/toast'
+import { serverMessage } from './model/serverMessage'
 
 // `/notices/reservations/:id/edit` — 단체예약 수정(Figma yot 1:7846).
 // 삭제는 이 화면이 아니라 목록 케밥이 맡는다(Figma 417:13157/417:13177).
@@ -38,7 +38,7 @@ export function ReservationEditPage() {
 
   const [value, setValue] = useState<ReservationFormValue | null>(null)
   const [errors, setErrors] = useState<ReservationFormErrors>({})
-  const [actionError, setActionError] = useState('')
+  const [failedToast, setFailedToast] = useState<string | null>(null)
 
   // 권한 섹션 검색어(서버 검색 없음 → 프론트에서 필터).
   const [permissionQuery, setPermissionQuery] = useState('')
@@ -61,14 +61,8 @@ export function ReservationEditPage() {
     setValue(toReservationFormValue(reservation))
   }
 
-  // 잘못된 id·404·조회 실패. 별도 화면은 디자인에 없어 목록으로 되돌린다.
-  useEffect(() => {
-    if (!isError) return
-    navigate(listPath, { replace: true })
-  }, [isError, listPath, navigate])
-
   // 배정 직원 목록(배정됨/배정가능) — 상세와 병렬 조회. 전원 반환(서버 검색 없음).
-  const { data: employees, isError: isEmployeesError } = useQuery({
+  const { data: employees } = useQuery({
     queryKey: ['reservations', id, 'employees'],
     queryFn: () => getReservationEmployees({ reservationId: Number(id) }),
     enabled: Boolean(id),
@@ -82,6 +76,21 @@ export function ReservationEditPage() {
     setAssignedIds(employees.assigned.map((staff) => staff.id))
   }
   const currentAssignedIds = useMemo(() => assignedIds ?? [], [assignedIds])
+
+  // 배정 id는 직원 조회 API에서 온 실제 숫자 id → 그대로 전송(배정 통째 교체).
+  const appAdminIds = useMemo(
+    () =>
+      currentAssignedIds
+        .map((staffId) => Number(staffId))
+        .filter((n) => Number.isSafeInteger(n) && n > 0),
+    [currentAssignedIds],
+  )
+
+  // 잘못된 id·404·조회 실패. 별도 화면은 디자인에 없어 목록으로 되돌린다.
+  useEffect(() => {
+    if (!isError) return
+    navigate(listPath, { replace: true })
+  }, [isError, listPath, navigate])
 
   // 배정됨 + 배정가능 합집합(중복 제거). 전원 반환된 풀(서버 검색 없음).
   const staffPool = useMemo<Staff[]>(() => {
@@ -125,36 +134,54 @@ export function ReservationEditPage() {
   const cancelStaff = (staffId: string) =>
     setAssignedIds((prev) => (prev ?? []).filter((sid) => sid !== staffId))
 
-  const saveMutation = useMutation({
-    mutationFn: (next: ReservationFormValue) => {
-      // 배정 id는 직원 조회 API에서 온 실제 숫자 id → 그대로 전송(배정 통째 교체).
-      const appAdminIds = currentAssignedIds
-        .map((staffId) => Number(staffId))
-        .filter((n) => Number.isSafeInteger(n) && n > 0)
-      return updateReservation({
-        id: Number(id),
-        body: toCreateReservationRequest(next, appAdminIds),
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-      navigate(listPath)
-    },
-    onError: (error) => setActionError(serverMessage(error, FALLBACK)),
-  })
-
   const formValue = value ?? emptyReservationFormValue
 
+  // 값은 그대로 두고 배정만 바꾼 저장이면 `권한 부여` 토스트를 쓴다(Figma 417:13419).
+  function completionKind(
+    next: ReservationFormValue,
+  ): ReservationFormCompletion {
+    if (!reservation || !employees) return 'updated'
+    const initialValue = toReservationFormValue(reservation)
+    const valueChanged = (
+      Object.keys(initialValue) as (keyof ReservationFormValue)[]
+    ).some((key) => initialValue[key] !== next[key])
+    if (valueChanged) return 'updated'
+
+    const initialAssigned = employees.assigned.map((staff) => staff.id)
+    const assignmentChanged =
+      initialAssigned.length !== currentAssignedIds.length ||
+      initialAssigned.some((staffId) => !currentAssignedIds.includes(staffId))
+    return assignmentChanged ? 'permission' : 'updated'
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: (next: ReservationFormValue) =>
+      updateReservation({
+        id: Number(id),
+        body: toCreateReservationRequest(next, appAdminIds),
+      }),
+    onSuccess: async (_data, next) => {
+      const toast = completionKind(next)
+      // 목록만 무효화하고 이 예약의 상세는 따로 지운다. `['reservations']` 로 넓히면
+      // 이미 떠난 화면의 쿼리까지 되살아난다.
+      await queryClient.invalidateQueries({
+        queryKey: ['reservations', 'list'],
+      })
+      await queryClient.invalidateQueries({ queryKey: ['reservations', id] })
+      navigate(listPath, { state: { toast } })
+    },
+    onError: (error, next) =>
+      setFailedToast(
+        serverMessage(error, failureToastMessage[completionKind(next)]),
+      ),
+  })
+
   function handleSave() {
-    setActionError('')
+    setFailedToast(null)
     // 배정 직원 조회가 끝나기 전(또는 실패)에는 현재 배정을 알 수 없다. 이때 저장하면
     // appAdminIds 가 빈 목록으로 나가 기존 배정을 전부 지운다 → 조회 성공 전까지 저장을 막는다.
     if (assignedIds === null) {
-      setActionError(
-        isEmployeesError
-          ? '담당자 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'
-          : '담당자 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.',
-      )
+      setFailedToast(failureToastMessage.permission)
       return
     }
     const nextErrors = validateReservationForm(formValue)
@@ -181,7 +208,6 @@ export function ReservationEditPage() {
     <Page>
       <Content>
         <ReservationBackLink to={listPath} />
-        {actionError && <ErrorAlert role="alert">{actionError}</ErrorAlert>}
         <ReservationForm
           value={formValue}
           onChange={setValue}
@@ -206,6 +232,14 @@ export function ReservationEditPage() {
           </SaveButton>
         </Actions>
       </Content>
+
+      {failedToast && (
+        <Toast
+          variant="error"
+          message={failedToast}
+          onDismiss={() => setFailedToast(null)}
+        />
+      )}
     </Page>
   )
 }
@@ -224,16 +258,6 @@ const Content = styled.div`
   gap: 32px;
   margin: 0 auto;
   padding-top: 76px;
-`
-
-const ErrorAlert = styled.div`
-  padding: 20px 24px;
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.2;
 `
 
 const Actions = styled.div`
