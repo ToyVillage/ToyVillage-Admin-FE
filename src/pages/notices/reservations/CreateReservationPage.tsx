@@ -16,11 +16,10 @@ import {
   getReservationEmployees,
   type Staff,
 } from '@/entities/reservation'
+import { Toast } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
+import { failureToastMessage } from './model/toast'
 import { serverMessage } from './model/serverMessage'
-
-// 서버가 사유를 주지 않았을 때 보일 기본 문구.
-const FALLBACK = '단체예약 생성에 실패했습니다. 다시 시도해 주세요.'
 
 // 저장 전 단체예약의 직원 목록은 reservationId=-1 로 조회한다(전원 assignable).
 const NEW_RESERVATION_ID = -1
@@ -32,7 +31,7 @@ export function CreateReservationPage() {
     emptyReservationFormValue,
   )
   const [errors, setErrors] = useState<ReservationFormErrors>({})
-  const [submitError, setSubmitError] = useState('')
+  const [failed, setFailed] = useState<string | null>(null)
 
   // 페이지 권한 섹션: 저장 전이므로 -1 로 전원 조회. 이름 검색은 프론트 필터.
   const [permissionQuery, setPermissionQuery] = useState('')
@@ -88,14 +87,19 @@ export function CreateReservationPage() {
       return createReservation(toCreateReservationRequest(value, appAdminIds))
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-      navigate('/notices/reservations')
+      // 목록만 무효화한다. `['reservations']` 로 넓히면 상세 쿼리까지 되살아난다.
+      await queryClient.invalidateQueries({
+        queryKey: ['reservations', 'list'],
+      })
+      // 성공 토스트는 목록이 띄운다(Figma `단체예약 · 토스트` 417:13439).
+      navigate('/notices/reservations', { state: { toast: 'created' } })
     },
-    onError: (error) => setSubmitError(serverMessage(error, FALLBACK)),
+    onError: (error) =>
+      setFailed(serverMessage(error, failureToastMessage.created)),
   })
 
   function handleCreate() {
-    setSubmitError('')
+    setFailed(null)
     const nextErrors = validateReservationForm(value)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length === 0) {
@@ -109,7 +113,6 @@ export function CreateReservationPage() {
     <Page>
       <Content>
         <ReservationBackLink />
-        {submitError && <ErrorAlert role="alert">{submitError}</ErrorAlert>}
         <ReservationForm
           value={value}
           onChange={setValue}
@@ -134,6 +137,14 @@ export function CreateReservationPage() {
           </CreateButton>
         </Actions>
       </Content>
+
+      {failed && (
+        <Toast
+          variant="error"
+          message={failed}
+          onDismiss={() => setFailed(null)}
+        />
+      )}
     </Page>
   )
 }
@@ -152,16 +163,6 @@ const Content = styled.div`
   gap: 32px;
   margin: 0 auto;
   padding-top: 76px;
-`
-
-const ErrorAlert = styled.div`
-  padding: 20px 24px;
-  border-radius: 16px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.2;
 `
 
 const Actions = styled.div`
