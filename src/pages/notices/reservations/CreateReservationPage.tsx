@@ -17,22 +17,13 @@ import {
   type Staff,
 } from '@/entities/reservation'
 import { ReservationBackLink } from './ui/ReservationBackLink'
+import { serverMessage } from './model/serverMessage'
+
+// 서버가 사유를 주지 않았을 때 보일 기본 문구.
+const FALLBACK = '단체예약 생성에 실패했습니다. 다시 시도해 주세요.'
 
 // 저장 전 단체예약의 직원 목록은 reservationId=-1 로 조회한다(전원 assignable).
 const NEW_RESERVATION_ID = -1
-
-// 서버 오류 응답에서 사용자용 message 를 뽑는다(없으면 기본 문구).
-function serverMessage(error: unknown): string {
-  const data = (error as { response?: { data?: unknown } })?.response?.data
-  if (
-    data &&
-    typeof data === 'object' &&
-    typeof (data as Record<string, unknown>).message === 'string'
-  ) {
-    return (data as { message: string }).message
-  }
-  return '단체예약 생성에 실패했습니다. 다시 시도해 주세요.'
-}
 
 export function CreateReservationPage() {
   const navigate = useNavigate()
@@ -100,7 +91,7 @@ export function CreateReservationPage() {
       await queryClient.invalidateQueries({ queryKey: ['reservations'] })
       navigate('/notices/reservations')
     },
-    onError: (error) => setSubmitError(serverMessage(error)),
+    onError: (error) => setSubmitError(serverMessage(error, FALLBACK)),
   })
 
   function handleCreate() {
