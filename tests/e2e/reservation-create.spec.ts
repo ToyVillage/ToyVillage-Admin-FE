@@ -43,12 +43,12 @@ async function fillAllRequired(page: Page) {
   await page.getByLabel('인솔자 인원').fill('3')
   await page.getByLabel('입장료를 입력해주세요').fill('48000')
   await page.getByLabel('방문일을 선택해주세요').fill('2026.08.20')
-  const visitLabel = '방문 시간을 선택해주세요'
+  const visitLabel = '방문 시간을 입력해주세요'
   await fillTime(page, visitLabel, '입장시간', '1000') // 10:00
   await fillTime(page, visitLabel, '퇴장시간', '1800') // 18:00
   await page.getByLabel('사전답사 인원').fill('8')
   await page.getByLabel('사전답사일을 선택해주세요').fill('2026.08.16')
-  const surveyLabel = '사전답사 시간을 선택해주세요'
+  const surveyLabel = '사전답사 시간을 입력해주세요'
   await fillTime(page, surveyLabel, '입장시간', '1000') // 10:00
   await fillTime(page, surveyLabel, '퇴장시간', '1500') // 15:00
 }
@@ -81,7 +81,7 @@ test('S3: 필수 미입력 검증(인라인)', async ({ page }) => {
 
   await expect(page.getByText('내용을 입력해주세요!').first()).toBeVisible()
   await expect(page.getByText('날짜를 선택해주세요!').first()).toBeVisible()
-  await expect(page.getByText('시간을 선택해주세요!').first()).toBeVisible()
+  await expect(page.getByText('시간을 입력해주세요!').first()).toBeVisible()
   await expect(page).toHaveURL(/\/notices\/reservations\/create$/)
 })
 
@@ -109,7 +109,7 @@ test('S5: 시간 직접 입력(24시간제)', async ({ page }) => {
   await routeAssignableEmployees(page)
 
   await page.goto('/notices/reservations/create')
-  const label = '방문 시간을 선택해주세요'
+  const label = '방문 시간을 입력해주세요'
   const hour = page.getByLabel(`${label} 입장시간 시`, { exact: true })
   const minute = page.getByLabel(`${label} 입장시간 분`, { exact: true })
 
@@ -149,7 +149,7 @@ test('S8: 한 자리만 입력해도 보이는 값으로 제출된다', async ({
   await page.goto('/notices/reservations/create')
   await fillAllRequired(page)
   // 방문 입장시간을 `1` 한 자리로 다시 입력한다 → 화면은 10 : 00.
-  const hour = page.getByLabel('방문 시간을 선택해주세요 입장시간 시', {
+  const hour = page.getByLabel('방문 시간을 입력해주세요 입장시간 시', {
     exact: true,
   })
   await hour.click()
@@ -171,7 +171,7 @@ test('S9: 퇴장이 입장보다 빠르면 그 칸에 인라인 에러', async (
   await routeAssignableEmployees(page)
 
   await page.goto('/notices/reservations/create')
-  const label = '방문 시간을 선택해주세요'
+  const label = '방문 시간을 입력해주세요'
   await fillTime(page, label, '입장시간', '1400')
   await fillTime(page, label, '퇴장시간', '0900')
   await page.getByRole('button', { name: '생성하기' }).click()
