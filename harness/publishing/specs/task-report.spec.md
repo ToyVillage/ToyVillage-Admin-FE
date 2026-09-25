@@ -22,10 +22,11 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 ## 상태와 근거
 
-- Status: Approved (yunho09, 2026-09-13 상세 디자인 2차 수정·배지 `완료` 반영 — S4·S9 재승인 · ③~⑤ 완료 · e2e freeze 32/32). ⑦ 육안 확인 대기.
+- Status: Approved (yunho09, 2026-09-25 목록 표 `제목` 컬럼 추가 — #184, S2 재승인 · ③~⑤ 완료 · e2e freeze 35/35). ⑦ 육안 확인 대기.
+  직전: Approved (yunho09, 2026-09-13 상세 디자인 2차 수정·배지 `완료` 반영 — S4·S9 재승인 · ③~⑤ 완료 · e2e freeze 32/32). ⑦ 육안 확인 대기.
   직전: Approved (yunho09, S1–S4·S6–S33, 2026-09-13 yot 기준 재승인 · ③~⑤ 완료 · e2e freeze).
   이전: Approved (yunho09, S1–S24, 2026-09-11 재승인 · e2e freeze) — 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`) 기준.
-- Last refreshed: 2026-09-13
+- Last refreshed: 2026-09-25
 - 기준 파일은 `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`), 페이지 `0:1` "토이빌리지" › 섹션 `웹 (operator)` ›
   `업무보고`(`300:12758`) › `업무보고 · 목록`(`311:12779`) / `업무보고 · 상세`(`311:12780`) / `업무보고 · 토스트`(`311:12781`).
 - 목록 화면 기준: `1:3510` (`task report`) — 표 `report list`(`141:9720`), 탭바 `report / 심사 상태 탭바`(`145:11718`)
@@ -59,7 +60,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 | 영역 | 구(`toyvillage-dev`) | yot |
 | --- | --- | --- |
 | 탭 | 심사대기·완료·반려·재제출 | **심사대기·완료·반려** (4번째 탭 hidden) |
-| 표 컬럼 | 담당자·제목·상태·우선순위·완료기한·공개범위 | **담당자·상태·우선순위·완료기한 + 케밥** |
+| 표 컬럼 | 담당자·제목·상태·우선순위·완료기한·공개범위 | **제목·담당자·상태·우선순위·완료기한 + 케밥** (제목은 2026-09-25 추가) |
 | 표 `상태` | 업무(task) 상태 pill | **심사 상태 배지**(`status / 업무 보고`) |
 | 행 동작 | 행 클릭 → 상세 | 행 클릭 → 상세 **+ 케밥 `승인하기`/`반려하기`** |
 | 상세 요약행 | 우선순위·상태(업무)·담당자·완료 기한·공개 범위 | 우선순위·**상태(심사)**·담당자·완료 기한 (공개 범위는 개발자 결정으로 제외) |
@@ -99,7 +100,8 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 2. 탭바 @300,278 (h46): `심사대기 n` `완료 n` `반려 n`. 활성 탭 SemiBold `text` + 하단선, 비활성 Medium `textGuide`.
    컴포넌트의 4번째 탭은 `hidden` 이라 구현하지 않는다.
 3. 표 @300,354 (w1320, h372 = 헤더 72 + 행 100 × 3): 헤더 배경 `tableHeaderStrong`, 행 `surface`, 행 구분선.
-   컬럼(폭): `담당자`(300) `상태`(320) `우선순위`(300) `완료기한`(320) + 헤더 텍스트 없는 케밥 칸(80). 셀 텍스트 좌측 여백 40.
+   컬럼(폭): `제목`(440) `담당자`(200) `상태`(200) `우선순위`(180) `완료기한`(220) + 헤더 텍스트 없는 케밥 칸(80). 셀 텍스트 좌측 여백 40.
+   `제목` 셀은 22 Medium `text` 한 줄이며 칸을 넘으면 말줄임(…)한다(2026-09-25 Figma 갱신, #184).
    - `상태` 셀: 심사 상태 배지(h40, `status / 업무 보고`) — `task-detail` 담당자별 보고 줄과 같은 배지.
    - `우선순위` 셀: 배지 42x40(`common / 뱃지 / 우선순위`) — 업무관리 목록과 같은 컴포넌트라 `entities/task` 의 `TaskPriorityBadge` 를 쓴다
      (상 `danger` · 중 `warning` · 하 회색). 구 디자인용 36px 원형 `TaskReportPriorityBadge` 는 삭제한다.
@@ -213,11 +215,11 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
   - `taskReportReviewStatuses = ['PENDING','APPROVED','REJECTED']` — `RESUBMITTED` 제거
   - `TaskReport { id, taskId?, assigneeId, assigneeName, title, content, reviewStatus, priority, dueDate, attachments? }`
     — 표시 위치가 사라진 `taskStatus` · `visibility` 제거
-  - `TaskReportListItem` — 표 렌더용 파생 타입(`id, assigneeName, reviewStatus, priority, dueDate`)
+  - `TaskReportListItem` — 표 렌더용 파생 타입(`id, assigneeName, title, reviewStatus, priority, dueDate`)
 - `entities/task-report/model/labels.ts` — 탭 라벨 `심사대기 / 완료 / 반려`
 - `entities/task-report/ui/TaskReportReviewBadge.tsx` (**신규 — `TaskReportSummaryCard` 안의 배지를 추출**) —
   심사 상태 배지. 업무 상세 보고 줄·목록 `상태` 칸·상세 요약행이 함께 쓴다. props: `status`.
-- `entities/task-report/ui/TaskReportTable.tsx` — `shared/ui/DataTable`. 컬럼 4개 + 케밥 칸. 케밥 칸 내용은 페이지가
+- `entities/task-report/ui/TaskReportTable.tsx` — `shared/ui/DataTable`. 컬럼 5개(제목 포함) + 케밥 칸. 케밥 칸 내용은 페이지가
   render prop 으로 넘긴다(업무관리 `TaskTable` 의 `actions` 칸과 같은 방식).
 - `entities/task-report/ui/TaskReportMetaRow.tsx` — props `priority, reviewStatus, assigneeName, dueDate` (`taskStatus`·`visibility` 제거)
 - `entities/task-report/ui/TaskReportContentCard.tsx` (**신규**) — 내용 카드(큰 제목·본문). props `title, content`.
