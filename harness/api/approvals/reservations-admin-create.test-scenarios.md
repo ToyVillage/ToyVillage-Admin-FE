@@ -31,7 +31,8 @@
 - Mock request: `POST /api/reservation`
 - Mock response: HTTP 400 `{ message: "퇴장 시간은 입장 시간보다 빠를 수 없습니다.", ... }`
 - 사용자 동작: 필수 채우고 생성
-- 기대 결과: 상단 `role="alert"`에 서버 message 표시, 목록 이동 없음.
+- 기대 결과: 실패 토스트(`role="alert"`)에 서버 message 표시, 목록 이동 없음.
+  서버가 message 를 주지 않으면 Figma 기본 문구 `데이터 생성에 실패했습니다`.
 
 ## Staging R1
 
