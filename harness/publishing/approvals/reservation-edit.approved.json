@@ -1,6 +1,6 @@
 {
   "feature": "reservation-edit",
-  "approvedAt": "2026-08-22T17:41:04.298Z",
+  "approvedAt": "2026-09-20T05:00:25.445Z",
   "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
@@ -10,6 +10,6 @@
     "S5",
     "S6"
   ],
-  "scenarioHash": "4ab54541677f02a80d8dee0d8074f2187f47dbc9bc444044950ebfcc28ce5303",
-  "e2eHash": "c57be2e38a14813577ddd7ae300063d7082f2017dbf1f514be73952968049931"
+  "scenarioHash": "87f228606c5a913c5f670187b613da88df0aeacdcb505fb81ac4d8ebb3813c62",
+  "e2eHash": "859ff864dd795a232826702bc21d9dfb4a4f1401524e83f1b5927b2a05afd776"
 }
