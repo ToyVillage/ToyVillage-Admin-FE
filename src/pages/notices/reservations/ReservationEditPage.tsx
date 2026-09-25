@@ -28,7 +28,7 @@ import { ReservationEditSkeleton } from './ui/ReservationEditSkeleton'
 // 서버가 사유를 주지 않았을 때 보일 기본 문구.
 const FALLBACK = '요청 처리에 실패했습니다. 다시 시도해 주세요.'
 
-export function ReservationDetailPage() {
+export function ReservationEditPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
