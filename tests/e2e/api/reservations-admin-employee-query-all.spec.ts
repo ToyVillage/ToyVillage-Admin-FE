@@ -48,7 +48,7 @@ test('S1: 배정됨/배정가능 목록 표시 + path 확인', async ({ page }) 
     })
   })
 
-  await page.goto('/notices/reservations/1')
+  await page.goto('/notices/reservations/1/edit')
 
   await expect(
     page.getByRole('list', { name: '배정된 담당자' }).getByText('이승현'),
@@ -78,7 +78,7 @@ test('S2: 권한 검색어는 프론트에서 필터(서버 name 파라미터 �
     })
   })
 
-  await page.goto('/notices/reservations/1')
+  await page.goto('/notices/reservations/1/edit')
   await expect(
     page.getByRole('list', { name: '배정된 담당자' }).getByText('이승현'),
   ).toBeVisible()
@@ -106,7 +106,7 @@ test('S3: 빈 목록 → 배정됨 없음 안내', async ({ page }) => {
     })
   })
 
-  await page.goto('/notices/reservations/1')
+  await page.goto('/notices/reservations/1/edit')
 
   await expect(page.getByText('아직 배정된 담당자가 없습니다.')).toBeVisible()
   await expect(
@@ -131,7 +131,7 @@ test('S4: 직원 목록 500 → 성공 빈 목록으로 위장하지 않음(폼�
     })
   })
 
-  await page.goto('/notices/reservations/1')
+  await page.goto('/notices/reservations/1/edit')
 
   // 상세 폼은 정상 렌더(그레이스풀 디그레이드). 데이터 계층은 오류를 throw 하며 빈 성공으로 변환하지 않는다.
   await expect(page.getByLabel('단체명', { exact: true })).toHaveValue(
