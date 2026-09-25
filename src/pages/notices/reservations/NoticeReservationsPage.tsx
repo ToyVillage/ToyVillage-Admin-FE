@@ -177,12 +177,13 @@ export function NoticeReservationsPage() {
     const targetId = deleteTargetId
     deleteMutation.mutate(targetId, {
       onSuccess: async () => {
+        // 모달은 목록 재조회를 기다리지 않고 바로 닫는다.
+        deletingRef.current = false
+        setDeleteTargetId(null)
         // 목록만 무효화한다. 상세 쿼리까지 넓히면 삭제된 id 를 다시 GET 해 404 가 난다.
         await queryClient.invalidateQueries({
           queryKey: ['reservations', 'list'],
         })
-        deletingRef.current = false
-        setDeleteTargetId(null)
         setLocalToast({
           variant: 'success',
           message: deleteToastMessage.success,
