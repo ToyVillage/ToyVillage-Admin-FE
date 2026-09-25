@@ -1,22 +1,24 @@
 # API Test Scenarios — reservations-admin-delete
 
-대상: `/notices/reservations/:id` (`ReservationDetailPage`). 상세(`/reservation/{id}`)를 200으로 채워 편집 폼이 렌더되게 하고 삭제를 검증한다. mock은 `page.route()` 기반, 실제 서버 요청 없음.
+대상: `/notices/reservations` 목록의 행 케밥 `삭제`(`NoticeReservationsPage`). 목록(`GET /reservation?`)을 200으로 채워 행을 렌더하고 케밥 → `삭제` → 확인 모달로 검증한다.
+(2026-09-20 디자인 개편: 삭제 버튼이 수정 화면에서 목록 케밥으로 옮겨졌다.) mock은 `page.route()` 기반, 실제 서버 요청 없음.
 
 ## Mock S1 — 정상 삭제 → 목록 이동
 
 - 목적: 삭제 확인 후 DELETE 호출·목록 복귀.
 - Mock request: `DELETE /api/reservation/1`
 - Mock response: HTTP 200, `{ "message": "단체예약 삭제가 완료되었습니다." }`
-- 사용자 동작: `삭제하기` → 확인 모달에서 `확인`(삭제)
-- 기대 결과: 요청 method DELETE, path `/reservation/1`. 이후 `/notices/reservations`로 이동.
+- 사용자 동작: 행 케밥(`⋮`) → `삭제` → 확인 모달에서 `확인`
+- 기대 결과: 요청 method DELETE, path `/reservation/1`. 목록에 머문 채 `데이터 삭제에 성공했습니다` 토스트를 띄우고 목록을 다시 조회한다.
 
 ## Mock S2 — 삭제 실패(404) → 서버 message 알림
 
 - 목적: 실패를 사용자에게 알린다(이동 없음).
 - Mock request: `DELETE /api/reservation/1`
 - Mock response: HTTP 404 `{ message: "존재하지 않는 단체예약 목록입니다.", ... }`
-- 사용자 동작: `삭제하기` → 확인
-- 기대 결과: 상단 `role="alert"`에 서버 message 표시, 목록 이동 없음.
+- 사용자 동작: 행 케밥(`⋮`) → `삭제` → 확인
+- 기대 결과: 실패 토스트(`role="alert"`)에 서버 message 표시, 행은 그대로 남는다.
+  서버가 message 를 주지 않으면 Figma 기본 문구 `데이터 삭제에 실패했습니다`.
 
 ## Staging R1
 
