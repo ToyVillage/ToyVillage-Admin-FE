@@ -50,8 +50,8 @@ const screens = [
   { id: 'S11', name: '공지사항 수정', path: '/notices/list/1/edit' },
   { id: 'S12', name: '휴관일 수정', path: '/notices/guide/1/edit' },
   { id: 'S13', name: '운영시간 수정', path: '/notices/guide/hours/2026-09-20' },
-  { id: 'S14', name: '자료실 수정', path: '/notices/resources/1' },
-  { id: 'S15', name: '단체예약 수정', path: '/notices/reservations/1' },
+  { id: 'S14', name: '자료실 수정', path: '/notices/resources/1/edit' },
+  { id: 'S15', name: '단체예약 수정', path: '/notices/reservations/1/edit' },
   { id: 'S16', name: '종 수정', path: '/species/1/edit' },
   { id: 'S17', name: '개체 수정', path: '/species/1/individuals/1/edit' },
   {
