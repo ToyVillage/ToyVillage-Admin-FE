@@ -3,7 +3,6 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
-  deleteReservation,
   getReservation,
   getReservationEmployees,
   isReservationNotFoundError,
@@ -20,7 +19,6 @@ import {
   type ReservationFormErrors,
   type ReservationFormValue,
 } from '@/features/reservation-form'
-import { DeleteConfirmationDialog } from '@/shared/ui'
 import { ReservationBackLink } from './ui/ReservationBackLink'
 import { serverMessage } from './model/serverMessage'
 import { ReservationEditSkeleton } from './ui/ReservationEditSkeleton'
@@ -28,6 +26,8 @@ import { ReservationEditSkeleton } from './ui/ReservationEditSkeleton'
 // 서버가 사유를 주지 않았을 때 보일 기본 문구.
 const FALLBACK = '요청 처리에 실패했습니다. 다시 시도해 주세요.'
 
+// `/notices/reservations/:id/edit` — 단체예약 수정(Figma yot 1:7846).
+// 삭제는 이 화면이 아니라 목록 케밥이 맡는다(Figma 417:13157/417:13177).
 export function ReservationEditPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
@@ -39,7 +39,6 @@ export function ReservationEditPage() {
 
   const [value, setValue] = useState<ReservationFormValue | null>(null)
   const [errors, setErrors] = useState<ReservationFormErrors>({})
-  const [deleteOpen, setDeleteOpen] = useState(false)
   const [actionError, setActionError] = useState('')
 
   // 권한 섹션 검색어(서버 검색 없음 → 프론트에서 필터).
@@ -139,17 +138,6 @@ export function ReservationEditPage() {
     },
     onError: (error) => setActionError(serverMessage(error, FALLBACK)),
   })
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteReservation(Number(id)),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['reservations'] })
-      navigate(listPath)
-    },
-    onError: (error) => {
-      setDeleteOpen(false)
-      setActionError(serverMessage(error, FALLBACK))
-    },
-  })
 
   const formValue = value ?? emptyReservationFormValue
 
@@ -227,13 +215,6 @@ export function ReservationEditPage() {
           }}
         />
         <Actions>
-          <DeleteButton
-            type="button"
-            disabled={deleteMutation.isPending}
-            onClick={() => setDeleteOpen(true)}
-          >
-            삭제하기
-          </DeleteButton>
           <SaveButton
             type="button"
             disabled={saveMutation.isPending}
@@ -243,14 +224,6 @@ export function ReservationEditPage() {
           </SaveButton>
         </Actions>
       </Content>
-
-      {deleteOpen && (
-        <DeleteConfirmationDialog
-          pending={deleteMutation.isPending}
-          onCancel={() => setDeleteOpen(false)}
-          onConfirm={() => deleteMutation.mutate()}
-        />
-      )}
     </Page>
   )
 }
@@ -284,16 +257,18 @@ const ErrorAlert = styled.div`
 const Actions = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 16px;
 `
 
-const baseAction = `
+const SaveButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 52px;
   padding: 16px 20px;
+  border: 0;
   border-radius: 8px;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
   cursor: pointer;
   font: inherit;
   font-size: 24px;
@@ -305,31 +280,13 @@ const baseAction = `
   }
 
   &:disabled {
+    background: ${({ theme }) => theme.colors.textGuide};
     cursor: wait;
   }
-`
 
-// 삭제하기: 빨강 아웃라인(bg gray/10) — hover 그림자, disabled 회색.
-const DeleteButton = styled.button`
-  ${baseAction}
-  border: 2px solid ${({ theme }) => theme.colors.danger};
-  background: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.colors.danger};
-
-  &:disabled {
-    border-color: ${({ theme }) => theme.colors.textGuide};
-    color: ${({ theme }) => theme.colors.textGuide};
-  }
-`
-
-const SaveButton = styled.button`
-  ${baseAction}
-  border: 0;
-  background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.surface};
-
-  &:disabled {
-    background: ${({ theme }) => theme.colors.textGuide};
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 3px;
   }
 `
 
