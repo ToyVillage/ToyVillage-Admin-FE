@@ -11,6 +11,7 @@ import {
 } from '@/entities/notice'
 import {
   AttachmentChip,
+  AttachmentPreviewDialog,
   BackLink,
   Toast,
   downloadStoredFile,
@@ -29,6 +30,9 @@ export function NoticeDetailPage() {
   const { id = '' } = useParams()
   const noticeId = parseNoticeId(id)
   const [downloadFailed, setDownloadFailed] = useState(false)
+  const [previewFile, setPreviewFile] = useState<NoticeAttachmentFile | null>(
+    null,
+  )
   const {
     data: notice,
     error,
@@ -126,6 +130,7 @@ export function NoticeDetailPage() {
                   key={`${file.fileKey}:${file.fileName}`}
                   fileName={file.fileName}
                   onDownload={() => void handleDownload(file)}
+                  onPreview={() => setPreviewFile(file)}
                 />
               ))}
             </AttachmentRow>
@@ -134,6 +139,14 @@ export function NoticeDetailPage() {
           )}
         </AttachmentCard>
       </Content>
+
+      {previewFile && (
+        <AttachmentPreviewDialog
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+          onDownloadError={() => setDownloadFailed(true)}
+        />
+      )}
 
       {downloadFailed && (
         <Toast
