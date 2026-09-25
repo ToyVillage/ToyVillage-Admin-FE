@@ -1,13 +1,18 @@
 import styled from '@emotion/styled'
 import downloadIcon from './assets/download.svg'
 import removeIcon from './assets/remove-circle.svg'
-import { fileTypeIcon } from './fileAttachment'
+import { fileTypeIcon, previewKind } from './fileAttachment'
 
 interface AttachmentChipProps {
   fileName: string
   onDownload: () => void
   /** 지정하면 다운로드 옆에 삭제 버튼을 두고, 생략하면 삭제 버튼이 없다. */
   onRemove?: () => void
+  /**
+   * 지정하면 이미지·PDF 칩은 유형 아이콘·파일명이 미리보기 버튼, 다운로드 아이콘이 별도 버튼이 된다
+   * (Figma `첨부파일 미리보기` 2435:24589). 그 밖의 형식은 지금처럼 칩 전체가 다운로드 버튼이다.
+   */
+  onPreview?: () => void
   /**
    * 요소 순서. `name-first`(기본)는 유형 아이콘 → 파일명 → 다운로드로,
    * 삭제 버튼이 없으면 칩 전체가 다운로드 버튼이다(표 칸·팝오버·관찰 상세).
@@ -28,6 +33,7 @@ export function AttachmentChip({
   fileName,
   onDownload,
   onRemove,
+  onPreview,
   order = 'name-first',
   removeTone = 'danger',
   className,
@@ -36,6 +42,29 @@ export function AttachmentChip({
     <TypeIcon src={fileTypeIcon(fileName)} alt="" aria-hidden="true" />
   )
   const name = <FileName>{fileName}</FileName>
+
+  if (onPreview && !onRemove && previewKind(fileName)) {
+    return (
+      <Chip className={className} data-order={order}>
+        <PreviewButton
+          type="button"
+          aria-label={`${fileName} 미리보기`}
+          onClick={onPreview}
+        >
+          {typeIcon}
+          {name}
+        </PreviewButton>
+        <IconButton
+          type="button"
+          data-hit-area="right"
+          aria-label={`${fileName} 다운로드`}
+          onClick={onDownload}
+        >
+          <ActionIcon src={downloadIcon} alt="" aria-hidden="true" />
+        </IconButton>
+      </Chip>
+    )
+  }
 
   // 파일명보다 앞에 버튼이 오는 순서에서는 칩 전체를 버튼으로 둘 수 없다.
   if (!onRemove && order === 'name-first') {
@@ -129,6 +158,26 @@ const ChipButton = styled(Chip.withComponent('button'))`
   }
 `
 
+// 칩 안의 유형 아이콘·파일명 영역. 칩과 같은 gap 을 두고 파일명 말줄임을 유지한다.
+const PreviewButton = styled.button`
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.textGuide};
+    outline-offset: 2px;
+  }
+`
+
 const TypeIcon = styled.img`
   width: 20px;
   height: 20px;
@@ -145,7 +194,8 @@ const FileName = styled.span`
   white-space: nowrap;
 
   /* 표 칸·팝오버 칩은 Figma 칩 최대 폭(316)에 맞춰 230px 에서 말줄임한다. */
-  [data-order='name-first'] > & {
+  [data-order='name-first'] > &,
+  [data-order='name-first'] > button > & {
     max-width: 230px;
   }
 `
