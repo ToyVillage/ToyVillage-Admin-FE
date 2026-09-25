@@ -1,5 +1,11 @@
+import { useState } from 'react'
 import styled from '@emotion/styled'
-import { downloadStoredFile, type StoredFile } from './fileAttachment'
+import { AttachmentPreviewDialog } from './AttachmentPreviewDialog'
+import {
+  downloadStoredFile,
+  previewKind,
+  type StoredFile,
+} from './fileAttachment'
 
 interface AttachmentListProps {
   files: StoredFile[]
@@ -10,11 +16,14 @@ interface AttachmentListProps {
 
 // 조회 전용 첨부 목록(Figma 3350:3988: 삭제 아이콘 hidden, 업로드 드롭존 없음).
 // 편집이 필요한 화면은 AttachmentField 를 쓴다.
+// 파일명을 누르면 이미지·PDF 는 미리보기 모달(yot 2435:24589)을 열고, 그 밖의 형식은 내려받는다.
 export function AttachmentList({
   files,
   label = '첨부자료',
   onDownloadError,
 }: AttachmentListProps) {
+  const [previewFile, setPreviewFile] = useState<StoredFile | null>(null)
+
   function handleDownload(file: StoredFile) {
     downloadStoredFile(file).catch((error: unknown) => {
       // 화면에는 토스트만 뜬다. 설정 누락(VITE_FILE_BASE_URL) 같은 원인은 콘솔에 남긴다.
@@ -33,8 +42,27 @@ export function AttachmentList({
 
             return (
               <FileChip key={file.fileKey}>
-                <FileBadge data-kind={kind}>{kind.toUpperCase()}</FileBadge>
-                <FileName>{file.fileName}</FileName>
+                {previewKind(file.fileName) ? (
+                  <NameButton
+                    type="button"
+                    aria-label={`${file.fileName} 미리보기`}
+                    onClick={() => setPreviewFile(file)}
+                  >
+                    <FileBadge data-kind={kind}>{kind.toUpperCase()}</FileBadge>
+                    <FileName>{file.fileName}</FileName>
+                  </NameButton>
+                ) : (
+                  // 미리보기가 없는 형식은 파일명도 내려받기다. 키보드·보조기기는 옆 다운로드 버튼 하나만 쓴다.
+                  <NameButton
+                    type="button"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    onClick={() => handleDownload(file)}
+                  >
+                    <FileBadge data-kind={kind}>{kind.toUpperCase()}</FileBadge>
+                    <FileName>{file.fileName}</FileName>
+                  </NameButton>
+                )}
                 <DownloadButton
                   type="button"
                   aria-label={`${file.fileName} 다운로드`}
@@ -50,6 +78,14 @@ export function AttachmentList({
         </FileList>
       ) : (
         <EmptyText>첨부된 자료가 없습니다.</EmptyText>
+      )}
+
+      {previewFile && (
+        <AttachmentPreviewDialog
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+          onDownloadError={onDownloadError}
+        />
       )}
     </Card>
   )
@@ -101,6 +137,25 @@ const FileChip = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.textFaint};
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
+`
+
+const NameButton = styled.button`
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.textGuide};
+    outline-offset: 2px;
+  }
 `
 
 const FileBadge = styled.span`
