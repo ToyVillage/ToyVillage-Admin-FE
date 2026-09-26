@@ -43,7 +43,9 @@ export function AttachmentPreviewDialog({
   const kind = previewKind(file.fileName)
   const { data, isPending, isError } = useQuery({
     queryKey: ['attachment-preview', file.fileKey, kind],
-    queryFn: () => loadPreviewSource(file.fileKey, kind === 'pdf'),
+    // 받는 도중 모달을 닫으면 signal 이 끊겨 요청과 PDF 해석을 멈춘다.
+    queryFn: ({ signal }) =>
+      loadPreviewSource(file.fileKey, kind === 'pdf', signal),
     // 모달을 닫으면 원본(최대 50MB)을 캐시에 남기지 않는다.
     gcTime: 0,
     staleTime: Infinity,
@@ -244,18 +246,30 @@ const pendingPdfDestroys = new Map<PDFDocumentProxy, number>()
 async function loadPreviewSource(
   fileKey: string,
   isPdf: boolean,
+  signal: AbortSignal,
 ): Promise<PreviewSource> {
-  const blob = await fetchStoredFile(fileKey)
+  const blob = await fetchStoredFile(fileKey, signal)
   if (!isPdf) return { blob, pdf: null }
 
   // pdf.js 는 크므로 PDF 미리보기를 열 때만 불러온다.
   const pdfjs = await import('pdfjs-dist')
+  signal.throwIfAborted()
   pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
-  const pdf = await pdfjs.getDocument({
+  const loadingTask = pdfjs.getDocument({
     data: new Uint8Array(await blob.arrayBuffer()),
-  }).promise
+  })
+  // 해석 중에 닫히면 PdfPage 가 붙지 않아 정리할 곳이 없으므로 여기서 워커 자원을 푼다.
+  const destroy = () => void loadingTask.destroy()
+  signal.addEventListener('abort', destroy, { once: true })
 
-  return { blob, pdf }
+  try {
+    const pdf = await loadingTask.promise
+    signal.throwIfAborted()
+    return { blob, pdf }
+  } finally {
+    // 넘겨준 뒤의 정리는 PdfPage 가 맡는다.
+    signal.removeEventListener('abort', destroy)
+  }
 }
 
 function trapTab(dialog: HTMLElement | null, event: KeyboardEvent) {
