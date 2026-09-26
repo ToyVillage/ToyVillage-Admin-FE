@@ -316,6 +316,9 @@ const Overlay = styled.div`
 const Dialog = styled.div`
   display: flex;
   width: min(calc(100% - 40px * 2), 1200px);
+  /* 낮은 화면에서도 위의 닫기 버튼이 화면 밖으로 밀리지 않게 높이를 막고 안에서 스크롤한다. */
+  max-height: calc(100dvh - 16px * 2);
+  overflow-y: auto;
   flex-direction: column;
   align-items: center;
   gap: 24px;
@@ -386,8 +389,9 @@ const Viewer = styled.div`
   display: flex;
   overflow: hidden;
   width: 100%;
-  height: min(640px, calc(100vh - 260px));
-  min-height: 240px;
+  height: min(640px, calc(100dvh - 260px));
+  min-height: 160px;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   padding: 20px;
