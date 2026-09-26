@@ -193,6 +193,8 @@ function ImagePreview({ blob, alt }: { blob: Blob; alt: string }) {
 // 뷰어 높이(600)에 맞춰 한 쪽을 그린다. 쪽을 넘기면 진행 중인 렌더를 취소한다.
 function PdfPage({ pdf, page }: { pdf: PDFDocumentProxy; page: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  // 실패한 쪽 번호. 다른 쪽으로 넘기면 그 쪽은 다시 그려 본다.
+  const [failedPage, setFailedPage] = useState<number | null>(null)
 
   useEffect(() => {
     const pending = pendingPdfDestroys.get(pdf)
@@ -231,7 +233,9 @@ function PdfPage({ pdf, page }: { pdf: PDFDocumentProxy; page: number }) {
         return renderTask.promise
       })
       .catch((error: unknown) => {
-        if (!cancelled) console.error(error)
+        if (cancelled) return
+        console.error(error)
+        setFailedPage(page)
       })
 
     return () => {
@@ -239,6 +243,10 @@ function PdfPage({ pdf, page }: { pdf: PDFDocumentProxy; page: number }) {
       renderTask?.cancel()
     }
   }, [pdf, page])
+
+  if (failedPage === page) {
+    return <StatusText role="status">미리보기를 불러오지 못했습니다.</StatusText>
+  }
 
   return <PdfCanvas ref={canvasRef} aria-label={`${page}쪽`} role="img" />
 }
