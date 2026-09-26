@@ -130,10 +130,13 @@ export function AttachmentPreviewDialog({
         </Header>
 
         <Viewer>
-          {isPending ? (
-            <StatusText>미리보기를 불러오는 중입니다.</StatusText>
-          ) : isError || !data ? (
-            <StatusText>미리보기를 불러오지 못했습니다.</StatusText>
+          {isPending || isError || !data ? (
+            // 같은 라이브 영역의 문구만 바꿔야 스크린 리더가 실패로 바뀐 것을 읽는다.
+            <StatusText role="status">
+              {isPending
+                ? '미리보기를 불러오는 중입니다.'
+                : '미리보기를 불러오지 못했습니다.'}
+            </StatusText>
           ) : data.pdf ? (
             <PdfPage pdf={data.pdf} page={page} />
           ) : (
