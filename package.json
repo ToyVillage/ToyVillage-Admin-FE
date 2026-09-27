@@ -33,6 +33,7 @@
     "@emotion/styled": "^11.14.1",
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.18.1",
+    "pdfjs-dist": "^6.3.289",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",

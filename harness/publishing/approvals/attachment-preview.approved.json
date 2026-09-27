@@ -1,0 +1,17 @@
+{
+  "feature": "attachment-preview",
+  "approvedAt": "2026-09-25T14:02:31.779Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8"
+  ],
+  "scenarioHash": "56646323a43abf07e28ffa2a3602908755a807fe8d593258c78bc808084cd555",
+  "e2eHash": "622159a5365d783290f68759d0dd81b458a225de4b138710c4947506bf1e51aa"
+}

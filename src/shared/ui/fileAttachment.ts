@@ -25,6 +25,16 @@ export function fileTypeIcon(fileName: string): string {
   return fileTypeIcons.etc
 }
 
+export type AttachmentPreviewKind = 'image' | 'pdf'
+
+// 미리보기 모달로 열 수 있는 형식. 그 밖의 형식은 null 이고 바로 내려받는다.
+export function previewKind(fileName: string): AttachmentPreviewKind | null {
+  const extension = fileName.split('.').pop()?.toLowerCase() ?? ''
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image'
+  if (extension === 'pdf') return 'pdf'
+  return null
+}
+
 // mock 경계: 새로 고른 파일은 원본을, 실제 파일 소스가 없는 기존 첨부는
 // 파일명을 담은 임시 Blob 을 내려받는다. 서버에 저장된 첨부는 downloadStoredFile 을 쓴다.
 export function downloadFile(fileName: string, file?: Blob) {

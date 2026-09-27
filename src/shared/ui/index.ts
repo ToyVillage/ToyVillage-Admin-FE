@@ -23,6 +23,7 @@ export { AttachmentField } from './AttachmentField'
 export type { AttachmentAddResult, AttachmentItem } from './AttachmentField'
 export { AttachmentList } from './AttachmentList'
 export { AttachmentChip } from './AttachmentChip'
+export { AttachmentPreviewDialog } from './AttachmentPreviewDialog'
 export {
   downloadFile,
   downloadStoredFile,
