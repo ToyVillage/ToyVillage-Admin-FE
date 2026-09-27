@@ -1,6 +1,7 @@
 # Scenario Draft — attachment-preview
 
 출처: `harness/publishing/specs/attachment-preview.spec.md` (yot `2435:24604`, `2435:24629`)
+갱신: 2026-09-27 #189 — 자료실 상세·관찰 상세 추가(S9·S10), S1~S8 은 그대로
 상태: draft — 개발자 승인 대기
 
 ## 핵심 시나리오
@@ -33,6 +34,16 @@
 - Given: 이미지 첨부가 있는 공지사항 상세, 업무보고 상세
 - When: 각 화면에서 `<파일명> 미리보기` 클릭
 - Then: 파일명 dialog 가 열린다
+
+### S9: 자료실 상세에서 열림
+- Given: 이미지 첨부(png)가 있는 자료실 상세 화면
+- When: `<파일명> 미리보기` 클릭
+- Then: 파일명 dialog 가 열리고 이미지가 보인다
+
+### S10: 관찰 상세에서 열림
+- Given: 이미지 첨부(jpg)가 있는 관찰 상세 화면
+- When: `<파일명> 미리보기` 클릭
+- Then: 파일명 dialog 가 열리고 이미지가 보인다
 
 ## 엣지 케이스
 

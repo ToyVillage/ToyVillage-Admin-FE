@@ -7,7 +7,7 @@ figma:
     - 2435:24604
     - 2435:24629
 requires_functional_test: true
-paths: src/shared/ui/AttachmentPreviewDialog.tsx, src/shared/ui/AttachmentChip.tsx, src/shared/ui/AttachmentList.tsx, src/pages/notices/notice/NoticeDetailPage.tsx, src/pages/tasks/TaskDetailPage.tsx, src/pages/task-reports/TaskReportDetailPage.tsx
+paths: src/shared/ui/AttachmentPreviewDialog.tsx, src/shared/ui/AttachmentChip.tsx, src/shared/ui/AttachmentList.tsx, src/pages/notices/notice/NoticeDetailPage.tsx, src/pages/tasks/TaskDetailPage.tsx, src/pages/task-reports/TaskReportDetailPage.tsx, src/pages/notices/resources/ResourceViewPage.tsx, src/pages/species/ObservationDetailPage.tsx
 ---
 
 # 첨부파일 미리보기 행동명세
@@ -15,13 +15,14 @@ paths: src/shared/ui/AttachmentPreviewDialog.tsx, src/shared/ui/AttachmentChip.t
 ## 상태와 근거
 
 - Status: Draft
-- Last refreshed: 2026-09-25 (이슈 #186)
+- Last refreshed: 2026-09-27 (이슈 #186, #189)
 - 기준: yot Figma 섹션 `첨부파일 미리보기`(`2435:24589`)
   - 이미지: `attachment preview (image)` `2435:24590` › 모달 `2435:24604`
   - PDF: `attachment preview (pdf)` `2435:24615` › 모달 `2435:24629`
-- Figma 배경은 자료실 상세지만, **이번 범위는 공지사항 상세·업무 상세·업무보고 상세 3개 화면**이다(개발자 결정 2026-09-25). 자료실·관찰 상세·업무일지는 건드리지 않는다.
+- 범위: 공지사항 상세·업무 상세·업무보고 상세(#186, 2026-09-25) + 자료실 상세·관찰 상세(#189, 2026-09-27 개발자 결정).
+  개체 상세 관찰 표의 첨부 칸·업무일지 시트·입력/수정 화면은 건드리지 않는다.
 - 새 API 없음. 파일은 기존 다운로드와 같이 파일 서버(`VITE_FILE_BASE_URL/{fileKey}`)에서 `fetchStoredFile` 로 받는다.
-- 관련 spec: `notice-detail.spec.md`, `task-detail.spec.md`, `task-report.spec.md`
+- 관련 spec: `notice-detail.spec.md`, `task-detail.spec.md`, `task-report.spec.md`, `observation-detail.spec.md`
 
 ## 목적
 
@@ -32,6 +33,8 @@ paths: src/shared/ui/AttachmentPreviewDialog.tsx, src/shared/ui/AttachmentChip.t
 - 공지사항 상세 `/notices/list/:id` — 첨부 칩(`AttachmentChip`)
 - 업무 상세 `/tasks/:id` — 첨부자료 카드(`AttachmentList`)
 - 업무보고 상세 — 첨부자료 카드(`AttachmentList`)
+- 자료실 상세 `/notices/resources/:id` — 첨부 칩(`AttachmentChip`). Figma 미리보기 프레임의 배경 화면이다.
+- 관찰 상세 — `첨부` 카드의 첨부 칩(`AttachmentChip`)
 
 ## 동작
 
@@ -89,9 +92,11 @@ paths: src/shared/ui/AttachmentPreviewDialog.tsx, src/shared/ui/AttachmentChip.t
 - S6: 칩의 다운로드 아이콘 → 모달 없이 내려받는다(회귀).
 - S7: 공지사항 상세·업무보고 상세에서도 파일명 클릭 → 모달이 열린다.
 - S8: 파일 서버 실패 → 모달 안에 `미리보기를 불러오지 못했습니다.` 가 보인다.
+- S9: 자료실 상세에서 이미지 첨부 파일명 클릭 → 모달이 열린다.
+- S10: 관찰 상세에서 이미지 첨부 파일명 클릭 → 모달이 열린다.
 
 ## 미결 사항
 
 - [ ] 여는 지점·기타 형식 동작·로딩/실패 문구는 Figma 에 없다 — 디자인 확인 필요
 - [ ] 큰 파일(최대 50MB)도 원본 전체를 받아 미리보기한다. 썸네일/저용량 파일이 필요하면 백엔드 협의
-- [ ] 자료실·관찰 상세·업무일지 적용 여부 — 이번 범위 밖
+- [ ] 개체 상세 관찰 표 첨부 칸·업무일지 시트 적용 여부 — 표 안 칩의 클릭 동작 결정 필요
