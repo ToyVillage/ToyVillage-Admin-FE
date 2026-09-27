@@ -10,6 +10,7 @@ import {
 import {
   AttachmentChip,
   AttachmentChipsSkeleton,
+  AttachmentPreviewDialog,
   BackLink,
   Skeleton,
   SkeletonStatus,
@@ -29,6 +30,7 @@ export function ResourceViewPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const [downloadFailed, setDownloadFailed] = useState(false)
+  const [previewFile, setPreviewFile] = useState<ResourceFile | null>(null)
 
   const {
     data: resource,
@@ -107,6 +109,7 @@ export function ResourceViewPage() {
                   key={`${file.fileKey}:${file.fileName}`}
                   fileName={file.fileName}
                   onDownload={() => void handleDownload(file)}
+                  onPreview={() => setPreviewFile(file)}
                 />
               ))}
             </AttachmentRow>
@@ -123,6 +126,14 @@ export function ResourceViewPage() {
 
         {isPending ? <SkeletonStatus>{cards}</SkeletonStatus> : cards}
       </Content>
+
+      {previewFile && (
+        <AttachmentPreviewDialog
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+          onDownloadError={() => setDownloadFailed(true)}
+        />
+      )}
 
       {downloadFailed && (
         <Toast

@@ -12,12 +12,14 @@ import {
 import { isNotFoundError } from '@/entities/species'
 import {
   AttachmentChip,
+  AttachmentPreviewDialog,
   BackLink,
   DeleteConfirmationDialog,
   downloadStoredFile,
   KebabMenu,
   Toast,
   useFocusFrame,
+  type StoredFile,
 } from '@/shared/ui'
 import { PageStatus } from './ui/PageStatus'
 import { ObservationDetailSkeleton } from './ui/ObservationDetailSkeleton'
@@ -34,6 +36,7 @@ export function ObservationDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteFailed, setDeleteFailed] = useState(false)
   const [downloadFailed, setDownloadFailed] = useState(false)
+  const [previewFile, setPreviewFile] = useState<StoredFile | null>(null)
   const focusFrame = useFocusFrame()
 
   const observationQuery = useQuery({
@@ -198,6 +201,7 @@ export function ObservationDetailPage() {
                         () => setDownloadFailed(true),
                       )
                     }
+                    onPreview={() => setPreviewFile(attachment)}
                   />
                 ))}
               </ChipList>
@@ -216,6 +220,14 @@ export function ObservationDetailPage() {
             focusMenuTrigger()
           }}
           onConfirm={handleDelete}
+        />
+      )}
+
+      {previewFile && (
+        <AttachmentPreviewDialog
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+          onDownloadError={() => setDownloadFailed(true)}
         />
       )}
 
