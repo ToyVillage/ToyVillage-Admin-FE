@@ -218,7 +218,11 @@ test('S16: 키보드 조작', async ({ page }) => {
   await expect(page.getByRole('menu')).toHaveCount(0)
   await expect(trigger).toBeFocused()
 
-  // 다운로드 버튼 실행 — 닫힌 메뉴 다음 초점이 첫 첨부 칩이다.
+  // 다운로드 버튼 실행 — 닫힌 메뉴 다음 초점이 첫 첨부 칩의 미리보기, 그다음이 다운로드다(#189).
+  await page.keyboard.press('Tab')
+  await expectFocusOutline(
+    page.getByRole('button', { name: '상처사진.jpg 미리보기' }),
+  )
   await page.keyboard.press('Tab')
   const firstChip = page.getByRole('button', { name: '상처사진.jpg 다운로드' })
   await expectFocusOutline(firstChip)
@@ -227,6 +231,7 @@ test('S16: 키보드 조작', async ({ page }) => {
   expect((await downloadPromise).suggestedFilename()).toBe('상처사진.jpg')
 
   // 메뉴 항목 실행
+  await page.keyboard.press('Shift+Tab')
   await page.keyboard.press('Shift+Tab')
   await expect(trigger).toBeFocused()
   await page.keyboard.press('Enter')
