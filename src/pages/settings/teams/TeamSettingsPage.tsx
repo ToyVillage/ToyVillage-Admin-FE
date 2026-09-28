@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getEmployees } from '@/entities/employee'
+import { employeeQueryKeys, getEmployees } from '@/entities/employee'
 import {
   createTeam,
   deleteTeam,
@@ -26,7 +26,7 @@ import {
 type OpenDialog = 'add-team' | 'add-member' | 'delete-team' | null
 
 const teamsQueryKey = ['teams', 'list'] as const
-const employeesQueryKey = ['employees', 'list'] as const
+const employeesQueryKey = employeeQueryKeys.list
 // 업무지시 담당자 트리(`['teams', 'tree']`)도 팀·소속을 읽는다. 팀이 바뀌면
 // 트리의 팀 행과 `미배정` 이 함께 달라지므로 같이 무효화한다.
 const teamTreeQueryKey = ['teams', 'tree'] as const

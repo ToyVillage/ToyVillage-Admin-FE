@@ -10,13 +10,13 @@ export interface StaffAccount {
   createdAt: string
 }
 
-export interface NewStaffAccountInput {
-  name: string
-  username: string
-}
-
-// 목록만 무효화한다. 넓은 키를 무효화하면 다른 화면의 직원 조회까지 다시 불린다.
+// 목록만 무효화한다. 넓은 키를 무효화하면 다른 화면의 조회까지 다시 불린다.
 export const staffAccountQueryKeys = {
   all: ['staff-accounts'] as const,
   list: ['staff-accounts', 'list'] as const,
+}
+
+// 같은 GET 을 팀 관리 화면이 직급과 함께 쓴다. 계정 생성·삭제 뒤 함께 무효화한다.
+export const employeeQueryKeys = {
+  list: ['employees', 'list'] as const,
 }
