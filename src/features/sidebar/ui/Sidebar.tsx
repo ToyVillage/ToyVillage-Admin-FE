@@ -12,6 +12,7 @@ import {
   useExitAnimation,
 } from '@/shared/ui'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
+import adminProfileImage from '@/shared/ui/assets/profile-admin.png'
 import { useLogout } from '../model/useLogout'
 import { mockSidebarDashboardItem, mockSidebarGroups } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
@@ -90,7 +91,7 @@ export function Sidebar() {
         </CloseButton>
 
         <Profile>
-          <Avatar role="img" aria-label={`${userName} 프로필`} />
+          <Avatar src={adminProfileImage} alt={`${userName} 프로필`} />
           <UserName>{userName}</UserName>
         </Profile>
 
@@ -220,12 +221,13 @@ const Profile = styled.div`
   padding: 0 36px;
 `
 
-const Avatar = styled.div`
+const Avatar = styled.img`
   width: 64px;
   height: 64px;
   flex: 0 0 64px;
   border-radius: 1000px;
   background: ${({ theme }) => theme.colors.avatar};
+  object-fit: cover;
 `
 
 const UserName = styled.span`
