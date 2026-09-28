@@ -1,0 +1,27 @@
+{
+  "feature": "staff-accounts",
+  "approvedAt": "2026-09-27T23:49:00.195Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S17",
+    "S18"
+  ],
+  "scenarioHash": "7cf7046292ec77e01e5e02eb6d0a6aa5419ce5918d1d59f192eb079f4186fcfc",
+  "e2eHash": "24464c9438ac56a40027e2beab293184b4d5c4d5ea9c2d31a14601d7b4a09485"
+}
