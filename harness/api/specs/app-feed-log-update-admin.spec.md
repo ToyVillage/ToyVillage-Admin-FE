@@ -59,7 +59,8 @@ real_server:
 
 # 비고 및 제약
 
-- 급여 기록 삭제는 feed-log-controller(Swagger)와 Notion 모두에 엔드포인트가 없다. 이 작업 범위 밖이며 백엔드 질문으로 남긴다.
+- 급여 기록 삭제는 이 작업 범위 밖이다. 작성 당시(2026-09-28)에는 삭제 엔드포인트가 없었고, 이후 추가된
+  DELETE `/feed-log/admin/{feedLogId}` 는 `app-feed-log-delete-admin` 에서 연동했다.
 - 실제 서버 테스트는 비활성화한다.
 
 # 확인이 필요한 명세 항목
@@ -68,4 +69,4 @@ real_server:
 2. Swagger 에 권한(roles) 정보가 없다. `/admin` 경로와 같은 컨트롤러의 `APP_FEED_LOG_QUERY_ADMIN`(ADMIN)에 맞춰 ADMIN 으로 둔다.
 3. `feedDateTime` 을 바꿀 수 없는 화면인데 필수다 — 원본을 그대로 보내면 되는지, 초 단위 정밀도가 유지되는지 확인 필요.
 4. 400(검증 실패) 응답이 Swagger 에 정의돼 있지 않다(`feedType` minLength 1, 필수 누락 시 동작).
-5. 급여 기록 삭제 API 가 필요하다(목록 케밥 `삭제`).
+5. ~~급여 기록 삭제 API 가 필요하다~~ — 해결: DELETE `/feed-log/admin/{feedLogId}` 추가, `app-feed-log-delete-admin` 에서 연동.
