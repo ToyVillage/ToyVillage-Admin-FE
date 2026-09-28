@@ -50,6 +50,13 @@ export function StaffAccountsPage() {
   const keyword = values.keyword
   const page = readPageParam(new URLSearchParams({ page: values.page }))
   const [query, setQuery] = useState(keyword)
+  // URL 검색어가 입력 밖에서 바뀌면(사이드바 재진입·뒤로가기) 입력도 맞춘다.
+  // 디바운스가 쓴 값(= 입력값)이면 그대로 두어 타이핑 중인 입력을 덮지 않는다.
+  const [syncedKeyword, setSyncedKeyword] = useState(keyword)
+  if (keyword !== syncedKeyword) {
+    setSyncedKeyword(keyword)
+    if (keyword !== query.trim()) setQuery(keyword)
+  }
   const [createOpen, setCreateOpen] = useState(false)
   // 케밥 메뉴는 동시에 하나만 열린다.
   const [openMenuId, setOpenMenuId] = useState<number | null>(null)
