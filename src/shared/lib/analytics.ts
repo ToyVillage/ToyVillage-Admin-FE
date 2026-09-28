@@ -46,21 +46,29 @@ export function initAnalytics(measurementId: string | undefined): void {
 
 // path 는 `/species/:speciesId` 같은 라우트 패턴이다. 제목도 같은 값으로 고정해
 // 화면 제목에 섞인 값이 GA 에 실리지 않게 한다.
-export function trackPageView(path: string): void {
+// referrer 도 패턴이나 출처(origin)만 받는다. 넘기지 않으면 gtag 가
+// document.referrer(쿼리·ID 포함)를 그대로 보낸다.
+export function trackPageView(path: string, referrer?: string): void {
   if (!gtag) return
 
   const page = {
-    page_location: new URL(path, window.location.origin).href,
+    page_location: toAbsoluteUrl(path),
     page_title: path,
+    ...(referrer && { page_referrer: toAbsoluteUrl(referrer) }),
   }
 
-  // 이후 자동 수집 이벤트도 실제 주소 대신 패턴 주소를 쓰게 한다.
-  gtag('set', page)
   gtag('event', 'page_view', page)
+  // 이후 자동 수집 이벤트도 실제 주소 대신 패턴 주소를 쓰게 한다.
+  // 이전 화면의 참여 시간에 새 화면 값이 붙지 않도록 페이지뷰 다음에 바꾼다.
+  gtag('set', page)
 }
 
 export function setAnalyticsUserProperties(
   properties: Record<string, string | null>,
 ): void {
   gtag?.('set', 'user_properties', properties)
+}
+
+function toAbsoluteUrl(path: string): string {
+  return new URL(path, window.location.origin).href
 }

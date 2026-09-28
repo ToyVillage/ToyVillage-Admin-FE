@@ -14,11 +14,13 @@ export function usePageViewTracking(routes: RouteObject[]): void {
   useEffect(() => {
     const pattern = toRoutePattern(routes, pathname)
     if (!pattern || trackedPattern.current === pattern) return
+
+    const referrer = trackedPattern.current ?? toInitialReferrer(routes)
     trackedPattern.current = pattern
 
     // 누가 쓰는지가 아니라 역할별 사용량을 본다. 이름은 보내지 않는다.
     setAnalyticsUserProperties({ role: readSessionUser()?.role ?? null })
-    trackPageView(pattern)
+    trackPageView(pattern, referrer)
   }, [routes, pathname])
 }
 
@@ -32,4 +34,15 @@ function toRoutePattern(routes: RouteObject[], pathname: string) {
 
     return `${pattern.replace(/\/$/, '')}/${route.path}`
   }, '')
+}
+
+// 첫 페이지뷰의 referrer 는 브라우저 값(document.referrer)이라 쿼리와 ID 가 그대로 담긴다.
+// 같은 출처면 패턴으로, 다른 출처면 출처만 남긴다.
+function toInitialReferrer(routes: RouteObject[]) {
+  if (!document.referrer) return undefined
+
+  const url = new URL(document.referrer)
+  if (url.origin !== window.location.origin) return url.origin
+
+  return toRoutePattern(routes, url.pathname) ?? url.origin
 }
