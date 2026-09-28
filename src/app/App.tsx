@@ -5,6 +5,7 @@ import {
   RouterProvider,
   type RouteObject,
 } from 'react-router-dom'
+import * as Sentry from '@sentry/react'
 import { DashboardPage } from '@/pages/dashboard'
 import { LoginPage } from '@/pages/login'
 import {
@@ -62,6 +63,7 @@ import { TeamSettingsPage } from '@/pages/settings/teams'
 import { StaffAccountsPage } from '@/pages/settings/accounts'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
+import { RouteErrorPage } from '@/app/RouteErrorPage'
 import {
   redirectOnlyRouteHandle,
   sessionRequiredRouteHandle,
@@ -86,9 +88,14 @@ function AppLayout() {
 }
 
 const routes: RouteObject[] = [
-  { path: '/login', element: <LoginPage /> },
+  {
+    path: '/login',
+    element: <LoginPage />,
+    errorElement: <RouteErrorPage />,
+  },
   {
     element: <RequireAuth />,
+    errorElement: <RouteErrorPage />,
     handle: sessionRequiredRouteHandle,
     children: [
       {
@@ -212,7 +219,12 @@ const routes: RouteObject[] = [
   },
 ]
 
-const router = createBrowserRouter([
+// Sentry 에 에러가 난 화면의 라우트 패턴(`/tasks/:id`)과 이동 흐름을 남긴다.
+// Sentry 가 꺼져 있으면 createBrowserRouter 와 같다.
+const sentryCreateBrowserRouter =
+  Sentry.wrapCreateBrowserRouterV7(createBrowserRouter)
+
+const router = sentryCreateBrowserRouter([
   { element: <RootLayout />, children: routes },
 ])
 
