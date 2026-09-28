@@ -2,7 +2,9 @@ import type { Page, Route } from '@playwright/test'
 
 // 먹이 급여 관리 화면이 쓰는 API mock.
 // 대상: GET /feed-log/admin(date · animalTaxonomic · page · size),
-//       GET /feed-log/admin/{feedLogId}, GET /feed-log/admin/history/{animalManageId}.
+//       GET /feed-log/admin/{feedLogId}, GET /feed-log/admin/history/{animalManageId},
+//       PUT /feed-log/admin/{feedLogId}(관리자 급여일지 수정),
+//       DELETE /feed-log/admin/{feedLogId}(관리자 급여일지 삭제 — 성공하면 목록 데이터에서 뺀다).
 // 실제 서버는 호출하지 않으며, 각 spec 은 필요한 응답만 page.route 로 덮어쓴다
 // (Playwright 는 나중에 등록한 route 를 먼저 매칭한다).
 
@@ -97,10 +99,25 @@ export interface FeedApiRequests {
   history: number
 }
 
+export interface FeedDeleteRequestRecord {
+  feedLogId: number
+  authorization: string | undefined
+}
+
+export interface FeedUpdateRequestRecord {
+  feedLogId: number
+  body: unknown
+  authorization: string | undefined
+}
+
 export interface FeedApiHandle {
   feedLogs: MockFeedLog[]
   requests: FeedApiRequests
   listQueries: URLSearchParams[]
+  /** PUT /feed-log/admin/{feedLogId} 요청 기록 */
+  updates: FeedUpdateRequestRecord[]
+  /** DELETE /feed-log/admin/{feedLogId} 요청 기록 */
+  deletes: FeedDeleteRequestRecord[]
 }
 
 export interface FeedApiOptions {
@@ -108,6 +125,15 @@ export interface FeedApiOptions {
   feedLogs?: MockFeedLog[]
   /** 목록 응답 지연(ms). 로딩 상태를 관찰할 때 쓴다. */
   listDelayMs?: number
+  /** 수정 응답. 기본 200 `{ message }` */
+  updateStatus?: number
+  updateBody?: unknown
+  /** 수정 응답 지연(ms). 중복 제출 확인용 */
+  updateDelayMs?: number
+  /** 삭제 응답. 기본 200 본문 없음 */
+  deleteStatus?: number
+  /** 삭제 응답 지연(ms). 중복 삭제 확인용 */
+  deleteDelayMs?: number
 }
 
 export async function mockFeedApi(
@@ -117,12 +143,19 @@ export async function mockFeedApi(
   const {
     feedLogs = mockFeedLogs.map((item) => ({ ...item })),
     listDelayMs = 0,
+    updateStatus = 200,
+    updateBody,
+    updateDelayMs = 0,
+    deleteStatus = 200,
+    deleteDelayMs = 0,
   } = options
 
   const handle: FeedApiHandle = {
     feedLogs,
     requests: { list: 0, adminDetail: 0, history: 0 },
     listQueries: [],
+    updates: [],
+    deletes: [],
   }
 
   await page.route(feedListPattern, async (route) => {
@@ -160,8 +193,63 @@ export async function mockFeedApi(
   })
 
   await page.route(feedAdminDetailPattern, async (route) => {
-    handle.requests.adminDetail += 1
     const feedLogId = Number(matchId(route, feedAdminDetailPattern))
+
+    if (route.request().method() === 'DELETE') {
+      handle.deletes.push({
+        feedLogId,
+        authorization: route.request().headers().authorization,
+      })
+      await delay(deleteDelayMs)
+      if (deleteStatus !== 200) {
+        await json(
+          route,
+          deleteStatus,
+          errorBody(deleteStatus, '존재하지 않는 급여일지입니다.'),
+        )
+        return
+      }
+      const index = handle.feedLogs.findIndex(
+        (item) => item.feedLogId === feedLogId,
+      )
+      if (index !== -1) handle.feedLogs.splice(index, 1)
+      await route.fulfill({ status: 200 })
+      return
+    }
+
+    if (route.request().method() === 'PUT') {
+      handle.updates.push({
+        feedLogId,
+        body: route.request().postDataJSON(),
+        authorization: route.request().headers().authorization,
+      })
+      await delay(updateDelayMs)
+      // 기본 성공 응답이면 받은 값을 기록에 반영해 이후 목록·상세 조회가 수정된 값을 돌려준다.
+      if (updateStatus === 200 && updateBody === undefined) {
+        const target = handle.feedLogs.find(
+          (item) => item.feedLogId === feedLogId,
+        )
+        const body = route.request().postDataJSON() as Partial<MockFeedLog>
+        if (target) {
+          if (typeof body.feedType === 'string') target.feedType = body.feedType
+          if (typeof body.feedAmount === 'number')
+            target.feedAmount = body.feedAmount
+          if (typeof body.significant === 'string')
+            target.significant = body.significant
+        }
+      }
+      await json(
+        route,
+        updateStatus,
+        updateBody ??
+          (updateStatus === 200
+            ? { message: '급여일지가 수정되었습니다.' }
+            : errorBody(updateStatus, '요청을 처리하지 못했습니다.')),
+      )
+      return
+    }
+
+    handle.requests.adminDetail += 1
     const target = handle.feedLogs.find((item) => item.feedLogId === feedLogId)
 
     if (!target) {

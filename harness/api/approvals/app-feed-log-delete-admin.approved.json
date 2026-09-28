@@ -1,0 +1,15 @@
+{
+  "feature": "app-feed-log-delete-admin",
+  "apiId": "APP_FEED_LOG_DELETE_ADMIN",
+  "approvedAt": "2026-09-28T10:25:02.118Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "dbefce410ea30694d3f21037b6e52030c359ad3387713b309c18c116ebe33c49",
+  "contractHash": "9aeb0089c1d930dcf5ccac38aeda194b183794aa0987bf0f3e41ab8d55655e3d",
+  "contractMarkdownHash": "d8baa08eadb61fdaec266d9c882a53d9201e773c6703771aeae505c47f4c10ad",
+  "planHash": "2ec3d247b6486de57d6f59d9548c1bf55f6daee01aad718ba80362bb6fc360d0",
+  "scenarioHash": "8256f7439ff513541c683ac0e98b2719407acac11f01fede0fed00378fd80a91",
+  "testHash": "5c4c6a0dd9f652a9731e75250d5461a6777b79cdc62e6d3798d3857f7440a59c",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-28T10:56:16.181Z"
+}
