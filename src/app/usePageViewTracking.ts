@@ -1,7 +1,22 @@
 import { useEffect, useRef } from 'react'
 import { matchRoutes, useLocation, type RouteObject } from 'react-router-dom'
-import { readSessionUser } from '@/shared/api/session'
+import { readAccessToken, readSessionUser } from '@/shared/api/session'
 import { setAnalyticsUserProperties, trackPageView } from '@/shared/lib'
+
+interface PageViewRouteHandle {
+  skipPageView?: boolean
+  requiresSession?: boolean
+}
+
+// 다른 주소로 바로 보내기만 하는 라우트. 사용자가 보지 않는 화면이라 집계하지 않는다.
+export const redirectOnlyRouteHandle: PageViewRouteHandle = {
+  skipPageView: true,
+}
+
+// 세션이 없으면 RequireAuth 가 로그인으로 보낸다. 그때 보호 화면은 집계하지 않는다.
+export const sessionRequiredRouteHandle: PageViewRouteHandle = {
+  requiresSession: true,
+}
 
 // 경로는 실제 주소가 아니라 `/species/:speciesId` 같은 라우트 패턴으로 보낸다.
 // ID별로 페이지가 쪼개지지 않고 쿼리스트링(검색어·필터)도 GA 에 실리지 않는다.
@@ -12,6 +27,8 @@ export function usePageViewTracking(routes: RouteObject[]): void {
   const trackedPattern = useRef<string | null>(null)
 
   useEffect(() => {
+    if (shouldSkipPageView(routes, pathname)) return
+
     const pattern = toRoutePattern(routes, pathname)
     if (!pattern || trackedPattern.current === pattern) return
 
@@ -22,6 +39,16 @@ export function usePageViewTracking(routes: RouteObject[]): void {
     setAnalyticsUserProperties({ role: readSessionUser()?.role ?? null })
     trackPageView(pattern, referrer)
   }, [routes, pathname])
+}
+
+function shouldSkipPageView(routes: RouteObject[], pathname: string) {
+  const handles = (matchRoutes(routes, pathname) ?? []).map(
+    ({ route }) => route.handle as PageViewRouteHandle | undefined,
+  )
+
+  if (handles.some((handle) => handle?.skipPageView)) return true
+
+  return handles.some((handle) => handle?.requiresSession) && !readAccessToken()
 }
 
 function toRoutePattern(routes: RouteObject[], pathname: string) {

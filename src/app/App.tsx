@@ -62,7 +62,11 @@ import { TeamSettingsPage } from '@/pages/settings/teams'
 import { StaffAccountsPage } from '@/pages/settings/accounts'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
-import { usePageViewTracking } from '@/app/usePageViewTracking'
+import {
+  redirectOnlyRouteHandle,
+  sessionRequiredRouteHandle,
+  usePageViewTracking,
+} from '@/app/usePageViewTracking'
 
 // 로그인 화면까지 모든 화면의 페이지뷰를 한곳에서 보낸다.
 function RootLayout() {
@@ -85,6 +89,7 @@ const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
   {
     element: <RequireAuth />,
+    handle: sessionRequiredRouteHandle,
     children: [
       {
         element: <AppLayout />,
@@ -93,6 +98,7 @@ const routes: RouteObject[] = [
           {
             path: '/notices',
             element: <Navigate to="/notices/list" replace />,
+            handle: redirectOnlyRouteHandle,
           },
           { path: '/notices/list', element: <NoticeListPage /> },
           { path: '/notices/list/create', element: <CreateNoticePage /> },
@@ -198,6 +204,7 @@ const routes: RouteObject[] = [
           {
             path: '/settings/accounts/create',
             element: <Navigate to="/settings/accounts" replace />,
+            handle: redirectOnlyRouteHandle,
           },
         ],
       },
