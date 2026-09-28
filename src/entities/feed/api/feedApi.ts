@@ -88,6 +88,8 @@ export async function getFeedDetail({
   return {
     id: String(feedLogId),
     animalManageId: data.animalId,
+    feedDateTime: data.feedDateTime,
+    feedAmountValue: data.feedAmount,
     animalType: data.animalKind,
     animalName: data.animalName,
     feedType: data.feedType,

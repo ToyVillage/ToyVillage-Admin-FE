@@ -20,8 +20,16 @@ export {
   isFeedNotFoundError,
   type FeedListPage,
 } from './api/feedApi'
+export {
+  deleteFeed,
+  updateFeed,
+  type FeedDeleteInput,
+  type FeedUpdateInput,
+} from './api/feedMutations'
 export type {
   AnimalTaxonomic,
+  FeedLogMessageResponse,
+  FeedLogUpdateRequest,
   FeedQueryAllRequest,
   FeedQueryRequest,
 } from './api/types'

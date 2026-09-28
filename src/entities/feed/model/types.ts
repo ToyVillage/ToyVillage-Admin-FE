@@ -51,6 +51,10 @@ export interface FeedHistoryRecord {
 export interface FeedRecordDetail extends FeedRecord {
   /** 개체 id(`animalManageId`). 급여 이력 조회의 키다. */
   animalManageId: number
+  /** 상세 응답의 `feedDateTime` 원본. 수정 요청에 그대로 보낸다(필수 값). */
+  feedDateTime: string
+  /** 상세 응답의 `feedAmount` 원본(kg). `feedAmount` 표기는 소수 둘째 자리로 반올림돼 있다. */
+  feedAmountValue: number
   /** 특이사항. 상세 응답의 `significant` 다. 값이 없으면 빈 문자열이다. */
   note: string
   animalPhotoUrl?: string
