@@ -1,1 +1,1 @@
-export { CreateAccountPage } from './CreateAccountPage'
+export { StaffAccountsPage } from './StaffAccountsPage'

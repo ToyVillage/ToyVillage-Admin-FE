@@ -10,6 +10,12 @@ interface DeleteConfirmationDialogProps {
   onConfirm: () => void
   /** 본문 문구. 생략하면 기본 문구(영구삭제 안내)를 보인다. */
   description?: ReactNode
+  /** 제목. 같은 모양의 다른 확인(비밀번호 초기화 등)에 쓴다. 생략하면 삭제 문구. */
+  title?: string
+  /** 확인 버튼 문구. 생략하면 `확인`. */
+  confirmLabel?: string
+  /** 처리 중 확인 버튼 문구. 생략하면 `삭제 중`. */
+  pendingLabel?: string
 }
 
 export function DeleteConfirmationDialog({
@@ -17,6 +23,9 @@ export function DeleteConfirmationDialog({
   onCancel,
   onConfirm,
   description = defaultDescription,
+  title = '정말 삭제하시겠습니까?',
+  confirmLabel = '확인',
+  pendingLabel = '삭제 중',
 }: DeleteConfirmationDialogProps) {
   const titleId = useId()
   const descriptionId = useId()
@@ -78,7 +87,7 @@ export function DeleteConfirmationDialog({
       >
         <Copy>
           <WarningIcon src={warningIcon} alt="" aria-hidden="true" />
-          <Title id={titleId}>정말 삭제하시겠습니까?</Title>
+          <Title id={titleId}>{title}</Title>
           <Description id={descriptionId}>{description}</Description>
         </Copy>
         <Actions>
@@ -96,7 +105,7 @@ export function DeleteConfirmationDialog({
             disabled={pending}
             onClick={onConfirm}
           >
-            {pending ? '삭제 중' : '확인'}
+            {pending ? pendingLabel : confirmLabel}
           </ConfirmButton>
         </Actions>
       </Dialog>

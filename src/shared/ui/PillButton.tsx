@@ -1,25 +1,24 @@
 import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
-import { Link } from 'react-router-dom'
 import plusIcon from './assets/plus.svg'
 import { pillButtonIconStyles, pillButtonStyles } from './pillButtonStyles'
 
-// + 아이콘 pill 링크 버튼. "공지/자료 생성하기" 등 라우트·라벨만 다른 버튼 공통화.
-interface LinkButtonProps {
-  to: string
+// `LinkButton` 과 같은 모양이지만 이동하지 않고 동작(모달 열기 등)을 실행한다.
+interface PillButtonProps {
+  onClick: () => void
   children: ReactNode
 }
 
-export function LinkButton({ to, children }: LinkButtonProps) {
+export function PillButton({ onClick, children }: PillButtonProps) {
   return (
-    <Button to={to}>
-      <PlusIcon src={plusIcon} alt="" />
+    <Button type="button" onClick={onClick}>
+      <PlusIcon src={plusIcon} alt="" aria-hidden="true" />
       <span>{children}</span>
     </Button>
   )
 }
 
-const Button = styled(Link)`
+const Button = styled.button`
   ${({ theme }) => pillButtonStyles(theme)}
 `
 

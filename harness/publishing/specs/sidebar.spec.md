@@ -75,7 +75,7 @@ paths: src/app, src/features/sidebar, src/shared/ui
 | 개체관리 | paw | 개체 카드 → `/species` · 먹이 급여 관리 → `/feeds` |
 | 시설관리 | 계단 | 점검 · 보수요청 / 공통 · 3층 / 4층 / 5층 / 6층 → 모두 화면 미구현 |
 | 재고관리 | 상자 | 식음료 / 동물 먹이 / 사육용품 / 비품 / 소모품 / 기타 → 모두 화면 미구현 |
-| 설정 | `mdi:cog` | 팀 설정 → `/settings/teams` / 직원 계정 관리 → `/settings/accounts/create` / 권한 관리 → 화면 미구현 |
+| 설정 | `mdi:cog` | 팀 관리 → `/settings/teams` / 직원 계정 관리 → `/settings/accounts` / 권한 관리 → 화면 미구현 |
 
 ## 치수 (Figma)
 
@@ -125,6 +125,9 @@ paths: src/app, src/features/sidebar, src/shared/ui
   메뉴 영역만 세로로 스크롤한다. 닫기 버튼과 프로필은 스크롤과 무관하게 제자리에 남는다.
 
 ## 개정 이력
+
+- 2026-09-28: 사이드바 참고 프레임(`1696:15473`)에 맞춰 `설정 > 팀 설정` 라벨을 `팀 관리` 로 바꾸고,
+  `직원 계정 관리` 를 새 목록 화면 `/settings/accounts` 로 연결했다(`staff-accounts.spec.md`).
 
 - 2026-09-15: develop 병합 시 개체관리(#82)의 평면 메뉴 `개체관리 바로가기` 를 폐기하고
   `개체관리 > 개체 카드` 에 `/species` 를 연결했다(개발자 결정).

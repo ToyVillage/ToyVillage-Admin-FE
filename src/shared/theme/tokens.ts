@@ -33,9 +33,11 @@ export const tokens = {
     tableHeader: '#E1E1E1', // 테이블 헤더
     tableHeaderStrong: '#DDDDE3', // 업무 테이블 헤더 / 진행중 pill / 업로드 드롭존
     tableDivider: '#EDEDF0', // gray/10 — 급여 이력 표 행 구분선
+    listDivider: '#F0F0F3', // 직원 계정 관리 표 머리행·행 구분선
     warning: '#FDB542', // 반려 상태 / 우선순위 중
     warningBg: '#FFE8C3', // 반려 상태 배경 / 우선순위 중 배경
     warningText: '#8A5A00', // 법정지정분류 뱃지 글자 (warningBg 위)
+    warningBadgeText: '#B7740A', // 직원 계정 `초기 비밀번호` 배지 글자 (warningBg 위)
     dangerBg: '#FFCECE', // 우선순위 상 배경 / 삭제 모달 아이콘 배경
     success: '#00B48A', // 성공 토스트 아이콘
     border: '#A1A1A1',

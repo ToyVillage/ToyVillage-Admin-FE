@@ -14,4 +14,5 @@ export const dataTableDefaultAppearance = {
   dividerInset: 40,
   align: 'left',
   paginationPlacement: 'inside',
+  headerDivider: false,
 } satisfies Required<DataTableAppearance>
