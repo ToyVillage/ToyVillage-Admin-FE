@@ -11,7 +11,8 @@ paths: src/pages/settings/accounts, src/features/create-account, src/shared/asse
 
 ## 상태와 근거
 
-- Status: Draft
+- Status: Superseded (2026-09-28) — 직원 계정 관리 화면(`staff-accounts.spec.md`)의 생성 모달로 대체됐다.
+  `/settings/accounts/create` 는 `/settings/accounts` 로 리다이렉트한다.
 - Last refreshed: 2026-09-17
 - 이슈: #96 계정 생성 퍼블리싱
 - 기준 프레임: Figma `1830:17307` "account make (empty)" — 빈 값으로 제출했을 때의 오류 상태 1920×1080.

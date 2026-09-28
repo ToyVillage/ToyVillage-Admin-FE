@@ -58,7 +58,7 @@ import {
   SpeciesListPage,
 } from '@/pages/species'
 import { TeamSettingsPage } from '@/pages/settings/teams'
-import { CreateAccountPage } from '@/pages/settings/accounts'
+import { StaffAccountsPage } from '@/pages/settings/accounts'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
 
@@ -183,9 +183,11 @@ const router = createBrowserRouter([
             element: <ObservationRedirectPage />,
           },
           { path: '/settings/teams', element: <TeamSettingsPage /> },
+          { path: '/settings/accounts', element: <StaffAccountsPage /> },
+          // 계정 생성은 목록 화면의 모달로 옮겼다. 옛 주소는 목록으로 보낸다.
           {
             path: '/settings/accounts/create',
-            element: <CreateAccountPage />,
+            element: <Navigate to="/settings/accounts" replace />,
           },
         ],
       },
