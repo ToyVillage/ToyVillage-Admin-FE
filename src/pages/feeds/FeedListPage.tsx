@@ -353,7 +353,11 @@ const TableArea = styled.div`
     min-width: ${feedTableMinWidth}px;
   }
 
+  // 가로 스크롤을 켜면 세로도 스크롤 영역이 되어, 마지막 행 아래로 여는 케밥 메뉴(약 124px)가 잘린다.
+  // 메뉴가 들어갈 만큼 영역 안쪽 아래 여백을 두고, 같은 만큼 음수 margin 으로 레이아웃은 그대로 둔다.
   @media (max-width: ${feedTableMinWidth + 64 + 20}px) {
     overflow-x: auto;
+    padding-bottom: 140px;
+    margin-bottom: -140px;
   }
 `
