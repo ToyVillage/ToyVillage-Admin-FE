@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import {
   DataTable,
   type DataTableColumn,
@@ -15,10 +16,11 @@ interface FeedTableProps {
   emptyLabel: string
   // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
   loading?: boolean
+  /** 행 오른쪽 케밥 메뉴. 메뉴 동작(수정·삭제)은 페이지가 소유한다. */
+  renderRowAction?: (feed: FeedRecord) => ReactNode
 }
 
-// Figma `748:14291` 의 열 구성. 케밥 열은 디자인에서 가려져 있어 만들지 않고,
-// 남는 폭은 마지막 `급여시간` 열이 채운다.
+// Figma `feed list table`(2580:24892) 의 열 구성. 남는 폭은 `먹이 종류 · 급여량` 이 채운다.
 // 대상 개체와 급여일시는 각각 두 열로 나눠 보여 준다(한 칸에 붙이면 줄바꿈으로 깨진다).
 const columns: DataTableColumn[] = [
   { key: 'animalKind', header: '종', width: 200, render: cell('animalKind') },
@@ -48,8 +50,12 @@ const columns: DataTableColumn[] = [
   },
 ]
 
+// 케밥 열. Figma 에는 머리행 라벨이 없다.
+const actionColumnWidth = 80
+
 // 열 폭 합계. 화면이 이보다 좁아지면 표를 가로로 스크롤한다.
-export const feedTableMinWidth = 200 + 180 + 320 + 180 + 220 + 140
+export const feedTableMinWidth =
+  200 + 180 + 320 + 180 + 220 + 140 + actionColumnWidth
 
 const appearance = {
   headerBackground: 'tableHeaderStrong',
@@ -63,7 +69,27 @@ export function FeedTable({
   pagination,
   emptyLabel,
   loading,
+  renderRowAction,
 }: FeedTableProps) {
+  const feedById = new Map(feeds.map((feed) => [feed.id, feed]))
+  const tableColumns: DataTableColumn[] = renderRowAction
+    ? [
+        ...columns,
+        {
+          key: 'actions',
+          header: '',
+          width: actionColumnWidth,
+          paddingX: 0,
+          align: 'center',
+          variant: 'action',
+          render: (row) => {
+            const feed = feedById.get(row.id)
+            return feed ? renderRowAction(feed) : null
+          },
+        },
+      ]
+    : columns
+
   return (
     <DataTable
       rows={feeds.map((feed): DataTableRow => ({
@@ -75,7 +101,7 @@ export function FeedTable({
         fedDate: formatFedDate(feed.fedDate),
         fedTime: feed.fedTime,
       }))}
-      columns={columns}
+      columns={tableColumns}
       onRowClick={onRowClick}
       rowTestId="feed-row"
       pagination={pagination}
