@@ -3,6 +3,7 @@ import {
   Navigate,
   Outlet,
   RouterProvider,
+  type RouteObject,
 } from 'react-router-dom'
 import { DashboardPage } from '@/pages/dashboard'
 import { LoginPage } from '@/pages/login'
@@ -61,6 +62,14 @@ import { TeamSettingsPage } from '@/pages/settings/teams'
 import { StaffAccountsPage } from '@/pages/settings/accounts'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
+import { usePageViewTracking } from '@/app/usePageViewTracking'
+
+// 로그인 화면까지 모든 화면의 페이지뷰를 한곳에서 보낸다.
+function RootLayout() {
+  usePageViewTracking(routes)
+
+  return <Outlet />
+}
 
 function AppLayout() {
   return (
@@ -72,7 +81,7 @@ function AppLayout() {
   )
 }
 
-const router = createBrowserRouter([
+const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
   {
     element: <RequireAuth />,
@@ -194,6 +203,10 @@ const router = createBrowserRouter([
       },
     ],
   },
+]
+
+const router = createBrowserRouter([
+  { element: <RootLayout />, children: routes },
 ])
 
 // Data router를 사용해 생성 화면의 이탈 시도를 일관되게 차단한다.
