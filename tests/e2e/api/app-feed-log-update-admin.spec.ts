@@ -135,6 +135,9 @@ test('S8: 수정 후 상세 재조회', async ({ page }) => {
   const api = await openEdit(page)
   const detailRequests = api.requests.adminDetail
 
+  await field(page, '먹이 종류').fill('닭가슴살')
+  await field(page, '급여량').fill('2.5')
+  await field(page, '특이사항').fill('잔반 조금 남김')
   await saveButton(page).click()
   await expect(page.getByText('데이터 수정에 성공했습니다')).toBeVisible()
   await page.getByTestId('feed-row').first().click()
@@ -143,4 +146,10 @@ test('S8: 수정 후 상세 재조회', async ({ page }) => {
   await expect
     .poll(() => api.requests.adminDetail)
     .toBeGreaterThan(detailRequests)
+  // 캐시된 옛 값(생닭 1.2kg)이 아니라 수정한 값이 상세에 보인다.
+  const main = page.getByRole('main')
+  await expect(main.getByText('닭가슴살').first()).toBeVisible()
+  await expect(main.getByText('2.5kg').first()).toBeVisible()
+  await expect(main.getByText('잔반 조금 남김').first()).toBeVisible()
+  await expect(main.getByText('생닭')).toHaveCount(0)
 })
