@@ -108,7 +108,12 @@ test('S6: 삭제한 기록의 상세는 캐시를 쓰지 않는다', async ({ pa
   await expect(page.getByText('데이터 삭제에 성공했습니다')).toBeVisible()
   const detailRequests = api.requests.adminDetail
 
-  await page.goto('/feeds/1')
+  // 문서를 새로 불러오면 QueryClient 도 새로 생겨 캐시 제거를 검증할 수 없다.
+  // 같은 SPA 안에서 라우터 이동(popstate)으로 상세에 들어간다.
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/feeds/1')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
 
   await expect
     .poll(() => api.requests.adminDetail)
