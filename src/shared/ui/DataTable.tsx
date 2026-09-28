@@ -59,6 +59,8 @@ export interface DataTableAppearance {
   align?: 'left' | 'center'
   /** 페이지네이션을 카드 안/밖 중 어디에 둘지 */
   paginationPlacement?: 'inside' | 'outside'
+  /** 머리행과 첫 행 사이에도 행 구분선(같은 색·여백)을 그릴지 */
+  headerDivider?: boolean
 }
 
 export interface DataTableColumn {
@@ -169,6 +171,9 @@ interface DataTableProps {
   pagination?: DataTablePagination
   // 문자열 한 줄 또는 여러 줄 블록(ReactNode). 호출부가 줄 구성을 정한다.
   emptyLabel?: ReactNode
+  // 카드 하단 왼쪽 요약(예: `총 12명`). 지정하면 요약·페이지네이션을 한 줄에 두고
+  // 페이지네이션은 가운데에 남긴다. 카드 안(`inside`) 페이지네이션에서만 쓴다.
+  footerStart?: ReactNode
   emptyMinHeight?: number
   appearance?: DataTableAppearance
   // 첫 조회 중. 헤더 라벨·검색바·페이지 화살표는 실제 UI 그대로 두고 값 자리만 막대로 채운다.
@@ -187,12 +192,15 @@ export function DataTable({
   selection,
   pagination,
   emptyLabel,
+  footerStart,
   emptyMinHeight,
   appearance,
   loading = false,
   loadingRows = 3,
 }: DataTableProps) {
   const look = { ...dataTableDefaultAppearance, ...appearance }
+  const hasFooter = footerStart != null && look.paginationPlacement === 'inside'
+  const paginationSlot = hasFooter ? 'footer' : look.paginationPlacement
   const [sortOpen, setSortOpen] = useState(false)
   const sortControlRef = useRef<HTMLDivElement>(null)
   const sortOptions = sort?.options ?? defaultSortOptions
@@ -229,7 +237,7 @@ export function DataTable({
   // 페이지네이션을 쓰는 표에서만 번호 자리를 그린다(급여 이력처럼 없는 표는 그대로 둔다).
   const loadingPaginationNode =
     loading && pagination ? (
-      <Pagination $placement={look.paginationPlacement}>
+      <Pagination $placement={paginationSlot}>
         <PageNav type="button" aria-label="이전 페이지" disabled>
           <ChevronIcon src={chevronIcon} alt="" />
         </PageNav>
@@ -246,7 +254,7 @@ export function DataTable({
 
   const paginationNode =
     pagination && pagination.pageCount > 1 ? (
-      <Pagination $placement={look.paginationPlacement}>
+      <Pagination $placement={paginationSlot}>
         <PageNav
           type="button"
           aria-label="이전 페이지"
@@ -289,7 +297,12 @@ export function DataTable({
   const table = (
     <>
       <Table $offsetTop={look.offsetTop} $bordered={look.bordered}>
-        <Header $height={look.headerHeight} $background={look.headerBackground}>
+        <Header
+          $height={look.headerHeight}
+          $background={look.headerBackground}
+          $divider={look.headerDivider ? look.dividerColor : null}
+          $dividerInset={look.dividerInset}
+        >
           {selection && (
             <SelectHeadCell>
               <Checkbox
@@ -471,8 +484,15 @@ export function DataTable({
           ))
         )}
 
-        {look.paginationPlacement === 'inside' &&
-          (loading ? loadingPaginationNode : paginationNode)}
+        {hasFooter ? (
+          <Footer>
+            <FooterStart>{footerStart}</FooterStart>
+            {loading ? loadingPaginationNode : paginationNode}
+          </Footer>
+        ) : (
+          look.paginationPlacement === 'inside' &&
+          (loading ? loadingPaginationNode : paginationNode)
+        )}
       </Table>
       {look.paginationPlacement === 'outside' &&
         (loading ? loadingPaginationNode : paginationNode)}
@@ -517,11 +537,31 @@ const Table = styled.div<{ $offsetTop: number; $bordered: boolean }>`
   background: ${({ theme }) => theme.colors.surface};
 `
 
-const Header = styled.div<{ $height: number; $background: ThemeColorKey }>`
+const Header = styled.div<{
+  $height: number
+  $background: ThemeColorKey
+  $divider: ThemeColorKey | null
+  $dividerInset: number
+}>`
+  position: relative;
   display: flex;
   min-height: ${({ $height }) => $height}px;
   border-radius: 20px 20px 0 0;
   background: ${({ theme, $background }) => theme.colors[$background]};
+
+  ${({ theme, $divider, $dividerInset }) =>
+    $divider
+      ? `
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: ${$dividerInset}px;
+      right: ${$dividerInset}px;
+      border-top: 1px solid ${theme.colors[$divider]};
+    }
+  `
+      : ''}
 `
 
 const ControlRow = styled.div`
@@ -784,13 +824,31 @@ const Pill = styled.span`
 `
 
 // 카드 밖 배치는 카드 하단에서 48px 띄운다(Figma 표 y=836 → 페이지네이션 y=884).
-const Pagination = styled.nav<{ $placement: 'inside' | 'outside' }>`
+const Pagination = styled.nav<{ $placement: 'inside' | 'outside' | 'footer' }>`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
   ${({ $placement }) =>
-    $placement === 'outside' ? 'margin-top: 48px;' : 'padding: 24px 0;'}
+    $placement === 'outside'
+      ? 'margin-top: 48px;'
+      : $placement === 'inside'
+        ? 'padding: 24px 0;'
+        : ''}
+`
+
+// 요약·페이지네이션 한 줄. 양 끝 칸을 같은 폭(1fr)으로 두어 페이지네이션이 가운데에 선다.
+const Footer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 84px;
+  padding: 24px 40px 28px;
+`
+
+const FooterStart = styled.div`
+  grid-column: 1;
+  min-width: 0;
 `
 
 const PageNav = styled.button`
