@@ -1,3 +1,4 @@
+export { CreateAccountDialog } from './ui/CreateAccountDialog'
 export { CreateAccountForm } from './ui/CreateAccountForm'
 export { createEmployee, isUsernameConflictError } from './api/employeeApi'
 export type {
