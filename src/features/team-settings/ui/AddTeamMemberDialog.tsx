@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
 import type { TeamMember } from '@/entities/team'
-import defaultProfileImage from '@/shared/ui/assets/profile-default.svg'
 import { trapTab } from '../lib/trapTab'
 
 interface AddTeamMemberDialogProps {
@@ -109,7 +108,7 @@ export function AddTeamMemberDialog({
               <GroupLabel $selected>추가할 인원 {selected.length}명</GroupLabel>
               {selected.map((member) => (
                 <StaffRow key={member.id} data-testid="selected-staff-row">
-                  <Avatar src={defaultProfileImage} alt="" />
+                  <Avatar aria-hidden="true" />
                   <Name>{member.name}</Name>
                   <RankCell>
                     <Rank>{member.position ?? '사원'}</Rank>
@@ -130,7 +129,7 @@ export function AddTeamMemberDialog({
 
           {rest.map((member) => (
             <StaffRow key={member.id} data-testid="staff-row">
-              <Avatar src={defaultProfileImage} alt="" />
+              <Avatar aria-hidden="true" />
               <Name>{member.name}</Name>
               <RankCell>
                 <Rank>{member.position ?? '사원'}</Rank>
@@ -274,13 +273,12 @@ const StaffRow = styled.div`
   padding: 10px;
 `
 
-const Avatar = styled.img`
+const Avatar = styled.div`
   width: 48px;
   height: 48px;
   flex: 0 0 48px;
   border-radius: 100px;
   background: ${({ theme }) => theme.colors.avatarMuted};
-  object-fit: cover;
 `
 
 const Name = styled.span`

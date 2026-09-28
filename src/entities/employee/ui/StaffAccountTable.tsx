@@ -8,7 +8,6 @@ import {
   type DataTablePagination,
   type DataTableRow,
 } from '@/shared/ui'
-import defaultProfileImage from '@/shared/ui/assets/profile-default.svg'
 import type { StaffAccount } from '../model/staffAccount'
 
 interface StaffAccountTableProps {
@@ -64,7 +63,7 @@ export function StaffAccountTable({
         if (!account) return null
         return (
           <Identity>
-            <Avatar src={defaultProfileImage} alt="" />
+            <Avatar aria-hidden="true">{account.name.slice(0, 1)}</Avatar>
             <Names>
               <Name>{account.name}</Name>
               <Username>{account.username}</Username>
@@ -152,12 +151,19 @@ const Identity = styled.div`
   gap: 16px;
 `
 
-const Avatar = styled.img`
+const Avatar = styled.span`
+  display: inline-flex;
   width: 52px;
   height: 52px;
   flex: 0 0 52px;
+  align-items: center;
+  justify-content: center;
   border-radius: 100px;
-  object-fit: cover;
+  background: ${({ theme }) => theme.colors.accentBg};
+  color: ${({ theme }) => theme.colors.accent};
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
 `
 
 const Names = styled.div`
