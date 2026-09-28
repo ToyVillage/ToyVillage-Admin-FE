@@ -1,17 +1,28 @@
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   animalSpeciesList,
   animalTaxonomicBySpecies,
+  deleteFeed,
   feedQueryKeys,
+  formatAnimalLabel,
   FeedTable,
   feedTableMinWidth,
   getFeeds,
   type AnimalSpecies,
+  type FeedRecord,
 } from '@/entities/feed'
-import { CategoryTabs, DateFilter } from '@/shared/ui'
+import {
+  CategoryTabs,
+  DateFilter,
+  DeleteConfirmationDialog,
+  KebabMenu,
+  Toast,
+  useFocusFrame,
+  type ToastVariant,
+} from '@/shared/ui'
 import {
   readIsoDateParam,
   readPageParam,
@@ -23,12 +34,39 @@ import {
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 10
 
+type FeedListToastKey = 'edit-success' | 'delete-success' | 'delete-error'
+
+// 수정 성공은 수정 화면이 이동 state 로 넘기고, 삭제 결과는 이 화면에서 띄운다.
+const toastByKey: Record<
+  FeedListToastKey,
+  { variant: ToastVariant; message: string }
+> = {
+  'edit-success': { variant: 'success', message: '데이터 수정에 성공했습니다' },
+  'delete-success': {
+    variant: 'success',
+    message: '데이터 삭제에 성공했습니다',
+  },
+  'delete-error': { variant: 'error', message: '데이터 삭제에 실패했습니다' },
+}
+
 const allTabLabel = '전체'
 const tabs = [allTabLabel, ...animalSpeciesList]
 
 export function FeedListPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
+  // 케밥 메뉴는 동시에 하나만 열린다.
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<FeedRecord | null>(null)
+  const [localToast, setLocalToast] = useState<FeedListToastKey | null>(null)
+  // 삭제 요청부터 목록 갱신까지. mutation 의 isPending 은 onSuccess(갱신 대기) 전에 풀려
+  // 그 사이 `확인` 이 다시 눌리므로 모달의 처리 중 상태를 따로 잡는다.
+  const [deleting, setDeleting] = useState(false)
+  // 행별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
+  const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
+  const focusFrame = useFocusFrame()
+  const deleteMutation = useMutation({ mutationFn: deleteFeed })
   // 조회 조건은 URL 이 소유한다. 상세에 다녀오거나 새로고침해도 그대로 남는다.
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -104,6 +142,62 @@ export function FeedListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalPageSize, page, pageCount])
 
+  const stateToast = (location.state as { toast?: FeedListToastKey } | null)
+    ?.toast
+  const toastKey = localToast ?? stateToast
+  const toast = toastKey ? toastByKey[toastKey] : undefined
+
+  // 닫을 때 이동 state 도 비워 새로고침·재방문 시 다시 뜨지 않게 한다(조회 조건은 유지).
+  const dismissToast = useCallback(() => {
+    setLocalToast(null)
+    if (stateToast) {
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      })
+    }
+  }, [location.pathname, location.search, navigate, stateToast])
+
+  function focusMenuTrigger(feedId: string) {
+    // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
+    focusFrame(() => menuTriggersRef.current.get(feedId))
+  }
+
+  function cancelDelete() {
+    if (!deleteTarget) return
+    const targetId = deleteTarget.id
+    setDeleteTarget(null)
+    focusMenuTrigger(targetId)
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget || deleting) return
+    const target = deleteTarget
+
+    setDeleting(true)
+    deleteMutation.mutate(
+      { feedLogId: Number(target.id) },
+      {
+        onSuccess: async () => {
+          // 지운 기록의 상세는 무효화하지 않고 지운다(다시 조회하면 404).
+          queryClient.removeQueries({
+            queryKey: feedQueryKeys.detail(target.id),
+          })
+          await queryClient.invalidateQueries({ queryKey: ['feeds', 'list'] })
+          setDeleting(false)
+          setDeleteTarget(null)
+          setLocalToast('delete-success')
+        },
+        onError: () => {
+          setDeleting(false)
+          setDeleteTarget(null)
+          setLocalToast('delete-error')
+          focusMenuTrigger(target.id)
+        },
+      },
+    )
+  }
+
   // 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
   if (feedsQuery.isError) {
     return (
@@ -139,9 +233,51 @@ export function FeedListPage() {
             }
             pagination={pagination}
             emptyLabel="해당 날짜에 급여 내역이 없습니다."
+            renderRowAction={(feed) => (
+              <KebabMenu
+                placement="below-trigger"
+                ariaLabel={`${formatAnimalLabel(feed.animalType, feed.animalName)} 급여 기록 메뉴`}
+                open={openMenuId === feed.id}
+                onOpenChange={(open) => setOpenMenuId(open ? feed.id : null)}
+                onTriggerRef={(node) => {
+                  if (node) menuTriggersRef.current.set(feed.id, node)
+                  else menuTriggersRef.current.delete(feed.id)
+                }}
+                items={[
+                  {
+                    label: '수정',
+                    onSelect: () =>
+                      navigate(`/feeds/${feed.id}/edit`, {
+                        state: { listSearch: location.search },
+                      }),
+                  },
+                  {
+                    label: '삭제',
+                    tone: 'danger',
+                    onSelect: () => setDeleteTarget(feed),
+                  },
+                ]}
+              />
+            )}
           />
         </TableArea>
       </Content>
+
+      {deleteTarget && (
+        <DeleteConfirmationDialog
+          pending={deleting}
+          onCancel={cancelDelete}
+          onConfirm={confirmDelete}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          variant={toast.variant}
+          message={toast.message}
+          onDismiss={dismissToast}
+        />
+      )}
     </Page>
   )
 }
@@ -207,12 +343,17 @@ const Subtitle = styled.p`
 
 // DataTable 의 기본 margin-top(20)에 12를 더해 Figma 의 탭바-표 간격 32를 맞춘다.
 // 화면이 열 폭 합계보다 좁아지면 표만 가로로 스크롤한다(열이 표 밖으로 새지 않게).
+// 넓은 화면에서는 스크롤 영역을 두지 않는다 — 마지막 행의 케밥 메뉴가 표 아래로 나가야 한다.
+// 기준은 본문 좌우 여백(64)에 세로 스크롤바 폭(Windows 약 17px)을 더한 뷰포트 폭이다.
 const TableArea = styled.div`
   width: 100%;
   margin-top: 12px;
-  overflow-x: auto;
 
   > * {
     min-width: ${feedTableMinWidth}px;
+  }
+
+  @media (max-width: ${feedTableMinWidth + 64 + 20}px) {
+    overflow-x: auto;
   }
 `
