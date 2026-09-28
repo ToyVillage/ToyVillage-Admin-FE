@@ -1,0 +1,15 @@
+{
+  "feature": "app-admin-employee-query-all",
+  "apiId": "APP_ADMIN_EMPLOYEE_QUERY_ALL",
+  "approvedAt": "2026-09-28T13:54:21.561Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "733cf0c5217ecf5a391c04a189ad8523cc7c8750f68d1ec3ab3c2dd33ba9f7fc",
+  "contractHash": "32bee0fc7b4394d6960fb364a9987e3f76bf14bbc88938c89d52d911669c1610",
+  "contractMarkdownHash": "bf2cf77563270f3295069d5ecde30a731fc3e61a87343a2a55440bf8ad0cad91",
+  "planHash": "cb3a97563cc33c975081db72eb99443246742f2e487d3ca438578b590237c87f",
+  "scenarioHash": "17826e3d77138f78e478e7838ae3929d9ec98f4cdef7f492c2bc087998284de3",
+  "testHash": "3d7a18e3deb75d873c30a8af22e950973d6f5eeeadbdd8e946d50610c50bddcd",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-28T13:54:21.970Z"
+}
