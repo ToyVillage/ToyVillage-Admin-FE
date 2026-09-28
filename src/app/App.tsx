@@ -38,7 +38,7 @@ import {
   TaskListPage,
 } from '@/pages/tasks'
 import { TaskReportDetailPage, TaskReportListPage } from '@/pages/task-reports'
-import { FeedDetailPage, FeedListPage } from '@/pages/feeds'
+import { EditFeedPage, FeedDetailPage, FeedListPage } from '@/pages/feeds'
 import {
   CreateWorkLogFormPage,
   WorkLogDetailPage,
@@ -143,6 +143,7 @@ const router = createBrowserRouter([
           { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
           { path: '/feeds', element: <FeedListPage /> },
           { path: '/feeds/:id', element: <FeedDetailPage /> },
+          { path: '/feeds/:id/edit', element: <EditFeedPage /> },
           { path: '/work-logs', element: <WorkLogListPage /> },
           // `create` 가 `:id` 로 잡히지 않도록 구체 경로를 먼저 둔다.
           // splat 으로 두어 1단계와 2단계(`/zones`)가 같은 화면을 다시 마운트하지 않게 한다.

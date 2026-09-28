@@ -1,0 +1,343 @@
+{
+  "apiId": "APP_FEED_LOG_UPDATE_ADMIN",
+  "name": "관리자 급여일지 수정",
+  "description": "앱 관리자가 급여일지 한 건의 급여일시·먹이 종류·급여량·특이사항을 수정하는 기능",
+  "method": "PUT",
+  "path": "/feed-log/admin/{feedLogId}",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "앱 access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [
+    {
+      "name": "feedLogId",
+      "location": "path",
+      "type": "integer",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": 1,
+      "description": "수정할 급여일지 id",
+      "constraints": [
+        "int64"
+      ]
+    }
+  ],
+  "queryParameters": [],
+  "requestBody": {
+    "required": true,
+    "type": "object",
+    "nullable": false,
+    "description": "FeedLogRequest",
+    "fields": [
+      {
+        "name": "feedDateTime",
+        "location": "body",
+        "type": "datetime",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "2026-09-03T09:30:00",
+        "description": "급여 일시(ISO date-time)",
+        "constraints": []
+      },
+      {
+        "name": "feedType",
+        "location": "body",
+        "type": "string",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "생닭",
+        "description": "먹이 종류",
+        "constraints": [
+          "minLength 1"
+        ]
+      },
+      {
+        "name": "feedAmount",
+        "location": "body",
+        "type": "number",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": 1.2,
+        "description": "급여량(kg, float)",
+        "constraints": [
+          "float"
+        ]
+      },
+      {
+        "name": "significant",
+        "location": "body",
+        "type": "string",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "평소보다 식욕이 왕성함.",
+        "description": "특이사항",
+        "constraints": []
+      }
+    ],
+    "example": {
+      "feedDateTime": "2026-09-03T09:30:00",
+      "feedType": "생닭",
+      "feedAmount": 1.2,
+      "significant": "평소보다 식욕이 왕성함."
+    }
+  },
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "수정 성공",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "결과 메시지 (MessageResponse)",
+          "fields": [
+            {
+              "name": "message",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "급여일지가 수정되었습니다.",
+              "description": "결과 메시지",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 403,
+        "description": "인증 토큰이 없거나 유효하지 않음, 또는 접근 권한 없음 (Swagger에 body 스키마 없음)",
+        "noContent": true,
+        "body": null
+      },
+      {
+        "status": 404,
+        "description": "존재하지 않는 급여일지(FEED_LOG_NOT_FOUND) 또는 앱 관리자(APP_ADMIN_NOT_FOUND)",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "존재하지 않는 급여일지입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 404,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "존재하지 않는 급여일지입니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 405,
+        "description": "Method Not Allowed",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 405,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "Internal Server Error",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "https://api-stag.toyvillage.kr/v3/api-docs/app",
+    "notionDataSource": null,
+    "resolvedNotionPage": "https://api-stag.toyvillage.kr/v3/api-docs/app#/paths/~1feed-log~1admin~1{feedLogId}/put",
+    "requestedNotionPage": null,
+    "checkedAt": "2026-09-28T12:00:00+09:00",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "APP_FEED_LOG_UPDATE_ADMIN",
+      "method": "PUT",
+      "path": "/feed-log/admin/{feedLogId}",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
+    },
+    "detailValues": {
+      "apiId": "APP_FEED_LOG_UPDATE_ADMIN",
+      "method": "PUT",
+      "path": "/feed-log/admin/{feedLogId}",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
+    }
+  }
+}

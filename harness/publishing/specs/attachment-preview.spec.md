@@ -15,7 +15,7 @@ paths: src/shared/ui/AttachmentPreviewDialog.tsx, src/shared/ui/AttachmentChip.t
 ## 상태와 근거
 
 - Status: Draft
-- Last refreshed: 2026-09-27 (이슈 #186, #189)
+- Last refreshed: 2026-09-28 (이슈 #186, #189, #191)
 - 기준: yot Figma 섹션 `첨부파일 미리보기`(`2435:24589`)
   - 이미지: `attachment preview (image)` `2435:24590` › 모달 `2435:24604`
   - PDF: `attachment preview (pdf)` `2435:24615` › 모달 `2435:24629`
@@ -56,6 +56,8 @@ paths: src/shared/ui/AttachmentPreviewDialog.tsx, src/shared/ui/AttachmentChip.t
   - 한 쪽짜리 PDF도 `1 / 1` 과 비활성 화살표를 보여준다.
 - 파일을 받는 중 → 뷰어에 `미리보기를 불러오는 중입니다.` (Figma 없음)
 - 파일 서버 실패·PDF 해석 실패 → 뷰어에 `미리보기를 불러오지 못했습니다.` (Figma 없음). 헤더 다운로드는 그대로 둔다(다운로드도 실패하면 기존 다운로드 실패 토스트).
+- 파일은 받았지만 브라우저가 이미지를 그리지 못함(예: 이름은 .jpg 인 아이폰 HEIC) → 깨진 이미지 아이콘 대신 뷰어에
+  `미리보기를 지원하지 않는 형식입니다. 다운로드해서 확인해 주세요.` (#191, Figma 없음). 헤더 다운로드는 그대로 동작한다.
 
 ## 화면 구조와 시각 규격
 
@@ -94,6 +96,7 @@ paths: src/shared/ui/AttachmentPreviewDialog.tsx, src/shared/ui/AttachmentChip.t
 - S8: 파일 서버 실패 → 모달 안에 `미리보기를 불러오지 못했습니다.` 가 보인다.
 - S9: 자료실 상세에서 이미지 첨부 파일명 클릭 → 모달이 열린다.
 - S10: 관찰 상세에서 이미지 첨부 파일명 클릭 → 모달이 열린다.
+- S11: 파일 서버가 브라우저가 그리지 못하는 이미지를 준다 → 모달 안에 지원하지 않는 형식 안내가 보이고, 모달 `다운로드`는 동작한다.
 
 ## 미결 사항
 

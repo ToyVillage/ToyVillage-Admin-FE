@@ -6,7 +6,7 @@ import { createMockNotices, mockNoticeApi } from './support/notice-api'
 import { mockTaskApi, mockTasks } from './support/task-api'
 import { mockWorkReportApi } from './support/task-report-api'
 
-// 승인된 시나리오(attachment-preview.approved.json: S1~S10)를 변환한 것.
+// 승인된 시나리오(attachment-preview.approved.json: S1~S11)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 파일 서버(VITE_FILE_BASE_URL)는 page.route 로 흉내 낸다. 기본값은 playwright.config.ts 와 같다.
 const fileServerOrigin = new URL(
@@ -194,6 +194,45 @@ test('S10: 관찰 상세에서 열림', async ({ page }) => {
   const dialog = page.getByRole('dialog', { name: '상처사진.jpg' })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('img', { name: '상처사진.jpg' })).toBeVisible()
+})
+
+test('S11: 브라우저가 그리지 못하는 이미지', async ({ page }) => {
+  // 이름만 .png 이고 내용은 아이폰 HEIC 머리글이다. 크롬은 그리지 못한다.
+  const heicBody = Buffer.concat([
+    Buffer.from('000000286674797068656963000000006d696631', 'hex'),
+    Buffer.alloc(64),
+  ])
+  await mockTaskApi(page)
+  await mockFileServer(page, 200)
+  // 나중에 등록한 route 가 먼저 매칭된다.
+  await page.route(
+    (url) =>
+      url.origin === fileServerOrigin && url.pathname.endsWith('.png'),
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: { 'access-control-allow-origin': '*' },
+        contentType: 'image/png',
+        body: heicBody,
+      }),
+  )
+  await page.goto('/tasks/1')
+
+  await previewButton(page, '휴관안내.png').click()
+
+  const dialog = page.getByRole('dialog', { name: '휴관안내.png' })
+  await expect(
+    dialog.getByText(
+      '미리보기를 지원하지 않는 형식입니다. 다운로드해서 확인해 주세요.',
+    ),
+  ).toBeVisible()
+  await expect(dialog.getByRole('img', { name: '휴관안내.png' })).toHaveCount(0)
+
+  const downloadPromise = page.waitForEvent('download')
+  await dialog.getByRole('button', { name: '다운로드' }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe('휴관안내.png')
+  expect(await readFile(await download.path())).toEqual(heicBody)
 })
 
 function previewButton(page: Page, fileName: string) {
