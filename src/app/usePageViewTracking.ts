@@ -18,6 +18,8 @@ export const sessionRequiredRouteHandle: PageViewRouteHandle = {
   requiresSession: true,
 }
 
+const notFoundPattern = '/(not-found)'
+
 // 경로는 실제 주소가 아니라 `/species/:speciesId` 같은 라우트 패턴으로 보낸다.
 // ID별로 페이지가 쪼개지지 않고 쿼리스트링(검색어·필터)도 GA 에 실리지 않는다.
 // 같은 패턴 안에서의 이동(페이지네이션·필터, 단계 화면의 리다이렉트)은
@@ -30,7 +32,7 @@ export function usePageViewTracking(routes: RouteObject[]): void {
     if (shouldSkipPageView(routes, pathname)) return
 
     const pattern = toRoutePattern(routes, pathname)
-    if (!pattern || trackedPattern.current === pattern) return
+    if (trackedPattern.current === pattern) return
 
     const referrer = trackedPattern.current ?? toInitialReferrer(routes)
     trackedPattern.current = pattern
@@ -53,14 +55,17 @@ function shouldSkipPageView(routes: RouteObject[], pathname: string) {
 
 function toRoutePattern(routes: RouteObject[], pathname: string) {
   const matches = matchRoutes(routes, pathname)
-  if (!matches) return null
+  if (!matches) return notFoundPattern
 
-  return matches.reduce((pattern, { route }) => {
-    if (!route.path) return pattern
+  const pattern = matches.reduce((joined, { route }) => {
+    if (!route.path) return joined
     if (route.path.startsWith('/')) return route.path
 
-    return `${pattern.replace(/\/$/, '')}/${route.path}`
+    return `${joined.replace(/\/$/, '')}/${route.path}`
   }, '')
+
+  // 단계 화면의 splat(`/*`)은 같은 화면이다. 제목에 `*` 가 남지 않게 뗀다.
+  return pattern.replace(/\/\*$/, '') || '/'
 }
 
 // 첫 페이지뷰의 referrer 는 브라우저 값(document.referrer)이라 쿼리와 ID 가 그대로 담긴다.
@@ -71,5 +76,5 @@ function toInitialReferrer(routes: RouteObject[]) {
   const url = new URL(document.referrer)
   if (url.origin !== window.location.origin) return url.origin
 
-  return toRoutePattern(routes, url.pathname) ?? url.origin
+  return toRoutePattern(routes, url.pathname)
 }
