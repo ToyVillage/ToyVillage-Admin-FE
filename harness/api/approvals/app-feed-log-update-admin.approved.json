@@ -1,0 +1,15 @@
+{
+  "feature": "app-feed-log-update-admin",
+  "apiId": "APP_FEED_LOG_UPDATE_ADMIN",
+  "approvedAt": "2026-09-28T10:09:56.231Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "06cc7730550b1a7863ba2efc3ab51d7a571401503da09400dc33dc387aeb8b91",
+  "contractHash": "eaa66c40ff1ebc72929ad9d34bbb324fd57c8b1c3633326d3e392c8fd9942605",
+  "contractMarkdownHash": "970a2a78b42c3d66acbf46317959b3bf69e7e10f8066ab1608f8300fca1a86c6",
+  "planHash": "46bc15634c30159ee5f04c78b205e6148a64aee8e5f3048920b3a17fa7ae7ba8",
+  "scenarioHash": "72927a2124a7b11f02e82fd220736162ca74b9982c25d0125038a5c74467dfea",
+  "testHash": "a1e218b70204df6b99808cdca59456a574574f9b3a30c7c9294c8a715995c1f4",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-28T10:10:16.909Z"
+}
