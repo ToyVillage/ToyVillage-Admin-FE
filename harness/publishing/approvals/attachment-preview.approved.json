@@ -1,6 +1,6 @@
 {
   "feature": "attachment-preview",
-  "approvedAt": "2026-09-27T07:00:26.508Z",
+  "approvedAt": "2026-09-27T23:52:16.647Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -12,8 +12,9 @@
     "S7",
     "S8",
     "S9",
-    "S10"
+    "S10",
+    "S11"
   ],
-  "scenarioHash": "deef2c39417d5fb0960dda443b40a8ba08b93d78fc9fd1b01ff88023018af27c",
-  "e2eHash": "613e03532ef544214c6fedde40df632b1f418391d84ee242bfbf44da9c931ee1"
+  "scenarioHash": "243dc9fc6f643033f6e095c1a07691626d6cd7ce2b1a152ce9bb9839e92e39fd",
+  "e2eHash": "cdbdddd344d9e8c92d1620c574cdf6c13095b0e013b56bed8b74da410a6a1abb"
 }

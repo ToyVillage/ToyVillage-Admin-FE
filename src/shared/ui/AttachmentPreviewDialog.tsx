@@ -177,17 +177,38 @@ export function AttachmentPreviewDialog({
 // Blob URL 은 이 요소가 있는 동안만 둔다. 렌더 중에 만들면 StrictMode 재실행에서 해제된 주소가 남는다.
 function ImagePreview({ blob, alt }: { blob: Blob; alt: string }) {
   const imageRef = useRef<HTMLImageElement>(null)
+  const urlRef = useRef<string | null>(null)
+  // 받았지만 브라우저가 그리지 못한 이미지(예: 이름만 .jpg 인 아이폰 HEIC, #191).
+  const [unsupported, setUnsupported] = useState(false)
 
   useEffect(() => {
     const image = imageRef.current
     if (!image) return
 
     const url = URL.createObjectURL(blob)
+    urlRef.current = url
     image.src = url
     return () => URL.revokeObjectURL(url)
   }, [blob])
 
-  return <PreviewImage ref={imageRef} alt={alt} />
+  if (unsupported) {
+    return (
+      <StatusText role="status">
+        미리보기를 지원하지 않는 형식입니다. 다운로드해서 확인해 주세요.
+      </StatusText>
+    )
+  }
+
+  return (
+    <PreviewImage
+      ref={imageRef}
+      alt={alt}
+      onError={(event) => {
+        // StrictMode 재실행에서 해제된 이전 주소의 실패는 무시한다.
+        if (event.currentTarget.src === urlRef.current) setUnsupported(true)
+      }}
+    />
+  )
 }
 
 // 뷰어 높이(600)에 맞춰 한 쪽을 그린다. 쪽을 넘기면 진행 중인 렌더를 취소한다.
