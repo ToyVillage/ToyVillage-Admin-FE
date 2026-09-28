@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
+import {
+  analyticsBaseURL,
+  analyticsMeasurementId,
+  analyticsServerPort,
+} from './tests/e2e/support/analytics-server'
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173'
 const serverURL = new URL(baseURL)
@@ -36,19 +41,33 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: `yarn dev --host 127.0.0.1 --port ${serverPort}`,
-    // mock e2e 는 실제 서버를 호출하지 않는다. 도달 불가 호스트로 고정해
-    // page.route() 로 가로채지 못한 요청이 staging 으로 새지 않게 한다.
-    // (route 패턴은 오리진을 특정하지 않으므로 그대로 매칭된다)
-    env: {
-      VITE_API_BASE_URL: 'https://api.e2e.invalid',
-      VITE_FILE_BASE_URL: 'https://cdn.e2e.invalid',
-      // 로컬 .env 에 측정 ID 가 있어도 테스트 방문이 GA 에 집계되지 않게 끈다.
-      VITE_GA_MEASUREMENT_ID: '',
+  webServer: [
+    {
+      command: `yarn dev --host 127.0.0.1 --port ${serverPort}`,
+      // mock e2e 는 실제 서버를 호출하지 않는다. 도달 불가 호스트로 고정해
+      // page.route() 로 가로채지 못한 요청이 staging 으로 새지 않게 한다.
+      // (route 패턴은 오리진을 특정하지 않으므로 그대로 매칭된다)
+      env: {
+        VITE_API_BASE_URL: 'https://api.e2e.invalid',
+        VITE_FILE_BASE_URL: 'https://cdn.e2e.invalid',
+        // 로컬 .env 에 측정 ID 가 있어도 테스트 방문이 GA 에 집계되지 않게 끈다.
+        VITE_GA_MEASUREMENT_ID: '',
+      },
+      url: baseURL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
     },
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+    {
+      // GA 연동 검증(analytics.spec.ts) 전용. 측정 ID 가 반드시 들어가야 하므로 재사용하지 않는다.
+      command: `yarn dev --host 127.0.0.1 --port ${analyticsServerPort}`,
+      env: {
+        VITE_API_BASE_URL: 'https://api.e2e.invalid',
+        VITE_FILE_BASE_URL: 'https://cdn.e2e.invalid',
+        VITE_GA_MEASUREMENT_ID: analyticsMeasurementId,
+      },
+      url: analyticsBaseURL,
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+  ],
 })
