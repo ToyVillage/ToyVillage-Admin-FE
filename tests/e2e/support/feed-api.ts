@@ -224,6 +224,20 @@ export async function mockFeedApi(
         authorization: route.request().headers().authorization,
       })
       await delay(updateDelayMs)
+      // 기본 성공 응답이면 받은 값을 기록에 반영해 이후 목록·상세 조회가 수정된 값을 돌려준다.
+      if (updateStatus === 200 && updateBody === undefined) {
+        const target = handle.feedLogs.find(
+          (item) => item.feedLogId === feedLogId,
+        )
+        const body = route.request().postDataJSON() as Partial<MockFeedLog>
+        if (target) {
+          if (typeof body.feedType === 'string') target.feedType = body.feedType
+          if (typeof body.feedAmount === 'number')
+            target.feedAmount = body.feedAmount
+          if (typeof body.significant === 'string')
+            target.significant = body.significant
+        }
+      }
       await json(
         route,
         updateStatus,
