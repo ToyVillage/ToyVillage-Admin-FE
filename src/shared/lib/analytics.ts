@@ -31,7 +31,12 @@ export function initAnalytics(measurementId: string | undefined): void {
 
   gtag('js', new Date())
   // SPA 라 페이지뷰는 라우트가 바뀔 때 trackPageView 로 직접 보낸다.
-  gtag('config', measurementId, { send_page_view: false })
+  // 내부 관리자 도구라 광고·Google signals 연동은 쓰지 않는다.
+  gtag('config', measurementId, {
+    send_page_view: false,
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false,
+  })
 
   const script = document.createElement('script')
   script.async = true
