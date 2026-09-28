@@ -44,6 +44,8 @@ export default defineConfig({
     env: {
       VITE_API_BASE_URL: 'https://api.e2e.invalid',
       VITE_FILE_BASE_URL: 'https://cdn.e2e.invalid',
+      // 로컬 .env 에 측정 ID 가 있어도 테스트 방문이 GA 에 집계되지 않게 끈다.
+      VITE_GA_MEASUREMENT_ID: '',
     },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
