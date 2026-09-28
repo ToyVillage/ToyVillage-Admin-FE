@@ -37,6 +37,15 @@ paths: src/pages/settings/accounts, src/features/create-account, src/entities/em
   - 개발자 위임 결정(2026-09-28): 개발자가 중간 게이트 초안(시나리오 S1–S18, 공용 prop 추가 3건,
     초기화 실패 문구, 케밥 폭 180 유지, 옛 화면 정리)을 그대로 승인하라고 지시해 AI 가 공식 승인 스크립트를 실행했다.
 
+## 개정 (2026-09-28, API 연동)
+
+- 직원 API(app-admin-controller) 연동: 목록 `APP_ADMIN_EMPLOYEE_QUERY_ALL`, 생성 `APP_ADMIN_EMPLOYEE_CREATE`(성공 200),
+  비밀번호 초기화 `APP_ADMIN_EMPLOYEE_PASSWORD_RESET`, 삭제 `APP_ADMIN_EMPLOYEE_DELETE`(`harness/api/specs/app-admin-employee-*.spec.md`).
+- `비밀번호` 열은 목록 응답에 필드가 없어 한때 뺐다가, 백엔드가 `passwordChanged`(boolean)를 추가해 원래대로 둔다.
+  배지는 `passwordChanged` 가 true 면 `변경 완료`, false 면 `초기 비밀번호` 다. 시나리오는 S4 만 API 흐름에 맞춰 개정했다.
+- 생성 성공 후 새 계정은 목록 맨 위에 끼워 넣지 않고 목록 재조회로 보인다(순서는 서버 응답 그대로).
+- 조회 실패는 `직원 목록을 불러오지 못했습니다. 다시 시도해 주세요.` 상태 카드(다른 목록 화면과 같다).
+
 ## 목적
 
 운영 관리자가 토이빌리지 직원 계정을 한눈에 보고, 새 계정을 만들고,

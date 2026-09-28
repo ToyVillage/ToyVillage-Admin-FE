@@ -1,6 +1,6 @@
 {
   "feature": "staff-accounts",
-  "approvedAt": "2026-09-27T23:49:00.195Z",
+  "approvedAt": "2026-09-28T13:54:25.500Z",
   "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
@@ -22,6 +22,6 @@
     "S17",
     "S18"
   ],
-  "scenarioHash": "7cf7046292ec77e01e5e02eb6d0a6aa5419ce5918d1d59f192eb079f4186fcfc",
-  "e2eHash": "24464c9438ac56a40027e2beab293184b4d5c4d5ea9c2d31a14601d7b4a09485"
+  "scenarioHash": "8e7e6231f4dfe24092a08ac79aa555801af0deb5ae301c4222dc21c5f4c24a6e",
+  "e2eHash": "05e7c180d4179af238dcbbae093c100fb09d4024e6ccfe99b09b0f6c94aad66d"
 }
