@@ -39,7 +39,8 @@ export function initSentry(): void {
         blockAllMedia: true,
       }),
     ],
-    tracesSampleRate: 0.1,
+    // 직원 수가 적어 샘플링하면 데이터가 거의 안 쌓인다. 전부 기록한다.
+    tracesSampleRate: 1,
     // 평소에는 녹화하지 않고 에러가 난 세션만 남긴다.
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1,
