@@ -3,8 +3,6 @@ import { expect, test as base, type Page } from '@playwright/test'
 // 승인된 시나리오(work-log-list.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 
-
-
 import { mockWorkLogApi, type WorkLogApiHandle } from './support/work-log-api'
 
 // 업무일지 API 연동 이후 localStorage mock 대신 `support/work-log-api` 의
@@ -274,6 +272,68 @@ test('S19: 양식 관리 행 클릭 → 양식 상세 이동', async ({ page }) 
   await expect(page).toHaveURL(/\/work-logs\/forms\/1$/)
 })
 
+test('S20: 양식 필터 기본 표시', async ({ page }) => {
+  await page.goto('/work-logs')
+
+  await expect(page.getByText('양식 필터', { exact: true })).toBeVisible()
+  await expect(formFilter(page)).toHaveText('전체 양식')
+
+  await page.getByRole('button', { name: '양식 관리' }).click()
+  await expect(page.getByText('양식 필터', { exact: true })).toBeHidden()
+  await expect(formFilter(page)).toBeHidden()
+})
+
+test('S21: 양식 필터 선택', async ({ page, workLogApi }) => {
+  await page.goto('/work-logs?tab=logs&page=2')
+
+  await formFilter(page).click()
+  const options = page
+    .getByRole('listbox', { name: '양식 필터' })
+    .getByRole('option')
+  // mock 의 양식 목록 응답은 id 100 미만 양식만 준다(시트 전용 픽스처 제외).
+  const listed = workLogApi.templates.filter((item) => item.templateId < 100)
+  await expect(options).toHaveCount(listed.length + 1)
+  await expect(options.first()).toHaveText('전체 양식')
+  await expect(options.nth(1)).toHaveText(listed[0].templateTitle)
+
+  await page.getByRole('option', { name: '양식3', exact: true }).click()
+  await expect(page.getByRole('listbox', { name: '양식 필터' })).toBeHidden()
+  await expect(formFilter(page)).toHaveText('양식3')
+  await expect(page).toHaveURL(/[?&]templateId=3(&|$)/)
+  await expect(page).not.toHaveURL(/[?&]page=/)
+
+  await formFilter(page).click()
+  await page.getByRole('option', { name: '전체 양식' }).click()
+  await expect(formFilter(page)).toHaveText('전체 양식')
+  await expect(page).not.toHaveURL(/templateId=/)
+})
+
+test('S22: 양식 필터 유지', async ({ page }) => {
+  await page.goto('/work-logs')
+  await formFilter(page).click()
+  await page.getByRole('option', { name: '양식3', exact: true }).click()
+  await expect(formFilter(page)).toHaveText('양식3')
+
+  const lastYear = String(new Date().getFullYear() - 1)
+  await page.getByRole('button', { name: '조회 연도' }).click()
+  await page.getByRole('option', { name: `${lastYear}년` }).click()
+  await expect(formFilter(page)).toHaveText('양식3')
+
+  await page.getByRole('button', { name: '양식 관리' }).click()
+  await page.getByRole('button', { name: '작성된 일지' }).click()
+  await expect(formFilter(page)).toHaveText('양식3')
+
+  await page.reload()
+  await expect(formFilter(page)).toHaveText('양식3')
+})
+
+test('S23: 알 수 없는 양식 id', async ({ page }) => {
+  await page.goto('/work-logs?templateId=999')
+
+  await expect(logRows(page)).toHaveCount(4)
+  await expect(formFilter(page)).toHaveText('전체 양식')
+})
+
 function logRows(page: Page) {
   return page.getByTestId('work-log-row')
 }
@@ -284,4 +344,8 @@ function formRows(page: Page) {
 
 function kebab(row: ReturnType<Page['getByTestId']>) {
   return row.getByRole('button', { name: /관리 메뉴$/ })
+}
+
+function formFilter(page: Page) {
+  return page.getByRole('button', { name: '양식 필터' })
 }
