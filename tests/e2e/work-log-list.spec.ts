@@ -333,6 +333,14 @@ test('S23: 알 수 없는 양식 id', async ({ page }) => {
   await expect(formFilter(page)).toHaveText('전체 양식')
   await expect(page).not.toHaveURL(/templateId=/)
   await expect(logRows(page)).toHaveCount(4)
+
+  // 양식 id 로 읽을 수 없는 값도 지우고, 같이 있던 조건은 남긴다.
+  for (const invalid of ['abc', '9007199254740993']) {
+    await page.goto(`/work-logs?page=2&templateId=${invalid}`)
+    await expect(page).not.toHaveURL(/templateId=/)
+    await expect(page).toHaveURL(/[?&]page=2(&|$)/)
+    await expect(formFilter(page)).toHaveText('전체 양식')
+  }
 })
 
 test('S24: 양식 필터로 목록이 걸러진다', async ({ page, workLogApi }) => {
@@ -354,6 +362,57 @@ test('S24: 양식 필터로 목록이 걸러진다', async ({ page, workLogApi }
 
   await expect(logRows(page)).toHaveCount(4)
   expect(workLogApi.listQueries.at(-1)?.has('templateId')).toBe(false)
+})
+
+test('S25: 양식이 많아도 모두 고를 수 있다', async ({ page }) => {
+  const manyForms = Array.from({ length: 150 }, (_, index) => ({
+    templateId: index + 1,
+    templateTitle: `많은양식${index + 1}`,
+    createdAt: '2026-09-01',
+  }))
+  await page.route(/^https:\/\/[^/]+\/work-log\/template\?/, (route) => {
+    const query = new URL(route.request().url()).searchParams
+    const size = Number(query.get('size'))
+    const number = Number(query.get('page')) - 1
+    const content = manyForms.slice(number * size, (number + 1) * size)
+    return route.fulfill({
+      json: {
+        content,
+        totalPages: Math.ceil(manyForms.length / size),
+        totalElements: manyForms.length,
+        number,
+        size,
+      },
+    })
+  })
+
+  await page.goto('/work-logs')
+  await formFilter(page).click()
+  const options = page
+    .getByRole('listbox', { name: '양식 필터' })
+    .getByRole('option')
+  await expect(options).toHaveCount(manyForms.length + 1)
+
+  await page.getByRole('option', { name: '많은양식150', exact: true }).click()
+  await expect(formFilter(page)).toHaveText('많은양식150')
+  await expect(page).toHaveURL(/[?&]templateId=150(&|$)/)
+})
+
+test('S26: 선택지를 불러오지 못해도 고른 양식을 전체 양식으로 보이지 않는다', async ({
+  page,
+  workLogApi,
+}) => {
+  await page.route(/^https:\/\/[^/]+\/work-log\/template\?/, (route) =>
+    route.fulfill({ status: 500, json: { message: '서버 오류' } }),
+  )
+
+  await page.goto('/work-logs?templateId=3')
+  await expect(logRows(page)).toHaveCount(1)
+  expect(workLogApi.listQueries.at(-1)?.get('templateId')).toBe('3')
+
+  await expect(formFilter(page)).not.toHaveText('전체 양식')
+  await expect(formFilter(page)).toHaveText('')
+  await expect(page).toHaveURL(/[?&]templateId=3(&|$)/)
 })
 
 function logRows(page: Page) {
