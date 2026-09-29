@@ -204,6 +204,7 @@ const routes: RouteObject[] = [
           {
             path: '/individuals/:individualId/observations/:observationId',
             element: <ObservationRedirectPage />,
+            handle: redirectOnlyRouteHandle,
           },
           { path: '/settings/teams', element: <TeamSettingsPage /> },
           { path: '/settings/accounts', element: <StaffAccountsPage /> },
