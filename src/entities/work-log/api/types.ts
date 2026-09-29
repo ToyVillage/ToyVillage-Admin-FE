@@ -99,7 +99,8 @@ export interface WorkLogTemplateQuestionResponse {
 export interface WorkLogTemplateDetailResponse {
   templateId: number
   templateTitle: string
-  sections: WorkLogTemplateSectionResponse[]
+  /** Swagger 에는 있지만 응답에서 빠져도 상세는 보여준다(표로 미리보기만 비게 된다). */
+  sections?: WorkLogTemplateSectionResponse[]
   questions: WorkLogTemplateQuestionResponse[]
 }
 

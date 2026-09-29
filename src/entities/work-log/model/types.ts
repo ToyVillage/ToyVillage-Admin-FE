@@ -78,6 +78,8 @@ export interface WorkLogFormDetail {
   id: string
   name: string
   questions: WorkLogFormQuestion[]
+  /** 설정된 구역 이름. 응답 순서가 구역 정렬 순서다. 표로 미리보기의 행이 된다. */
+  zones: string[]
 }
 
 // --- 양식 생성·수정 (Figma 353:13063) --------------------------------------

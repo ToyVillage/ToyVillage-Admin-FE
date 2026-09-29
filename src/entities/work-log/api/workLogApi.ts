@@ -198,6 +198,8 @@ export async function getWorkLogFormDetail({
       required: true,
       options: question.options.map((option) => option.content),
     })),
+    // 구역은 표로 미리보기에만 쓴다. 응답에 없어도 상세 화면은 그대로 보인다.
+    zones: (data.sections ?? []).map((section) => section.sectionName),
   }
 }
 
@@ -471,9 +473,18 @@ function isWorkLogTemplateDetailResponse(
   return (
     Number.isInteger(detail.templateId) &&
     typeof detail.templateTitle === 'string' &&
+    (detail.sections === undefined ||
+      (Array.isArray(detail.sections) &&
+        detail.sections.every(isTemplateSection))) &&
     Array.isArray(detail.questions) &&
     detail.questions.every(isTemplateQuestion)
   )
+}
+
+function isTemplateSection(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null) return false
+
+  return typeof (value as Record<string, unknown>).sectionName === 'string'
 }
 
 function isTemplateQuestion(value: unknown): boolean {
