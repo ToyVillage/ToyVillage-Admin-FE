@@ -3,6 +3,7 @@ import {
   Navigate,
   Outlet,
   RouterProvider,
+  type RouteObject,
 } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
 import { DashboardPage } from '@/pages/dashboard'
@@ -63,6 +64,18 @@ import { StaffAccountsPage } from '@/pages/settings/accounts'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
 import { RouteErrorPage } from '@/app/RouteErrorPage'
+import {
+  redirectOnlyRouteHandle,
+  sessionRequiredRouteHandle,
+  usePageViewTracking,
+} from '@/app/usePageViewTracking'
+
+// 로그인 화면까지 모든 화면의 페이지뷰를 한곳에서 보낸다.
+function RootLayout() {
+  usePageViewTracking(routes)
+
+  return <Outlet />
+}
 
 function AppLayout() {
   return (
@@ -74,12 +87,7 @@ function AppLayout() {
   )
 }
 
-// Sentry 에 에러가 난 화면의 라우트 패턴(`/tasks/:id`)과 이동 흐름을 남긴다.
-// Sentry 가 꺼져 있으면 createBrowserRouter 와 같다.
-const sentryCreateBrowserRouter =
-  Sentry.wrapCreateBrowserRouterV7(createBrowserRouter)
-
-const router = sentryCreateBrowserRouter([
+const routes: RouteObject[] = [
   {
     path: '/login',
     element: <LoginPage />,
@@ -88,6 +96,7 @@ const router = sentryCreateBrowserRouter([
   {
     element: <RequireAuth />,
     errorElement: <RouteErrorPage />,
+    handle: sessionRequiredRouteHandle,
     children: [
       {
         element: <AppLayout />,
@@ -96,6 +105,7 @@ const router = sentryCreateBrowserRouter([
           {
             path: '/notices',
             element: <Navigate to="/notices/list" replace />,
+            handle: redirectOnlyRouteHandle,
           },
           { path: '/notices/list', element: <NoticeListPage /> },
           { path: '/notices/list/create', element: <CreateNoticePage /> },
@@ -194,6 +204,7 @@ const router = sentryCreateBrowserRouter([
           {
             path: '/individuals/:individualId/observations/:observationId',
             element: <ObservationRedirectPage />,
+            handle: redirectOnlyRouteHandle,
           },
           { path: '/settings/teams', element: <TeamSettingsPage /> },
           { path: '/settings/accounts', element: <StaffAccountsPage /> },
@@ -201,11 +212,21 @@ const router = sentryCreateBrowserRouter([
           {
             path: '/settings/accounts/create',
             element: <Navigate to="/settings/accounts" replace />,
+            handle: redirectOnlyRouteHandle,
           },
         ],
       },
     ],
   },
+]
+
+// Sentry 에 에러가 난 화면의 라우트 패턴(`/tasks/:id`)과 이동 흐름을 남긴다.
+// Sentry 가 꺼져 있으면 createBrowserRouter 와 같다.
+const sentryCreateBrowserRouter =
+  Sentry.wrapCreateBrowserRouterV7(createBrowserRouter)
+
+const router = sentryCreateBrowserRouter([
+  { element: <RootLayout />, children: routes },
 ])
 
 // Data router를 사용해 생성 화면의 이탈 시도를 일관되게 차단한다.

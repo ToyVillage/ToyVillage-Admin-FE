@@ -34,6 +34,8 @@ export default defineConfig({
   ],
   webServer: {
     command: `yarn dev --host 127.0.0.1 --port ${serverPort}`,
+    // 로컬 .env 에 측정 ID 가 있어도 테스트 방문이 GA 에 집계되지 않게 끈다.
+    env: { VITE_GA_MEASUREMENT_ID: '' },
     url: baseURL,
     reuseExistingServer: false,
     timeout: 120_000,
