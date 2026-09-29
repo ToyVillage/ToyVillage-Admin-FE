@@ -1,0 +1,22 @@
+{
+  "feature": "work-log-form-detail",
+  "approvedAt": "2026-09-29T04:37:44.320Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13"
+  ],
+  "scenarioHash": "fe4443a8135e4469698081e0aa3d0fb8e3ab9a0ab46ee26583c8206b5c320ea0",
+  "e2eHash": "662e1cda1202ad93a9ecd396a8590259adf09524a5e03a5895c06435009a5d90"
+}

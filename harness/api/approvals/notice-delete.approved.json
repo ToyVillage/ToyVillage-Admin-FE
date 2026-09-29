@@ -1,0 +1,15 @@
+{
+  "feature": "notice-delete",
+  "apiId": "NOTICE_DELETE",
+  "approvedAt": "2026-09-17T05:05:27.734Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "2b79deaf54f3baa271f3d6fc6f7b714f7b31a4ed9f67e1e12138f46e6e58d232",
+  "contractHash": "6d850a0c9ef53c7c274bce7d6ac2abb60f209a9fa26c6127964706376978c6b7",
+  "contractMarkdownHash": "674bdef13f8ebf16b2ce5e66f5026de999b805593ba4fe25c8d7079537eb2157",
+  "planHash": "c64fb0955381f4adae4b26ec8629279a06a87ff55d6f4ddc634260bf3bdf357b",
+  "scenarioHash": "d7bbeebc83f0034f84b90be2ddb152cabf385b12bb84ecc6943a621a79d90633",
+  "testHash": "795f6ecad89ea1b3856c106e4bd8bb407b4b31f694e042c1301e24a8c4aaddf3",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-18T11:28:40.723Z"
+}

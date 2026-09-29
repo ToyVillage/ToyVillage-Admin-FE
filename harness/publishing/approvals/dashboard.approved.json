@@ -1,0 +1,21 @@
+{
+  "feature": "dashboard",
+  "approvedAt": "2026-09-17T16:21:50.524Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
+  ],
+  "scenarioHash": "e5b9f17afbbf765338cba969fa04bc907163e92c1fde5cda413111ffe4058557",
+  "e2eHash": "aad334f3cfa1f8f9fa202b41f1e4b8e31c835f63ad9d3acb978a042b9c345f88"
+}

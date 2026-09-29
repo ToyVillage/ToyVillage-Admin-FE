@@ -1,0 +1,15 @@
+{
+  "feature": "animal-manage-create",
+  "apiId": "ANIMAL_MANAGE_CREATE",
+  "approvedAt": "2026-09-16T15:20:13.255Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "16fdf74ab3cad932bb4d536160874b3e3836e005f34a0dd559447b0b8e517cc5",
+  "contractHash": "8a628b885c1c39813e3a774fa347792fc37647629883c7105e97b603e79bd840",
+  "contractMarkdownHash": "aec8e552cdfb53fa31b4aa092e7209ff5fcd6474ef22bc3aeb38ea82d5b608cd",
+  "planHash": "9bda3dc5ecd60dc6dee4c1da4f34ff67fadce3ebe059821296b9531b757aec67",
+  "scenarioHash": "3c48e55663fb49c79e7c09a2d3f489fa3de17295a5dd56ed168bf70bd6a8df2f",
+  "testHash": "c21d845bb7f81b3ebf6914efceb0b025dc02151302a5349b1886a033472bfe8d",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T00:45:05.379Z"
+}

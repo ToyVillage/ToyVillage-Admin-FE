@@ -1,0 +1,22 @@
+{
+  "feature": "login",
+  "approvedAt": "2026-09-17T14:16:20.526Z",
+  "approvedBy": "yunho",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13"
+  ],
+  "scenarioHash": "5ce8b15cbb42851e07a010456ed2f286c66c60172a68f0872e1a668523202a8f",
+  "e2eHash": "fce5d49d12f3781b34c71f40151550f848c372d2a74dc79c616c2df798414745"
+}

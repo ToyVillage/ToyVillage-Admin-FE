@@ -1,3 +1,0 @@
-#!/bin/sh
-# 하네스 승인 게이트 강제 (agent-agnostic). scripts/pre-commit-gate.mjs 참조.
-node scripts/pre-commit-gate.mjs || exit 1

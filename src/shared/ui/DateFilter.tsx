@@ -1,0 +1,104 @@
+import styled from '@emotion/styled'
+import {
+  calendarYearSpan,
+  clampCalendarDate,
+  daysInMonth,
+  todayCalendarDate,
+  type CalendarDate,
+} from '../lib/calendarDate'
+import { SelectMenu, type SelectMenuOption } from './SelectMenu'
+
+interface DateFilterProps {
+  value: CalendarDate
+  onChange: (value: CalendarDate) => void
+  label?: string
+  className?: string
+}
+
+// Figma `Frame 460`/`Frame 459`. `조회날짜` 라벨 + 년/월/일 셀렉트 3개.
+// 업무일지관리 목록과 먹이 급여 관리 목록이 같은 규격을 쓴다.
+export function DateFilter({
+  value,
+  onChange,
+  label = '조회날짜',
+  className,
+}: DateFilterProps) {
+  const currentYear = todayCalendarDate().year
+  const yearOptions = buildOptions(
+    Array.from({ length: calendarYearSpan }, (_, index) => currentYear - index),
+    (year) => `${year}년`,
+  )
+  const monthOptions = buildOptions(
+    Array.from({ length: 12 }, (_, index) => index + 1),
+    (month) => `${pad(month)}월`,
+  )
+  const dayOptions = buildOptions(
+    Array.from(
+      { length: daysInMonth(value.year, value.month) },
+      (_, index) => index + 1,
+    ),
+    (day) => `${pad(day)}일`,
+  )
+
+  return (
+    <Filter className={className}>
+      <Label>{label}</Label>
+      <SelectMenu
+        value={String(value.year)}
+        options={yearOptions}
+        onChange={(year) =>
+          onChange(clampCalendarDate({ ...value, year: Number(year) }))
+        }
+        ariaLabel="조회 연도"
+        width={186}
+        openBorder
+      />
+      <SelectMenu
+        value={String(value.month)}
+        options={monthOptions}
+        onChange={(month) =>
+          onChange(clampCalendarDate({ ...value, month: Number(month) }))
+        }
+        ariaLabel="조회 월"
+        width={154}
+        openBorder
+      />
+      <SelectMenu
+        value={String(value.day)}
+        options={dayOptions}
+        onChange={(day) => onChange({ ...value, day: Number(day) })}
+        ariaLabel="조회 일"
+        width={156}
+        openBorder
+      />
+    </Filter>
+  )
+}
+
+function buildOptions(
+  values: number[],
+  toLabel: (value: number) => string,
+): SelectMenuOption[] {
+  return values.map((value) => ({
+    value: String(value),
+    label: toLabel(value),
+  }))
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+const Filter = styled.div`
+  display: flex;
+  margin-top: 32px;
+  align-items: center;
+  gap: 24px;
+`
+
+const Label = styled.span`
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.2;
+`

@@ -1,0 +1,647 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import styled from '@emotion/styled'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { uploadFile } from '@/entities/file'
+import {
+  createNotice,
+  type Notice,
+  type NoticeTeam,
+  updateNotice,
+} from '@/entities/notice'
+import { getTeams } from '@/entities/team'
+import {
+  AttachmentField,
+  ValidationDialog,
+  type AttachmentItem,
+} from '@/shared/ui'
+
+type FieldName = 'title' | 'content'
+
+const validationMessages: Record<FieldName, string> = {
+  title: '제목을 입력해 주세요',
+  content: '내용을 입력해 주세요',
+}
+
+const defaultCategory = '전체'
+
+interface NoticeFormInput {
+  /** 선택한 팀 id. 비어 있으면 `전체`다. */
+  teamIds: number[]
+  title: string
+  content: string
+  attachments: string[]
+}
+
+interface NoticeFormProps {
+  initialNotice?: Notice
+  onCompleted: () => void
+  onDirtyChange: (isDirty: boolean) => void
+}
+
+export function NoticeForm({
+  initialNotice,
+  onCompleted,
+  onDirtyChange,
+}: NoticeFormProps) {
+  const queryClient = useQueryClient()
+  const submittingRef = useRef(false)
+  const titleRef = useRef<HTMLInputElement>(null)
+  const contentRef = useRef<HTMLTextAreaElement>(null)
+  const initialTeamIds = useMemo(
+    () => initialNotice?.teams.map((team) => team.id) ?? [],
+    [initialNotice],
+  )
+  const initialAttachmentNames = useMemo(
+    () => initialNotice?.attachments ?? [],
+    [initialNotice?.attachments],
+  )
+  // 저장소 키까지 온 첨부만 파일 서버에서 원본을 받는다. mock 첨부는 이름뿐이다.
+  const initialAttachmentFiles = initialNotice?.attachmentFiles
+  // 팀 설정과 같은 캐시를 쓴다. 분류는 `전체` 와 팀 조회 API 가 준 팀 중에서만 고른다.
+  const teamsQuery = useQuery({
+    queryKey: ['teams', 'list'],
+    queryFn: getTeams,
+  })
+  // 팀은 id로 구분한다. 이름이 같은 팀이 있어도 따로 고를 수 있다.
+  const teams = useMemo(() => {
+    const byId = new Map<number, NoticeTeam>()
+    // 수정 화면의 기존 팀이 팀 목록에 없더라도 선택 상태는 보여준다.
+    for (const team of initialNotice?.teams ?? []) byId.set(team.id, team)
+    for (const team of teamsQuery.data ?? []) {
+      byId.set(team.id, { id: team.id, name: team.name })
+    }
+    return [...byId.values()]
+  }, [initialNotice?.teams, teamsQuery.data])
+  // 분류는 여러 팀을 고를 수 있다. 팀을 하나도 고르지 않은 상태가 `전체` 다.
+  // `전체` 를 고르면 팀 선택이 모두 풀리고, 팀을 모두 해제하면 `전체` 로 돌아간다.
+  const [selectedTeamIds, setSelectedTeamIds] = useState(initialTeamIds)
+
+  function toggleTeam(teamId: number) {
+    setSelectedTeamIds((previous) =>
+      previous.includes(teamId)
+        ? previous.filter((id) => id !== teamId)
+        : [...previous, teamId],
+    )
+  }
+  const [title, setTitle] = useState(initialNotice?.title ?? '')
+  const [content, setContent] = useState(initialNotice?.content ?? '')
+  const [hasAttachments, setHasAttachments] = useState(false)
+  const [attachmentNames, setAttachmentNames] = useState(initialAttachmentNames)
+  // 제출할 첨부 목록. 기존 첨부는 fileKey 를, 새로 고른 파일은 File 을 가진다.
+  const [attachmentItems, setAttachmentItems] = useState<AttachmentItem[]>([])
+  const [validationError, setValidationError] = useState<FieldName | null>(null)
+  const mutation = useMutation({
+    mutationFn: async (input: NoticeFormInput) => {
+      // 기존 첨부는 fileKey 를 그대로 재전송하고, 새로 고른 파일만 업로드한다.
+      // 업로드가 하나라도 실패하면 공지 요청을 보내지 않는다.
+      const files: string[] = []
+      for (const attachment of attachmentItems) {
+        if (attachment.fileKey) {
+          files.push(attachment.fileKey)
+          continue
+        }
+        if (!attachment.file) continue
+
+        const { fileKey } = await uploadFile({ files: attachment.file })
+        files.push(fileKey)
+      }
+
+      if (initialNotice) {
+        await updateNotice({
+          id: Number(initialNotice.id),
+          input: {
+            title: input.title,
+            teamIds: input.teamIds,
+            content: input.content,
+            files,
+          },
+        })
+        return
+      }
+
+      await createNotice({
+        title: input.title,
+        teamIds: input.teamIds,
+        content: input.content,
+        files,
+      })
+    },
+  })
+  const isEditing = Boolean(initialNotice)
+
+  useEffect(() => {
+    const isDirty = Boolean(
+      title !== (initialNotice?.title ?? '') ||
+      content !== (initialNotice?.content ?? '') ||
+      !sameArray(selectedTeamIds, initialTeamIds) ||
+      (isEditing
+        ? !sameArray(attachmentNames, initialAttachmentNames)
+        : hasAttachments),
+    )
+
+    onDirtyChange(isDirty)
+  }, [
+    attachmentNames,
+    selectedTeamIds,
+    content,
+    hasAttachments,
+    initialAttachmentNames,
+    initialTeamIds,
+    initialNotice,
+    isEditing,
+    onDirtyChange,
+    title,
+  ])
+
+  const handleConfirm = useCallback(() => {
+    const error = validationError
+    setValidationError(null)
+
+    requestAnimationFrame(() => {
+      if (error === 'title') {
+        titleRef.current?.focus()
+        return
+      }
+
+      contentRef.current?.focus()
+    })
+  }, [validationError])
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (submittingRef.current) return
+
+    const input: NoticeFormInput = {
+      teamIds: selectedTeamIds,
+      title: title.trim(),
+      content: content.trim(),
+      attachments: attachmentNames,
+    }
+    const nextError = validate(input)
+
+    if (nextError) {
+      setValidationError(nextError)
+      return
+    }
+
+    setValidationError(null)
+    submittingRef.current = true
+    mutation.mutate(input, {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({ queryKey: ['notices'] })
+        if (initialNotice) {
+          queryClient.setQueryData(['notices', initialNotice.id], undefined)
+        }
+        onCompleted()
+      },
+      onError: () => {
+        submittingRef.current = false
+      },
+    })
+  }
+
+  return (
+    <Form data-editing={isEditing} onSubmit={handleSubmit} noValidate>
+      <TitleCard>
+        <TitleLabel htmlFor="notice-title">
+          제목 {!isEditing && <Required aria-hidden="true">*</Required>}
+        </TitleLabel>
+        <TitleInput
+          ref={titleRef}
+          id="notice-title"
+          required
+          value={title}
+          placeholder="제목을 입력해주세요"
+          onChange={(event) => setTitle(event.target.value)}
+        />
+      </TitleCard>
+
+      <CategoryCard aria-required="true">
+        <CategoryLegend>분류</CategoryLegend>
+        <CategoryOptions>
+          <CategoryOption>
+            <CategorySelectLabel>
+              <CategoryCheckbox
+                type="checkbox"
+                name="notice-category"
+                value="all"
+                checked={selectedTeamIds.length === 0}
+                onChange={() => setSelectedTeamIds([])}
+              />
+              <CategoryPill>{defaultCategory}</CategoryPill>
+            </CategorySelectLabel>
+          </CategoryOption>
+          {teams.map((team) => (
+            <CategoryOption key={team.id}>
+              <CategorySelectLabel>
+                <CategoryCheckbox
+                  type="checkbox"
+                  name="notice-category"
+                  value={team.id}
+                  checked={selectedTeamIds.includes(team.id)}
+                  onChange={() => toggleTeam(team.id)}
+                />
+                <CategoryPill>{categoryDisplayName(team.name)}</CategoryPill>
+              </CategorySelectLabel>
+            </CategoryOption>
+          ))}
+        </CategoryOptions>
+        {teamsQuery.isPending && (
+          <CategoryStatus role="status">
+            팀 목록을 불러오는 중입니다.
+          </CategoryStatus>
+        )}
+        {teamsQuery.isError && (
+          <CategoryStatus role="status">
+            팀 목록을 불러오지 못했습니다.
+            <RetryButton type="button" onClick={() => teamsQuery.refetch()}>
+              다시 시도
+            </RetryButton>
+          </CategoryStatus>
+        )}
+      </CategoryCard>
+
+      <ContentCard>
+        <Label htmlFor="notice-content">
+          상세 업무 내용 <Required aria-hidden="true">*</Required>
+        </Label>
+        <ContentInput
+          ref={contentRef}
+          id="notice-content"
+          required
+          value={content}
+          placeholder="상세 업무 내용을 입력해주세요"
+          onChange={(event) => {
+            setContent(event.target.value)
+            resizeTextarea(event.currentTarget)
+          }}
+        />
+      </ContentCard>
+
+      <AttachmentField
+        variant={isEditing ? 'notice' : 'notice-create'}
+        initialFileNames={initialAttachmentNames}
+        initialFiles={initialAttachmentFiles}
+        storedFiles={Boolean(initialAttachmentFiles)}
+        onFilesChange={setHasAttachments}
+        onFileNamesChange={setAttachmentNames}
+        onFileItemsChange={setAttachmentItems}
+      />
+
+      {mutation.isError && (
+        <SubmitStatus role="status">
+          {isEditing
+            ? '저장하지 못했습니다. 다시 시도해 주세요.'
+            : '생성하지 못했습니다. 다시 시도해 주세요.'}
+        </SubmitStatus>
+      )}
+
+      <Actions>
+        <SubmitButton type="submit" disabled={mutation.isPending}>
+          {mutation.isPending
+            ? isEditing
+              ? '저장 중'
+              : '생성 중'
+            : isEditing
+              ? '저장하기'
+              : '생성하기'}
+        </SubmitButton>
+      </Actions>
+
+      {validationError && (
+        <ValidationDialog
+          message={validationMessages[validationError]}
+          onConfirm={handleConfirm}
+        />
+      )}
+    </Form>
+  )
+}
+
+function validate(input: NoticeFormInput): FieldName | null {
+  if (!input.title) return 'title'
+  if (!input.content) return 'content'
+  return null
+}
+
+function sameArray<T>(left: T[], right: T[]) {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  )
+}
+
+function categoryDisplayName(category: string) {
+  return category.replace(/^팀이름\s*/, '팀 이름')
+}
+
+function resizeTextarea(textarea: HTMLTextAreaElement) {
+  textarea.style.height = 'auto'
+  textarea.style.height = `${textarea.scrollHeight}px`
+}
+
+// yot `make notification`(1:6919)·`remake notification`(1:6711) 공통 배치.
+const Form = styled.form`
+  width: 100%;
+`
+
+const FieldCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 40px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 980px) {
+    padding: 24px;
+  }
+`
+
+// 수정 화면은 yot `1:6711` 을 따른다: 카드 padding 40·gap 10, 입력은 gray/10 배경 박스.
+const TitleCard = styled(FieldCard)`
+  min-height: 164px;
+  margin-top: 0;
+
+  form & {
+    min-height: 0;
+    gap: 10px;
+  }
+`
+
+const Label = styled.label`
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
+
+  form & {
+    font-size: 22px;
+  }
+`
+
+const TitleLabel = styled(Label)`
+  [data-editing='true'] & {
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 20px;
+  }
+`
+
+const Required = styled.span`
+  color: ${({ theme }) => theme.colors.danger};
+`
+
+const TitleInput = styled.input`
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font: inherit;
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1.2;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.textGuide};
+    opacity: 1;
+  }
+
+  @media (max-width: 980px) {
+    font-size: 28px;
+  }
+
+  form & {
+    height: 66px;
+    min-height: 0;
+    padding: 0 24px;
+    border-radius: 8px;
+    background: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 24px;
+  }
+`
+
+const CategoryCard = styled.fieldset`
+  min-height: 170px;
+  margin: 32px 0 0;
+
+  form & {
+    margin-top: 12px;
+  }
+
+  [data-editing='true'] & {
+    margin-top: 14px;
+  }
+
+  padding: 40px;
+  border: 0;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 980px) {
+    padding: 24px;
+  }
+`
+
+const CategoryLegend = styled.legend`
+  float: left;
+  width: 100%;
+  padding: 0;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
+
+  form & {
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 22px;
+  }
+`
+
+const CategoryOptions = styled.div`
+  display: flex;
+  clear: both;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding-top: 16px;
+
+  form & {
+    gap: 12px;
+    padding-top: 18px;
+  }
+`
+
+const CategoryOption = styled.div`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.background};
+`
+
+const CategorySelectLabel = styled.label`
+  position: relative;
+  display: inline-flex;
+`
+
+const CategoryCheckbox = styled.input`
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+
+  // 자원 폼 분류 pill 과 같은 선택 표시다.
+  &:checked + span {
+    background: ${({ theme }) => theme.colors.textStrong};
+    color: ${({ theme }) => theme.colors.surface};
+  }
+
+  &:focus-visible + span {
+    outline: 2px solid ${({ theme }) => theme.colors.textGuide};
+    outline-offset: 3px;
+  }
+`
+
+const CategoryPill = styled.span`
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.2;
+
+  form & {
+    height: 46px;
+    min-height: 0;
+    padding: 0 20px;
+    color: #434343;
+    font-size: 22px;
+  }
+
+  form input:checked + & {
+    color: ${({ theme }) => theme.colors.surface};
+  }
+`
+
+const CategoryStatus = styled.p`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 0;
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 18px;
+`
+
+const RetryButton = styled.button`
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.textGuide};
+    outline-offset: 3px;
+  }
+`
+
+const ContentCard = styled(FieldCard)`
+  min-height: 240px;
+
+  form & {
+    min-height: 0;
+    gap: 10px;
+  }
+`
+
+const ContentInput = styled.textarea`
+  width: 100%;
+  min-height: 160px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.textStrong};
+  font: inherit;
+  font-size: 22px;
+  line-height: 1.5;
+  overflow: hidden;
+  resize: none;
+
+  form & {
+    min-height: 160px;
+    padding: 20px 24px;
+    border-radius: 8px;
+    background: ${({ theme }) => theme.colors.background};
+    line-height: normal;
+  }
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.textGuide};
+    opacity: 1;
+  }
+`
+
+const SubmitStatus = styled.p`
+  margin: 16px 0 0;
+  color: ${({ theme }) => theme.colors.danger};
+  font-size: 18px;
+  text-align: right;
+`
+
+const Actions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+  margin-top: 32px;
+
+  form & {
+    margin-top: 135px;
+  }
+
+  [data-editing='true'] & {
+    margin-top: 180px;
+  }
+`
+
+const SubmitButton = styled.button`
+  min-width: 123px;
+  height: 61px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
+  cursor: pointer;
+  font: inherit;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.textGuide};
+    outline-offset: 3px;
+  }
+`

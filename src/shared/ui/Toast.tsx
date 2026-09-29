@@ -1,0 +1,116 @@
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import styled from '@emotion/styled'
+import {
+  motionDuration,
+  motionEasing,
+  prefersReducedMotion,
+  toastIn,
+  toastOut,
+} from './motion'
+
+export type ToastVariant = 'success' | 'error'
+
+interface ToastProps {
+  variant: ToastVariant
+  message: string
+  onDismiss: () => void
+  // Figma에 시간 규격이 없어 화면 공통 기본값으로 둔다.
+  duration?: number
+}
+
+const defaultDuration = 3000
+
+// Figma "toast notification" 공통 컴포넌트. 화면 우상단 고정, 일정 시간 후 스스로 사라진다.
+export function Toast({
+  variant,
+  message,
+  onDismiss,
+  duration = defaultDuration,
+}: ToastProps) {
+  // 사라질 때도 올라가며 없어지도록, 표시 시간이 끝나면 먼저 나가는 애니메이션을 켜고
+  // 그 길이만큼 지난 뒤에 화면에서 내린다.
+  const [leaving, setLeaving] = useState(false)
+
+  // 같은 자리에서 다른 토스트로 바뀌면 다시 처음부터 보여 준다.
+  // 렌더 중 상태 보정이라 effect 가 필요 없다.
+  const toastKey = `${variant}|${message}|${duration}`
+  const [prevToastKey, setPrevToastKey] = useState(toastKey)
+  if (prevToastKey !== toastKey) {
+    setPrevToastKey(toastKey)
+    setLeaving(false)
+  }
+
+  useEffect(() => {
+    const exitDuration = prefersReducedMotion() ? 0 : motionDuration.reveal
+    const startExit = window.setTimeout(() => setLeaving(true), duration)
+    const dismiss = window.setTimeout(onDismiss, duration + exitDuration)
+
+    return () => {
+      window.clearTimeout(startExit)
+      window.clearTimeout(dismiss)
+    }
+  }, [duration, message, onDismiss, variant])
+
+  return createPortal(
+    <Container
+      role={variant === 'error' ? 'alert' : 'status'}
+      $leaving={leaving}
+    >
+      <Row>
+        <Icon viewBox="0 0 40 40" aria-hidden="true" $variant={variant}>
+          {variant === 'success' ? (
+            <path d="M20 3.333C10.795 3.333 3.333 10.795 3.333 20S10.795 36.667 20 36.667 36.667 29.205 36.667 20 29.205 3.333 20 3.333Zm-3.333 25L8.333 20l2.35-2.35 5.984 5.967L29.317 11.05l2.35 2.367-15 15Z" />
+          ) : (
+            <path d="M20 3.333C10.795 3.333 3.333 10.795 3.333 20S10.795 36.667 20 36.667 36.667 29.205 36.667 20 29.205 3.333 20 3.333Zm1.667 25h-3.334v-3.333h3.334v3.333Zm0-6.666h-3.334v-10h3.334v10Z" />
+          )}
+        </Icon>
+        <Message>{message}</Message>
+      </Row>
+    </Container>,
+    document.body,
+  )
+}
+
+const Container = styled.div<{ $leaving: boolean }>`
+  position: fixed;
+  top: 32px;
+  right: 48px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  width: min(calc(100vw - 96px), 440px);
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+  font-family: ${({ theme }) => theme.font.body};
+  animation: ${({ $leaving }) => ($leaving ? toastOut : toastIn)}
+    ${({ $leaving }) =>
+      $leaving ? motionDuration.reveal : motionDuration.overlay}ms
+    ${({ $leaving }) => ($leaving ? motionEasing.exit : motionEasing.enter)}
+    both;
+`
+
+const Row = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 24px;
+`
+
+// Figma 토스트 아이콘 색은 결과에 따라 갈린다(성공 초록 / 실패 빨강).
+const Icon = styled.svg<{ $variant: ToastVariant }>`
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  fill: ${({ theme, $variant }) =>
+    $variant === 'error' ? theme.colors.danger : theme.colors.success};
+`
+
+const Message = styled.p`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.2;
+`

@@ -1,0 +1,46 @@
+import { expect, test } from '@playwright/test'
+
+const apiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
+
+test('서버의 다음 페이지까지 조회해 11번째 공지와 팀을 표시한다', async ({
+  page,
+}) => {
+  const requestedPages: string[] = []
+
+  await page.route(apiPath, async (route) => {
+    const requestURL = new URL(route.request().url())
+    const serverPage = requestURL.searchParams.get('page') ?? ''
+    requestedPages.push(serverPage)
+
+    const startId = (Number(serverPage) - 1) * 10 + 1
+    const pageSize = serverPage === '1' ? 10 : 3
+    const notices = Array.from({ length: pageSize }, (_, index) => {
+      const id = startId + index
+
+      return {
+        id,
+        title: `공지 ${id}`,
+        teams: [
+          id > 10
+            ? { id: 2, name: '두 번째 페이지 팀' }
+            : { id: 1, name: '첫 번째 페이지 팀' },
+        ],
+        createdAt: `2026-07-${String(28 - id).padStart(2, '0')}`,
+      }
+    })
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ notices, totalPageSize: 2 }),
+    })
+  })
+
+  await page.goto('/notices/list')
+
+  await page.getByRole('button', { name: '3 페이지' }).click()
+  await expect(
+    page.getByTestId('notice-row').filter({ hasText: '공지 11' }),
+  ).toContainText('두 번째 페이지 팀')
+  expect(requestedPages).toEqual(['1', '2'])
+})

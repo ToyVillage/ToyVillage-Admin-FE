@@ -1,0 +1,205 @@
+import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import styled from '@emotion/styled'
+import { fadeIn, motionDuration, motionEasing, popIn } from './motion'
+import warningIcon from './assets/warning.svg'
+
+interface DeleteConfirmationDialogProps {
+  pending: boolean
+  onCancel: () => void
+  onConfirm: () => void
+  /** 본문 문구. 생략하면 기본 문구(영구삭제 안내)를 보인다. */
+  description?: ReactNode
+  /** 제목. 같은 모양의 다른 확인(비밀번호 초기화 등)에 쓴다. 생략하면 삭제 문구. */
+  title?: string
+  /** 확인 버튼 문구. 생략하면 `확인`. */
+  confirmLabel?: string
+  /** 처리 중 확인 버튼 문구. 생략하면 `삭제 중`. */
+  pendingLabel?: string
+}
+
+export function DeleteConfirmationDialog({
+  pending,
+  onCancel,
+  onConfirm,
+  description = defaultDescription,
+  title = '정말 삭제하시겠습니까?',
+  confirmLabel = '확인',
+  pendingLabel = '삭제 중',
+}: DeleteConfirmationDialogProps) {
+  const titleId = useId()
+  const descriptionId = useId()
+  const cancelRef = useRef<HTMLButtonElement>(null)
+  const confirmRef = useRef<HTMLButtonElement>(null)
+  const pendingRef = useRef(pending)
+  // 호출부가 매 렌더 새 onCancel 을 넘겨도 아래 effect 가 다시 돌지 않게 ref 로 읽는다.
+  // effect 가 다시 돌면 초점이 `취소`로 되돌아가 `확인`에 있던 초점을 빼앗는다.
+  const onCancelRef = useRef(onCancel)
+
+  useEffect(() => {
+    pendingRef.current = pending
+    onCancelRef.current = onCancel
+  }, [pending, onCancel])
+
+  useEffect(() => {
+    const appRoot = document.getElementById('root')
+    appRoot?.setAttribute('inert', '')
+    appRoot?.setAttribute('aria-hidden', 'true')
+    cancelRef.current?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !pendingRef.current) {
+        event.preventDefault()
+        onCancelRef.current()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      if (event.shiftKey && document.activeElement === cancelRef.current) {
+        event.preventDefault()
+        confirmRef.current?.focus()
+      } else if (
+        !event.shiftKey &&
+        document.activeElement === confirmRef.current
+      ) {
+        event.preventDefault()
+        cancelRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      appRoot?.removeAttribute('inert')
+      appRoot?.removeAttribute('aria-hidden')
+    }
+  }, [])
+
+  return createPortal(
+    <Overlay>
+      <Dialog
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        aria-busy={pending}
+      >
+        <Copy>
+          <WarningIcon src={warningIcon} alt="" aria-hidden="true" />
+          <Title id={titleId}>{title}</Title>
+          <Description id={descriptionId}>{description}</Description>
+        </Copy>
+        <Actions>
+          <CancelButton
+            ref={cancelRef}
+            type="button"
+            disabled={pending}
+            onClick={onCancel}
+          >
+            취소
+          </CancelButton>
+          <ConfirmButton
+            ref={confirmRef}
+            type="button"
+            disabled={pending}
+            onClick={onConfirm}
+          >
+            {pending ? pendingLabel : confirmLabel}
+          </ConfirmButton>
+        </Actions>
+      </Dialog>
+    </Overlay>,
+    document.body,
+  )
+}
+
+const defaultDescription = (
+  <>
+    삭제하신 뒤에는 영구삭제되며
+    <br />
+    복구 할 수 없습니다
+  </>
+)
+
+const Overlay = styled.div`
+  position: fixed;
+  z-index: 21;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  animation: ${fadeIn} ${motionDuration.overlay}ms ${motionEasing.enter} both;
+`
+
+const Dialog = styled.div`
+  display: flex;
+  width: min(calc(100% - 40px * 2), 600px);
+  min-height: 309px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  animation: ${popIn} ${motionDuration.overlay}ms ${motionEasing.enter} both;
+`
+
+const Copy = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+`
+
+const WarningIcon = styled.img`
+  width: 48px;
+  height: 48px;
+`
+
+const Title = styled.h2`
+  margin: 12px 0 0;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+`
+
+const Description = styled.p`
+  margin: 12px 0 0;
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 20px;
+  line-height: 1.4;
+`
+
+const Actions = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+`
+
+const DialogButton = styled.button`
+  width: 100px;
+  height: 48px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 500;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+`
+
+const CancelButton = styled(DialogButton)`
+  border: 1px solid ${({ theme }) => theme.colors.dialogBorder};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+`
+
+const ConfirmButton = styled(DialogButton)`
+  border: 0;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.surface};
+`

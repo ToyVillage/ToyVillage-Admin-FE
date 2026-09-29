@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { ThemeProvider } from '@emotion/react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter } from 'react-router-dom'
 import { theme } from '@/shared/theme/theme'
 import { queryClient } from '@/shared/config/queryClient'
 
@@ -9,9 +8,7 @@ import { queryClient } from '@/shared/config/queryClient'
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <BrowserRouter>{children}</BrowserRouter>
-      </ThemeProvider>
+      <ThemeProvider theme={theme}>{children}</ThemeProvider>
     </QueryClientProvider>
   )
 }

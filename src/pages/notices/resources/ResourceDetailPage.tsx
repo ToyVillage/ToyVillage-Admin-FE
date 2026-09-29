@@ -1,0 +1,132 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import styled from '@emotion/styled'
+import { useQuery } from '@tanstack/react-query'
+import {
+  useBeforeUnload,
+  useBlocker,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom'
+import { getDocument } from '@/entities/resource'
+import { LeaveConfirmationDialog } from '@/shared/ui'
+import {
+  ResourceForm,
+  type ResourceFormCompletion,
+} from '@/features/create-resource'
+import { ResourceEditSkeleton } from './ui/ResourceEditSkeleton'
+
+// `/notices/resources/:id/edit` — 자료 수정 폼(Figma `remake resource` yot 1:6226).
+// 읽기 전용 상세는 `ResourceViewPage` 가 맡는다.
+export function ResourceDetailPage() {
+  const { id = '' } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건으로 돌아간다.
+  const listState = location.state as { listSearch?: string } | null
+  const listPath = `/notices/resources${listState?.listSearch ?? ''}`
+  const allowNavigationRef = useRef(false)
+  const [isDirty, setIsDirty] = useState(false)
+
+  // 상세 진입 시 페이지 상단으로 스크롤한다.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  const { data: resource, isError } = useQuery({
+    queryKey: ['resources', id],
+    queryFn: () => getDocument({ id: Number(id) }),
+    enabled: Boolean(id),
+    retry: false,
+    // 상세 페이지를 떠나는 즉시 캐시를 제거한다. 삭제 후 재진입 시 stale 데이터가
+    // 표시되지 않고 항상 신규 요청을 보낸다.
+    gcTime: 0,
+  })
+
+  // 상세 조회가 실패하면(잘못된 id·404·네트워크) resource 가 영영 undefined 로 남아
+  // 제출·삭제가 비활성화된 빈 폼에 고착된다. 별도 '찾을 수 없음' 화면은 디자인에 없으므로
+  // 목록으로 되돌려 보낸다. (이탈 차단은 우회한다.)
+  useEffect(() => {
+    if (!isError) return
+    allowNavigationRef.current = true
+    navigate(listPath, { replace: true })
+  }, [isError, listPath, navigate])
+  const blocker = useBlocker(
+    useCallback(
+      ({ currentLocation, nextLocation }) =>
+        !allowNavigationRef.current &&
+        isDirty &&
+        currentLocation.pathname !== nextLocation.pathname,
+      [isDirty],
+    ),
+  )
+
+  useBeforeUnload(
+    useCallback(
+      (event) => {
+        if (!isDirty || allowNavigationRef.current) return
+        event.preventDefault()
+        event.returnValue = ''
+      },
+      [isDirty],
+    ),
+  )
+
+  // 목록이 결과 토스트를 띄운다(Figma `자료실 · 토스트` 311:12766).
+  const handleCompleted = useCallback(
+    (reason: ResourceFormCompletion) => {
+      allowNavigationRef.current = true
+      navigate(listPath, { state: { toast: reason } })
+    },
+    [listPath, navigate],
+  )
+
+  // 조회 중에는 입력을 막기 위해 폼 대신 스켈레톤을 보인다. 조회 실패는 위 effect 가
+  // 목록으로 되돌린다(별도의 '찾을 수 없음' 화면은 두지 않는다).
+  if (!resource) {
+    return (
+      <Page>
+        <Content>
+          <ResourceEditSkeleton />
+        </Content>
+      </Page>
+    )
+  }
+
+  return (
+    <Page>
+      <Content>
+        <ResourceForm
+          key={resource.id}
+          initialResource={resource}
+          editing
+          onCompleted={handleCompleted}
+          onDirtyChange={setIsDirty}
+        />
+      </Content>
+      {blocker.state === 'blocked' && (
+        <LeaveConfirmationDialog
+          onCancel={blocker.reset}
+          onConfirm={blocker.proceed}
+        />
+      )}
+    </Page>
+  )
+}
+
+const Page = styled.main`
+  min-height: 100vh;
+  padding: 0 32px 66px;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const Content = styled.div`
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding-top: 168px;
+
+  @media (max-width: 980px) {
+    padding-top: 96px;
+  }
+`

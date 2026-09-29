@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// map-tokens.mjs — raw 토큰 수집기 + 기존 tokens.ts diff (읽기 전용).
+// map-tokens.mjs — semantic token 후보 + direct CSS 값 수집기 (읽기 전용).
 // 이 저장소의 Figma는 Variables를 노출하지 않으므로(설계: design-input-contract.md),
-// figma dump에서 raw 값(색/폰트/간격/반경)을 수집해 기존 tokens.ts와 대조만 한다.
-// 시맨틱 이름은 자동으로 붙이지 않는다(개발자가 게이트에서 명명).
+// solid color/font family만 기존 tokens.ts와 대조한다.
+// px/rgba/font size/weight/spacing/radius는 구현 참고값이며 토큰 후보로 제안하지 않는다.
 //
 // 사용: node scripts/map-tokens.mjs <feature>
-//   입력:  harness/artifacts/<feature>.figma.txt   (에이전트가 get_figma_data 결과를 저장)
-//   출력:  harness/artifacts/<feature>.token-candidates.json
-//          harness/artifacts/<feature>.token-diff.report.md
+//   입력:  harness/artifacts/publishing/<feature>.figma.txt
+//   출력:  harness/artifacts/publishing/<feature>.token-candidates.json
+//          harness/artifacts/publishing/<feature>.token-diff.report.md
 // tokens.ts 는 절대 수정하지 않는다.
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
@@ -21,13 +21,15 @@ if (!feature) {
   process.exit(1)
 }
 
-const artifactsDir = join(root, 'harness', 'artifacts')
+const artifactsDir = join(root, 'harness', 'artifacts', 'publishing')
 const figmaPath = join(artifactsDir, `${feature}.figma.txt`)
 const tokensPath = join(root, 'src', 'shared', 'theme', 'tokens.ts')
 
 if (!existsSync(figmaPath)) {
   console.error(`[map-tokens] missing figma dump: ${figmaPath}`)
-  console.error('  → 에이전트가 get_figma_data 결과를 이 경로에 저장해야 합니다.')
+  console.error(
+    '  → 에이전트가 get_figma_data 결과를 이 경로에 저장해야 합니다.',
+  )
   process.exit(1)
 }
 if (!existsSync(artifactsDir)) mkdirSync(artifactsDir, { recursive: true })
@@ -41,14 +43,16 @@ const existing = new Set(
 )
 
 // --- harvest helpers ---
-function countBy(values) {
+function countBy(values, compareWithTokens = false) {
   const map = new Map()
   for (const v of values) map.set(v, (map.get(v) ?? 0) + 1)
   return [...map.entries()]
     .map(([value, count]) => ({
       value,
       count,
-      matched: existing.has(String(value).toLowerCase()),
+      matched: compareWithTokens
+        ? existing.has(String(value).toLowerCase())
+        : undefined,
     }))
     .sort((a, b) => b.count - a.count)
 }
@@ -56,11 +60,18 @@ function countBy(values) {
 // 색: #RRGGBB
 const colors = countBy(
   [...figma.matchAll(/#[0-9a-fA-F]{6}\b/g)].map((m) => m[0].toUpperCase()),
+  true,
 )
+const alphaColors = countBy([
+  ...[...figma.matchAll(/#[0-9a-fA-F]{8}\b/g)].map((m) => m[0].toUpperCase()),
+  ...[...figma.matchAll(/rgba?\([^\n)]+\)/gi)].map((m) => m[0]),
+  ...[...figma.matchAll(/hsla?\([^\n)]+\)/gi)].map((m) => m[0]),
+])
 
 // 폰트 family / size / weight
 const fontFamilies = countBy(
   [...figma.matchAll(/fontFamily:\s*"?([^"\n,}]+)"?/g)].map((m) => m[1].trim()),
+  true,
 )
 const fontSizes = countBy(
   [...figma.matchAll(/fontSize:\s*(\d+)/g)].map((m) => `${m[1]}px`),
@@ -74,7 +85,8 @@ const spacingRaw = []
 for (const m of figma.matchAll(/padding[:=]\s*"?([0-9px\s]+?)"?[,}\n]/g)) {
   for (const px of m[1].matchAll(/(\d+)px/g)) spacingRaw.push(`${px[1]}px`)
 }
-for (const m of figma.matchAll(/gap[:=]\s*"?(\d+)px/g)) spacingRaw.push(`${m[1]}px`)
+for (const m of figma.matchAll(/gap[:=]\s*"?(\d+)px/g))
+  spacingRaw.push(`${m[1]}px`)
 const spacing = countBy(spacingRaw)
 
 // 반경: borderRadius
@@ -82,14 +94,24 @@ const radius = countBy(
   [...figma.matchAll(/borderRadius[:=]\s*"?(\d+)px/g)].map((m) => `${m[1]}px`),
 )
 
-const candidates = { feature, colors, fontFamilies, fontSizes, fontWeights, spacing, radius }
+const candidates = {
+  feature,
+  tokenCandidates: { colors, fontFamilies },
+  directValues: {
+    alphaColors,
+    fontSizes,
+    fontWeights,
+    spacing,
+    radius,
+  },
+}
 writeFileSync(
   join(artifactsDir, `${feature}.token-candidates.json`),
   JSON.stringify(candidates, null, 2) + '\n',
 )
 
 // --- diff report (markdown) ---
-function section(title, rows, tokenPathHint) {
+function tokenSection(title, rows, tokenPathHint) {
   if (rows.length === 0) return `### ${title}\n(없음)\n`
   const lines = rows.map(
     (r) =>
@@ -104,31 +126,46 @@ function section(title, rows, tokenPathHint) {
   ].join('\n')
 }
 
-const newCount = [colors, fontFamilies, fontSizes, fontWeights, spacing, radius]
-  .flat()
-  .filter((r) => !r.matched).length
+function directSection(title, rows) {
+  if (rows.length === 0) return `### ${title}\n(없음)\n`
+  const lines = rows.map((row) => `| \`${row.value}\` | ${row.count} |`)
+  return [`### ${title}`, '| 값 | 사용 |', '|----|------|', ...lines, ''].join(
+    '\n',
+  )
+}
+
+const newCount = [colors, fontFamilies].flat().filter((r) => !r.matched).length
 
 const report = [
   `# Token Diff Report — ${feature}`,
   '',
-  `> Figma Variables 미노출 → raw 수집 + 기존값 대조. 시맨틱 이름은 개발자가 figma-review.md에서 부여.`,
-  `> tokens.ts 는 수정되지 않았습니다(읽기 전용). new 항목은 개발자 확인 후 직접 반영.`,
+  `> Figma Variables 미노출 → semantic token 후보와 direct CSS 구현값을 분리해 수집합니다.`,
+  `> tokens.ts 는 수정되지 않았습니다(읽기 전용). solid color/font family의 new 항목만 개발자 확인 후 반영합니다.`,
+  `> px·rgba·font size/weight·spacing·radius는 토큰에 저장하지 않고 사용하는 Emotion 스타일에 직접 작성합니다.`,
   '',
   `- matched: 기존 tokens.ts 값과 동일`,
-  `- new: 기존에 없는 값 → 개발자가 이름 부여(color.* / space.* / radius.* / font.*) 후 반영`,
-  `- 신규 후보 개수: **${newCount}**`,
+  `- new: 기존에 없는 semantic token 후보 → 개발자가 이름 부여(color.* / font.body) 후 반영`,
+  `- 신규 semantic token 후보 개수: **${newCount}**`,
   '',
-  section('Colors → color.*', colors, 'color.<name>'),
-  section('Font families → font.*', fontFamilies, 'font.<name>'),
-  section('Font sizes', fontSizes, '(font size 스케일 검토)'),
-  section('Font weights', fontWeights, '(weight)'),
-  section('Spacing → space.*', spacing, 'space.<name>'),
-  section('Radius → radius.*', radius, 'radius.<name>'),
+  '## Semantic token candidates',
+  '',
+  tokenSection('Solid colors → color.*', colors, 'color.<name>'),
+  tokenSection('Font families → font.*', fontFamilies, 'font.<name>'),
+  '## Direct CSS implementation values',
+  '',
+  directSection('Alpha/calculated colors', alphaColors),
+  directSection('Font sizes', fontSizes),
+  directSection('Font weights', fontWeights),
+  directSection('Spacing', spacing),
+  directSection('Radius', radius),
   '',
   `> 참고: 확정 시 \`color.*\`는 theme.ts에서 \`colors.*\`로 투영됨(color→colors 리네임).`,
 ].join('\n')
 
-writeFileSync(join(artifactsDir, `${feature}.token-diff.report.md`), report + '\n')
+writeFileSync(
+  join(artifactsDir, `${feature}.token-diff.report.md`),
+  report + '\n',
+)
 
 console.log(
   JSON.stringify({
@@ -136,6 +173,9 @@ console.log(
     colors: colors.length,
     new: newCount,
     wroteTokens: false,
-    outputs: [`${feature}.token-candidates.json`, `${feature}.token-diff.report.md`],
+    outputs: [
+      `${feature}.token-candidates.json`,
+      `${feature}.token-diff.report.md`,
+    ],
   }),
 )

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// verify.mjs — 인너 루프 검증. `yarn verify`(lint && typecheck && build) 래핑.
+// verify.mjs — 인너 루프 검증. `yarn verify`(lint && typecheck && style-policy && build) 래핑.
 // Playwright는 포함하지 않는다(그건 run-scenarios.mjs = verify:e2e).
 // 출력: JSON {pass, firstError, errorHash}. exit 0=pass, 1=fail.
 

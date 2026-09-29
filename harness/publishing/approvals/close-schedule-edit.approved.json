@@ -1,0 +1,17 @@
+{
+  "feature": "close-schedule-edit",
+  "approvedAt": "2026-09-17T11:18:08.428Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8"
+  ],
+  "scenarioHash": "be9e5cfddaa7fb5c9fb5aadd9659919689cf552703d95d101b2b8a54c7f8a134",
+  "e2eHash": "9503e10dc7717e1d184a201823bc789d017e5172493b47fb261d8cd7351a43f6"
+}

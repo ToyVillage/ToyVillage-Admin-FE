@@ -1,0 +1,345 @@
+import { useCallback, useMemo, useRef, useState } from 'react'
+import styled from '@emotion/styled'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { deleteTask, getTask, TaskInfoRow } from '@/entities/task'
+import {
+  TaskProgressCard,
+  TaskReportSummaryCard,
+  type TaskReportProgressCounts,
+  type TaskReportSummaryItem,
+} from '@/entities/task-report'
+import {
+  taskReportReviewToasts,
+  type TaskReportReviewResult,
+} from '@/features/review-task-report'
+import { RowActionMenu } from '@/features/row-actions'
+import {
+  AttachmentList,
+  DeleteConfirmationDialog,
+  Skeleton,
+  Toast,
+} from '@/shared/ui'
+import { TaskBackLink } from './ui/TaskBackLink'
+import { TaskDetailSkeleton } from './ui/TaskDetailSkeleton'
+
+// 여기서 연 업무보고를 심사하고 돌아오면 그 결과를 이동 state 로 받는다.
+interface TaskDetailLocationState {
+  toast?: TaskReportReviewResult
+}
+
+// `/tasks/:id` — 읽기 전용 업무 상세(Figma `task detail` yot 133:9725).
+// 편집은 `/tasks/:id/edit`, 삭제는 이 화면의 케밥이 맡는다.
+export function TaskDetailPage() {
+  const { id = '' } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
+  // 목록에서 넘어왔다면 그때의 조회 조건(탭·페이지)으로 돌아간다.
+  const listState = location.state as { listSearch?: string } | null
+  const backPath = `/tasks${listState?.listSearch ?? ''}`
+  const queryClient = useQueryClient()
+  const deletingRef = useRef(false)
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteFailed, setDeleteFailed] = useState(false)
+  // 다운로드 실패가 연달아 나도 토스트를 새로 띄우도록 매번 값을 바꾼다. 0 이면 숨긴다.
+  const [downloadErrorId, setDownloadErrorId] = useState(0)
+  const dismissDownloadError = useCallback(() => setDownloadErrorId(0), [])
+
+  // 업무보고 상세에서 심사에 성공하면 여기로 돌아와 결과 토스트를 보인다.
+  const reviewToastKey = (location.state as TaskDetailLocationState | null)
+    ?.toast
+  const reviewToast = reviewToastKey
+    ? taskReportReviewToasts[reviewToastKey]
+    : undefined
+  // 닫을 때 이동 state 를 비워 재방문 시 다시 뜨지 않게 한다.
+  const dismissReviewToast = useCallback(() => {
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, navigate])
+
+  const {
+    data: task,
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ['tasks', id],
+    queryFn: () => getTask({ id: Number(id) }),
+    enabled: Boolean(id),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteTask({ id: Number(id) }),
+  })
+
+  // 담당자별 보고 현황과 집계는 상세 조회 응답에 함께 온다. 따로 조회하지 않는다.
+  // 서버 `MISSING`(미제출)은 `미제출` 배지로 따로 보여준다(yot 133:9725).
+  const reportItems = useMemo<TaskReportSummaryItem[]>(
+    () =>
+      (task?.reports ?? []).map((report) => ({
+        reportId: report.reportId,
+        assigneeName: report.name,
+        reviewStatus: report.status,
+      })),
+    [task],
+  )
+
+  // 진행도도 미제출을 심사대기와 따로 센다.
+  const progress = useMemo<TaskReportProgressCounts | undefined>(
+    () =>
+      task && {
+        total: task.progress.total,
+        approved: task.progress.approved,
+        rejected: task.progress.rejected,
+        pending: task.progress.pending,
+        missing: task.progress.missing,
+      },
+    [task],
+  )
+
+  const focusMenuTrigger = useCallback(() => {
+    requestAnimationFrame(() => menuTriggerRef.current?.focus())
+  }, [])
+
+  function handleDelete() {
+    if (deletingRef.current || deleteMutation.isPending) return
+
+    deletingRef.current = true
+    deleteMutation.mutate(undefined, {
+      onSuccess: async () => {
+        deletingRef.current = false
+        queryClient.removeQueries({ queryKey: ['tasks', id] })
+        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        navigate('/tasks', { state: { toast: 'delete-success' } })
+      },
+      onError: () => {
+        deletingRef.current = false
+        setDeleteDialogOpen(false)
+        setDeleteFailed(true)
+        focusMenuTrigger()
+      },
+    })
+  }
+
+  if (isPending) {
+    return (
+      <Page>
+        <Content>
+          <TopRow>
+            <TaskBackLink to={backPath} />
+            {/* Figma 2238:20192 의 ⋮ 자리. 조회 전에는 메뉴를 열 수 없어 자리만 둔다. */}
+            <Skeleton width={6} height={26} radius={3} />
+          </TopRow>
+          <TaskDetailSkeleton />
+        </Content>
+      </Page>
+    )
+  }
+
+  if (isError || !task) {
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          업무를 찾을 수 없습니다.
+          <BackToList to={backPath}>목록으로 돌아가기</BackToList>
+        </StateCard>
+      </StatePage>
+    )
+  }
+
+  return (
+    <Page>
+      <Content>
+        <TopRow>
+          <TaskBackLink to={backPath} />
+          <RowActionMenu
+            triggerLabel={`${task.title} 업무 메뉴 열기`}
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            onTriggerRef={(node) => {
+              menuTriggerRef.current = node
+            }}
+            items={[
+              {
+                key: 'edit',
+                label: '수정',
+                onSelect: () => navigate(`/tasks/${id}/edit`),
+              },
+              {
+                key: 'delete',
+                label: '삭제',
+                tone: 'danger',
+                onSelect: () => setDeleteDialogOpen(true),
+              },
+            ]}
+          />
+        </TopRow>
+
+        <TaskInfoRow
+          assigneeName={task.assignees[0]?.name ?? ''}
+          assigneeExtraCount={Math.max(task.assigneeCount - 1, 0)}
+          status={task.status}
+          priority={task.priority}
+          dueDate={task.dueDate}
+        />
+
+        <BodyCard>
+          <BodyTitle>{task.title}</BodyTitle>
+          <BodyContent>{task.content}</BodyContent>
+        </BodyCard>
+
+        {task.attachmentFiles.length > 0 && (
+          <AttachmentList
+            files={task.attachmentFiles}
+            onDownloadError={() => setDownloadErrorId((prev) => prev + 1)}
+          />
+        )}
+
+        <BottomRow>
+          {/* 제출된 줄만 누를 수 있다. id 는 `workReportId` 이고 업무보고 상세 조회가 같은 id 를 받는다. */}
+          {/* 심사 후 목록으로 튕기지 않게 돌아올 경로를 함께 넘긴다. */}
+          <TaskReportSummaryCard
+            items={reportItems}
+            onSelect={(reportId) =>
+              navigate(`/task-reports/${reportId}`, {
+                state: { returnTo: location.pathname },
+              })
+            }
+          />
+          {reportItems.length > 0 && progress && (
+            <TaskProgressCard counts={progress} />
+          )}
+        </BottomRow>
+      </Content>
+
+      {deleteDialogOpen && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={() => {
+            setDeleteDialogOpen(false)
+            focusMenuTrigger()
+          }}
+          onConfirm={handleDelete}
+        />
+      )}
+
+      {reviewToast && (
+        <Toast
+          key={reviewToastKey}
+          variant={reviewToast.variant}
+          message={reviewToast.message}
+          onDismiss={dismissReviewToast}
+        />
+      )}
+
+      {deleteFailed && (
+        <Toast
+          variant="error"
+          message="데이터 삭제에 실패했습니다"
+          onDismiss={() => setDeleteFailed(false)}
+        />
+      )}
+
+      {downloadErrorId > 0 && (
+        <Toast
+          key={downloadErrorId}
+          variant="error"
+          message="파일 다운로드에 실패했습니다"
+          onDismiss={dismissDownloadError}
+        />
+      )}
+    </Page>
+  )
+}
+
+const Page = styled.main`
+  min-height: 100vh;
+  padding: 0 32px 32px;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const Content = styled.div`
+  display: flex;
+  width: min(100%, 1320px);
+  flex-direction: column;
+  gap: 32px;
+  margin: 0 auto;
+  padding-top: 75px;
+`
+
+const TopRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+`
+
+const BodyCard = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 980px) {
+    padding: 24px;
+  }
+`
+
+const BodyTitle = styled.h1`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.4;
+`
+
+const BodyContent = styled.p`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: pre-wrap;
+`
+
+const BottomRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+
+  @media (max-width: 980px) {
+    flex-direction: column;
+  }
+`
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  display: flex;
+  width: min(100%, 560px);
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
+
+const BackToList = styled(Link)`
+  color: ${({ theme }) => theme.colors.accent};
+  font-size: 20px;
+  font-weight: 600;
+`

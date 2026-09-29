@@ -1,0 +1,29 @@
+{
+  "feature": "task-create",
+  "approvedAt": "2026-09-11T05:01:36.006Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S17",
+    "S18",
+    "S19",
+    "S20"
+  ],
+  "scenarioHash": "1533c65e91c6d43116ffd5195556fbe510ed556ab056b19b84a3535ce9aa3b14",
+  "e2eHash": "3ca5da95eb4677414ee0d9fea07dad79b3a2c81f772236f680bd8f5205a57cfa"
+}

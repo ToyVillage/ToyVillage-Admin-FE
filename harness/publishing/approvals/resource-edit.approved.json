@@ -1,0 +1,21 @@
+{
+  "feature": "resource-edit",
+  "approvedAt": "2026-09-20T04:48:02.669Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
+  ],
+  "scenarioHash": "88be3af8427bb49fc78123818df739badf4b44244e4e6f040c145c0a9fb058b1",
+  "e2eHash": "3fdab86965257ca36bdda2a6959018b46a3c916579cd4946da5c8eea0f10ebf5"
+}

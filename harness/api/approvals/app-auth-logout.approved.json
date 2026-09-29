@@ -1,0 +1,15 @@
+{
+  "feature": "app-auth-logout",
+  "apiId": "APP_AUTH_LOGOUT",
+  "approvedAt": "2026-09-17T11:26:03.017Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "0ac3bbf84de42f2890d5503067654362874c9d4becbd05dba73cdd2983999fc0",
+  "contractHash": "468a2a92e69a02b6730cc20ec56a5cccf37119d14e76d5ed54dac85977374d9c",
+  "contractMarkdownHash": "fbf7257997eedd00061b05d24a6b8e4fbd71d25069ac4c74de1f1bc0106f3ed3",
+  "planHash": "ed74f5be0e3c5a5562d96e3ab1d75e8f89f5448e98d4bb3e025cf0878ec30567",
+  "scenarioHash": "5b860bf6ed743afae49141a7d2cc25174273e9eb3c038a6e8c74d368b54730e1",
+  "testHash": "a887666c24cce7347348c799eec2b089aee88b3b1dc8ce16967a844060ed7d04",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T11:28:29.290Z"
+}

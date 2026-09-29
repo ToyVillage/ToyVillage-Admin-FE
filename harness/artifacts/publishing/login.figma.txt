@@ -1,0 +1,141 @@
+// source: get_design_context fileKey=P7Jhnu8qV5m9q2QJNzkwAN nodeId=1830:17172 (login (empty)) 2026-09-17
+// styles: gray color/60: #848491, gray color/10: #F5F5F7, gray color/30: #C6C6CE
+const assetPathPrefix = "https://www.figma.com/api/mcp/asset/861be47d-053a-4f10-8b2d-92a73f2b2b61";
+const imgImage22 = `${assetPathPrefix}/58006.png`;
+const imgShape = `${assetPathPrefix}/2aba8.svg`;
+const imgShape1 = `${assetPathPrefix}/074b1.svg`;
+const imgShapeQuarter = `${assetPathPrefix}/e5bc5.svg`;
+const imgShape2 = `${assetPathPrefix}/47da1.svg`;
+const imgMdiEyeOff = `${assetPathPrefix}/6f6c3.svg`;
+
+export default function LoginEmpty() {
+  return (
+    <div className="bg-[#f5f5f7] relative size-full" data-node-id="1830:17172" data-name="login (empty)">
+      <div className="absolute bg-[#2b6034] h-[1080px] left-0 overflow-clip top-0 w-[760px]" data-node-id="1830:17173" data-name="brand panel">
+        <div className="absolute bg-[#377b43] left-[300px] size-[300px] top-[300px]" data-node-id="1830:17174" data-name="shape" />
+        <div className="absolute left-[40px] size-[360px] top-[120px]" data-node-id="1830:17175" data-name="shape">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgShape} />
+        </div>
+        <div className="absolute left-[460px] size-[260px] top-[40px]" data-node-id="1830:17176" data-name="shape">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgShape1} />
+        </div>
+        <div className="absolute left-[40px] size-[260px] top-[480px]" data-node-id="1830:17177" data-name="shape quarter">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgShapeQuarter} />
+        </div>
+        <div className="absolute left-[540px] size-[190px] top-[420px]" data-node-id="1830:17179" data-name="shape">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgShape2} />
+        </div>
+        <div className="absolute bg-[rgba(115,84,55,0.55)] left-[300px] size-[160px] top-[620px]" data-node-id="1830:17180" data-name="shape" />
+        <p className="[word-break:break-word] absolute font-['Inter:Semi_Bold'] font-semibold leading-[normal] left-[80px] not-italic text-[18px] text-[rgba(169,236,221,0.34)] top-[756px] w-[600px]" data-node-id="1830:17181">
+          Toy Village Operator
+        </p>
+        <div className="[word-break:break-word] absolute font-['Inter:Semi_Bold'] font-semibold leading-[0] left-[80px] not-italic text-[44px] text-white top-[798px] w-[600px]" data-node-id="1830:17182">
+          <p className="leading-[normal] mb-0">동물원의 하루를,</p>
+          <p className="leading-[normal]">한 곳에서 관리해요.</p>
+        </div>
+        <div className="[word-break:break-word] absolute font-['Inter:Medium'] font-medium leading-[0] left-[80px] not-italic text-[18px] text-[rgba(255,255,255,0.7)] top-[936px] w-[600px]" data-node-id="1830:17183">
+          <p className="leading-[normal] mb-0">공지부터 업무 지시, 개체 기록까지</p>
+          <p className="leading-[normal]">운영에 필요한 모든 것을 담았습니다.</p>
+        </div>
+      </div>
+      <div className="absolute bg-white h-[843px] left-[980px] overflow-clip rounded-[24px] shadow-[0px_12px_40px_0px_rgba(20,26,23,0.1)] top-[119px] w-[720px]" data-node-id="1830:17184">
+        <div className="absolute content-stretch flex flex-col gap-[12px] items-center left-[198px] top-[52px] w-[324px]" data-node-id="1830:17185">
+          <div className="h-[114px] relative shrink-0 w-[136px]" data-node-id="1830:17186" data-name="image 22">
+            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgImage22} />
+          </div>
+          <div className="[word-break:break-word] content-stretch flex flex-col gap-[8px] items-center not-italic relative shrink-0 text-center w-full" data-node-id="1830:17187">
+            <p className="font-['Wanted_Sans:Bold'] leading-[normal] relative shrink-0 text-[40px] text-black w-full" data-node-id="1830:17188">
+              로그인
+            </p>
+            <div className="font-['Wanted_Sans:Medium'] leading-[0] relative shrink-0 text-[#848491] text-[24px] w-full" data-node-id="1830:17189">
+              <p className="leading-[normal] mb-0">토이빌리지 관리자에 로그인 하고</p>
+              <p className="leading-[normal]">토이빌리지의 업무들을 관리하세요</p>
+            </div>
+          </div>
+        </div>
+        <div className="absolute content-stretch flex flex-col gap-[8px] items-start left-[40px] top-[324px] w-[640px]" data-node-id="1830:17190">
+          <p className="[word-break:break-word] font-['Wanted_Sans:SemiBold'] leading-[normal] not-italic relative shrink-0 text-[22px] text-black w-full" data-node-id="1830:17191">
+            아이디
+          </p>
+          <div className="bg-[#f5f5f7] border border-[#c6c6ce] border-solid content-stretch flex items-center overflow-clip px-[16px] py-[20px] relative rounded-[8px] shrink-0 w-full" data-node-id="1830:17192">
+            <p className="[word-break:break-word] font-['Wanted_Sans:Medium'] leading-[normal] not-italic relative shrink-0 text-[#848491] text-[20px] text-center whitespace-nowrap" data-node-id="1830:17193">
+              아이디를 입력해주세요
+            </p>
+          </div>
+          <div className="content-stretch flex gap-[8px] items-center overflow-clip relative shrink-0 w-full" data-node-id="1830:17208" data-name="error">
+            <div className="bg-[#ff3131] overflow-clip relative rounded-[11px] shrink-0 size-[22px]" data-node-id="1830:17209" data-name="alert">
+              <p className="[word-break:break-word] absolute font-['Inter:Semi_Bold'] font-semibold leading-[normal] left-[9px] not-italic text-[14px] text-white top-[3px] whitespace-nowrap" data-node-id="1830:17210">
+                !
+              </p>
+            </div>
+            <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#ff3131] text-[18px] whitespace-nowrap" data-node-id="1830:17211">
+              아이디를 입력해주세요!
+            </p>
+          </div>
+        </div>
+        <div className="-translate-x-1/2 absolute bg-[#3a7d44] border-[#c6c6ce] border-solid border-t content-stretch flex items-center justify-center left-1/2 overflow-clip px-[190px] py-[23px] rounded-[12px] top-[712px] w-[640px]" data-node-id="1830:17194">
+          <p className="[word-break:break-word] font-['Wanted_Sans:Medium'] leading-[normal] not-italic relative shrink-0 text-[28px] text-white whitespace-nowrap" data-node-id="1830:17195">
+            로그인
+          </p>
+        </div>
+        <div className="absolute content-stretch flex flex-col gap-[8px] items-start left-[40px] top-[484px] w-[640px]" data-node-id="1830:17202" data-name="password field">
+          <p className="[word-break:break-word] font-['Wanted_Sans:SemiBold'] leading-[normal] not-italic relative shrink-0 text-[22px] text-black w-full" data-node-id="1830:17203">
+            비밀번호
+          </p>
+          <div className="bg-[#f5f5f7] border border-[#c6c6ce] border-solid content-stretch flex items-center justify-between overflow-clip px-[16px] py-[18px] relative rounded-[8px] shrink-0 w-full" data-node-id="1830:17204">
+            <p className="[word-break:break-word] font-['Wanted_Sans:Medium'] leading-[normal] not-italic relative shrink-0 text-[#848491] text-[20px] text-center whitespace-nowrap" data-node-id="1830:17205">
+              비밀번호를 입력해주세요
+            </p>
+            <div className="relative shrink-0 size-[28px]" data-node-id="1830:17206" data-name="mdi:eye-off">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMdiEyeOff} />
+            </div>
+          </div>
+          <div className="content-stretch flex gap-[8px] items-center overflow-clip relative shrink-0 w-full" data-node-id="1830:17212" data-name="error">
+            <div className="bg-[#ff3131] overflow-clip relative rounded-[11px] shrink-0 size-[22px]" data-node-id="1830:17213" data-name="alert">
+              <p className="[word-break:break-word] absolute font-['Inter:Semi_Bold'] font-semibold leading-[normal] left-[9px] not-italic text-[14px] text-white top-[3px] whitespace-nowrap" data-node-id="1830:17214">
+                !
+              </p>
+            </div>
+            <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#ff3131] text-[18px] whitespace-nowrap" data-node-id="1830:17215">
+              비밀번호를 입력해주세요!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+// svg fills: 2aba8 circle #234F2B / 074b1 circle #38B14A 0.9 / e5bc5 quarter #458F4F / 47da1 circle #A9ECDD 0.34 / 6f6c3 eye-off #848491
+
+// source: get_design_context fileKey=P7Jhnu8qV5m9q2QJNzkwAN nodeId=1830:17246 (login (mismatch) > password field) 2026-09-17
+// styles: gray color/60: #848491, gray color/10: #F5F5F7
+export default function PasswordField() {
+  return (
+    <div className="content-stretch flex flex-col gap-[8px] items-start relative size-full" data-node-id="1830:17246" data-name="password field">
+      <p className="font-['Wanted_Sans:SemiBold'] leading-[normal] text-[22px] text-black w-full" data-node-id="1830:17247">비밀번호</p>
+      <div className="bg-[#f5f5f7] border border-[#c6c6ce] border-solid flex items-center justify-between px-[16px] py-[18px] rounded-[8px] w-full" data-node-id="1830:17248">
+        <p className="font-['Inter:Medium'] font-medium text-[#36363f] text-[20px]" data-node-id="1830:17253">••••••••</p>
+        <div className="size-[28px]" data-node-id="1830:17250" data-name="mdi:eye-off" />
+      </div>
+      <div className="flex gap-[8px] items-center w-full" data-node-id="1830:17254" data-name="error">
+        <div className="bg-[#ff3131] rounded-[11px] size-[22px]" data-node-id="1830:17255" data-name="alert">
+          <p className="absolute font-['Inter:Semi_Bold'] font-semibold left-[9px] text-[14px] text-white top-[3px]" data-node-id="1830:17256">!</p>
+        </div>
+        <p className="font-['Inter:Medium'] font-medium text-[#ff3131] text-[18px]" data-node-id="1830:17257">아이디 또는 비밀번호를 확인해주세요</p>
+      </div>
+    </div>
+  );
+}
+
+// source: get_design_context fileKey=P7Jhnu8qV5m9q2QJNzkwAN nodeId=1830:17301 (login (server error) > toast / fail) 2026-09-17
+// styles: red: #FF3131
+export default function ToastFail() {
+  return (
+    <div className="bg-white flex flex-col items-start px-[24px] py-[20px] rounded-[12px] shadow-[0px_0px_10px_0px_rgba(255,49,49,0.25)]" data-node-id="1830:17301" data-name="toast / fail">
+      <div className="flex gap-[24px] items-center justify-center w-full" data-node-id="1830:17302">
+        <div className="size-[40px]" data-node-id="1830:17303" data-name="Frame" />
+        <p className="font-['Inter:Medium'] font-medium text-[28px] text-black" data-node-id="1830:17306">로그인에 실패했습니다</p>
+      </div>
+    </div>
+  );
+}

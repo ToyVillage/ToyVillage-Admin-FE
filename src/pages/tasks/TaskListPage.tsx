@@ -1,0 +1,291 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import styled from '@emotion/styled'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useLocation, useNavigate } from 'react-router-dom'
+import {
+  deleteTask,
+  getTasks,
+  TaskTable,
+  type TaskStatus,
+} from '@/entities/task'
+import { CreateTaskButton } from '@/features/create-task'
+import { RowActionMenu } from '@/features/row-actions'
+import {
+  CategoryTabs,
+  DeleteConfirmationDialog,
+  Toast,
+  type ToastVariant,
+} from '@/shared/ui'
+import { readPageParam, useListSearchParams } from '@/shared/lib'
+
+const TABLE_PAGE_SIZE = 10
+
+// URL 에 남기지 않을 기본값(첫 탭·첫 페이지).
+const listParamDefaults = { tab: '전체 업무', page: '1' } as const
+
+const tabs = ['전체 업무', '진행중', '완료', '지연']
+
+// 탭은 서버 `status` query parameter 로 전달한다. `전체 업무` 는 보내지 않는다.
+const tabStatuses: Record<string, TaskStatus | undefined> = {
+  '전체 업무': undefined,
+  진행중: 'IN_PROGRESS',
+  완료: 'COMPLETED',
+  지연: 'EXPIRED',
+}
+
+type TaskListToastKey = 'delete-success' | 'delete-error' | 'create-success'
+
+interface TaskListLocationState {
+  toast?: TaskListToastKey
+}
+
+const toastByKey: Record<
+  TaskListToastKey,
+  { variant: ToastVariant; message: string }
+> = {
+  'delete-success': {
+    variant: 'success',
+    message: '데이터 삭제에 성공했습니다',
+  },
+  'delete-error': { variant: 'error', message: '데이터 삭제에 실패했습니다' },
+  'create-success': {
+    variant: 'success',
+    message: '데이터 생성에 성공했습니다',
+  },
+}
+
+export function TaskListPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const queryClient = useQueryClient()
+  // 조회 조건(탭·페이지)은 URL 이 소유한다. 상세에 다녀와도 그대로 남는다.
+  const { values, update } = useListSearchParams(listParamDefaults)
+  const active = tabs.includes(values.tab) ? values.tab : tabs[0]
+  const page = readPageParam(new URLSearchParams({ page: values.page }))
+
+  // 탭이 바뀌면 첫 페이지로 되돌린다.
+  function setActive(next: string) {
+    update({ tab: next, page: '1' })
+  }
+
+  function setPage(next: number) {
+    update({ page: String(next) })
+  }
+  // 케밥 메뉴는 동시에 하나만 열린다. 열린 행 id 를 목록이 소유한다.
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  // 페이지 안에서 발생한 토스트(삭제 결과). 진입 시 전달받는 토스트와 별개다.
+  const [localToast, setLocalToast] = useState<TaskListToastKey | null>(null)
+  const deletingRef = useRef(false)
+  // 행별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
+  const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
+
+  const focusMenuTrigger = useCallback((taskId: string) => {
+    // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
+    requestAnimationFrame(() => menuTriggersRef.current.get(taskId)?.focus())
+  }, [])
+
+  const status = tabStatuses[active]
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['tasks', 'list', { page, size: TABLE_PAGE_SIZE, status }],
+    queryFn: () => getTasks({ page: page - 1, size: TABLE_PAGE_SIZE, status }),
+    placeholderData: (previousData) => previousData,
+  })
+  const tasks = data?.items ?? []
+  // 페이지 수는 서버가 준 총 페이지 수를 그대로 쓴다.
+  const pageCount = Math.max(1, data?.totalPageSize ?? 1)
+
+  // 삭제로 마지막 페이지가 사라지면 범위 밖 페이지에 고착되지 않게 되돌린다.
+  // URL 을 바꾸는 일이라 렌더가 끝난 뒤에 한다(렌더 중 라우터 갱신 금지).
+  useEffect(() => {
+    if (data && page > pageCount) setPage(pageCount)
+    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, page, pageCount])
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteTask({ id: Number(id) }),
+  })
+
+  // 생성·삭제 결과는 이동 state 로 전달받아 표시하고, 닫을 때 state 를 비워 재방문 시 다시 뜨지 않게 한다.
+  const stateToast = (location.state as TaskListLocationState | null)?.toast
+  const toastKey = localToast ?? stateToast
+  const toast = toastKey ? toastByKey[toastKey] : undefined
+
+  const dismissToast = useCallback(() => {
+    setLocalToast(null)
+    // 조회 조건(쿼리)은 그대로 두고 토스트 state 만 비운다.
+    if (stateToast) {
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      })
+    }
+  }, [location.pathname, location.search, navigate, stateToast])
+
+  function handleDelete() {
+    if (!deleteTargetId || deletingRef.current || deleteMutation.isPending) {
+      return
+    }
+
+    deletingRef.current = true
+    const targetId = deleteTargetId
+    deleteMutation.mutate(targetId, {
+      onSuccess: async () => {
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        queryClient.removeQueries({ queryKey: ['tasks', targetId] })
+        await queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        setLocalToast('delete-success')
+        focusMenuTrigger(targetId)
+      },
+      onError: () => {
+        deletingRef.current = false
+        setDeleteTargetId(null)
+        setLocalToast('delete-error')
+        focusMenuTrigger(targetId)
+      },
+    })
+  }
+
+  if (isError) {
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          업무를 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
+  }
+
+  return (
+    <Page>
+      <Content>
+        <Header>
+          <div>
+            <Title>업무관리</Title>
+            <Subtitle>토이빌리지 업무 지시</Subtitle>
+          </div>
+          <CreateTaskButton />
+        </Header>
+
+        <CategoryTabs categories={tabs} active={active} onSelect={setActive} />
+
+        <TaskTable
+          loading={isPending}
+          tasks={tasks}
+          onRowClick={(id) =>
+            navigate(`/tasks/${id}`, {
+              state: { listSearch: location.search },
+            })
+          }
+          pagination={{
+            page: Math.min(page, pageCount),
+            pageCount,
+            onChange: setPage,
+          }}
+          emptyLabel="등록된 업무가 없습니다."
+          renderRowAction={(task) => (
+            <RowActionMenu
+              triggerLabel={`${task.assigneeName} ${task.title} 업무 메뉴 열기`}
+              open={openMenuId === task.id}
+              onOpenChange={(open) => setOpenMenuId(open ? task.id : null)}
+              onTriggerRef={(node) => {
+                if (node) menuTriggersRef.current.set(task.id, node)
+                else menuTriggersRef.current.delete(task.id)
+              }}
+              items={[
+                {
+                  key: 'edit',
+                  label: '수정',
+                  onSelect: () => navigate(`/tasks/${task.id}/edit`),
+                },
+                {
+                  key: 'delete',
+                  label: '삭제',
+                  tone: 'danger',
+                  onSelect: () => setDeleteTargetId(task.id),
+                },
+              ]}
+            />
+          )}
+        />
+      </Content>
+
+      {deleteTargetId && (
+        <DeleteConfirmationDialog
+          pending={deleteMutation.isPending}
+          onCancel={() => {
+            const targetId = deleteTargetId
+            setDeleteTargetId(null)
+            focusMenuTrigger(targetId)
+          }}
+          onConfirm={handleDelete}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          variant={toast.variant}
+          message={toast.message}
+          onDismiss={dismissToast}
+        />
+      )}
+    </Page>
+  )
+}
+
+const Page = styled.main`
+  padding: 32px;
+  background: ${({ theme }) => theme.colors.background};
+  min-height: 100vh;
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const Content = styled.div`
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding-top: calc(124px - 32px);
+`
+
+const Header = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+`
+
+const Title = styled.h1`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 60px;
+  font-weight: 600;
+  line-height: 1.2;
+`
+
+const Subtitle = styled.p`
+  margin: 12px 0 0;
+  color: ${({ theme }) => theme.colors.textGuide};
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.2;
+`
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  width: min(100%, 560px);
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`

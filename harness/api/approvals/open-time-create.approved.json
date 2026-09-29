@@ -1,0 +1,15 @@
+{
+  "feature": "open-time-create",
+  "apiId": "OPEN_TIME_CREATE",
+  "approvedAt": "2026-09-17T08:02:44.863Z",
+  "approvedBy": "yunho09",
+  "taskSpecHash": "8b79a9092f4f723678c655218bd786323296ba0529e04121035e38f9487a5d18",
+  "contractHash": "d89ddadd0fc25954b31037d33714870f86ecc41e2bfc1d19919c94332f5a0ec0",
+  "contractMarkdownHash": "1eb22c853232027667b24980d5cd1c3519ce1fa6e47a55c6121ae384dc7d4fab",
+  "planHash": "f21a7680c62aa3582b2b1bbd4e12b66260fb8c92659405e89eba32044238006b",
+  "scenarioHash": "722c1428d1f5743475f623786d088daf9b1259e05cb083445996d67c73b0b6d2",
+  "testHash": "29d65020e062df011b7a65aa5d232bbca05be80a22b5c5ca6fffb8a17d5e9049",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-17T08:08:32.593Z"
+}

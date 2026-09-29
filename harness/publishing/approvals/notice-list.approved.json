@@ -1,0 +1,21 @@
+{
+  "feature": "notice-list",
+  "approvedAt": "2026-09-17T04:01:29.033Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
+  ],
+  "scenarioHash": "6cb7d081d30d63f9a26e9a9c71789489821deddc6028db2cf0d0da6166ef3946",
+  "e2eHash": "bf6dfaedd36af35e8960af844dd541e7575d7a0af495ad26418e79c169fa668d"
+}

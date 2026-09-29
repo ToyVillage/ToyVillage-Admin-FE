@@ -1,0 +1,306 @@
+{
+  "apiId": "APP_AUTH_LOGIN",
+  "name": "앱 관리자·직원 로그인",
+  "description": "앱 슈퍼관리자와 직원이 공통 API로 로그인하고 앱 전용 토큰을 발급받는 기능",
+  "method": "POST",
+  "path": "/app/auth/login",
+  "authentication": {
+    "required": false,
+    "type": null,
+    "roles": []
+  },
+  "contentType": "application/json",
+  "headers": [],
+  "pathParameters": [],
+  "queryParameters": [],
+  "requestBody": {
+    "required": true,
+    "fields": [
+      {
+        "name": "username",
+        "location": "body",
+        "type": "string",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "employee01",
+        "description": "앱 슈퍼관리자 또는 직원 아이디입니다.",
+        "constraints": ["비어 있을 수 없음"]
+      },
+      {
+        "name": "password",
+        "location": "body",
+        "type": "string",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "employee01",
+        "description": "앱 슈퍼관리자 또는 직원 비밀번호입니다.",
+        "constraints": ["비어 있을 수 없음"]
+      }
+    ],
+    "example": {
+      "username": "employee01",
+      "password": "employee01"
+    }
+  },
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "로그인 성공",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "앱 전용 토큰과 사용자 정보",
+          "fields": [
+            {
+              "name": "access_token",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "앱 access token",
+              "description": "앱 access token",
+              "constraints": []
+            },
+            {
+              "name": "refresh_token",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "앱 refresh token",
+              "description": "앱 refresh token",
+              "constraints": []
+            },
+            {
+              "name": "name",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "김직원",
+              "description": "사용자 이름",
+              "constraints": []
+            },
+            {
+              "name": "role",
+              "location": "body",
+              "type": "enum",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "EMPLOYEE",
+              "description": "슈퍼관리자는 APP_ADMIN, 직원은 EMPLOYEE로 반환됩니다.",
+              "constraints": [],
+              "allowedValues": ["APP_ADMIN", "EMPLOYEE"]
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "description": "잘못된 요청입니다. (아이디 또는 비밀번호를 비워둘 수 없습니다.)",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "잘못된 요청입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 400,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-08-10T22:30:00.000000",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "아이디 또는 비밀번호를 비워둘 수 없습니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 401,
+        "description": "아이디 또는 비밀번호를 확인해주세요",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "아이디 또는 비밀번호를 확인해주세요",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 401,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-08-10T22:30:00.000000",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "아이디 또는 비밀번호를 확인해주세요",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "내부 서버 오류가 발생했습니다.",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-08-10T22:30:00.000000",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "https://app.notion.com/p/ebee8d82a45083cdb95401879bf64735",
+    "notionDataSource": "a14e8d82-a450-83d9-b811-87e1c3508076",
+    "resolvedNotionPage": "https://app.notion.com/p/7fde8d82a4508360819a01dca6981ea7",
+    "requestedNotionPage": null,
+    "checkedAt": "2026-09-10T00:00:00Z",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "APP_AUTH_LOGIN",
+      "method": "POST",
+      "path": "/app/auth/login",
+      "authentication": {
+        "required": false,
+        "type": null,
+        "roles": []
+      }
+    },
+    "detailValues": {
+      "apiId": "APP_AUTH_LOGIN",
+      "method": "POST",
+      "path": "/app/auth/login",
+      "authentication": {
+        "required": false,
+        "type": null,
+        "roles": []
+      }
+    }
+  }
+}

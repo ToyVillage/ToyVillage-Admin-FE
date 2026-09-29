@@ -1,0 +1,15 @@
+{
+  "feature": "task-query-all",
+  "apiId": "TASK_QUERY_ALL",
+  "approvedAt": "2026-09-10T23:45:22.425Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "7d06487a43a724f2b8b4ea250d08ab0d73270372c8a64e56a56d83ffa0e3e231",
+  "contractHash": "039abc5e671faad5a48fff5a9033be047af3ba911ec820cc0d38a6872c7fcee3",
+  "contractMarkdownHash": "6162e4d6b147220ef4af434d2bd5812826664b7faf55656a789d443358614580",
+  "planHash": "36194e1ec28e4b6660e10af5b5bce257b45dd2e62498c257c285248cb6e4667a",
+  "scenarioHash": "5b20a6587171a55db440bd7671c864d3ac4d40eb0f37d43177de10dd45b84f0c",
+  "testHash": "c4324ec2905e987497b1fa1e1e2470bcfafe6d1b2b17f6c639880eccdaed3836",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-10T23:45:30.184Z"
+}

@@ -1,0 +1,20 @@
+{
+  "feature": "notice-edit",
+  "approvedAt": "2026-09-17T04:01:29.480Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11"
+  ],
+  "scenarioHash": "71a3913b28c4165bd629ed9f289ea86993664cca12472d129a949db5c294d9d3",
+  "e2eHash": "0b4a8dfbc81a8029ffb7ab7c45fd1bae279e7d8e3ccaeafd5a8b2204932c8741"
+}

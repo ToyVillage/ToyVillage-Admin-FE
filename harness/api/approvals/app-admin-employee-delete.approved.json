@@ -1,0 +1,15 @@
+{
+  "feature": "app-admin-employee-delete",
+  "apiId": "APP_ADMIN_EMPLOYEE_DELETE",
+  "approvedAt": "2026-09-28T13:54:23.527Z",
+  "approvedBy": "kimjihwan8",
+  "taskSpecHash": "0c7e9c9c37aee8ff12437632f9c8b4f75c7898fb454122ee83d1bbc8703f756f",
+  "contractHash": "73e76417bcc9ff7718a4138c394e524983cd446df63e2a1826a29c4c83344576",
+  "contractMarkdownHash": "cb025326f1493ab0b31f0db0ced3caf095c271b809ab7c327498656369045412",
+  "planHash": "ba929b4dedef6b26a1fba18f0e3af1f8732950f86a942a144c2aa8b09c74613c",
+  "scenarioHash": "293001e853c7cc5e8a53fbe6ad37c13a0e255f4eec6bb37353862d6be494fcd3",
+  "testHash": "8604097203d6e47376fd7218b2cff33ad65e1c75f1852934dfe3c8dcc203e50b",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-28T13:54:24.095Z"
+}

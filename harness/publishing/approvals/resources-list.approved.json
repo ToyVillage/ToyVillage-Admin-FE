@@ -1,0 +1,18 @@
+{
+  "feature": "resources-list",
+  "approvedAt": "2026-09-20T04:48:18.066Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9"
+  ],
+  "scenarioHash": "ae46c911473168c5a6f879f992d084aca3c33f6cb5722d696d8bc63a89ff3948",
+  "e2eHash": "2ea113572f1e8114b44a47de75f3050aea8ee2e3b16b4f1e354b0d61d06517fe"
+}

@@ -1,0 +1,15 @@
+{
+  "feature": "team-query-tree",
+  "apiId": "TEAM_QUERY_TREE",
+  "approvedAt": "2026-09-09T13:27:47.597Z",
+  "approvedBy": "yunho",
+  "taskSpecHash": "7098edff2d9bc1256422fbabfb9669583894929d25668110401973bef15bccb7",
+  "contractHash": "5410a49b5c7c4328ae58fc61d9030cc80654059de5053dd231b17eadaa95a646",
+  "contractMarkdownHash": "d217ee31dd66c3ec68b7c4f9c930d0bfcfe438cc378e27d51c5bca53c52bf739",
+  "planHash": "8124dea5305fcd34e22afadacf5317170b699dafb1f659e7d7cc82db61eab8c8",
+  "scenarioHash": "bdb857200aa347f6b15ab04993df4697bbbdde5636ebcc3b9b8f64a101eeea93",
+  "testHash": "aa59515792cbf69169543d53fe09625952459b2397e6e3117ba89107be548e9b",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-09-09T13:35:25.268Z"
+}
