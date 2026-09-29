@@ -107,7 +107,11 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
   `전체 양식` 을 고르면 `templateId` 가 URL 에서 빠지고 양식 조건 없이 조회한다.
 - 양식 필터 선택값은 조회날짜를 바꾸거나 탭을 오가도 유지된다. `templateId` 가 있는 URL 로 새로고침해도 유지된다.
 - `templateId` 가 등록된 양식에 없는 값이면(지워진 양식 등) 양식 선택지를 받은 뒤 URL 에서 `templateId` 를
-  지우고 `전체 양식` 으로 조회한다. 트리거와 목록 조건이 어긋나지 않게 하기 위해서다.
+  지우고 `전체 양식` 으로 1페이지부터 조회한다. 트리거와 목록 조건이 어긋나지 않게 하기 위해서다.
+- `templateId` 가 양식 id 로 읽을 수 없는 값(양의 안전 정수가 아님)이면 URL 에서 지우고 다른 조건은 그대로 둔다.
+- 양식 선택지는 양식 전체다. 양식이 한 번에 받는 수(100개)를 넘으면 나머지 페이지도 받는다.
+- 선택지를 받는 중이거나 받지 못했으면, 고른 양식이 있을 때 트리거를 비워 둔다(`전체 양식` 으로 보이지 않게).
+  목록은 URL 의 양식 조건으로 그대로 조회한다.
 - 양식 필터는 서버가 거른다: `GET /work-log` 의 `templateId`(선택, int64) 쿼리로 보낸다
   (2026-09-29 백엔드 반영, Swagger 확인, #206).
 - 선택한 조회날짜에 작성된 일지가 없으면 → 행 대신 `해당 날짜에 작성된 업무일지가 없습니다.` 를
@@ -128,7 +132,7 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 - 서버 데이터: 퍼블리싱 단계에서는 mock 으로 둔다(`/api` 스킬이 실제 연동을 담당).
   - 작성된 일지 목록: 쿼리키 `['work-logs', 'list', { date, page, templateId }]`
   - 양식 목록: 쿼리키 후보 `['work-log-forms', 'list']`
-  - 양식 필터 선택지: 양식 목록 조회(`GET /work-log/template`, `page=1`·`size=100`)의 양식 이름.
+  - 양식 필터 선택지: 양식 목록 조회(`GET /work-log/template`, `size=100`, 모든 페이지)의 양식 이름.
     쿼리키 `['work-log-forms', 'list', 'filter-options']` — 양식 삭제 시 목록 무효화 범위에 함께 든다.
   - 삭제: `useMutation` + 해당 목록 쿼리키 무효화. 무효화 범위는 `['work-logs','list']` /
     `['work-log-forms','list']` 로 좁힌다(상세 쿼리까지 무효화하지 않는다).
