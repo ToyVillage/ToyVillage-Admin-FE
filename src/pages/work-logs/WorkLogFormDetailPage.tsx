@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
@@ -5,9 +6,10 @@ import {
   getWorkLogFormDetail,
   isWorkLogNotFoundError,
   workLogFormQueryKeys,
+  WorkLogFormPreviewDialog,
   WorkLogFormQuestionCard,
 } from '@/entities/work-log'
-import { BackLink } from '@/shared/ui'
+import { ActionButton, BackLink } from '@/shared/ui'
 import { WorkLogFormDetailSkeleton } from './ui/WorkLogFormDetailSkeleton'
 
 const listPath = '/work-logs?tab=forms'
@@ -15,6 +17,7 @@ const listPath = '/work-logs?tab=forms'
 export function WorkLogFormDetailPage() {
   const { id = '' } = useParams()
   const location = useLocation()
+  const [previewOpen, setPreviewOpen] = useState(false)
   // 목록에서 넘어왔다면 그때의 조회 조건(페이지)으로 돌아간다.
   const navState = location.state as { listSearch?: string } | null
   const backPath = navState?.listSearch
@@ -67,7 +70,14 @@ export function WorkLogFormDetailPage() {
   return (
     <Page>
       <Content>
-        <BackLink to={backPath} />
+        <TopBar>
+          <BackLink to={backPath} />
+          {form && (
+            <PreviewButton onClick={() => setPreviewOpen(true)}>
+              표로 미리보기
+            </PreviewButton>
+          )}
+        </TopBar>
         <Cards>
           <TitleCard>
             <TitleLabel>
@@ -80,6 +90,13 @@ export function WorkLogFormDetailPage() {
           ))}
         </Cards>
       </Content>
+
+      {previewOpen && form && (
+        <WorkLogFormPreviewDialog
+          form={form}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </Page>
   )
 }
@@ -117,6 +134,20 @@ const Content = styled.div`
   align-items: flex-start;
   margin: 0 auto;
   padding-top: calc(76px - 32px);
+`
+
+// 줄 높이는 `뒤로가기`(36) 기준이다. 더 높은 버튼(61)은 위아래로 넘쳐도 카드 위치를 밀지 않는다.
+const TopBar = styled.div`
+  display: flex;
+  width: 100%;
+  height: 36px;
+  align-items: center;
+  justify-content: space-between;
+`
+
+// Figma `표 미리보기 버튼`(2433:24717)의 오른쪽 끝은 본문보다 16px 안쪽이다.
+const PreviewButton = styled(ActionButton)`
+  margin-right: 16px;
 `
 
 const Cards = styled.div`

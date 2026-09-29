@@ -3,8 +3,6 @@ import { expect, test as base, type Page } from '@playwright/test'
 // 승인된 시나리오(work-log-list.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 
-
-
 import { mockWorkLogApi, type WorkLogApiHandle } from './support/work-log-api'
 
 // 업무일지 API 연동 이후 localStorage mock 대신 `support/work-log-api` 의
@@ -274,6 +272,149 @@ test('S19: 양식 관리 행 클릭 → 양식 상세 이동', async ({ page }) 
   await expect(page).toHaveURL(/\/work-logs\/forms\/1$/)
 })
 
+test('S20: 양식 필터 기본 표시', async ({ page }) => {
+  await page.goto('/work-logs')
+
+  await expect(page.getByText('양식 필터', { exact: true })).toBeVisible()
+  await expect(formFilter(page)).toHaveText('전체 양식')
+
+  await page.getByRole('button', { name: '양식 관리' }).click()
+  await expect(page.getByText('양식 필터', { exact: true })).toBeHidden()
+  await expect(formFilter(page)).toBeHidden()
+})
+
+test('S21: 양식 필터 선택', async ({ page, workLogApi }) => {
+  await page.goto('/work-logs?tab=logs&page=2')
+
+  await formFilter(page).click()
+  const options = page
+    .getByRole('listbox', { name: '양식 필터' })
+    .getByRole('option')
+  // mock 의 양식 목록 응답은 id 100 미만 양식만 준다(시트 전용 픽스처 제외).
+  const listed = workLogApi.templates.filter((item) => item.templateId < 100)
+  await expect(options).toHaveCount(listed.length + 1)
+  await expect(options.first()).toHaveText('전체 양식')
+  await expect(options.nth(1)).toHaveText(listed[0].templateTitle)
+
+  await page.getByRole('option', { name: '양식3', exact: true }).click()
+  await expect(page.getByRole('listbox', { name: '양식 필터' })).toBeHidden()
+  await expect(formFilter(page)).toHaveText('양식3')
+  await expect(page).toHaveURL(/[?&]templateId=3(&|$)/)
+  await expect(page).not.toHaveURL(/[?&]page=/)
+
+  await formFilter(page).click()
+  await page.getByRole('option', { name: '전체 양식' }).click()
+  await expect(formFilter(page)).toHaveText('전체 양식')
+  await expect(page).not.toHaveURL(/templateId=/)
+})
+
+test('S22: 양식 필터 유지', async ({ page }) => {
+  await page.goto('/work-logs')
+  await formFilter(page).click()
+  await page.getByRole('option', { name: '양식3', exact: true }).click()
+  await expect(formFilter(page)).toHaveText('양식3')
+
+  const lastYear = String(new Date().getFullYear() - 1)
+  await page.getByRole('button', { name: '조회 연도' }).click()
+  await page.getByRole('option', { name: `${lastYear}년` }).click()
+  await expect(formFilter(page)).toHaveText('양식3')
+
+  await page.getByRole('button', { name: '양식 관리' }).click()
+  await page.getByRole('button', { name: '작성된 일지' }).click()
+  await expect(formFilter(page)).toHaveText('양식3')
+
+  await page.reload()
+  await expect(formFilter(page)).toHaveText('양식3')
+})
+
+test('S23: 알 수 없는 양식 id', async ({ page }) => {
+  await page.goto('/work-logs?templateId=999')
+
+  await expect(formFilter(page)).toHaveText('전체 양식')
+  await expect(page).not.toHaveURL(/templateId=/)
+  await expect(logRows(page)).toHaveCount(4)
+
+  // 양식 id 로 읽을 수 없는 값도 지우고, 같이 있던 조건은 남긴다.
+  for (const invalid of ['abc', '9007199254740993']) {
+    await page.goto(`/work-logs?page=2&templateId=${invalid}`)
+    await expect(page).not.toHaveURL(/templateId=/)
+    await expect(page).toHaveURL(/[?&]page=2(&|$)/)
+    await expect(formFilter(page)).toHaveText('전체 양식')
+  }
+})
+
+test('S24: 양식 필터로 목록이 걸러진다', async ({ page, workLogApi }) => {
+  // 조회 결과는 쿼리 캐시에 남는다. 요청을 확인하려고 매 단계 처음 보는 조건으로 바꾼다.
+  await page.goto('/work-logs?templateId=3')
+  await expect(logRows(page)).toHaveCount(1)
+  await expect(logRows(page).first()).toContainText('양식3')
+  expect(workLogApi.listQueries.at(-1)?.get('templateId')).toBe('3')
+
+  await formFilter(page).click()
+  await page.getByRole('option', { name: '양식4', exact: true }).click()
+
+  await expect(logRows(page)).toHaveCount(1)
+  await expect(logRows(page).first()).toContainText('양식4')
+  expect(workLogApi.listQueries.at(-1)?.get('templateId')).toBe('4')
+
+  await formFilter(page).click()
+  await page.getByRole('option', { name: '전체 양식' }).click()
+
+  await expect(logRows(page)).toHaveCount(4)
+  expect(workLogApi.listQueries.at(-1)?.has('templateId')).toBe(false)
+})
+
+test('S25: 양식이 많아도 모두 고를 수 있다', async ({ page }) => {
+  const manyForms = Array.from({ length: 150 }, (_, index) => ({
+    templateId: index + 1,
+    templateTitle: `많은양식${index + 1}`,
+    createdAt: '2026-09-01',
+  }))
+  await page.route(/^https:\/\/[^/]+\/work-log\/template\?/, (route) => {
+    const query = new URL(route.request().url()).searchParams
+    const size = Number(query.get('size'))
+    const number = Number(query.get('page')) - 1
+    const content = manyForms.slice(number * size, (number + 1) * size)
+    return route.fulfill({
+      json: {
+        content,
+        totalPages: Math.ceil(manyForms.length / size),
+        totalElements: manyForms.length,
+        number,
+        size,
+      },
+    })
+  })
+
+  await page.goto('/work-logs')
+  await formFilter(page).click()
+  const options = page
+    .getByRole('listbox', { name: '양식 필터' })
+    .getByRole('option')
+  await expect(options).toHaveCount(manyForms.length + 1)
+
+  await page.getByRole('option', { name: '많은양식150', exact: true }).click()
+  await expect(formFilter(page)).toHaveText('많은양식150')
+  await expect(page).toHaveURL(/[?&]templateId=150(&|$)/)
+})
+
+test('S26: 선택지를 불러오지 못해도 고른 양식을 전체 양식으로 보이지 않는다', async ({
+  page,
+  workLogApi,
+}) => {
+  await page.route(/^https:\/\/[^/]+\/work-log\/template\?/, (route) =>
+    route.fulfill({ status: 500, json: { message: '서버 오류' } }),
+  )
+
+  await page.goto('/work-logs?templateId=3')
+  await expect(logRows(page)).toHaveCount(1)
+  expect(workLogApi.listQueries.at(-1)?.get('templateId')).toBe('3')
+
+  await expect(formFilter(page)).not.toHaveText('전체 양식')
+  await expect(formFilter(page)).toHaveText('')
+  await expect(page).toHaveURL(/[?&]templateId=3(&|$)/)
+})
+
 function logRows(page: Page) {
   return page.getByTestId('work-log-row')
 }
@@ -284,4 +425,8 @@ function formRows(page: Page) {
 
 function kebab(row: ReturnType<Page['getByTestId']>) {
   return row.getByRole('button', { name: /관리 메뉴$/ })
+}
+
+function formFilter(page: Page) {
+  return page.getByRole('button', { name: '양식 필터' })
 }

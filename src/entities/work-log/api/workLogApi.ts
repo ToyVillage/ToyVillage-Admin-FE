@@ -79,14 +79,17 @@ const etcOptionContent = '기타'
 // WORK_LOG_QUERY_ALL — 해당 날짜에 작성된 모든 직원의 업무일지(관리자 전용).
 export async function getWorkLogs({
   date,
+  templateId,
   page,
   size,
 }: WorkLogQueryAllRequest): Promise<WorkLogListPage> {
   assertIsoDate(date)
+  if (templateId !== undefined) assertId(templateId, '업무일지 양식')
   assertPaging(page, size)
 
+  // templateId 가 없으면 axios 가 파라미터를 빼고 보낸다(전체 양식).
   const { data } = await api.get<unknown>('/work-log', {
-    params: { date, page, size },
+    params: { date, templateId, page, size },
   })
 
   if (!isPageResponse(data, isWorkLogListItem)) {
@@ -198,6 +201,8 @@ export async function getWorkLogFormDetail({
       required: true,
       options: question.options.map((option) => option.content),
     })),
+    // 구역은 표로 미리보기에만 쓴다. 응답에 없어도 상세 화면은 그대로 보인다.
+    zones: (data.sections ?? []).map((section) => section.sectionName),
   }
 }
 
@@ -471,9 +476,18 @@ function isWorkLogTemplateDetailResponse(
   return (
     Number.isInteger(detail.templateId) &&
     typeof detail.templateTitle === 'string' &&
+    (detail.sections === undefined ||
+      (Array.isArray(detail.sections) &&
+        detail.sections.every(isTemplateSection))) &&
     Array.isArray(detail.questions) &&
     detail.questions.every(isTemplateQuestion)
   )
+}
+
+function isTemplateSection(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null) return false
+
+  return typeof (value as Record<string, unknown>).sectionName === 'string'
 }
 
 function isTemplateQuestion(value: unknown): boolean {

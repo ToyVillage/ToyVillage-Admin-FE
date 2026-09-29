@@ -3,8 +3,6 @@ import { expect, test as base, type Page } from '@playwright/test'
 // 승인된 시나리오(work-log-form-detail.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 
-
-
 import { mockWorkLogApi, type WorkLogApiHandle } from './support/work-log-api'
 
 // 업무일지 API 연동 이후 localStorage mock 대신 `support/work-log-api` 의
@@ -90,12 +88,16 @@ test('S7: 주관식 질문 카드', async ({ page }) => {
 test('S8: 읽기 전용 — 조작되지 않는다', async ({ page }) => {
   await page.goto('/work-logs/forms/1')
 
-  // 본문에는 입력 요소도, 조작 가능한 컨트롤도 없다(뒤로가기 링크만).
+  // 본문에는 입력 요소가 없고, 조작 가능한 컨트롤은 뒤로가기 링크와
+  // `표로 미리보기` 버튼(S11, 2026-09-29 추가)뿐이다. 질문 카드에는 버튼이 없다.
   // 사이드바 토글은 레이아웃이 소유하므로 본문(main)으로 범위를 좁힌다.
   const main = page.getByRole('main')
   await expect(main.locator('input')).toHaveCount(0)
   await expect(main.locator('textarea')).toHaveCount(0)
-  await expect(main.getByRole('button')).toHaveCount(0)
+  await expect(main.getByRole('button')).toHaveCount(1)
+  await expect(
+    main.getByRole('button', { name: '표로 미리보기' }),
+  ).toBeVisible()
   await expect(main.getByRole('link')).toHaveCount(1)
 })
 
@@ -115,12 +117,86 @@ test('S10: 없는 양식으로 진입', async ({ page }) => {
   await page.goto('/work-logs/forms/999')
 
   await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
-  await expect(page.getByRole('heading', { name: '업무일지관리' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: '업무일지관리' }),
+  ).toBeVisible()
 })
 
 // 질문 카드는 h2(질문명)를 품은 section 이다.
 function questionCard(page: Page, questionLabel: string) {
-  return page
-    .locator('section')
-    .filter({ has: page.getByRole('heading', { name: questionLabel, exact: true }) })
+  return page.locator('section').filter({
+    has: page.getByRole('heading', { name: questionLabel, exact: true }),
+  })
+}
+
+test('S11: 표로 미리보기 버튼 표시', async ({ page }) => {
+  await page.goto('/work-logs/forms/1')
+
+  const back = page.getByRole('link', { name: '뒤로가기' })
+  const preview = previewButton(page)
+  await expect(back).toBeVisible()
+  await expect(preview).toBeVisible()
+
+  // 같은 줄: 두 요소의 세로 중심이 거의 같다.
+  const backBox = await back.boundingBox()
+  const previewBox = await preview.boundingBox()
+  expect(backBox).not.toBeNull()
+  expect(previewBox).not.toBeNull()
+  expect(
+    Math.abs(
+      backBox!.y +
+        backBox!.height / 2 -
+        (previewBox!.y + previewBox!.height / 2),
+    ),
+  ).toBeLessThan(4)
+})
+
+test('S12: 양식 미리보기 모달', async ({ page }) => {
+  await page.goto('/work-logs/forms/1')
+  await previewButton(page).click()
+
+  const dialog = page.getByRole('dialog', { name: '양식 미리보기' })
+  await expect(dialog).toBeVisible()
+
+  const headerCells = dialog
+    .getByTestId('work-log-sheet-header')
+    .locator(':scope > *')
+  await expect(headerCells).toHaveText([
+    '설정된 구역',
+    '습도',
+    '청소여부',
+    '청소 방법이 뭔가요?',
+  ])
+
+  const rows = dialog.getByTestId('work-log-sheet-row')
+  await expect(rows).toHaveCount(3)
+  // 질문 칸은 비어 있어 행의 글자는 구역 이름뿐이다.
+  await expect(rows).toHaveText(['A1', 'A2', 'A3'])
+})
+
+test('S13: 양식 미리보기 닫기', async ({ page }) => {
+  await page.goto('/work-logs/forms/1')
+  const dialog = page.getByRole('dialog', { name: '양식 미리보기' })
+
+  await previewButton(page).click()
+  await dialog.getByRole('button', { name: '닫기' }).click()
+  await expect(dialog).toBeHidden()
+  await expect(previewButton(page)).toBeFocused()
+
+  await previewButton(page).click()
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(previewButton(page)).toBeFocused()
+
+  await previewButton(page).click()
+  await expect(dialog).toBeVisible()
+  // 모달 바깥(어두운 배경)의 왼쪽 위 모서리.
+  await page.mouse.click(8, 8)
+  await expect(dialog).toBeHidden()
+  await expect(previewButton(page)).toBeFocused()
+})
+
+function previewButton(page: Page) {
+  return page.getByRole('button', { name: '표로 미리보기' })
 }

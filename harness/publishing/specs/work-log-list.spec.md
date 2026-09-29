@@ -12,6 +12,8 @@ figma:
     - 479:14386
     - 479:14604
     - 479:14680
+    - 2432:24290
+    - 2432:24327
 requires_functional_test: true
 paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 ---
@@ -21,13 +23,14 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 ## 상태와 근거
 
 - Status: Active
-- Last refreshed: 2026-09-16
+- Last refreshed: 2026-09-29
 - 목록 화면 기준: Figma `353:13062` ("업무일지관리 · 목록")
   - `1:3417` worklog main (작성된 일지 탭 기본)
   - `1:3463` worklog main (필터 열림 — 조회날짜 년/월/일 드롭다운)
   - `1:3503` worklog (empty)
   - `457:13745` worklog (kebab open) / `457:13757` worklog (delete)
   - `479:14386` worklog form list (양식 관리 탭) / `479:14604` (kebab open) / `479:14680` (delete)
+  - `2432:24290` worklog main (양식 필터) / `2432:24327` (양식 필터 열림)
 - 이 spec 범위 밖의 인접 섹션: `457:13744`(상세), `353:13063`(양식 생성·수정), `353:13064`(토스트)
 - 추출 캐시: `harness/artifacts/publishing/work-log-list.figma.txt`
 - 공통 코드 규칙: `harness/shared/code-rules.md`, 퍼블리싱 규칙: `harness/publishing/design-rules.md`
@@ -44,7 +47,7 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 
 ## 범위
 
-- 포함: 두 탭의 목록 조회, 조회날짜 필터, 페이지네이션, 행 클릭 이동, 케밥 메뉴, 삭제 확인 모달,
+- 포함: 두 탭의 목록 조회, 조회날짜 필터, 양식 필터, 페이지네이션, 행 클릭 이동, 케밥 메뉴, 삭제 확인 모달,
   빈 상태, 삭제 결과 토스트, 사이드바 항목 라우트 연결
 - 제외: 실제 API 연동(`/api` 스킬 담당), 업무일지 상세 화면, 양식 생성·수정 화면,
   검색·정렬, 다중 선택
@@ -96,13 +99,28 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 - 행 클릭 → 해당 일지의 `/work-logs/:id` 로 이동한다.
   케밥 버튼과 케밥 메뉴를 클릭할 때는 행 이동이 일어나지 않는다.
 - 케밥 메뉴 항목은 `삭제` 하나뿐이다.
+- `조회날짜` 드롭다운 오른쪽(24px 간격)에 `양식 필터` 라벨과 드롭다운이 있다. 초기값은 `전체 양식` 이다.
+- `양식 필터` 드롭다운을 열면 첫 항목 `전체 양식` 아래로 등록된 양식 이름이 양식 목록 순서대로 나온다.
+  열고 닫는 방식·선택 항목 강조·바깥 클릭/`Escape` 닫기는 조회날짜 드롭다운과 같다.
+- 양식을 고르면 → 드롭다운이 닫히고 트리거에 그 양식 이름이 보이며, 목록이 선택 날짜에 그 양식으로
+  작성된 일지만으로 다시 걸러지고 1페이지로 리셋된다. URL 에 `templateId` 파라미터로 남는다.
+  `전체 양식` 을 고르면 `templateId` 가 URL 에서 빠지고 양식 조건 없이 조회한다.
+- 양식 필터 선택값은 조회날짜를 바꾸거나 탭을 오가도 유지된다. `templateId` 가 있는 URL 로 새로고침해도 유지된다.
+- `templateId` 가 등록된 양식에 없는 값이면(지워진 양식 등) 양식 선택지를 받은 뒤 URL 에서 `templateId` 를
+  지우고 `전체 양식` 으로 1페이지부터 조회한다. 트리거와 목록 조건이 어긋나지 않게 하기 위해서다.
+- `templateId` 가 양식 id 로 읽을 수 없는 값(양의 안전 정수가 아님)이면 URL 에서 지우고 다른 조건은 그대로 둔다.
+- 양식 선택지는 양식 전체다. 양식이 한 번에 받는 수(100개)를 넘으면 나머지 페이지도 받는다.
+- 선택지를 받는 중이거나 받지 못했으면, 고른 양식이 있을 때 트리거를 비워 둔다(`전체 양식` 으로 보이지 않게).
+  목록은 URL 의 양식 조건으로 그대로 조회한다.
+- 양식 필터는 서버가 거른다: `GET /work-log` 의 `templateId`(선택, int64) 쿼리로 보낸다
+  (2026-09-29 백엔드 반영, Swagger 확인, #206).
 - 선택한 조회날짜에 작성된 일지가 없으면 → 행 대신 `해당 날짜에 작성된 업무일지가 없습니다.` 를
   표시하고 페이지네이션을 숨긴다.
 
 ### 양식 관리 탭 (`?tab=forms`)
 
 - 표의 열은 `양식` / `작성자` / `날짜` 와 케밥 열이다.
-- `조회날짜` 필터를 보여주지 않고, 목록 요청에도 날짜를 보내지 않는다(양식은 날짜에 종속되지 않는다).
+- `조회날짜` 필터와 `양식 필터` 를 보여주지 않고, 목록 요청에도 날짜를 보내지 않는다(양식은 날짜에 종속되지 않는다).
   표는 탭바 바로 아래에 붙는다.
 - 행 클릭 → 해당 양식의 `/work-logs/forms/:id` 로 이동한다.
   케밥 버튼과 케밥 메뉴를 클릭할 때는 행 이동이 일어나지 않는다.
@@ -112,18 +130,21 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 ## 데이터
 
 - 서버 데이터: 퍼블리싱 단계에서는 mock 으로 둔다(`/api` 스킬이 실제 연동을 담당).
-  - 작성된 일지 목록: 쿼리키 후보 `['work-logs', 'list', { date }]`
+  - 작성된 일지 목록: 쿼리키 `['work-logs', 'list', { date, page, templateId }]`
   - 양식 목록: 쿼리키 후보 `['work-log-forms', 'list']`
+  - 양식 필터 선택지: 양식 목록 조회(`GET /work-log/template`, `size=100`, 모든 페이지)의 양식 이름.
+    쿼리키 `['work-log-forms', 'list', 'filter-options']` — 양식 삭제 시 목록 무효화 범위에 함께 든다.
   - 삭제: `useMutation` + 해당 목록 쿼리키 무효화. 무효화 범위는 `['work-logs','list']` /
     `['work-log-forms','list']` 로 좁힌다(상세 쿼리까지 무효화하지 않는다).
-- 클라이언트 상태: 탭·조회날짜·페이지는 URL 과 컴포넌트 지역 상태로 관리한다. Zustand 는 쓰지 않는다.
+- 클라이언트 상태: 탭·조회날짜·양식 필터·페이지는 URL 과 컴포넌트 지역 상태로 관리한다. Zustand 는 쓰지 않는다.
 
 ## 컴포넌트 구조/props
 
 - `WorkLogListPage` — `/work-logs` 화면. 탭·조회날짜·페이지·케밥·삭제 상태를 소유한다.
 - `WorkLogTable { logs, onRowClick, onDelete, pagination, emptyLabel }` — 작성된 일지 표.
 - `WorkLogFormTable { forms, onEdit, onDelete, pagination, emptyLabel }` — 양식 관리 표.
-- `SelectMenu { label, value, options, onChange, ariaLabel }` (shared/ui) — 조회날짜 드롭다운.
+- `SelectMenu { label, value, options, onChange, ariaLabel }` (shared/ui) — 조회날짜·양식 필터 드롭다운.
+  양식 필터는 폭 260(Figma `2432:24336`), 열린 목록은 조회날짜와 같은 테두리·최대 높이 256 이다.
   Figma `Frame 459`(1:11248) + `Frame 427`(1:3470) 규격의 범용 셀렉트.
 - `KebabMenu { items, ariaLabel }` (shared/ui) — Figma component set `141:9597` 대응.
   `items: { label, onSelect, tone?: 'default' | 'danger' }[]`
@@ -144,6 +165,9 @@ paths: src/pages/work-logs, src/entities/work-log, src/shared/ui
 
 ## 개정 이력
 
+- 2026-09-29: `작성된 일지` 탭에 `양식 필터`(Figma `2432:24290`/`2432:24327`)를 추가했다(#206).
+  같은 날 백엔드가 `GET /work-log` 에 `templateId` 를 추가해 목록을 서버에서 거르도록 연결했고,
+  없는 양식 id 는 `전체 양식` 으로 되돌리도록 S23 을 고쳤다.
 - 2026-09-17: `양식 관리` 케밥의 `수정` 항목과 `/work-logs/forms/:id/edit` 이동 계약을 지웠다.
   양식 수정 기능이 제거돼 `WorkLogFormTable` 의 케밥에는 `삭제` 만 있다.
 - 2026-09-16: 탭바를 `조회날짜` 필터 위로 올리고, `양식 관리` 탭에서 조회날짜 필터와 날짜 파라미터를 뺐다.

@@ -15,6 +15,7 @@ import {
   type StoredFile,
 } from './fileAttachment'
 import { fadeIn, motionDuration, motionEasing, popIn } from './motion'
+import { trapTab } from './trapTab'
 
 interface AttachmentPreviewDialogProps {
   file: StoredFile
@@ -116,7 +117,11 @@ export function AttachmentPreviewDialog({
       >
         <Header>
           <Title id={titleId}>{file.fileName}</Title>
-          <IconButton type="button" aria-label="다운로드" onClick={handleDownload}>
+          <IconButton
+            type="button"
+            aria-label="다운로드"
+            onClick={handleDownload}
+          >
             <img src={downloadIcon} alt="" aria-hidden="true" />
           </IconButton>
           <IconButton
@@ -266,7 +271,9 @@ function PdfPage({ pdf, page }: { pdf: PDFDocumentProxy; page: number }) {
   }, [pdf, page])
 
   if (failedPage === page) {
-    return <StatusText role="status">미리보기를 불러오지 못했습니다.</StatusText>
+    return (
+      <StatusText role="status">미리보기를 불러오지 못했습니다.</StatusText>
+    )
   }
 
   return <PdfCanvas ref={canvasRef} aria-label={`${page}쪽`} role="img" />
@@ -301,26 +308,6 @@ async function loadPreviewSource(
   } finally {
     // 넘겨준 뒤의 정리는 PdfPage 가 맡는다.
     signal.removeEventListener('abort', destroy)
-  }
-}
-
-function trapTab(dialog: HTMLElement | null, event: KeyboardEvent) {
-  if (!dialog) return
-
-  const focusables = [
-    ...dialog.querySelectorAll<HTMLElement>('button:not([disabled])'),
-  ]
-  if (focusables.length === 0) return
-
-  const first = focusables[0]
-  const last = focusables[focusables.length - 1]
-
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault()
-    last.focus()
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault()
-    first.focus()
   }
 }
 

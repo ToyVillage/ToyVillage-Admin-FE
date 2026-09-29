@@ -202,10 +202,14 @@ const TriggerContent = styled.span`
   gap: 12px;
 `
 
+// 폭이 고정된 트리거(양식 필터 260 등)에 긴 항목명이 오면 박스를 넘지 않고 말줄임한다.
 const TriggerLabel = styled.span<{ $variant: SelectMenuVariant }>`
+  overflow: hidden;
+  min-width: 0;
   font-size: ${({ $variant }) => ($variant === 'field' ? 22 : 24)}px;
   font-weight: 500;
   line-height: 1.2;
+  text-overflow: ellipsis;
   white-space: nowrap;
 `
 

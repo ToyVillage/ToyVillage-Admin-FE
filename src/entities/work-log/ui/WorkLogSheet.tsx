@@ -50,9 +50,15 @@ export function WorkLogSheet({
     [],
   )
 
-  const columnStyle = (index: number) => ({
-    flex: `0 0 ${widths[index] ?? MIN_COLUMN_WIDTH}px`,
-  })
+  // 마지막 열은 시트 끝까지 늘어난다(Figma 2433:24737). 헤더와 본문이 같은 폭을 쓴다.
+  // 시트가 max-content 라 늘어나는 열에는 width 도 줘야 한다. 없으면 긴 답변의 글자 폭만큼
+  // 시트가 넓어지고 셀 말줄임이 풀린다.
+  const columnStyle = (index: number) => {
+    const basis = widths[index] ?? MIN_COLUMN_WIDTH
+    return index === columns.length - 1
+      ? { flex: `1 0 ${basis}px`, width: basis }
+      : { flex: `0 0 ${basis}px` }
+  }
 
   return (
     <Scroll data-testid="work-log-sheet">
@@ -436,6 +442,10 @@ const HeadCell = styled.div`
   color: ${({ theme }) => theme.colors.textBody};
   font-size: 20px;
   font-weight: 500;
+
+  &:last-of-type {
+    border-right: 0;
+  }
 `
 
 const HeadLabel = styled.span`

@@ -11,14 +11,10 @@ export const templateListPattern =
   /^https:\/\/[^/]+\/work-log\/template(?:\?.*)?$/
 export const templateItemPattern =
   /^https:\/\/[^/]+\/work-log\/template\/(\d+)(?:\?.*)?$/
-export const workLogItemPattern =
-  /^https:\/\/[^/]+\/work-log\/(\d+)(?:\?.*)?$/
+export const workLogItemPattern = /^https:\/\/[^/]+\/work-log\/(\d+)(?:\?.*)?$/
 
 export type MockServerQuestionType =
-  | 'TEXT'
-  | 'MULTIPLE_CHOICE'
-  | 'CHECK_BOX'
-  | 'FILE_UPLOAD'
+  'TEXT' | 'MULTIPLE_CHOICE' | 'CHECK_BOX' | 'FILE_UPLOAD'
 
 export interface MockTemplateOption {
   optionId: number
@@ -118,7 +114,9 @@ export const mockWorkLogs: MockWorkLog[] = [
         { questionId: 210, optionIds: [422] },
         { questionId: 213, optionIds: [427, 428] },
       ],
-      A3: [{ questionId: 213, optionIds: [427, 428, 429], etcText: '야간 소독' }],
+      A3: [
+        { questionId: 213, optionIds: [427, 428, 429], etcText: '야간 소독' },
+      ],
     },
   },
   ...Array.from({ length: 8 }, (_, index) => ({
@@ -265,8 +263,13 @@ export async function mockWorkLogApi(
     handle.listQueries.push(query)
 
     // 목록에는 답변이 없는 일지(상세 전용)를 넣지 않는다.
+    // templateId 를 보내면 그 양식으로 작성된 일지만 준다.
+    const templateId = query.get('templateId')
     const matched = handle.workLogs.filter(
-      (item) => item.writeAt === query.get('date') && item.workLogId < 100,
+      (item) =>
+        item.writeAt === query.get('date') &&
+        item.workLogId < 100 &&
+        (templateId === null || String(item.templateId) === templateId),
     )
 
     await json(
@@ -406,10 +409,7 @@ function toDetailBody(handle: WorkLogApiHandle, log: MockWorkLog) {
   }
 }
 
-function toAnswerBody(
-  questions: MockTemplateQuestion[],
-  answer: MockAnswer,
-) {
+function toAnswerBody(questions: MockTemplateQuestion[], answer: MockAnswer) {
   const question = questions.find(
     (item) => item.questionId === answer.questionId,
   )

@@ -3,9 +3,11 @@ import { expect, test as base, type Locator, type Page } from '@playwright/test'
 // 승인된 시나리오(work-log-detail.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 
-
-
-import { mockWorkLogApi, type WorkLogApiHandle } from './support/work-log-api'
+import {
+  mockWorkLogApi,
+  todayIsoDate,
+  type WorkLogApiHandle,
+} from './support/work-log-api'
 
 // 업무일지 API 연동 이후 localStorage mock 대신 `support/work-log-api` 의
 // page.route mock 을 쓴다. 실제 서버는 호출하지 않는다.
@@ -184,9 +186,12 @@ test('S11: 헤더 셀은 질문명이 길어도 항상 한 줄이다', async ({ 
   expect(box?.height).toBeLessThanOrEqual(57)
 
   // 질문명이 잘리지도 않는다 — 열 폭이 헤더 텍스트 폭 이상으로 잡힌다.
-  const clipped = await header.locator('> *').evaluateAll((cells) =>
-    cells.filter((cell) => cell.scrollWidth > cell.clientWidth + 1).length,
-  )
+  const clipped = await header
+    .locator('> *')
+    .evaluateAll(
+      (cells) =>
+        cells.filter((cell) => cell.scrollWidth > cell.clientWidth + 1).length,
+    )
   expect(clipped).toBe(0)
 })
 
@@ -274,6 +279,64 @@ test('S10: 없는 일지로 진입', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: '업무일지관리' }),
   ).toBeVisible()
+})
+
+test('S15: 마지막 열이 길어도 시트가 넓어지지 않는다', async ({
+  page,
+  workLogApi,
+}) => {
+  const longAnswer = '바닥과 벽면을 닦고 소독했습니다. '.repeat(60)
+  workLogApi.templates.push({
+    templateId: 900,
+    templateTitle: '긴 답변 양식',
+    createdAt: todayIsoDate(),
+    sections: [{ sectionId: 9001, sectionName: 'A1' }],
+    questions: [
+      { questionId: 9101, question: '온도', questionType: 'TEXT', options: [] },
+      {
+        questionId: 9102,
+        question: '청소 방법',
+        questionType: 'TEXT',
+        options: [],
+      },
+    ],
+  })
+  workLogApi.workLogs.push({
+    workLogId: 900,
+    templateId: 900,
+    writer: '김수인',
+    writeAt: todayIsoDate(),
+    answers: {
+      A1: [
+        { questionId: 9101, answerText: '20도' },
+        { questionId: 9102, answerText: longAnswer },
+      ],
+    },
+  })
+
+  await page.goto('/work-logs/900')
+  const sheet = page.getByTestId('work-log-sheet')
+  await expect(rows(page)).toHaveCount(1)
+
+  const size = await sheet.evaluate((element) => ({
+    scroll: element.scrollWidth,
+    client: element.clientWidth,
+  }))
+  expect(size.scroll).toBeLessThanOrEqual(size.client)
+
+  // 마지막 열은 시트 끝까지 찬다(헤더·본문 같은 폭).
+  const header = await columnWidths(page.getByTestId('work-log-sheet-header'))
+  const body = await columnWidths(rows(page).first())
+  expect(body).toEqual(header)
+  expect(header.reduce((sum, width) => sum + width, 0)).toBeGreaterThanOrEqual(
+    size.client - 2,
+  )
+
+  const value = rows(page).first().getByText(longAnswer.trim())
+  const clipped = await value.evaluate(
+    (element) => element.scrollWidth > element.clientWidth,
+  )
+  expect(clipped).toBe(true)
 })
 
 function rows(page: Page) {

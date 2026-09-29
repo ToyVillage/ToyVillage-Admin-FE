@@ -1,6 +1,6 @@
 {
   "feature": "work-log-detail",
-  "approvedAt": "2026-09-17T12:12:44.757Z",
+  "approvedAt": "2026-09-29T04:50:23.125Z",
   "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
@@ -16,8 +16,9 @@
     "S11",
     "S12",
     "S13",
-    "S14"
+    "S14",
+    "S15"
   ],
-  "scenarioHash": "ddb402147dbaa7966ee8eb6a353d01fc478365fdc6b62f9c35aff3c1d9d6a69d",
-  "e2eHash": "2cb9158d72ee12cde4ce5e37c17a75d29a4c67b62a9780c3721a8336165b9420"
+  "scenarioHash": "64af9a48a273b942ee4d04069120ccab907c6c05196884fe0786e4d0719aff98",
+  "e2eHash": "6b2abc7bfaf838f069ab4670f53b4fc476ed3f9ea70fc0bf768a92882b95503a"
 }

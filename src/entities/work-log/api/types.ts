@@ -99,7 +99,8 @@ export interface WorkLogTemplateQuestionResponse {
 export interface WorkLogTemplateDetailResponse {
   templateId: number
   templateTitle: string
-  sections: WorkLogTemplateSectionResponse[]
+  /** Swagger 에는 있지만 응답에서 빠져도 상세는 보여준다(표로 미리보기만 비게 된다). */
+  sections?: WorkLogTemplateSectionResponse[]
   questions: WorkLogTemplateQuestionResponse[]
 }
 
@@ -129,6 +130,8 @@ export interface WorkLogMessageResponse {
 export interface WorkLogQueryAllRequest {
   /** YYYY-MM-DD */
   date: string
+  /** 보내면 그 양식으로 작성된 일지만 조회한다(선택). */
+  templateId?: number
   /** 1부터 시작한다(명세는 0부터로 적혀 있다). */
   page: number
   size: number

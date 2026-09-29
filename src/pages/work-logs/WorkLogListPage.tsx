@@ -11,6 +11,7 @@ import {
   toIsoDate,
   workLogFormQueryKeys,
   workLogQueryKeys,
+  WorkLogFormFilter,
   WorkLogFormTable,
   WorkLogTable,
   type WorkLogDate,
@@ -26,6 +27,8 @@ import {
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 4
+// `양식 필터` 선택지를 받는 페이지 크기. 양식이 더 많으면 나머지 페이지도 받는다.
+const FORM_FILTER_OPTION_SIZE = 100
 
 const logsTabLabel = '작성된 일지'
 const formsTabLabel = '양식 관리'
@@ -38,11 +41,18 @@ interface PendingDelete {
   id: string
 }
 
+interface ListParams {
+  tab: WorkLogTab
+  date: string
+  page: number
+  templateId: string | null
+}
+
 export function WorkLogListPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
-  // 조회 조건(탭·조회날짜·페이지)은 URL 이 소유한다.
+  // 조회 조건(탭·조회날짜·양식 필터·페이지)은 URL 이 소유한다.
   // 상세에 다녀오거나 새로고침해도 고른 날짜와 페이지가 그대로 남는다.
   const [searchParams, setSearchParams] = useSearchParams()
   const [openKebabId, setOpenKebabId] = useState<string | null>(null)
@@ -54,32 +64,48 @@ export function WorkLogListPage() {
   const isoDate = readIsoDateParam(searchParams)
   const date: WorkLogDate = toCalendarDate(isoDate)
   const page = readPageParam(searchParams)
+  const templateId = readTemplateIdParam(searchParams)
+  // 값은 있는데 양식 id 로 읽을 수 없으면(문자·범위 초과) URL 에서 지운다.
+  const invalidTemplateParam =
+    searchParams.has('templateId') && templateId === null
 
-  // 조회날짜·탭이 바뀌면 첫 페이지로 되돌린다.
+  // 조회날짜·양식 필터·탭이 바뀌면 첫 페이지로 되돌린다.
   function setDate(next: WorkLogDate) {
-    updateParams({ tab, date: toIsoDate(next), page: 1 })
+    updateParams({ tab, date: toIsoDate(next), page: 1, templateId })
+  }
+
+  function setTemplateId(next: string | null) {
+    updateParams({ tab, date: isoDate, page: 1, templateId: next })
   }
 
   function setPage(next: number) {
-    updateParams({ tab, date: isoDate, page: next })
+    updateParams({ tab, date: isoDate, page: next, templateId })
   }
 
-  function updateParams(next: { tab: WorkLogTab; date: string; page: number }) {
+  function updateParams(next: ListParams) {
     const params = new URLSearchParams()
     params.set('tab', next.tab)
     // 오늘이면 URL 에 남기지 않는다(기본값). 양식 관리에서도 값은 들고 다녀
     // 탭을 왕복해도 고른 날짜가 풀리지 않게 한다.
     if (next.date !== toIsoDate(todayWorkLogDate()))
       params.set('date', next.date)
+    // 양식 필터도 날짜처럼 양식 관리 탭에서 들고 다닌다. `전체 양식` 이면 남기지 않는다.
+    if (next.templateId) params.set('templateId', next.templateId)
     if (next.page > 1) params.set('page', String(next.page))
     setSearchParams(params, { replace: true })
   }
 
   // 서버 페이지네이션이다. 명세는 page 를 0부터 적었지만 서버는 1부터 센다(#158).
-
+  // 양식 필터도 서버가 거른다(`templateId`, #206).
   const logsQuery = useQuery({
-    queryKey: workLogQueryKeys.list(isoDate, page),
-    queryFn: () => getWorkLogs({ date: isoDate, page, size: TABLE_PAGE_SIZE }),
+    queryKey: workLogQueryKeys.list(isoDate, page, templateId),
+    queryFn: () =>
+      getWorkLogs({
+        date: isoDate,
+        templateId: templateId === null ? undefined : Number(templateId),
+        page,
+        size: TABLE_PAGE_SIZE,
+      }),
     enabled: tab === 'logs',
   })
   // 양식은 날짜에 묶이지 않는다 — 조회날짜를 보내지 않는다(양식 관리 탭에 필터가 없다).
@@ -87,6 +113,13 @@ export function WorkLogListPage() {
     queryKey: workLogFormQueryKeys.list(page),
     queryFn: () => getWorkLogForms({ page, size: TABLE_PAGE_SIZE }),
     enabled: tab === 'forms',
+  })
+  // 선택지를 못 받아도 목록은 그대로 쓸 수 있다. 실패를 화면 오류로 올리지 않고,
+  // 고른 양식이 있으면 트리거를 비워 둔다(`전체 양식` 으로 잘못 보이지 않게).
+  const formFilterQuery = useQuery({
+    queryKey: workLogFormQueryKeys.filterOptions(),
+    queryFn: fetchAllFormFilterOptions,
+    enabled: tab === 'logs',
   })
 
   const deleteMutation = useMutation({
@@ -110,6 +143,10 @@ export function WorkLogListPage() {
 
   const logs = useMemo(() => logsQuery.data?.items ?? [], [logsQuery.data])
   const forms = useMemo(() => formsQuery.data?.items ?? [], [formsQuery.data])
+  const filterForms = useMemo(
+    () => formFilterQuery.data ?? [],
+    [formFilterQuery.data],
+  )
   const activeQuery = tab === 'logs' ? logsQuery : formsQuery
   const isPending = activeQuery.isPending
 
@@ -118,19 +155,38 @@ export function WorkLogListPage() {
   const currentPage = Math.min(page, pageCount)
   const pagination = { page: currentPage, pageCount, onChange: setPage }
 
-  // 삭제로 마지막 페이지가 비면 직전 페이지를 다시 조회한다.
-  // 로딩 중에는 총 페이지 수를 모르므로 응답을 받은 뒤에만 보정한다.
+  // URL 의 양식이 선택지에 없으면(지워진 양식 등) `전체 양식` 으로 되돌린다.
+  // 트리거에는 `전체 양식` 이 보이는데 목록만 그 양식으로 걸러지는 어긋남을 막는다.
+  // 선택지는 모든 페이지를 받은 뒤에만(조회 성공) 판단한다.
+  const unknownTemplate =
+    tab === 'logs' &&
+    formFilterQuery.isSuccess &&
+    templateId !== null &&
+    !filterForms.some((form) => form.id === templateId)
+
+  // URL 보정은 한 번의 갱신으로 모은다. 따로 고치면 나중 갱신이 앞의 수정을 덮어쓴다.
+  // - 잘못된 templateId 값 → 지운다(나머지 조건은 그대로).
+  // - 없는 양식 → `전체 양식` 으로 되돌리고 첫 페이지로.
+  // - 삭제로 마지막 페이지가 비면 → 직전 페이지. 총 페이지 수는 응답을 받은 뒤에만 안다.
   // URL 을 바꾸는 일이라 렌더가 끝난 뒤에 한다(렌더 중 라우터 갱신 금지).
   useEffect(() => {
-    if (totalPages !== undefined && page > pageCount) setPage(pageCount)
-    // setPage 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    const clampPage = totalPages !== undefined && page > pageCount
+    if (!invalidTemplateParam && !unknownTemplate && !clampPage) return
+
+    updateParams({
+      tab,
+      date: isoDate,
+      templateId: unknownTemplate ? null : templateId,
+      page: unknownTemplate ? 1 : clampPage ? pageCount : page,
+    })
+    // updateParams 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalPages, page, pageCount])
+  }, [invalidTemplateParam, unknownTemplate, totalPages, page, pageCount])
 
   function handleSelectTab(label: string) {
     const nextTab: WorkLogTab = label === formsTabLabel ? 'forms' : 'logs'
     setOpenKebabId(null)
-    updateParams({ tab: nextTab, date: isoDate, page: 1 })
+    updateParams({ tab: nextTab, date: isoDate, page: 1, templateId })
   }
 
   function handleRequestDelete(id: string) {
@@ -168,7 +224,17 @@ export function WorkLogListPage() {
           onSelect={handleSelectTab}
         />
 
-        {tab === 'logs' && <DateFilter value={date} onChange={setDate} />}
+        {tab === 'logs' && (
+          <Filters>
+            <RowDateFilter value={date} onChange={setDate} />
+            <WorkLogFormFilter
+              value={templateId}
+              forms={filterForms}
+              optionsConfirmed={formFilterQuery.isSuccess}
+              onChange={setTemplateId}
+            />
+          </Filters>
+        )}
 
         <TableArea>
           {tab === 'logs' ? (
@@ -284,7 +350,43 @@ const Subtitle = styled.p`
   line-height: 1.2;
 `
 
+// Figma `조회날짜`(Frame 459)와 `양식 필터`(2432:24334)는 한 줄에 24px 간격으로 놓인다.
+const Filters = styled.div`
+  display: flex;
+  margin-top: 32px;
+  align-items: center;
+  gap: 24px;
+`
+
+// 줄 간격은 Filters 가 맡는다.
+const RowDateFilter = styled(DateFilter)`
+  margin-top: 0;
+`
+
 // DataTable 의 기본 margin-top(20)에 12를 더해 Figma 의 탭바-표 간격 32를 맞춘다.
 const TableArea = styled.div`
   margin-top: 12px;
 `
+
+// 양식 id 는 양의 안전 정수다. 그 밖의 값은 `전체 양식` 으로 본다.
+function readTemplateIdParam(params: URLSearchParams): string | null {
+  const value = params.get('templateId')
+  if (!value || !/^[1-9]\d*$/.test(value)) return null
+
+  return Number.isSafeInteger(Number(value)) ? value : null
+}
+
+// `양식 필터` 선택지는 양식 전체다. 첫 페이지의 총 페이지 수를 보고 나머지를 함께 받는다.
+async function fetchAllFormFilterOptions() {
+  const first = await getWorkLogForms({
+    page: 1,
+    size: FORM_FILTER_OPTION_SIZE,
+  })
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, first.totalPages - 1) }, (_, index) =>
+      getWorkLogForms({ page: index + 2, size: FORM_FILTER_OPTION_SIZE }),
+    ),
+  )
+
+  return [first, ...rest].flatMap((result) => result.items)
+}

@@ -12,6 +12,7 @@ interface DateFilterProps {
   value: CalendarDate
   onChange: (value: CalendarDate) => void
   label?: string
+  className?: string
 }
 
 // Figma `Frame 460`/`Frame 459`. `조회날짜` 라벨 + 년/월/일 셀렉트 3개.
@@ -20,6 +21,7 @@ export function DateFilter({
   value,
   onChange,
   label = '조회날짜',
+  className,
 }: DateFilterProps) {
   const currentYear = todayCalendarDate().year
   const yearOptions = buildOptions(
@@ -39,7 +41,7 @@ export function DateFilter({
   )
 
   return (
-    <Filter>
+    <Filter className={className}>
       <Label>{label}</Label>
       <SelectMenu
         value={String(value.year)}
