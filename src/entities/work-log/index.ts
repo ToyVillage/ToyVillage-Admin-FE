@@ -54,6 +54,7 @@ export type {
 export { WorkLogTable } from './ui/WorkLogTable'
 export { WorkLogFormTable } from './ui/WorkLogFormTable'
 export { WorkLogSheet } from './ui/WorkLogSheet'
+export { WorkLogFormPreviewDialog } from './ui/WorkLogFormPreviewDialog'
 export { WorkLogFormQuestionCard } from './ui/WorkLogFormQuestionCard'
 export { WorkLogFormWizardSteps } from './ui/WorkLogFormWizardSteps'
 export {
