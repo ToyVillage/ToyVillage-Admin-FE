@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
+import { Skeleton } from './Skeleton'
 
 interface SectionHeaderProps {
   title: string
@@ -7,6 +8,8 @@ interface SectionHeaderProps {
   count?: number
   // 건수 뒤에 붙는 단위. 생략하면 `건` 이다(개체 수는 `마리`).
   unit?: string
+  // 건수를 아직 모를 때(첫 조회 중) 건수 자리만 막대로 채운다.
+  countLoading?: boolean
   // 우측 버튼. 넘기면 `with button` variant(127:9297)가 된다.
   action?: ReactNode
 }
@@ -16,16 +19,21 @@ export function SectionHeader({
   title,
   count,
   unit = '건',
+  countLoading = false,
   action,
 }: SectionHeaderProps) {
   return (
     <Header>
       <Title>{title}</Title>
-      {count != null && (
-        <Count>
-          {count}
-          {unit}
-        </Count>
+      {countLoading ? (
+        <Skeleton width={30} height={18} />
+      ) : (
+        count != null && (
+          <Count>
+            {count}
+            {unit}
+          </Count>
+        )
       )}
       {action && <Action>{action}</Action>}
     </Header>

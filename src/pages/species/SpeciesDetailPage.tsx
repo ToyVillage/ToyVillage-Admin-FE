@@ -22,6 +22,7 @@ import {
   KebabMenu,
   LinkButton,
   SectionHeader,
+  SkeletonStatus,
   Toast,
   useFocusFrame,
 } from '@/shared/ui'
@@ -31,7 +32,8 @@ import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { SpeciesEmptyMessage } from './ui/SpeciesEmptyMessage'
 import { SEARCH_DEBOUNCE_MS, TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
-import { ProfileDetailSkeleton } from './ui/ProfileDetailSkeleton'
+import { ProfileCardSkeleton } from './ui/ProfileCardSkeleton'
+import { SectionError } from './ui/SectionError'
 
 type DeleteTarget =
   { kind: 'species' } | { kind: 'individual'; individualId: string }
@@ -194,59 +196,12 @@ export function SpeciesDetailPage() {
     focusMenuTrigger(target)
   }
 
-  if (speciesQuery.isPending || individualsQuery.isPending) {
-    return (
-      <Page>
-        <Content>
-          <BackToSpeciesList to={speciesListPath} />
-          <ProfileDetailSkeleton
-            infoRows={[
-              ['국명', '학명'],
-              ['분류군', '법정지정분류'],
-              ['영문명', '세부분류'],
-            ]}
-            sectionTitle="개체"
-            sectionAction={
-              <LinkButton to={`/species/${speciesId}/individuals/create`}>
-                개체 등록하기
-              </LinkButton>
-            }
-            search
-            searchPlaceholder="개체 이름을 입력해주세요"
-            columns={[
-              { width: 520, header: '이름', bar: 60, barHeight: 18 },
-              { width: 300, header: '성별', bar: 56, barHeight: 32 },
-              { header: '출생연도', bar: 60, barHeight: 18 },
-            ]}
-          />
-        </Content>
-      </Page>
-    )
-  }
-
-  if (speciesQuery.isError && !isNotFoundError(speciesQuery.error)) {
-    return (
-      <PageStatus
-        state="error"
-        message="종 정보를 불러오지 못했습니다. 다시 시도해 주세요."
-      />
-    )
-  }
-
-  const species = speciesQuery.data
-  if (speciesQuery.isError || !species) {
-    return (
-      <PageStatus
-        state="not-found"
-        message="종을 찾을 수 없습니다."
-        linkTo={speciesListPath}
-        linkLabel="목록으로 돌아가기"
-      />
-    )
-  }
-
   // 개체 목록 404 는 종이 없어진 것이다.
-  if (individualsQuery.isError && isNotFoundError(individualsQuery.error)) {
+  if (
+    [speciesQuery, individualsQuery].some(
+      (query) => query.isError && isNotFoundError(query.error),
+    )
+  ) {
     return (
       <PageStatus
         state="not-found"
@@ -257,135 +212,156 @@ export function SpeciesDetailPage() {
     )
   }
 
-  if (individualsQuery.isError) {
-    return (
-      <PageStatus
-        state="error"
-        message="개체 목록을 불러오지 못했습니다. 다시 시도해 주세요."
-      />
-    )
-  }
-
-  const individuals = individualsQuery.data.items
+  // 프로필 카드와 개체 표는 각자 자기 조회만 기다린다(먼저 도착한 쪽부터 보인다).
+  const species = speciesQuery.data
+  const individuals = individualsQuery.data?.items ?? []
 
   // 0마리 종은 검색어가 있어도 빈 상태 문구를 유지한다(검색할 개체 자체가 없다).
-  const emptyLabel =
-    species.individualCount === 0 ? (
-      <SpeciesEmptyMessage
-        title="등록된 개체가 없습니다"
-        description="오른쪽 위 [개체 등록하기]로 첫 개체를 추가해주세요"
-      />
-    ) : (
-      '검색결과가 없습니다'
-    )
+  // 종이 아직 오지 않았으면 검색어 없는 빈 목록이 곧 0마리다.
+  const hasNoIndividuals = species ? species.individualCount === 0 : !keyword
+  const emptyLabel = individualsQuery.isError ? (
+    <span role="alert">
+      개체 목록을 불러오지 못했습니다. 다시 시도해 주세요.
+    </span>
+  ) : hasNoIndividuals ? (
+    <SpeciesEmptyMessage
+      title="등록된 개체가 없습니다"
+      description="오른쪽 위 [개체 등록하기]로 첫 개체를 추가해주세요"
+    />
+  ) : (
+    '검색결과가 없습니다'
+  )
 
   return (
     <Page>
       <Content>
         <BackToSpeciesList to={speciesListPath} />
 
-        <ProfileArea>
-          <SpeciesProfileCard
-            species={species}
-            action={
-              <KebabMenu
-                placement="below-trigger"
-                ariaLabel={`${species.koreanName} 종 메뉴 열기`}
-                open={openMenuKey === speciesMenuKey}
-                onOpenChange={(open) =>
-                  setOpenMenuKey(open ? speciesMenuKey : null)
+        {/* 섹션별 스켈레톤을 묶어 "불러오는 중" status 는 하나만 둔다. */}
+        <SkeletonStatus
+          busy={speciesQuery.isPending || individualsQuery.isPending}
+        >
+          <ProfileArea>
+            {speciesQuery.isError ? (
+              <SectionError role="alert">
+                종 정보를 불러오지 못했습니다. 다시 시도해 주세요.
+              </SectionError>
+            ) : species ? (
+              <SpeciesProfileCard
+                species={species}
+                action={
+                  <KebabMenu
+                    placement="below-trigger"
+                    ariaLabel={`${species.koreanName} 종 메뉴 열기`}
+                    open={openMenuKey === speciesMenuKey}
+                    onOpenChange={(open) =>
+                      setOpenMenuKey(open ? speciesMenuKey : null)
+                    }
+                    onTriggerRef={(node) => {
+                      speciesMenuTriggerRef.current = node
+                    }}
+                    items={[
+                      {
+                        label: '수정',
+                        onSelect: () => navigate(`/species/${speciesId}/edit`),
+                      },
+                      {
+                        label: '삭제',
+                        tone: 'danger',
+                        onSelect: () => setDeleteTarget({ kind: 'species' }),
+                      },
+                    ]}
+                  />
                 }
-                onTriggerRef={(node) => {
-                  speciesMenuTriggerRef.current = node
-                }}
-                items={[
-                  {
-                    label: '수정',
-                    onSelect: () => navigate(`/species/${speciesId}/edit`),
-                  },
-                  {
-                    label: '삭제',
-                    tone: 'danger',
-                    onSelect: () => setDeleteTarget({ kind: 'species' }),
-                  },
-                ]}
               />
-            }
-          />
-        </ProfileArea>
-
-        <IndividualsSection>
-          <SectionHeader
-            title="개체"
-            // 검색 결과 수가 아니라 그 종의 전체 마리수다.
-            count={species.individualCount}
-            unit="마리"
-            action={
-              <LinkButton to={`/species/${speciesId}/individuals/create`}>
-                개체 등록하기
-              </LinkButton>
-            }
-          />
-
-          <IndividualTable
-            individuals={individuals}
-            onRowClick={(id) =>
-              navigate(`/species/${speciesId}/individuals/${id}`, {
-                state: {
-                  individualListSearch: location.search,
-                  speciesListSearch,
-                },
-              })
-            }
-            search={{
-              value: query,
-              onChange: setQuery,
-              placeholder: '개체 이름을 입력해주세요',
-              ariaLabel: '개체 검색',
-            }}
-            pagination={{
-              page: Math.min(page, pageCount),
-              pageCount,
-              onChange: setPage,
-            }}
-            emptyLabel={emptyLabel}
-            renderRowAction={(individual) => (
-              <KebabMenu
-                placement="below-trigger"
-                ariaLabel={`${individual.name} 개체 메뉴 열기`}
-                open={openMenuKey === individualMenuKey(individual.id)}
-                onOpenChange={(open) =>
-                  setOpenMenuKey(open ? individualMenuKey(individual.id) : null)
-                }
-                onTriggerRef={(node) => {
-                  if (node) {
-                    individualMenuTriggersRef.current.set(individual.id, node)
-                  } else {
-                    individualMenuTriggersRef.current.delete(individual.id)
-                  }
-                }}
-                items={[
-                  {
-                    label: '수정',
-                    onSelect: () =>
-                      navigate(
-                        `/species/${speciesId}/individuals/${individual.id}/edit`,
-                      ),
-                  },
-                  {
-                    label: '삭제',
-                    tone: 'danger',
-                    onSelect: () =>
-                      setDeleteTarget({
-                        kind: 'individual',
-                        individualId: individual.id,
-                      }),
-                  },
+            ) : (
+              <ProfileCardSkeleton
+                infoRows={[
+                  ['국명', '학명'],
+                  ['분류군', '법정지정분류'],
+                  ['영문명', '세부분류'],
                 ]}
               />
             )}
-          />
-        </IndividualsSection>
+          </ProfileArea>
+
+          <IndividualsSection>
+            <SectionHeader
+              title="개체"
+              // 검색 결과 수가 아니라 그 종의 전체 마리수다.
+              count={species?.individualCount}
+              countLoading={!species && !speciesQuery.isError}
+              unit="마리"
+              action={
+                <LinkButton to={`/species/${speciesId}/individuals/create`}>
+                  개체 등록하기
+                </LinkButton>
+              }
+            />
+
+            <IndividualTable
+              individuals={individuals}
+              onRowClick={(id) =>
+                navigate(`/species/${speciesId}/individuals/${id}`, {
+                  state: {
+                    individualListSearch: location.search,
+                    speciesListSearch,
+                  },
+                })
+              }
+              search={{
+                value: query,
+                onChange: setQuery,
+                placeholder: '개체 이름을 입력해주세요',
+                ariaLabel: '개체 검색',
+              }}
+              pagination={{
+                page: Math.min(page, pageCount),
+                pageCount,
+                onChange: setPage,
+              }}
+              emptyLabel={emptyLabel}
+              loading={individualsQuery.isPending}
+              renderRowAction={(individual) => (
+                <KebabMenu
+                  placement="below-trigger"
+                  ariaLabel={`${individual.name} 개체 메뉴 열기`}
+                  open={openMenuKey === individualMenuKey(individual.id)}
+                  onOpenChange={(open) =>
+                    setOpenMenuKey(
+                      open ? individualMenuKey(individual.id) : null,
+                    )
+                  }
+                  onTriggerRef={(node) => {
+                    if (node) {
+                      individualMenuTriggersRef.current.set(individual.id, node)
+                    } else {
+                      individualMenuTriggersRef.current.delete(individual.id)
+                    }
+                  }}
+                  items={[
+                    {
+                      label: '수정',
+                      onSelect: () =>
+                        navigate(
+                          `/species/${speciesId}/individuals/${individual.id}/edit`,
+                        ),
+                    },
+                    {
+                      label: '삭제',
+                      tone: 'danger',
+                      onSelect: () =>
+                        setDeleteTarget({
+                          kind: 'individual',
+                          individualId: individual.id,
+                        }),
+                    },
+                  ]}
+                />
+              )}
+            />
+          </IndividualsSection>
+        </SkeletonStatus>
       </Content>
 
       {deleteTarget && (
@@ -397,7 +373,8 @@ export function SpeciesDetailPage() {
         />
       )}
 
-      {toast && (
+      {/* 이동 state 로 받은 토스트는 두 섹션의 첫 조회가 끝난 뒤 띄운다(스켈레톤 status 와 겹치지 않게). */}
+      {toast && !speciesQuery.isPending && !individualsQuery.isPending && (
         <Toast
           variant={toast.variant}
           message={toast.message}

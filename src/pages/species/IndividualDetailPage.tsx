@@ -22,6 +22,7 @@ import {
   DeleteConfirmationDialog,
   KebabMenu,
   SectionHeader,
+  SkeletonStatus,
   ShortcutButton,
   Toast,
   useFocusFrame,
@@ -30,7 +31,8 @@ import { PageStatus } from './ui/PageStatus'
 import { SpeciesDeleteDescription } from './ui/SpeciesDeleteDescription'
 import { TABLE_PAGE_SIZE } from './ui/tablePage'
 import { usePageToast } from './ui/usePageToast'
-import { ProfileDetailSkeleton } from './ui/ProfileDetailSkeleton'
+import { ProfileCardSkeleton } from './ui/ProfileCardSkeleton'
+import { SectionError } from './ui/SectionError'
 
 // 카드 케밥의 메뉴 id. 행 케밥은 관찰 id 를 쓴다(관찰 id 는 숫자 문자열).
 const profileMenuId = 'profile'
@@ -219,48 +221,13 @@ export function IndividualDetailPage() {
     })
   }
 
-  if (
-    individualQuery.isPending ||
-    (observationsQuery.isPending && !observationsQuery.isError)
-  ) {
-    return (
-      <Page>
-        <Content>
-          <BackLink
-            to={`/species/${speciesId}${listState?.individualListSearch ?? ''}`}
-            state={{ speciesListSearch: listState?.speciesListSearch }}
-          />
-          <ProfileDetailSkeleton
-            infoRows={[['출생연도', '기타정보']]}
-            sectionTitle="관찰 및 특이사항"
-            columns={[
-              { width: 200, header: '날짜', bar: 90, barHeight: 18 },
-              { width: 180, header: '관찰자', bar: 40, barHeight: 18 },
-              { header: '제목', bar: 300, barHeight: 18 },
-              { width: 240, header: '첨부', bar: 150, barHeight: 32 },
-            ]}
-          />
-        </Content>
-      </Page>
-    )
-  }
-
-  if (individualQuery.isError && !isNotFoundError(individualQuery.error)) {
-    return (
-      <PageStatus
-        state="error"
-        message="개체를 불러오지 못했습니다. 다시 시도해 주세요."
-      />
-    )
-  }
-
   const individual = individualQuery.data
   // 관찰 목록 404 는 개체가 없어진 것이다.
   if (
-    individualQuery.isError ||
-    (observationsQuery.isError && isNotFoundError(observationsQuery.error)) ||
-    !individual ||
-    individual.speciesId !== speciesId
+    [individualQuery, observationsQuery].some(
+      (query) => query.isError && isNotFoundError(query.error),
+    ) ||
+    (individual && individual.speciesId !== speciesId)
   ) {
     return (
       <PageStatus
@@ -283,105 +250,124 @@ export function IndividualDetailPage() {
           state={{ speciesListSearch: listState?.speciesListSearch }}
         />
 
-        <ProfileSection>
-          <IndividualProfileCard
-            name={individual.name}
-            sex={individual.sex}
-            birthYear={individual.birthYear}
-            note={individual.note}
-            photo={individual.photo}
-            actions={
-              <>
-                <ShortcutButton onClick={() => void handleOpenFeedHistory()}>
-                  먹이 급여 기록 확인하기
-                </ShortcutButton>
+        {/* 섹션별 스켈레톤을 묶어 "불러오는 중" status 는 하나만 둔다. */}
+        <SkeletonStatus
+          busy={individualQuery.isPending || observationsQuery.isPending}
+        >
+          {/* 프로필 카드와 관찰 표는 각자 자기 조회만 기다린다(먼저 도착한 쪽부터 보인다). */}
+          <ProfileSection>
+            {individualQuery.isError ? (
+              <SectionError role="alert">
+                개체를 불러오지 못했습니다. 다시 시도해 주세요.
+              </SectionError>
+            ) : individual ? (
+              <IndividualProfileCard
+                name={individual.name}
+                sex={individual.sex}
+                birthYear={individual.birthYear}
+                note={individual.note}
+                photo={individual.photo}
+                actions={
+                  <>
+                    <ShortcutButton
+                      onClick={() => void handleOpenFeedHistory()}
+                    >
+                      먹이 급여 기록 확인하기
+                    </ShortcutButton>
+                    <KebabMenu
+                      placement="below-trigger"
+                      ariaLabel={`${individual.name} 개체 메뉴 열기`}
+                      open={openMenuId === profileMenuId}
+                      onOpenChange={(open) => changeMenu(profileMenuId, open)}
+                      onTriggerRef={(node) =>
+                        registerMenuTrigger(profileMenuId, node)
+                      }
+                      items={[
+                        {
+                          label: '수정',
+                          onSelect: () => navigate(`${detailPath}/edit`),
+                        },
+                        {
+                          label: '삭제',
+                          tone: 'danger',
+                          onSelect: () =>
+                            setDeleteTarget({ kind: 'individual' }),
+                        },
+                      ]}
+                    />
+                  </>
+                }
+              />
+            ) : (
+              <ProfileCardSkeleton infoRows={[['출생연도', '기타정보']]} />
+            )}
+          </ProfileSection>
+
+          <ObservationSection>
+            <SectionHeader
+              title="관찰 및 특이사항"
+              count={observationPage?.totalElements}
+              countLoading={observationsQuery.isPending}
+            />
+            <ObservationTable
+              rows={observationPage?.items ?? []}
+              page={Math.min(page, pageCount)}
+              pageCount={pageCount}
+              onPageChange={setPage}
+              loading={observationsQuery.isPending}
+              onRowClick={(observationId) =>
+                navigate(`${detailPath}/observations/${observationId}`)
+              }
+              emptyLabel={
+                observationsQuery.isError ? (
+                  <span role="alert">
+                    관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요.
+                  </span>
+                ) : (
+                  '등록된 관찰 기록이 없습니다'
+                )
+              }
+              renderAttachments={(observation) => (
+                <ObservationAttachmentCell
+                  attachments={observation.attachments}
+                  observationTitle={observation.title}
+                  open={openPopoverId === observation.id}
+                  onOpenChange={(open) => changePopover(observation.id, open)}
+                  onDownloadError={() => showToast('download-error')}
+                />
+              )}
+              renderRowAction={(observation) => (
                 <KebabMenu
                   placement="below-trigger"
-                  ariaLabel={`${individual.name} 개체 메뉴 열기`}
-                  open={openMenuId === profileMenuId}
-                  onOpenChange={(open) => changeMenu(profileMenuId, open)}
+                  ariaLabel={`${observation.title} 관찰 메뉴 열기`}
+                  open={openMenuId === observation.id}
+                  onOpenChange={(open) => changeMenu(observation.id, open)}
                   onTriggerRef={(node) =>
-                    registerMenuTrigger(profileMenuId, node)
+                    registerMenuTrigger(observation.id, node)
                   }
                   items={[
                     {
                       label: '수정',
-                      onSelect: () => navigate(`${detailPath}/edit`),
+                      onSelect: () =>
+                        navigate(
+                          `${detailPath}/observations/${observation.id}/edit`,
+                        ),
                     },
                     {
                       label: '삭제',
                       tone: 'danger',
-                      onSelect: () => setDeleteTarget({ kind: 'individual' }),
+                      onSelect: () =>
+                        setDeleteTarget({
+                          kind: 'observation',
+                          observationId: observation.id,
+                        }),
                     },
                   ]}
                 />
-              </>
-            }
-          />
-        </ProfileSection>
-
-        <ObservationSection>
-          <SectionHeader
-            title="관찰 및 특이사항"
-            count={observationPage?.totalElements ?? 0}
-          />
-          <ObservationTable
-            rows={observationPage?.items ?? []}
-            page={Math.min(page, pageCount)}
-            pageCount={pageCount}
-            onPageChange={setPage}
-            onRowClick={(observationId) =>
-              navigate(`${detailPath}/observations/${observationId}`)
-            }
-            emptyLabel={
-              observationsQuery.isError ? (
-                <span role="alert">
-                  관찰 기록을 불러오지 못했습니다. 다시 시도해 주세요.
-                </span>
-              ) : (
-                '등록된 관찰 기록이 없습니다'
-              )
-            }
-            renderAttachments={(observation) => (
-              <ObservationAttachmentCell
-                attachments={observation.attachments}
-                observationTitle={observation.title}
-                open={openPopoverId === observation.id}
-                onOpenChange={(open) => changePopover(observation.id, open)}
-                onDownloadError={() => showToast('download-error')}
-              />
-            )}
-            renderRowAction={(observation) => (
-              <KebabMenu
-                placement="below-trigger"
-                ariaLabel={`${observation.title} 관찰 메뉴 열기`}
-                open={openMenuId === observation.id}
-                onOpenChange={(open) => changeMenu(observation.id, open)}
-                onTriggerRef={(node) =>
-                  registerMenuTrigger(observation.id, node)
-                }
-                items={[
-                  {
-                    label: '수정',
-                    onSelect: () =>
-                      navigate(
-                        `${detailPath}/observations/${observation.id}/edit`,
-                      ),
-                  },
-                  {
-                    label: '삭제',
-                    tone: 'danger',
-                    onSelect: () =>
-                      setDeleteTarget({
-                        kind: 'observation',
-                        observationId: observation.id,
-                      }),
-                  },
-                ]}
-              />
-            )}
-          />
-        </ObservationSection>
+              )}
+            />
+          </ObservationSection>
+        </SkeletonStatus>
       </Content>
 
       {deleteTarget && (
@@ -401,7 +387,8 @@ export function IndividualDetailPage() {
         />
       )}
 
-      {toast && (
+      {/* 이동 state 로 받은 토스트는 두 섹션의 첫 조회가 끝난 뒤 띄운다(스켈레톤 status 와 겹치지 않게). */}
+      {toast && !individualQuery.isPending && !observationsQuery.isPending && (
         <Toast
           variant={toast.variant}
           message={toast.message}
