@@ -330,8 +330,30 @@ test('S22: 양식 필터 유지', async ({ page }) => {
 test('S23: 알 수 없는 양식 id', async ({ page }) => {
   await page.goto('/work-logs?templateId=999')
 
-  await expect(logRows(page)).toHaveCount(4)
   await expect(formFilter(page)).toHaveText('전체 양식')
+  await expect(page).not.toHaveURL(/templateId=/)
+  await expect(logRows(page)).toHaveCount(4)
+})
+
+test('S24: 양식 필터로 목록이 걸러진다', async ({ page, workLogApi }) => {
+  // 조회 결과는 쿼리 캐시에 남는다. 요청을 확인하려고 매 단계 처음 보는 조건으로 바꾼다.
+  await page.goto('/work-logs?templateId=3')
+  await expect(logRows(page)).toHaveCount(1)
+  await expect(logRows(page).first()).toContainText('양식3')
+  expect(workLogApi.listQueries.at(-1)?.get('templateId')).toBe('3')
+
+  await formFilter(page).click()
+  await page.getByRole('option', { name: '양식4', exact: true }).click()
+
+  await expect(logRows(page)).toHaveCount(1)
+  await expect(logRows(page).first()).toContainText('양식4')
+  expect(workLogApi.listQueries.at(-1)?.get('templateId')).toBe('4')
+
+  await formFilter(page).click()
+  await page.getByRole('option', { name: '전체 양식' }).click()
+
+  await expect(logRows(page)).toHaveCount(4)
+  expect(workLogApi.listQueries.at(-1)?.has('templateId')).toBe(false)
 })
 
 function logRows(page: Page) {
