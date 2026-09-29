@@ -93,12 +93,16 @@ export function WorkLogListPage() {
   }
 
   // 서버 페이지네이션이다. 명세는 page 를 0부터 적었지만 서버는 1부터 센다(#158).
-  // `GET /work-log` 에 양식 조건 파라미터가 아직 없다(백엔드 요청, #206).
-  // 한 페이지 안만 거르면 서버 페이지네이션과 어긋나므로, 반영 전까지 양식 필터는 요청에 넣지 않는다.
-
+  // 양식 필터도 서버가 거른다(`templateId`, #206).
   const logsQuery = useQuery({
-    queryKey: workLogQueryKeys.list(isoDate, page),
-    queryFn: () => getWorkLogs({ date: isoDate, page, size: TABLE_PAGE_SIZE }),
+    queryKey: workLogQueryKeys.list(isoDate, page, templateId),
+    queryFn: () =>
+      getWorkLogs({
+        date: isoDate,
+        templateId: templateId === null ? undefined : Number(templateId),
+        page,
+        size: TABLE_PAGE_SIZE,
+      }),
     enabled: tab === 'logs',
   })
   // 양식은 날짜에 묶이지 않는다 — 조회날짜를 보내지 않는다(양식 관리 탭에 필터가 없다).
@@ -146,6 +150,22 @@ export function WorkLogListPage() {
   const pageCount = Math.max(1, totalPages ?? page)
   const currentPage = Math.min(page, pageCount)
   const pagination = { page: currentPage, pageCount, onChange: setPage }
+
+  // URL 의 양식이 선택지에 없으면(지워진 양식 등) `전체 양식` 으로 되돌린다.
+  // 트리거에는 `전체 양식` 이 보이는데 목록만 그 양식으로 걸러지는 어긋남을 막는다.
+  // 선택지가 한 번에 다 오지 않았으면(양식이 FORM_FILTER_OPTION_SIZE 초과) 판단하지 않는다.
+  const filterOptionsComplete =
+    formFilterQuery.data !== undefined && formFilterQuery.data.totalPages <= 1
+  const unknownTemplate =
+    filterOptionsComplete &&
+    templateId !== null &&
+    !filterForms.some((form) => form.id === templateId)
+
+  useEffect(() => {
+    if (tab === 'logs' && unknownTemplate) setTemplateId(null)
+    // setTemplateId 는 렌더마다 새로 만들어지므로 의존성에 넣지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, unknownTemplate])
 
   // 삭제로 마지막 페이지가 비면 직전 페이지를 다시 조회한다.
   // 로딩 중에는 총 페이지 수를 모르므로 응답을 받은 뒤에만 보정한다.

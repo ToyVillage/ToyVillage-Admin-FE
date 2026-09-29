@@ -130,6 +130,8 @@ export interface WorkLogMessageResponse {
 export interface WorkLogQueryAllRequest {
   /** YYYY-MM-DD */
   date: string
+  /** 보내면 그 양식으로 작성된 일지만 조회한다(선택). */
+  templateId?: number
   /** 1부터 시작한다(명세는 0부터로 적혀 있다). */
   page: number
   size: number

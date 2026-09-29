@@ -79,14 +79,17 @@ const etcOptionContent = '기타'
 // WORK_LOG_QUERY_ALL — 해당 날짜에 작성된 모든 직원의 업무일지(관리자 전용).
 export async function getWorkLogs({
   date,
+  templateId,
   page,
   size,
 }: WorkLogQueryAllRequest): Promise<WorkLogListPage> {
   assertIsoDate(date)
+  if (templateId !== undefined) assertId(templateId, '업무일지 양식')
   assertPaging(page, size)
 
+  // templateId 가 없으면 axios 가 파라미터를 빼고 보낸다(전체 양식).
   const { data } = await api.get<unknown>('/work-log', {
-    params: { date, page, size },
+    params: { date, templateId, page, size },
   })
 
   if (!isPageResponse(data, isWorkLogListItem)) {
