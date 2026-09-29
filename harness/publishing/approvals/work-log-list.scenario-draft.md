@@ -133,7 +133,13 @@
 ### S23: 알 수 없는 양식 id
 - Given: 등록된 양식에 없는 id 가 있다.
 - When: `/work-logs?templateId=<없는 id>` 로 진입한다.
-- Then: 양식 필터 트리거에 `전체 양식` 이 보인다.
+- Then: 양식 필터 트리거에 `전체 양식` 이 보이고, URL 에서 `templateId` 가 빠지며 양식 조건 없는 목록이 보인다.
+
+### S24: 양식 필터로 목록이 걸러진다
+- Given: 조회날짜에 여러 양식으로 작성된 일지가 있다.
+- When: 양식 필터에서 양식 하나를 고른다.
+- Then: 목록 요청에 그 양식의 `templateId` 가 실리고, 그 양식으로 작성된 일지만 보인다.
+  `전체 양식` 으로 되돌리면 요청에서 `templateId` 가 빠지고 전체 목록이 다시 보인다.
 
 ---
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
