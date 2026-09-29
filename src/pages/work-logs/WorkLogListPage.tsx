@@ -11,6 +11,7 @@ import {
   toIsoDate,
   workLogFormQueryKeys,
   workLogQueryKeys,
+  WorkLogFormFilter,
   WorkLogFormTable,
   WorkLogTable,
   type WorkLogDate,
@@ -26,6 +27,8 @@ import {
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 4
+// `양식 필터` 선택지는 양식 목록 한 번으로 받는다. 양식 수가 이보다 많아지면 늘린다.
+const FORM_FILTER_OPTION_SIZE = 100
 
 const logsTabLabel = '작성된 일지'
 const formsTabLabel = '양식 관리'
@@ -38,11 +41,18 @@ interface PendingDelete {
   id: string
 }
 
+interface ListParams {
+  tab: WorkLogTab
+  date: string
+  page: number
+  templateId: string | null
+}
+
 export function WorkLogListPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
-  // 조회 조건(탭·조회날짜·페이지)은 URL 이 소유한다.
+  // 조회 조건(탭·조회날짜·양식 필터·페이지)은 URL 이 소유한다.
   // 상세에 다녀오거나 새로고침해도 고른 날짜와 페이지가 그대로 남는다.
   const [searchParams, setSearchParams] = useSearchParams()
   const [openKebabId, setOpenKebabId] = useState<string | null>(null)
@@ -54,28 +64,37 @@ export function WorkLogListPage() {
   const isoDate = readIsoDateParam(searchParams)
   const date: WorkLogDate = toCalendarDate(isoDate)
   const page = readPageParam(searchParams)
+  const templateId = readTemplateIdParam(searchParams)
 
-  // 조회날짜·탭이 바뀌면 첫 페이지로 되돌린다.
+  // 조회날짜·양식 필터·탭이 바뀌면 첫 페이지로 되돌린다.
   function setDate(next: WorkLogDate) {
-    updateParams({ tab, date: toIsoDate(next), page: 1 })
+    updateParams({ tab, date: toIsoDate(next), page: 1, templateId })
+  }
+
+  function setTemplateId(next: string | null) {
+    updateParams({ tab, date: isoDate, page: 1, templateId: next })
   }
 
   function setPage(next: number) {
-    updateParams({ tab, date: isoDate, page: next })
+    updateParams({ tab, date: isoDate, page: next, templateId })
   }
 
-  function updateParams(next: { tab: WorkLogTab; date: string; page: number }) {
+  function updateParams(next: ListParams) {
     const params = new URLSearchParams()
     params.set('tab', next.tab)
     // 오늘이면 URL 에 남기지 않는다(기본값). 양식 관리에서도 값은 들고 다녀
     // 탭을 왕복해도 고른 날짜가 풀리지 않게 한다.
     if (next.date !== toIsoDate(todayWorkLogDate()))
       params.set('date', next.date)
+    // 양식 필터도 날짜처럼 양식 관리 탭에서 들고 다닌다. `전체 양식` 이면 남기지 않는다.
+    if (next.templateId) params.set('templateId', next.templateId)
     if (next.page > 1) params.set('page', String(next.page))
     setSearchParams(params, { replace: true })
   }
 
   // 서버 페이지네이션이다. 명세는 page 를 0부터 적었지만 서버는 1부터 센다(#158).
+  // `GET /work-log` 에 양식 조건 파라미터가 아직 없다(백엔드 요청, #206).
+  // 한 페이지 안만 거르면 서버 페이지네이션과 어긋나므로, 반영 전까지 양식 필터는 요청에 넣지 않는다.
 
   const logsQuery = useQuery({
     queryKey: workLogQueryKeys.list(isoDate, page),
@@ -87,6 +106,12 @@ export function WorkLogListPage() {
     queryKey: workLogFormQueryKeys.list(page),
     queryFn: () => getWorkLogForms({ page, size: TABLE_PAGE_SIZE }),
     enabled: tab === 'forms',
+  })
+  // 선택지를 못 받아도 `전체 양식` 만으로 목록은 그대로 쓸 수 있다. 실패를 화면 오류로 올리지 않는다.
+  const formFilterQuery = useQuery({
+    queryKey: workLogFormQueryKeys.filterOptions(),
+    queryFn: () => getWorkLogForms({ page: 1, size: FORM_FILTER_OPTION_SIZE }),
+    enabled: tab === 'logs',
   })
 
   const deleteMutation = useMutation({
@@ -110,6 +135,10 @@ export function WorkLogListPage() {
 
   const logs = useMemo(() => logsQuery.data?.items ?? [], [logsQuery.data])
   const forms = useMemo(() => formsQuery.data?.items ?? [], [formsQuery.data])
+  const filterForms = useMemo(
+    () => formFilterQuery.data?.items ?? [],
+    [formFilterQuery.data],
+  )
   const activeQuery = tab === 'logs' ? logsQuery : formsQuery
   const isPending = activeQuery.isPending
 
@@ -130,7 +159,7 @@ export function WorkLogListPage() {
   function handleSelectTab(label: string) {
     const nextTab: WorkLogTab = label === formsTabLabel ? 'forms' : 'logs'
     setOpenKebabId(null)
-    updateParams({ tab: nextTab, date: isoDate, page: 1 })
+    updateParams({ tab: nextTab, date: isoDate, page: 1, templateId })
   }
 
   function handleRequestDelete(id: string) {
@@ -168,7 +197,17 @@ export function WorkLogListPage() {
           onSelect={handleSelectTab}
         />
 
-        {tab === 'logs' && <DateFilter value={date} onChange={setDate} />}
+        {tab === 'logs' && (
+          <Filters>
+            <RowDateFilter value={date} onChange={setDate} />
+            <WorkLogFormFilter
+              value={templateId}
+              forms={filterForms}
+              loading={formFilterQuery.isPending}
+              onChange={setTemplateId}
+            />
+          </Filters>
+        )}
 
         <TableArea>
           {tab === 'logs' ? (
@@ -284,7 +323,26 @@ const Subtitle = styled.p`
   line-height: 1.2;
 `
 
+// Figma `조회날짜`(Frame 459)와 `양식 필터`(2432:24334)는 한 줄에 24px 간격으로 놓인다.
+const Filters = styled.div`
+  display: flex;
+  margin-top: 32px;
+  align-items: center;
+  gap: 24px;
+`
+
+// 줄 간격은 Filters 가 맡는다.
+const RowDateFilter = styled(DateFilter)`
+  margin-top: 0;
+`
+
 // DataTable 의 기본 margin-top(20)에 12를 더해 Figma 의 탭바-표 간격 32를 맞춘다.
 const TableArea = styled.div`
   margin-top: 12px;
 `
+
+// 양식 id 는 양의 정수다. 그 밖의 값은 `전체 양식` 으로 본다.
+function readTemplateIdParam(params: URLSearchParams): string | null {
+  const value = params.get('templateId')
+  return value && /^[1-9]\d*$/.test(value) ? value : null
+}

@@ -10,6 +10,8 @@ export const workLogFormQueryKeys = {
   all: ['work-log-forms'] as const,
   // 양식 목록은 조회날짜로 거르지 않는다(양식 관리 탭에 날짜 필터가 없다).
   list: (page: number) => ['work-log-forms', 'list', { page }] as const,
+  // 작성된 일지의 `양식 필터` 선택지. 'list' 아래에 두어 양식 삭제 시 함께 무효화된다.
+  filterOptions: () => ['work-log-forms', 'list', 'filter-options'] as const,
   detail: (templateId: string) =>
     ['work-log-forms', 'detail', templateId] as const,
 }

@@ -53,6 +53,7 @@ export type {
 } from './api/types'
 export { WorkLogTable } from './ui/WorkLogTable'
 export { WorkLogFormTable } from './ui/WorkLogFormTable'
+export { WorkLogFormFilter } from './ui/WorkLogFormFilter'
 export { WorkLogSheet } from './ui/WorkLogSheet'
 export { WorkLogFormPreviewDialog } from './ui/WorkLogFormPreviewDialog'
 export { WorkLogFormQuestionCard } from './ui/WorkLogFormQuestionCard'
