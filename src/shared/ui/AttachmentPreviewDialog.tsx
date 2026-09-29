@@ -116,7 +116,11 @@ export function AttachmentPreviewDialog({
       >
         <Header>
           <Title id={titleId}>{file.fileName}</Title>
-          <IconButton type="button" aria-label="다운로드" onClick={handleDownload}>
+          <IconButton
+            type="button"
+            aria-label="다운로드"
+            onClick={handleDownload}
+          >
             <img src={downloadIcon} alt="" aria-hidden="true" />
           </IconButton>
           <IconButton
@@ -266,7 +270,9 @@ function PdfPage({ pdf, page }: { pdf: PDFDocumentProxy; page: number }) {
   }, [pdf, page])
 
   if (failedPage === page) {
-    return <StatusText role="status">미리보기를 불러오지 못했습니다.</StatusText>
+    return (
+      <StatusText role="status">미리보기를 불러오지 못했습니다.</StatusText>
+    )
   }
 
   return <PdfCanvas ref={canvasRef} aria-label={`${page}쪽`} role="img" />
