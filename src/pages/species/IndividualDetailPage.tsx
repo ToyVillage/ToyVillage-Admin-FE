@@ -306,7 +306,7 @@ export function IndividualDetailPage() {
           <ObservationSection>
             <SectionHeader
               title="관찰 및 특이사항"
-              count={observationPage?.totalElements ?? 0}
+              count={observationPage?.totalElements}
               countLoading={observationsQuery.isPending}
             />
             <ObservationTable
