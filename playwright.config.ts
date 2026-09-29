@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { loadEnv } from 'vite'
 import {
   analyticsBaseURL,
   analyticsMeasurementId,
@@ -14,6 +15,13 @@ const serverPort = serverURL.port || '5173'
 if (!/^\d+$/.test(serverPort)) {
   throw new Error('PLAYWRIGHT_BASE_URL의 포트가 유효하지 않습니다')
 }
+
+// 로컬 .env(또는 셸)에 GA 측정 ID 가 있으면 이미 떠 있는 dev 서버도 그 ID 로 떠 있다.
+// 그 서버를 재사용하면 아래 webServer.env 의 빈 값이 적용되지 않아 테스트 방문이 GA 로 나가므로
+// 이때는 재사용하지 않고 ID 를 비운 서버를 새로 띄운다.
+const hasLocalMeasurementId = Boolean(
+  loadEnv('development', process.cwd(), 'VITE_').VITE_GA_MEASUREMENT_ID,
+)
 
 // 인증 가드가 붙은 뒤로 보호 경로 테스트는 세션이 필요하다.
 // 테스트마다 토큰을 심는 대신 기본 storageState로 한 번에 seed 한다.
@@ -54,7 +62,7 @@ export default defineConfig({
         VITE_GA_MEASUREMENT_ID: '',
       },
       url: baseURL,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !process.env.CI && !hasLocalMeasurementId,
       timeout: 120_000,
     },
     {
