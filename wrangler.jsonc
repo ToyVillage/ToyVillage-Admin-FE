@@ -5,4 +5,13 @@
     "directory": "./dist",
     "not_found_handling": "single-page-application",
   },
+  "env": {
+    "prod": {
+      "name": "toyvillage-admin-fe",
+      "assets": {
+        "directory": "./dist",
+        "not_found_handling": "single-page-application",
+      },
+    },
+  },
 }
