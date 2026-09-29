@@ -5,12 +5,15 @@ export type {
   AppAdminEmployeeQueryAllResponse,
   AppAdminEmployeeQueryAllResponseItem,
 } from './api/types'
-export type { NewStaffAccountInput, StaffAccount } from './model/staffAccount'
-export { staffAccountQueryKeys } from './model/staffAccount'
+export type { StaffAccount } from './model/staffAccount'
+export { employeeQueryKeys, staffAccountQueryKeys } from './model/staffAccount'
 export {
-  addStaffAccount,
   deleteStaffAccount,
   getStaffAccounts,
   resetStaffAccountPassword,
-} from './model/staffAccountMock'
+} from './api/staffAccountApi'
+export type {
+  AppAdminEmployeeResponseItem,
+  AppAdminMessageResponse,
+} from './api/types'
 export { StaffAccountTable } from './ui/StaffAccountTable'

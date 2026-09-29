@@ -7,7 +7,7 @@ import {
 
 // 승인된 시나리오(staff-accounts.approved.json)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 목록·삭제·비밀번호 초기화는 퍼블리싱 mock 이고, 계정 생성 요청만 가짜 서버로 받는다.
+// 직원 API(목록·생성·비밀번호 초기화·삭제)는 모두 `support/employee-api` 가짜 서버로 받는다.
 
 const listUrl = '/settings/accounts'
 
@@ -116,9 +116,7 @@ test('S3: 이름 또는 아이디로 검색한다', async ({ page }) => {
   await expect(rows(page).first()).toContainText('김수인')
 })
 
-test('S4: 계정을 만들면 모달이 닫히고 목록 맨 위에 추가된다', async ({
-  page,
-}) => {
+test('S4: 계정을 만들면 모달이 닫히고 목록에 추가된다', async ({ page }) => {
   const api = await openList(page)
 
   await openCreate(page)
@@ -131,11 +129,11 @@ test('S4: 계정을 만들면 모달이 닫히고 목록 맨 위에 추가된다
     username: 'employee01',
     name: '김직원',
   })
-  const first = rows(page).first()
-  await expect(first).toContainText('김직원')
-  await expect(first).toContainText('employee01')
-  await expect(first).toContainText('초기 비밀번호')
   await expect(total(page, 13)).toBeVisible()
+  await searchInput(page).fill('employee01')
+  await expect(rows(page)).toHaveCount(1)
+  await expect(rows(page).first()).toContainText('김직원')
+  await expect(rows(page).first()).toContainText('초기 비밀번호')
 })
 
 test('S5: 비밀번호를 초기화하면 배지가 초기 비밀번호로 바뀐다', async ({

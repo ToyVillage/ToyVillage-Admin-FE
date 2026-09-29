@@ -3,8 +3,8 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   StaffAccountTable,
-  addStaffAccount,
   deleteStaffAccount,
+  employeeQueryKeys,
   getStaffAccounts,
   resetStaffAccountPassword,
   staffAccountQueryKeys,
@@ -13,7 +13,6 @@ import {
 import {
   CreateAccountDialog,
   createEmployee,
-  type CreateAccountInput,
   type CreateAccountSubmit,
 } from '@/features/create-account'
 import { readPageParam, useListSearchParams } from '@/shared/lib'
@@ -111,14 +110,20 @@ export function StaffAccountsPage() {
     await createMutation.mutateAsync({ username, name })
   }
 
+  // 직원 목록(이 화면)과 팀 관리의 직원 목록이 같은 GET 을 쓴다. 바뀐 뒤 둘 다 갱신한다.
+  function invalidateEmployeeLists() {
+    return Promise.all([
+      queryClient.invalidateQueries({ queryKey: staffAccountQueryKeys.list }),
+      queryClient.invalidateQueries({ queryKey: employeeQueryKeys.list }),
+    ])
+  }
+
   // 모달은 곧바로 닫고 목록은 뒤에서 갱신한다. 갱신을 기다리는 동안 모달이 열려 있으면
   // 이미 끝난 제출을 Escape 로 취소하거나 다시 보낼 틈이 생긴다.
-  function handleCreated(input: CreateAccountInput) {
+  function handleCreated() {
     setCreateOpen(false)
     setToast({ variant: 'success', message: '계정 생성에 성공했습니다' })
-    void addStaffAccount(input).then(() =>
-      queryClient.invalidateQueries({ queryKey: staffAccountQueryKeys.list }),
-    )
+    void invalidateEmployeeLists()
   }
 
   function focusMenuTrigger(accountId: number) {
@@ -141,9 +146,7 @@ export function StaffAccountsPage() {
     setConfirming(true)
     mutation.mutate(account.id, {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: staffAccountQueryKeys.list,
-        })
+        await invalidateEmployeeLists()
         setConfirming(false)
         setPendingAction(null)
         setToast({
@@ -168,6 +171,17 @@ export function StaffAccountsPage() {
         focusMenuTrigger(account.id)
       },
     })
+  }
+
+  // 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
+  if (accountsQuery.isError) {
+    return (
+      <StatePage>
+        <StateCard role="alert">
+          직원 목록을 불러오지 못했습니다. 다시 시도해 주세요.
+        </StateCard>
+      </StatePage>
+    )
   }
 
   return (
@@ -295,6 +309,25 @@ function filterAccounts(
       account.username.toLowerCase().includes(needle),
   )
 }
+
+const StatePage = styled.main`
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.font.body};
+`
+
+const StateCard = styled.section`
+  width: min(100%, 560px);
+  padding: 48px;
+  border-radius: 20px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textStrong};
+  font-size: 22px;
+  text-align: center;
+`
 
 const Page = styled.main`
   min-height: 100vh;

@@ -17,6 +17,7 @@ export async function createEmployee({
     name,
   })
 
+  // 실제 서버는 생성 성공에 201 을 준다(Swagger 는 200 으로 적혀 있지만 실제 응답이 우선).
   if (status !== 201 || !isMessageResponse(data)) {
     throw new Error('직원 계정 생성 응답 형식이 올바르지 않습니다.')
   }

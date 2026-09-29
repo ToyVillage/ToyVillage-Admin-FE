@@ -1,0 +1,258 @@
+{
+  "apiId": "APP_ADMIN_EMPLOYEE_QUERY_ALL",
+  "name": "직원 전체 조회",
+  "description": "앱 슈퍼관리자가 직원(앱 관리자) 계정 전체를 조회하는 기능",
+  "method": "GET",
+  "path": "/app/admin/employees",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "앱 access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [],
+  "queryParameters": [],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "직원 목록 (EmployeeResponse 배열)",
+        "noContent": false,
+        "body": {
+          "type": "array",
+          "nullable": false,
+          "description": "EmployeeResponse[]",
+          "fields": [
+            {
+              "name": "id",
+              "location": "response",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 3,
+              "description": "직원 id",
+              "constraints": [
+                "int64"
+              ]
+            },
+            {
+              "name": "username",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "suin.kim",
+              "description": "로그인 아이디",
+              "constraints": []
+            },
+            {
+              "name": "name",
+              "location": "response",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "김수인",
+              "description": "이름",
+              "constraints": []
+            },
+            {
+              "name": "createAt",
+              "location": "response",
+              "type": "date",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-07-03",
+              "description": "계정 생성일(YYYY-MM-DD)",
+              "constraints": []
+            },
+            {
+              "name": "passwordChanged",
+              "location": "response",
+              "type": "boolean",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": true,
+              "description": "직원이 초기 비밀번호를 바꿨는지(false 면 초기 비밀번호 사용 중)",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 403,
+        "description": "인증 토큰이 없거나 유효하지 않음, 또는 접근 권한 없음 (Swagger에 body 스키마 없음)",
+        "noContent": true,
+        "body": null
+      },
+      {
+        "status": 405,
+        "description": "지원하지 않는 메서드 형식입니다.",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 405,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "내부 서버 오류가 발생했습니다.",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "notionDatabase": "https://api-stag.toyvillage.kr/v3/api-docs/app",
+    "notionDataSource": null,
+    "resolvedNotionPage": "https://api-stag.toyvillage.kr/v3/api-docs/app#/paths/~1app~1admin~1employees/get",
+    "requestedNotionPage": null,
+    "checkedAt": "2026-09-28T22:00:00+09:00",
+    "apiIdMatchCount": 1,
+    "databaseValues": {
+      "apiId": "APP_ADMIN_EMPLOYEE_QUERY_ALL",
+      "method": "GET",
+      "path": "/app/admin/employees",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
+    },
+    "detailValues": {
+      "apiId": "APP_ADMIN_EMPLOYEE_QUERY_ALL",
+      "method": "GET",
+      "path": "/app/admin/employees",
+      "authentication": {
+        "required": true,
+        "type": "Bearer",
+        "roles": [
+          "ADMIN"
+        ]
+      }
+    }
+  }
+}
