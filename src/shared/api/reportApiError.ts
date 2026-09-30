@@ -12,8 +12,11 @@ export function reportApiError(error: unknown): void {
 
   Sentry.captureException(error, {
     tags: { 'api.method': method, 'api.path': path, 'api.status': status },
-    // axios 에러는 스택이 모두 같아 한 이슈로 뭉친다. API·상태별로 나눈다.
-    fingerprint: ['api', method, path, String(status)],
+    // axios 에러는 스택이 모두 같아 한 이슈로 뭉친다. 5xx 는 API·상태별로 나눈다.
+    // 응답이 없는 에러는 연결 문제라 여러 API 가 한꺼번에 실패하므로 종류별로 하나로 묶는다.
+    fingerprint: error.response
+      ? ['api', method, path, String(status)]
+      : ['api', String(status)],
   })
 }
 
@@ -21,7 +24,10 @@ function shouldReport(error: AxiosError): boolean {
   if (error.code === AxiosError.ERR_CANCELED) return false
 
   const status = error.response?.status
-  return status === undefined || status >= 500
+  if (status !== undefined) return status >= 500
+
+  // 노트북이 잠들었다 깨어나 재연결될 때처럼 기기 쪽 연결이 끊긴 상태의 실패는 보내지 않는다.
+  return navigator.onLine && document.visibilityState === 'visible'
 }
 
 // `/tasks/12` → `/tasks/:id`. 같은 API 가 ID 마다 따로 묶이지 않게 한다.
