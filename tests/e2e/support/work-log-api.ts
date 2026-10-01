@@ -291,7 +291,7 @@ export async function mockWorkLogApi(
     if (route.request().method() === 'POST') {
       handle.requests.templateCreate += 1
       handle.createdBodies.push(route.request().postDataJSON())
-      await json(route, 201, { message: '업무일지 양식 생성 성공' })
+      await json(route, 201, { templateId: 100 })
       return
     }
 
