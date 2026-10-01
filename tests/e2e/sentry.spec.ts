@@ -9,6 +9,7 @@ const noticeListApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 interface SentryEvent {
   exception?: { values?: { type?: string; value?: string }[] }
   tags?: Record<string, unknown>
+  fingerprint?: string[]
 }
 
 function session(tokens: Record<string, string>) {
@@ -49,6 +50,31 @@ test.describe('요청 실패', () => {
       'request.kind': 'query',
       'request.key': 'notices',
     })
+  })
+
+  test('400 은 API·상태로 보내고 쿼리 실패로 한 번 더 보내지 않는다', async ({
+    page,
+  }) => {
+    const events = captureSentryEvents(page)
+    await page.route(noticeListApiPath, (route) =>
+      route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify(errorBody(400, '요청이 유효하지 않습니다.')),
+      }),
+    )
+
+    await page.goto(`${sentryBaseURL}/notices/list`)
+
+    const apiEvents = () =>
+      events.filter((event) => event.tags?.['api.path'] === '/notice')
+    await expect.poll(() => apiEvents().length).toBeGreaterThan(0)
+    expect(apiEvents()[0].tags).toMatchObject({
+      'api.method': 'GET',
+      'api.status': 400,
+    })
+    expect(apiEvents()[0].fingerprint).toEqual(['api', 'GET', '/notice', '400'])
+    expect(events.filter((event) => event.tags?.['request.kind'])).toEqual([])
   })
 })
 
@@ -101,4 +127,13 @@ function findException(events: SentryEvent[], value: string) {
   return events.filter((event) =>
     event.exception?.values?.some((exception) => exception.value === value),
   )
+}
+
+function errorBody(status: number, message: string) {
+  return {
+    message,
+    status,
+    timestamp: '2026-08-10T22:30:00.000000',
+    description: message,
+  }
 }
