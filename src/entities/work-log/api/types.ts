@@ -123,6 +123,11 @@ export interface WorkLogTemplateCreateOption {
   etcOption: boolean
 }
 
+/** WORK_LOG_TEMPLATE_CREATE 성공(201) 응답. 다른 API 와 달리 message 가 아니라 새 양식 id 를 준다. */
+export interface WorkLogTemplateCreateResponse {
+  templateId: number
+}
+
 export interface WorkLogMessageResponse {
   message: string
 }
