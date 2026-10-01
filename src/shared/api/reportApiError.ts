@@ -33,6 +33,6 @@ function shouldReport(error: AxiosError): boolean {
 }
 
 // `/tasks/12` → `/tasks/:id`. 같은 API 가 ID 마다 따로 묶이지 않게 한다.
-function toPathPattern(url = ''): string {
+export function toPathPattern(url = ''): string {
   return url.split('?')[0].replace(/\/\d+(?=\/|$)/g, '/:id')
 }
