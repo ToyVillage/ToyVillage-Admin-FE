@@ -6,7 +6,7 @@
 - Path `workReportId` required, 양의 정수
 - Query·Body 없음
 - 성공 `200` body 전 필드 required. `rejectionReason`만 nullable
-- `status` 허용값 `PENDING`/`APPROVED`/`REJECTED`(목록 API 값 적용), `priority` 허용값 `HIGH`/`MEDIUM`/`LOW`
+- `status` 허용값 `PENDING`/`RESUBMIT`/`APPROVED`/`REJECTED`(목록 API 값 적용, 2026-10-01 `RESUBMIT` 추가 — #218. 상세 타입 가드는 `taskReportReviewStatuses` 를 그대로 써서 코드 변경 없음), `priority` 허용값 `HIGH`/`MEDIUM`/`LOW`
 - 오류 401/404/500 공통 body
 - 실제 서버 테스트 disabled
 - 업무보고 네 spec이 모두 승인된 뒤 한 번에 구현한다

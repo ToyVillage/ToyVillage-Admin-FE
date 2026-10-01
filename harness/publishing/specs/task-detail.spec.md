@@ -8,6 +8,7 @@ figma:
     - 152:11510
     - 152:11536
     - 133:9735
+    - 2716:24609 # status / 업무 보고 · 재심사대기 변형
 requires_functional_test: true
 paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/features/row-actions
 ---
@@ -16,9 +17,10 @@ paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/feature
 
 ## 상태와 근거
 
-- Status: Published — 2026-09-13 S5 재승인(yunho09) · 배지 승인 문구 `승인` → `완료` · e2e 재freeze 19/19.
+- Status: Draft — 2026-10-01 `재심사대기` 추가(#218) · S5·S7 수정 · S20 추가. 게이트 ② 재승인 2026-10-01 kimjihwan8 · ③~⑤ 완료 · e2e freeze 20/20. ⑦ 육안 확인 대기.
+  직전: Published — 2026-09-13 S5 재승인(yunho09) · 배지 승인 문구 `승인` → `완료` · e2e 재freeze 19/19.
   직전: Published (게이트 ② 승인 2026-09-07 · ③~⑤ 완료 · ⑦ 육안 확인 2026-09-08 yunho09)
-- Last refreshed: 2026-09-08
+- Last refreshed: 2026-10-01
 - 기준 파일은 `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`), 페이지 `0:1` "토이빌리지" › 섹션 `웹 (operator)` ›
   `업무관리`(`300:12757`) › `업무관리 · 상세`(`311:12775`).
 - 상세 화면 기준: `133:9725` (`task detail`)
@@ -94,24 +96,28 @@ paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/feature
 - 이 업무의 **담당자별 보고 현황**을 나열한다. 제출한 사람만이 아니라 담당자 전원이 한 줄이다
   (2026-09-11 `TASK_QUERY` 연동 — 서버 `reports[]` 가 담당자 전원을 준다).
 - 각 항목은 담당자 이름 + 심사 상태 배지 + `>` 다.
-- 심사 상태 배지는 `완료` / `반려` / `심사대기` / `재제출` 네 가지를 그대로 표시한다
+- 심사 상태 배지는 `완료` / `반려` / `심사대기` / `재심사대기` / `미제출` 다섯 가지를 그대로 표시한다
   (합산은 진행도 요약에서만 한다). **승인된 보고의 배지 문구는 `승인` 이 아니라 `완료` 다**(2026-09-13 개발자 결정 —
   업무보고 목록 탭 `완료` 와 맞춘다. 공유 배지 `TaskReportReviewBadge` 를 쓰는 곳 전부에 적용. `task-report` spec TODO-4).
   진행도 요약 문구(`전체 N · 승인 N · …`)는 그대로 둔다.
-- **서버의 `MISSING`(미제출)은 화면에서 `심사대기` 로 보여준다**(2026-09-11 개발자 결정).
-  미제출을 따로 표기하지 않는다. `재제출` 은 현재 서버 상태에 없다.
+- 서버의 `MISSING`(미제출)은 `미제출` 배지(흰 바탕 + 테두리, yot `2073:17289`)로 따로 보여준다
+  (커밋 f585ae7 — 2026-09-11 `심사대기` 로 합치던 결정을 대체. 이 spec 에는 2026-10-01 에 반영).
+- 서버의 `RESUBMIT`(반려 후 다시 제출)은 `재심사대기` 배지(배경 `resubmitBg` · 글자 `resubmit`, yot `2716:24609`)로 보여준다
+  (2026-10-01 #218). 제출된 보고이므로 누르면 업무보고 상세로 간다.
 - 제출된 보고가 있는 항목만 클릭 → `/task-reports/:reportId` 로 이동한다.
 - 아직 보고가 없는 줄(`workReportId: null`)은 열 대상이 없어 버튼이 아니고 `>` 도 없다.
-  배지는 다른 `심사대기` 줄과 같다.
+  배지는 `미제출` 이고 이름은 흐린 글자색이다.
 - 보고 현황이 비면 `제출된 업무 보고가 없습니다.` 를 표시하고 진행도 카드를 숨긴다.
 
 ### 진행도
 
-- 도넛 차트로 심사 상태 분포를 표시하고, 아래에 `전체 N · 승인 N · 반려 N · 심사대기 N` 을 쓴다.
-- 도넛 조각은 세 개다 — 승인 `colors.accent`, 반려 `colors.warning`, 심사대기 `colors.pageMuted`.
+- 도넛 차트로 심사 상태 분포를 표시하고, 아래 두 줄에
+  `전체 N · 승인 N · 반려 N` / `심사대기 N · 재심사대기 N · 미제출 N` 을 쓴다(yot `progress` 2026-10-01).
+- 도넛 조각은 12시부터 시계 방향으로 승인 `colors.accent` → 반려 `colors.warning` → 심사대기 `colors.textGuide` →
+  재심사대기 `colors.resubmit` 순이다. 미제출은 조각을 그리지 않고 트랙(`colors.tableHeaderStrong`)으로 남긴다.
 - 숫자는 서버 집계(`progress`)에서 온다. 화면에서 `reports` 로 다시 세지 않는다.
-- **`재제출` 과 `미제출` 은 `심사대기` 에 합산한다**(재제출 2026-09-07, 미제출 2026-09-11 개발자 결정).
-  별도 조각도 별도 문구도 만들지 않는다. 즉 `심사대기 N` 은 `progress.pending + progress.missing` 이다.
+- 각 숫자는 `progress` 의 같은 이름 필드를 그대로 쓴다: `approved` · `rejected` · `pending` · `resubmit` · `missing` · `total`.
+  합산하지 않는다(재제출·미제출을 심사대기에 합치던 2026-09-07·09-11 결정은 폐기).
 - 도넛은 차트 라이브러리를 새로 넣지 않고 인라인 SVG 로 그린다.
 
 ### 케밥 메뉴
@@ -161,7 +167,7 @@ paths: src/pages/tasks, src/entities/task, src/entities/task-report, src/feature
 
 ### 신규 semantic color 토큰 후보
 
-없다. 도넛 조각은 기존 `accent` / `warning` / `pageMuted` 로 충분하다.
+2026-10-01: `resubmit`(#8A4DFF) · `resubmitBg`(#F0E8FF) — `task-report` spec 과 같은 토큰(재심사대기 배지·도넛 조각).
 
 ## 데이터
 
@@ -180,7 +186,7 @@ interface TaskDetail {
 interface TaskReportSummaryItem {
   reportId: string | null // null = 아직 보고가 없다(누를 수 없다)
   assigneeName: string
-  reviewStatus: TaskReportReviewStatus // 승인 / 반려 / 심사대기 / 재제출
+  reviewStatus: TaskReportBadgeStatus // 승인 / 반려 / 심사대기 / 재심사대기 / 미제출
 }
 ```
 
@@ -225,9 +231,9 @@ interface TaskReportSummaryItem {
 - S2: 담당자가 여럿인 업무 → `이승현 외 3명`, 1명이면 이름만 보인다.
 - S3: 첨부가 있는 업무 → 파일 chip 이 첨부 수만큼 보이고 각 chip 에 다운로드 버튼이 있다.
 - S4: 첨부가 없는 업무 → 첨부자료 카드가 보이지 않는다.
-- S5: 업무보고가 있는 업무 → 담당자별 항목과 심사 상태 배지가 보인다.
+- S5: 업무보고가 있는 업무 → 담당자별 항목과 심사 상태 배지(재심사대기·미제출 포함)가 보인다.
 - S6: 업무보고 항목 클릭 → `/task-reports/:reportId` 로 이동한다.
-- S7: 진행도 요약 문구가 `전체 N · 승인 N · 반려 N · 심사대기 N` 으로 실제 건수와 맞는다.
+- S7: 진행도 요약 문구가 `전체 N · 승인 N · 반려 N` / `심사대기 N · 재심사대기 N · 미제출 N` 으로 서버 집계와 맞는다.
 - S8: 업무보고가 없는 업무 → 빈 문구가 보이고 진행도 카드가 사라진다.
 - S9: `뒤로가기` → `/tasks` 로 이동한다(이탈 확인 없음).
 - S10: 우상단 `⋮` 클릭 → `수정` / `삭제` 메뉴가 열린다.
@@ -240,6 +246,7 @@ interface TaskReportSummaryItem {
 - S17: 없는 id 로 진입 → `업무를 찾을 수 없습니다.` 와 목록 복귀 링크가 보인다.
 - S18: 완료기한이 지난 업무여도 상세 요약행의 완료기한은 위험색이 아니다.
 - S19: 키보드만으로 케밥 열기·항목 실행·업무보고 진입을 수행할 수 있다.
+- S20: 미제출 줄은 버튼이 아니고 `>` 가 없다(e2e 의 기존 `S5-1` 을 승인 시나리오로 올린다).
 
 ## 결정 사항
 
@@ -253,17 +260,20 @@ interface TaskReportSummaryItem {
 
 ## 미결 사항
 
+- [x] **게이트 ② 재승인(#218, 2026-10-01 kimjihwan8)** — S5·S7 수정, S20 추가. 미제출 분리(f585ae7)가 spec·시나리오에 빠져 있어 gate 가
+      이미 invalid(e2eHash 불일치)였다. 이번 재승인으로 함께 맞춘다.
 - [x] **게이트 ② 승인**(2026-09-07 yunho09, S1~S19). e2e 변환·freeze·통과 완료(19/19).
 - [x] **`task-list` 재승인** — S16(케밥 `수정` → `/tasks/:id/edit`) 재승인·재변환 완료(2026-09-07).
 - [x] **`task-report` 재승인**(2026-09-11) — 그 spec 의 S16 이 `업무 보고 상세조회` 버튼을 When 으로
       삼았는데, 이 화면이 담당자별 보고 현황 줄로 대체했다. S16 을 그 줄 클릭으로 고치고 재freeze 했다.
       업무보고 상세는 아직 mock 이라 이동한 뒤 내용까지는 확인하지 않는다.
 - [x] **게이트 ② 재승인(S5)** — 배지 승인 문구를 `완료` 로 바꿨다(2026-09-13 yunho09 승인 · e2e 재freeze 19/19). 초안 `harness/artifacts/publishing/task-detail.scenario-draft.md`.
-- [x] `재제출` 은 진행도 요약에서 `심사대기` 에 합산한다(2026-09-07 개발자 결정).
+- [x] ~~`재제출` 은 진행도 요약에서 `심사대기` 에 합산한다(2026-09-07)~~ → 2026-10-01 `재심사대기` 로 따로 센다(#218).
 - [ ] 업무보고 빈 상태 문구는 Figma 근거가 없다(`제출된 업무 보고가 없습니다.` 는 임시안).
       서버가 담당자 전원을 주므로 이 문구는 담당자가 없는 업무에서만 보인다. 문구를 바꿀지 재검토 필요.
-- [ ] `reports[].status` 의 허용값이 명세에 없다. `PENDING` 은 같은 응답의 `progress.pending` 을 근거로
+- [x] `reports[].status` 허용값은 staging Swagger 기준 `PENDING`·`APPROVED`·`REJECTED`·`MISSING`·`RESUBMIT` 이다(2026-10-01 확인).
+      (이전 메모) `reports[].status` 의 허용값이 명세에 없다. `PENDING` 은 같은 응답의 `progress.pending` 을 근거로
       받고 있다(`harness/artifacts/api/task.backend-questions.md` 5번).
-- [x] 서버 `MISSING`(미제출)은 `심사대기` 로 표시하고 진행도에서도 심사대기에 합산한다
-      (2026-09-11 개발자 결정). 미제출을 별도 배지·조각으로 두지 않는다.
+- [x] ~~서버 `MISSING`(미제출)은 `심사대기` 로 표시하고 진행도에서도 심사대기에 합산한다(2026-09-11)~~
+      → 커밋 f585ae7 에서 `미제출` 배지·요약 문구로 분리했다.
 - [ ] 첨부 다운로드의 실제 동작(서버 파일 URL) — `/api` 스킬 담당.

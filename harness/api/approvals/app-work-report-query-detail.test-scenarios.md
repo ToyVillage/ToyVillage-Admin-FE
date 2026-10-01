@@ -1,5 +1,7 @@
 # API Test Scenarios — app-work-report-query-detail
 
+> **2026-10-01 `재심사대기`(`RESUBMIT`) 추가(#218)** — Mock S4-1 추가. 나머지는 직전 승인본과 같다.
+
 공통 사전 조건: `accessToken`을 localStorage에 넣는다.
 `GET /work-report/detail/{id}`는 `page.route()`로 가로챈다.
 조회 오류는 공통 QueryClient `retry: 1`로 한 번 더 요청한 뒤 오류 화면이 뜬다.
@@ -50,6 +52,11 @@
 
 - Mock response: 기본 body에 `status: "APPROVED"`
 - 기대 결과: 심사 배지 `완료`
+
+## Mock S4-1 — 재심사대기 보고 배지
+
+- Mock response: 기본 body에 `status: "RESUBMIT"`
+- 기대 결과: 심사 배지 `재심사대기`, 하단 `반려하기`·`승인하기` 버튼 유지
 
 ## Mock S5 — 존재하지 않는 보고
 

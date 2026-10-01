@@ -78,6 +78,7 @@
       "constraints": [],
       "allowedValues": [
         "PENDING",
+        "RESUBMIT",
         "APPROVED",
         "REJECTED"
       ]
@@ -162,6 +163,7 @@
                   "constraints": [],
                   "allowedValues": [
                     "PENDING",
+                    "RESUBMIT",
                     "APPROVED",
                     "REJECTED"
                   ]
@@ -239,6 +241,17 @@
               "default": null,
               "example": 2,
               "description": "반려 건수. status 필터와 무관하다.",
+              "constraints": []
+            },
+            {
+              "name": "resubmitCount",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 3,
+              "description": "재심사대기(반려 후 재제출) 건수. status 필터와 무관하다.",
               "constraints": []
             }
           ]

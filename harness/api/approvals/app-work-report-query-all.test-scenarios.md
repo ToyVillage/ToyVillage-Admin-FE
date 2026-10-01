@@ -1,5 +1,7 @@
 # API Test Scenarios — app-work-report-query-all
 
+> **2026-10-01 `재심사대기`(`RESUBMIT`) 추가(#218)** — 데이터 표·S2·S6·S11 수정, S13 추가. 나머지는 직전 승인본과 같다.
+
 공통 사전 조건: `accessToken`을 localStorage에 넣고 `/task-reports`로 진입한다.
 `GET /work-report`는 `page.route()`로 가로채고, 요청 query의 `status`·`page`에
 따라 아래 데이터로 응답한다. 한 페이지는 `size=10`이다.
@@ -7,10 +9,11 @@
 | 탭 | `status` | 건수 필드 | 데이터 | `totalPageSize` |
 | --- | --- | --- | --- | --- |
 | 심사대기 | `PENDING` | `pendingCount: 3` | 3건 | 1 |
+| 재심사대기 | `RESUBMIT` | `resubmitCount: 1` | 1건 | 1 |
 | 완료 | `APPROVED` | `approvedCount: 12` | 1페이지 10건, 2페이지 2건 | 2 |
 | 반려 | `REJECTED` | `rejectedCount: 2` | 2건 | 1 |
 
-모든 응답의 건수 필드는 필터와 무관하게 `3`/`12`/`2`로 같다.
+모든 응답의 건수 필드는 필터와 무관하게 `3`/`1`/`12`/`2`로 같다.
 조회 오류는 공통 QueryClient `retry: 1`로 한 번 더 요청한 뒤 오류 화면이 뜬다.
 오류 시나리오의 요청 횟수는 2회까지 허용한다.
 
@@ -36,8 +39,8 @@
 
 ## Mock S2 — 탭 건수는 응답 건수를 그대로 쓴다
 
-- Mock response: S1 body (`pendingCount: 3`, `approvedCount: 12`, `rejectedCount: 2`)
-- 기대 결과: 탭 라벨 `심사대기 3`, `완료 12`, `반려 2`. `완료` 건수는 `심사대기` 목록에 없는 값이므로 응답에서 온 것이다
+- Mock response: S1 body (`pendingCount: 3`, `resubmitCount: 1`, `approvedCount: 12`, `rejectedCount: 2`)
+- 기대 결과: 탭 라벨이 이 순서로 `심사대기 3`, `재심사대기 1`, `완료 12`, `반려 2`. `완료` 건수는 `심사대기` 목록에 없는 값이므로 응답에서 온 것이다
 
 ## Mock S3 — 페이지 이동은 서버 page를 보낸다
 
@@ -63,8 +66,8 @@
 
 ## Mock S6 — 빈 목록
 
-- Mock response: HTTP 200, `{ "reports": [], "totalPageSize": 0, "pendingCount": 0, "approvedCount": 0, "rejectedCount": 0 }`
-- 기대 결과: `등록된 업무보고가 없습니다.`, 탭 `심사대기 0`·`완료 0`·`반려 0`, 페이지 1개
+- Mock response: HTTP 200, `{ "reports": [], "totalPageSize": 0, "pendingCount": 0, "approvedCount": 0, "rejectedCount": 0, "resubmitCount": 0 }`
+- 기대 결과: `등록된 업무보고가 없습니다.`, 탭 `심사대기 0`·`재심사대기 0`·`완료 0`·`반려 0`, 페이지 1개
 
 ## Mock S7 — 행 클릭 이동
 
@@ -92,11 +95,19 @@
 - Mock response: HTTP 200, `reports[0].status: "MISSING"` (허용값 밖)
 - 기대 결과: 오류 화면
 - 추가: HTTP 200, `pendingCount` 누락 → 오류 화면
+- 추가: HTTP 200, `resubmitCount` 누락 → 오류 화면
 
 ## Mock S12 — 로딩 상태
 
 - Mock response: 최초 요청을 1초 지연
 - 기대 결과: 응답 전 `업무보고를 불러오는 중입니다.` 표시, 응답 후 표 표시
+
+## Mock S13 — `재심사대기` 탭은 `status=RESUBMIT` 로 조회한다
+
+- 사용자 동작: `재심사대기` 탭 클릭
+- Mock request: `GET /work-report?page=1&size=10&status=RESUBMIT`
+- Mock response: HTTP 200, `[{ "id": 41, "taskId": 15, "name": "최유진", "title": "야간 순찰 특이사항", "status": "RESUBMIT", "priority": "MEDIUM", "finishDate": "2026-07-28" }]`, `totalPageSize: 1`
+- 기대 결과: 요청 query `page=1`·`status=RESUBMIT`, 표 1행 `최유진`, 상태 배지 `재심사대기`, 탭 `재심사대기 1` 활성
 
 ## Staging R1
 

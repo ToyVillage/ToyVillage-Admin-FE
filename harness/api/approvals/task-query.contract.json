@@ -293,6 +293,8 @@
                   "description": "보고 심사 상태",
                   "constraints": [],
                   "allowedValues": [
+                    "PENDING",
+                    "RESUBMIT",
                     "APPROVED",
                     "REJECTED",
                     "MISSING"
@@ -353,6 +355,17 @@
                   "default": null,
                   "example": 1,
                   "description": "심사대기 수",
+                  "constraints": []
+                },
+                {
+                  "name": "resubmit",
+                  "location": "body",
+                  "type": "integer",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": 1,
+                  "description": "재심사대기(반려 후 재제출) 수",
                   "constraints": []
                 },
                 {

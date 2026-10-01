@@ -8,6 +8,9 @@
 - Requested page: 없음
 - Checked at: 2026-09-13T21:15:00+09:00
 - Exact match count: 1
+- 2026-10-01 보강(#218, 개발자 지시 "Swagger 보고 해"): staging Swagger `/v3/api-docs` 의 `GET /work-report`(`getWorkReportDetails`) ·
+  `WorkReportListResponse` 기준으로 `status` 허용값에 `RESUBMIT` 을, 응답에 `resubmitCount` 를 추가했다.
+  Swagger enum 의 `MISSING` 은 보고가 없는 상태라 목록 행으로 오지 않으므로 허용값에 넣지 않는다.
 
 ## Basic Information
 
@@ -38,7 +41,7 @@
 | `page` | integer | false | false | `1` | `5` | 현재 페이지(1부터 시작) |
 | `size` | integer | false | false | `10` | `15` | 페이지 사이즈 |
 | `sort` | string | false | false | `"id,DESC"` | `"finishDate,ASC"` | 정렬기준,방향. 방향은 ASC/DESC |
-| `status` | enum | false | false | 없음 | `"PENDING"` | 업무 상태 필터 — 허용값 `PENDING`, `APPROVED`, `REJECTED` |
+| `status` | enum | false | false | 없음 | `"PENDING"` | 업무 상태 필터 — 허용값 `PENDING`, `RESUBMIT`, `APPROVED`, `REJECTED` |
 
 ## Request Body
 
@@ -61,13 +64,14 @@
 | `reports[].taskId` | integer | true | false | `12` | 업무지시 id |
 | `reports[].name` | string | true | false | `"이강희"` | 담당자 이름 |
 | `reports[].title` | string | true | false | `"9월 정기 안전점검"` | 업무지시 제목 |
-| `reports[].status` | enum | true | false | `"REJECTED"` | 심사 상태 — 허용값 `PENDING`, `APPROVED`, `REJECTED` |
+| `reports[].status` | enum | true | false | `"REJECTED"` | 심사 상태 — 허용값 `PENDING`, `RESUBMIT`, `APPROVED`, `REJECTED` |
 | `reports[].priority` | enum | true | false | `"HIGH"` | 업무지시 중요도 — 허용값 `HIGH`, `MEDIUM`, `LOW` |
 | `reports[].finishDate` | string | true | false | `"2026-09-05"` | 업무지시 완료기한 (`yyyy-MM-dd`) |
 | `totalPageSize` | integer | true | false | `3` | 총 페이지 수 |
 | `pendingCount` | integer | true | false | `3` | 심사대기 건수. `status` 필터와 무관 |
 | `approvedCount` | integer | true | false | `3` | 승인 건수. `status` 필터와 무관 |
 | `rejectedCount` | integer | true | false | `2` | 반려 건수. `status` 필터와 무관 |
+| `resubmitCount` | integer | true | false | `3` | 재심사대기(반려 후 재제출) 건수. `status` 필터와 무관 |
 
 ## Error Responses
 
@@ -86,12 +90,14 @@
 
 ## Notes
 
-- 탭 건수는 `pendingCount`/`approvedCount`/`rejectedCount`를 그대로 쓴다. 목록 `reports`로 다시 세지 않는다.
+- 탭 건수는 `pendingCount`/`resubmitCount`/`approvedCount`/`rejectedCount`를 그대로 쓴다. 목록 `reports`로 다시 세지 않는다.
 - `page`는 1부터 시작한다(Notion 원문, 2026-09-13 개발자 확인). 업무지시 목록(`GET /tasks`)의 0부터와 다르다.
 - 화면은 `size=10`(2026-09-13 개발자 결정)을 보내고 `sort`는 보내지 않는다.
 - `reports[].taskId`, `reports[].title`은 현재 목록 표에 쓰지 않는다.
 
 ## Backend Questions
+
+0. (2026-10-01, #218) Notion 행에 `RESUBMIT`·`resubmitCount` 가 아직 없다. staging Swagger 에만 있다 — Notion 갱신 요청.
 
 1. `page`가 1부터인지 확인해 달라. 업무지시 목록 staging 요청은 `page=0`부터였다.
 2. 응답 `priority`의 허용값을 이 페이지에도 적어 달라(`HIGH`/`MEDIUM`/`LOW`로 가정).

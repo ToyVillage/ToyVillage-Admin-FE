@@ -72,11 +72,12 @@ real_server:
 
 # 상태 표시
 
-`status` 허용값은 목록 API의 `status` 필터 값과 같은 세 값으로 받는다.
+`status` 허용값은 목록 API의 `status` 필터 값과 같은 네 값으로 받는다(2026-10-01 `RESUBMIT` 추가 — staging Swagger `/v3/api-docs`(2026-10-01, #218 개발자 지시 "Swagger 보고 해") `WorkReportDetailResponse`).
 
 | 값         | 배지     |
 | ---------- | -------- |
 | `PENDING`  | 심사대기 |
+| `RESUBMIT` | 재심사대기 |
 | `APPROVED` | 완료     |
 | `REJECTED` | 반려     |
 

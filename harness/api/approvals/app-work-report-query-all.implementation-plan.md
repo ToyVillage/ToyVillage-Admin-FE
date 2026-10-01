@@ -1,11 +1,13 @@
 # Implementation Plan — app-work-report-query-all
 
+> **2026-10-01 `재심사대기` 추가(#218)** — staging Swagger 기준 `RESUBMIT` · `resubmitCount`. 변경점은 아래 `2026-10-01 변경` 절.
+
 ## 승인 기준
 
 - `GET /work-report`, Authorization Bearer required, roles `ADMIN`
 - Query `page`(1부터)·`size`·`status` optional로 동결. 화면은 `page`, `size=10`, `status`를 보내고 `sort`는 보내지 않는다(2026-09-13 개발자 결정)
-- 성공 `200` body `{ reports[], totalPageSize, pendingCount, approvedCount, rejectedCount }` 전 필드 required·non-null
-- `reports[].status` 허용값 `PENDING`/`APPROVED`/`REJECTED`, `reports[].priority` 허용값 `HIGH`/`MEDIUM`/`LOW`
+- 성공 `200` body `{ reports[], totalPageSize, pendingCount, approvedCount, rejectedCount, resubmitCount }` 전 필드 required·non-null
+- `reports[].status` 허용값 `PENDING`/`RESUBMIT`/`APPROVED`/`REJECTED`, `reports[].priority` 허용값 `HIGH`/`MEDIUM`/`LOW`
 - 오류 400/401/500 공통 body
 - 실제 서버 테스트 disabled
 - 업무보고 네 spec(`app-work-report-query-all`, `-query-detail`, `-approve`, `-reject`)이 모두 승인된 뒤 한 번에 구현한다
@@ -72,6 +74,16 @@
 4. `yarn lint`, `yarn typecheck`, `yarn build`
 5. `yarn verify:api app-work-report-query-all`
 6. `tests/e2e/task-report.spec.ts` 회귀
+
+## 2026-10-01 변경 (#218)
+
+- `src/entities/task-report/model/types.ts`: `taskReportReviewStatuses = ['PENDING', 'RESUBMIT', 'APPROVED', 'REJECTED']`(탭 순서).
+- `src/entities/task-report/model/labels.ts`: `RESUBMIT: '재심사대기'`.
+- `src/entities/task-report/api/types.ts`: `TaskReportQueryAllResponse` 에 `resubmitCount: number`.
+- `src/entities/task-report/api/taskReportApi.ts`: 타입 가드가 `resubmitCount` 정수를 요구하고, `counts.RESUBMIT = resubmitCount`.
+  `status` 허용값 검사는 `taskReportReviewStatuses` 를 그대로 쓰므로 `RESUBMIT` 이 자동으로 들어간다.
+- 화면(`TaskReportListPage`)은 `taskReportReviewStatuses` 로 탭을 만들므로 코드 변경이 없다. 배지는 퍼블리싱(`task-report`) 범위.
+- 테스트: `tests/e2e/api/app-work-report-query-all.spec.ts`(S2·S6·S11·S13), `tests/e2e/support/task-report-api.ts` mock 에 `resubmitCount`·`RESUBMIT` 데이터.
 
 ## STOP 조건과 미해결 질문
 
