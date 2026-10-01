@@ -70,7 +70,7 @@ export function WorkLogZoneEditor({
             <NumberInput
               value={start}
               inputMode="numeric"
-              placeholder="1"
+              placeholder="시작"
               aria-label="시작 번호"
               onChange={(event) => setStart(onlyDigits(event.target.value))}
             />
@@ -78,7 +78,7 @@ export function WorkLogZoneEditor({
             <NumberInput
               value={end}
               inputMode="numeric"
-              placeholder="24"
+              placeholder="끝"
               aria-label="끝 번호"
               onChange={(event) => setEnd(onlyDigits(event.target.value))}
             />
