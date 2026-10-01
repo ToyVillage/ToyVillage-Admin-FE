@@ -26,7 +26,14 @@ const detail = {
     { fileName: '당일 지침.pdf', fileKey: '2026/08/28/guide_a1b2c3.pdf' },
   ],
   reports: [],
-  progress: { total: 3, approved: 0, rejected: 0, pending: 3, missing: 0 },
+  progress: {
+    total: 3,
+    approved: 0,
+    rejected: 0,
+    pending: 3,
+    resubmit: 0,
+    missing: 0,
+  },
 }
 
 const teamTree = {
@@ -287,6 +294,7 @@ const reports = [
   { workReportId: 31, appAdminId: 3, name: '이승현', status: 'APPROVED' },
   { workReportId: 33, appAdminId: 4, name: '홍길동', status: 'REJECTED' },
   { workReportId: 34, appAdminId: 6, name: '배준영', status: 'PENDING' },
+  { workReportId: 35, appAdminId: 8, name: '최유진', status: 'RESUBMIT' },
   { workReportId: null, appAdminId: 7, name: '김유영', status: 'MISSING' },
 ]
 
@@ -296,46 +304,73 @@ test('S15: 담당자별 보고 현황을 표시하고 제출 전 줄은 누를 �
   await mockDetail(page, 200, {
     ...detail,
     reports,
-    progress: { total: 4, approved: 1, rejected: 1, pending: 1, missing: 1 },
+    progress: {
+      total: 5,
+      approved: 1,
+      rejected: 1,
+      pending: 1,
+      resubmit: 1,
+      missing: 1,
+    },
   })
   await page.goto('/tasks/12')
 
   const rows = page.getByTestId('task-report-row')
-  await expect(rows).toHaveCount(4)
+  await expect(rows).toHaveCount(5)
   await expect(rows.nth(0)).toContainText('이승현')
   // 승인된 보고의 배지 문구는 `완료` 다(2026-09-13 배지 문구 변경).
   await expect(rows.nth(0)).toContainText('완료')
   await expect(rows.nth(1)).toContainText('반려')
   await expect(rows.nth(2)).toContainText('심사대기')
+  // 서버 `RESUBMIT`(반려 후 재제출)은 `재심사대기` 다(#218).
+  await expect(rows.nth(3)).toContainText('최유진')
+  await expect(rows.nth(3)).toContainText('재심사대기')
   // 서버 `MISSING`(미제출)은 화면에서도 `미제출` 이다.
-  await expect(rows.nth(3)).toContainText('김유영')
-  await expect(rows.nth(3)).toContainText('미제출')
-  await expect(rows.nth(3)).not.toContainText('심사대기')
+  await expect(rows.nth(4)).toContainText('김유영')
+  await expect(rows.nth(4)).toContainText('미제출')
+  await expect(rows.nth(4)).not.toContainText('심사대기')
 
-  // 제출된 3줄만 버튼이다. 누르면 `workReportId` 로 업무보고 상세에 들어간다.
+  // 제출된 4줄(재심사대기 포함)만 버튼이다. 누르면 `workReportId` 로 업무보고 상세에 들어간다.
   // 이동한 화면의 업무보고 조회는 이 시나리오 범위가 아니라 요청만 끊는다(실제 서버 요청 없음).
   await page.route(/^https:\/\/[^/]+\/work-report\/detail\/31(?:\?.*)?$/, (route) =>
     route.abort(),
   )
-  await expect(reportButtons(page)).toHaveCount(3)
+  await expect(reportButtons(page)).toHaveCount(4)
   await reportButtons(page).first().click()
   await expect(page).toHaveURL(/\/task-reports\/31$/)
 })
 
-test('S16: 진행도는 서버 집계를 쓰고 미제출을 따로 센다', async ({
-  page,
-}) => {
+test('S16: 진행도는 서버 집계를 합산 없이 그대로 쓴다', async ({ page }) => {
   // reports 로 다시 세면 이 값과 어긋난다.
   await mockDetail(page, 200, {
     ...detail,
     reports,
-    progress: { total: 9, approved: 5, rejected: 2, pending: 1, missing: 1 },
+    progress: {
+      total: 10,
+      approved: 5,
+      rejected: 2,
+      pending: 1,
+      resubmit: 1,
+      missing: 1,
+    },
   })
   await page.goto('/tasks/12')
 
   // 응답 값 그대로다.
-  await expect(page.getByText('전체 9 · 승인 5 · 반려 2')).toBeVisible()
-  await expect(page.getByText('심사대기 1 · 미제출 1')).toBeVisible()
+  await expect(page.getByText('전체 10 · 승인 5 · 반려 2')).toBeVisible()
+  await expect(
+    page.getByText('심사대기 1 · 재심사대기 1 · 미제출 1'),
+  ).toBeVisible()
+
+  // `progress.resubmit` 이 없으면 Contract 형식 위반이다.
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+  await mockDetail(page, 200, {
+    ...detail,
+    reports,
+    progress: { total: 10, approved: 5, rejected: 2, pending: 1, missing: 1 },
+  })
+  await page.reload()
+  await expectDetailError(page)
 })
 
 test('S17: 모르는 보고 상태가 와도 상세 화면을 살린다', async ({ page }) => {
@@ -345,9 +380,16 @@ test('S17: 모르는 보고 상태가 와도 상세 화면을 살린다', async 
     ...detail,
     reports: [
       { ...reports[0], status: 'RESUBMITTED' },
-      { ...reports[3], status: 'UNKNOWN' },
+      { ...reports[4], status: 'UNKNOWN' },
     ],
-    progress: { total: 2, approved: 0, rejected: 0, pending: 1, missing: 1 },
+    progress: {
+      total: 2,
+      approved: 0,
+      rejected: 0,
+      pending: 1,
+      resubmit: 0,
+      missing: 1,
+    },
   })
   await page.goto('/tasks/12')
 

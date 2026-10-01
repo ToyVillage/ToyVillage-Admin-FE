@@ -8,6 +8,8 @@
 - Requested page: 없음
 - Checked at: 2026-09-09T20:10:00+09:00
 - Exact match count: 1
+- 2026-10-01 보강(#218): staging Swagger `/v3/api-docs`(2026-10-01, #218 개발자 지시 "Swagger 보고 해") `GET /tasks/{id}` · `TaskDetailResponse` 기준으로
+  `reports[].status` 허용값을 Swagger enum 다섯 값으로 확정하고 `progress.resubmit` 을 추가했다(백엔드 질문 1번 해소).
 
 ## Basic Information
 
@@ -72,12 +74,13 @@
 | `reports[].workReportId` | integer | true | true | `31` | 업무보고 id. 미제출이면 null. |
 | `reports[].appAdminId` | integer | true | false | `7` | 보고 대상 직원 id |
 | `reports[].name` | string | true | false | `"이승현"` | 보고 대상 직원 이름 |
-| `reports[].status` | enum | true | false | `"APPROVED"` | 보고 심사 상태 — 허용값 `APPROVED`, `REJECTED`, `MISSING` |
+| `reports[].status` | enum | true | false | `"APPROVED"` | 보고 심사 상태 — 허용값 `PENDING`, `RESUBMIT`, `APPROVED`, `REJECTED`, `MISSING` |
 | `progress` | object | true | false | — | 보고 진행 현황 집계 |
 | `progress.total` | integer | true | false | `4` | 담당자 총원 |
 | `progress.approved` | integer | true | false | `2` | 승인 수 |
 | `progress.rejected` | integer | true | false | `1` | 반려 수 |
 | `progress.pending` | integer | true | false | `1` | 심사대기 수 |
+| `progress.resubmit` | integer | true | false | `1` | 재심사대기(반려 후 재제출) 수 |
 | `progress.missing` | integer | true | false | `0` | 미제출 수 |
 
 ## Error Responses

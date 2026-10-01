@@ -13,6 +13,9 @@ real_server:
 
 # 목적
 
+> 2026-10-01 보강(#218): 반려 후 재제출 상태 `RESUBMIT`(`재심사대기`)과 건수 `resubmitCount` 를 추가한다.
+> 근거는 staging Swagger `/v3/api-docs`(2026-10-01, #218 개발자 지시 "Swagger 보고 해")의 `WorkReportListResponse` 다(Notion 행에는 아직 없다).
+
 업무보고 목록 화면(`/task-reports`)의 localStorage mock 전체 조회
 (`getMockTaskReports`)를 `APP_WORK_REPORT_QUERY_ALL` API 연동으로 교체한다.
 
@@ -40,6 +43,7 @@ real_server:
   | 탭       | `status`   | 탭 건수         |
   | -------- | ---------- | --------------- |
   | 심사대기 | `PENDING`  | `pendingCount`  |
+  | 재심사대기 | `RESUBMIT` | `resubmitCount` |
   | 완료     | `APPROVED` | `approvedCount` |
   | 반려     | `REJECTED` | `rejectedCount` |
 

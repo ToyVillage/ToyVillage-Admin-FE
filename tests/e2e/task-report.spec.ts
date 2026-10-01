@@ -66,11 +66,15 @@ test('S2: 컬럼 표시 확인', async ({ page }) => {
 test('S3: 탭 라벨에 건수 표시', async ({ page }) => {
   await page.goto('/task-reports')
 
-  for (const label of ['심사대기 12', '완료 3', '반려 2']) {
-    await expect(
-      page.getByRole('button', { name: label, exact: true }),
-    ).toBeVisible()
+  const labels = ['심사대기 12', '재심사대기 3', '완료 3', '반려 2']
+  const positions: number[] = []
+  for (const label of labels) {
+    const tab = page.getByRole('button', { name: label, exact: true })
+    await expect(tab).toBeVisible()
+    positions.push((await tab.boundingBox())?.x ?? -1)
   }
+  // 탭은 심사대기 → 재심사대기 → 완료 → 반려 순서다.
+  expect(positions).toEqual([...positions].sort((a, b) => a - b))
   await expect(page.getByRole('button', { name: /재제출/ })).toHaveCount(0)
 })
 
@@ -96,6 +100,37 @@ test('S25: 표 상태 칸은 심사 상태 배지', async ({ page }) => {
   await page.getByRole('button', { name: '반려 2', exact: true }).click()
   await expect(rows(page)).toHaveCount(2)
   await expect(rows(page).filter({ hasText: '반려' })).toHaveCount(2)
+})
+
+// #218: 반려된 보고를 직원이 다시 제출하면 `재심사대기`(서버 `RESUBMIT`)가 된다.
+test('S37: 재심사대기 탭 필터', async ({ page }) => {
+  await page.goto('/task-reports')
+  const tab = page.getByRole('button', { name: '재심사대기 3', exact: true })
+  await tab.click()
+
+  await expect(tab).toHaveAttribute('aria-pressed', 'true')
+  await expect(rows(page)).toHaveCount(3)
+  await expect(rows(page).first()).toContainText('최유진')
+  await expect(rows(page).filter({ hasText: '재심사대기' })).toHaveCount(3)
+})
+
+test('S38: 재심사대기 보고 목록에서 승인', async ({ page }) => {
+  await page.goto('/task-reports')
+  await page.getByRole('button', { name: '재심사대기 3', exact: true }).click()
+  await expect(rows(page).first()).toContainText('2027-03-04')
+
+  await rowMenuTrigger(page).click()
+  await page.getByRole('menuitem', { name: '승인하기' }).click()
+
+  await expect(page.getByText('승인에 성공했습니다')).toBeVisible()
+  await expect(page).toHaveURL(/\/task-reports\?/)
+  await expect(
+    page.getByRole('button', { name: '재심사대기 2', exact: true }),
+  ).toBeVisible()
+  await expect(rows(page).filter({ hasText: '2027-03-04' })).toHaveCount(0)
+
+  await page.getByRole('button', { name: '완료 4', exact: true }).click()
+  await expect(rows(page).filter({ hasText: '2027-03-04' })).toHaveCount(1)
 })
 
 test('S6: 페이지네이션 이동', async ({ page }) => {
@@ -213,6 +248,16 @@ test('S36: 이미 심사된 보고는 승인·반려 버튼이 없다', async ({
 
   await expect(page.getByRole('button', { name: '반려하기' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: '승인하기' })).toHaveCount(0)
+})
+
+// #218: 재심사대기는 아직 심사 대상이라 #159 와 달리 승인·반려 버튼이 보인다.
+test('S39: 재심사대기 보고 상세', async ({ page }) => {
+  await page.goto('/task-reports/18')
+
+  await expect(page.getByText('담당자: 최유진')).toBeVisible()
+  await expect(page.getByText('재심사대기', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '반려하기' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '승인하기' })).toBeVisible()
 })
 
 test('S10: 첨부자료는 조회 전용', async ({ page }) => {
@@ -356,12 +401,12 @@ test.describe('업무 상세에서 진입', () => {
     await mockTaskApi(page)
     await page.goto('/tasks/1')
 
-    // 제출된 4줄만 버튼이다. 미제출(`workReportId: null`) 2줄은 누를 수 없다.
+    // 제출된 5줄(재심사대기 포함)만 버튼이다. 미제출(`workReportId: null`) 1줄은 누를 수 없다.
     const reportButtons = page
       .locator('section')
       .filter({ hasText: '업무 보고' })
       .getByRole('button')
-    await expect(reportButtons).toHaveCount(4)
+    await expect(reportButtons).toHaveCount(5)
 
     await reportButtons.first().click()
 

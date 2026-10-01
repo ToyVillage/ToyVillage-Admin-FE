@@ -23,7 +23,14 @@ const detail = {
   createdAt: '2026-08-28T10:15:30',
   files: [{ fileName: '당일 지침.pdf', fileKey: existingFileKey }],
   reports: [],
-  progress: { total: 1, approved: 0, rejected: 0, pending: 1, missing: 0 },
+  progress: {
+    total: 1,
+    approved: 0,
+    rejected: 0,
+    pending: 1,
+    resubmit: 0,
+    missing: 0,
+  },
 }
 
 const teamTree = {

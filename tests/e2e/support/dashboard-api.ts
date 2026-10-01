@@ -52,7 +52,7 @@ export interface MockDashboardWorkReport {
   taskId: number
   name: string
   title: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status: 'PENDING' | 'RESUBMIT' | 'APPROVED' | 'REJECTED'
   priority: 'HIGH' | 'MEDIUM' | 'LOW'
   finishDate: string
 }
@@ -207,6 +207,7 @@ export async function mockDashboardApi(
       pendingCount: countStatus(data.workReports, 'PENDING'),
       approvedCount: countStatus(data.workReports, 'APPROVED'),
       rejectedCount: countStatus(data.workReports, 'REJECTED'),
+      resubmitCount: countStatus(data.workReports, 'RESUBMIT'),
     }),
     workLogs: () => ({
       content: data.workLogs,

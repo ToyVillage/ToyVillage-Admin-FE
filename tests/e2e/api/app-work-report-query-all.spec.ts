@@ -1,12 +1,13 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-// 승인된 시나리오(app-work-report-query-all.test-scenarios.md: S1~S12)를 mock 으로 변환한 것.
+// 승인된 시나리오(app-work-report-query-all.test-scenarios.md: S1~S13)를 mock 으로 변환한 것.
+// 2026-10-01 `재심사대기`(`RESUBMIT`, `resubmitCount`) 추가(#218).
 // 대상: GET /work-report. 서버 페이지네이션(page 1부터, size=10)과 상태 탭 필터, 서버 건수를 검증한다.
 // 조회는 목록 진입 시 발생하므로 goto 전에 route 를 건다. 실제 서버는 호출하지 않는다.
 
 const listPath = /^https:\/\/[^/]+\/work-report(?:\?.*)?$/
 
-type Status = 'PENDING' | 'APPROVED' | 'REJECTED'
+type Status = 'PENDING' | 'RESUBMIT' | 'APPROVED' | 'REJECTED'
 
 const pendingReports = [
   item(32, '이승현', 'PENDING', 'HIGH', '2026-07-03'),
@@ -29,7 +30,16 @@ const rejectedReports = [
   item(52, '최유진', 'REJECTED', 'MEDIUM', '2026-09-02'),
 ]
 
-const counts = { pendingCount: 3, approvedCount: 12, rejectedCount: 2 }
+const resubmitReports = [
+  item(41, '최유진', 'RESUBMIT', 'MEDIUM', '2026-07-28'),
+]
+
+const counts = {
+  pendingCount: 3,
+  approvedCount: 12,
+  rejectedCount: 2,
+  resubmitCount: 1,
+}
 
 const errorBody = (status: number, message: string) => ({
   message,
@@ -83,11 +93,14 @@ test('S2: 탭 건수는 응답의 상태별 건수를 그대로 쓴다', async (
 
   await page.goto('/task-reports')
 
-  for (const label of ['심사대기 3', '완료 12', '반려 2']) {
-    await expect(
-      page.getByRole('button', { name: label, exact: true }),
-    ).toBeVisible()
+  const labels = ['심사대기 3', '재심사대기 1', '완료 12', '반려 2']
+  const positions: number[] = []
+  for (const label of labels) {
+    const tab = page.getByRole('button', { name: label, exact: true })
+    await expect(tab).toBeVisible()
+    positions.push((await tab.boundingBox())?.x ?? -1)
   }
+  expect(positions).toEqual([...positions].sort((a, b) => a - b))
 })
 
 test('S3: 페이지 이동은 서버 page 를 보낸다', async ({ page }) => {
@@ -180,6 +193,7 @@ test('S6: 빈 목록이면 빈 상태와 0건 탭을 표시한다', async ({ pag
       pendingCount: 0,
       approvedCount: 0,
       rejectedCount: 0,
+      resubmitCount: 0,
     }),
   )
 
@@ -187,7 +201,7 @@ test('S6: 빈 목록이면 빈 상태와 0건 탭을 표시한다', async ({ pag
 
   await expect(page.getByText('등록된 업무보고가 없습니다.')).toBeVisible()
   await expect(rows(page)).toHaveCount(0)
-  for (const label of ['심사대기 0', '완료 0', '반려 0']) {
+  for (const label of ['심사대기 0', '재심사대기 0', '완료 0', '반려 0']) {
     await expect(
       page.getByRole('button', { name: label, exact: true }),
     ).toBeVisible()
@@ -276,6 +290,7 @@ test('S11: 응답 형식이 Contract 와 다르면 오류 화면을 표시한다
       totalPageSize: 1,
       approvedCount: 12,
       rejectedCount: 2,
+      resubmitCount: 1,
     }),
   )
 
@@ -283,6 +298,46 @@ test('S11: 응답 형식이 Contract 와 다르면 오류 화면을 표시한다
   await expect(
     page.getByText('업무보고를 불러오지 못했습니다. 다시 시도해 주세요.'),
   ).toBeVisible()
+
+  // `resubmitCount` 누락도 형식 위반이다.
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+  await page.route(listPath, (route) =>
+    json(route, 200, {
+      reports: pendingReports,
+      totalPageSize: 1,
+      pendingCount: 3,
+      approvedCount: 12,
+      rejectedCount: 2,
+    }),
+  )
+
+  await page.reload()
+  await expect(
+    page.getByText('업무보고를 불러오지 못했습니다. 다시 시도해 주세요.'),
+  ).toBeVisible()
+})
+
+test('S13: 재심사대기 탭은 status=RESUBMIT 으로 조회한다', async ({ page }) => {
+  const queries: URLSearchParams[] = []
+  await page.route(listPath, async (route) => {
+    queries.push(new URL(route.request().url()).searchParams)
+    await fulfillList(route)
+  })
+
+  await page.goto('/task-reports')
+  await expect(rows(page)).toHaveCount(3)
+
+  const tab = page.getByRole('button', { name: '재심사대기 1', exact: true })
+  await tab.click()
+
+  await expect(tab).toHaveAttribute('aria-pressed', 'true')
+  await expect(rows(page)).toHaveCount(1)
+  await expect(rows(page).first()).toContainText('최유진')
+  await expect(rows(page).first()).toContainText('재심사대기')
+
+  const last = queries.at(-1)
+  expect(last?.get('page')).toBe('1')
+  expect(last?.get('status')).toBe('RESUBMIT')
 })
 
 test('S12: 응답 전에는 로딩 상태를 표시한다', async ({ page }) => {
@@ -328,6 +383,7 @@ async function fulfillList(route: Route) {
   const pageNumber = Number(query.get('page'))
   const source = {
     PENDING: pendingReports,
+    RESUBMIT: resubmitReports,
     APPROVED: approvedReports,
     REJECTED: rejectedReports,
   }[query.get('status') as Status]

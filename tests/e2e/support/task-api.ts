@@ -30,7 +30,12 @@ export interface MockTaskFile {
   fileKey: string
 }
 
-export type MockReportStatus = 'APPROVED' | 'REJECTED' | 'PENDING' | 'MISSING'
+export type MockReportStatus =
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'PENDING'
+  | 'RESUBMIT'
+  | 'MISSING'
 
 // 담당자별 업무보고 현황. 서버는 담당자 전원을 한 줄씩 주고, 내지 않은 사람은
 // `workReportId: null` · `MISSING` 이다.
@@ -120,14 +125,15 @@ export const mockTasks: MockTask[] = [
     priority: 'HIGH',
     finishDate: '2026-07-03',
     files: figmaFiles,
-    // 네 가지 상태를 모두 한 화면에서 보이게 둔다(승인 2 · 반려 1 · 심사대기 1 · 미제출 2).
+    // 다섯 가지 상태를 모두 한 화면에서 보이게 둔다(승인 2 · 반려 1 · 심사대기 1 · 재심사대기 1 · 미제출 1).
+    // Figma yot 133:9725 의 담당자별 보고와 같은 구성이다(#218).
     reports: [
       { appAdminId: 1, workReportId: 31, status: 'APPROVED' },
       { appAdminId: 2, workReportId: 32, status: 'APPROVED' },
       { appAdminId: 3, workReportId: 33, status: 'REJECTED' },
       { appAdminId: 10, workReportId: 34, status: 'PENDING' },
       { appAdminId: 14, workReportId: null, status: 'MISSING' },
-      { appAdminId: 15, workReportId: null, status: 'MISSING' },
+      { appAdminId: 15, workReportId: 35, status: 'RESUBMIT' },
     ],
   },
   {
@@ -499,6 +505,7 @@ function toDetail(task: MockTask, members: MockMember[]) {
       approved: countBy(reports, 'APPROVED'),
       rejected: countBy(reports, 'REJECTED'),
       pending: countBy(reports, 'PENDING'),
+      resubmit: countBy(reports, 'RESUBMIT'),
       missing: countBy(reports, 'MISSING'),
     },
   }

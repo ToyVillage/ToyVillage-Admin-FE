@@ -1,4 +1,5 @@
 import type { InternalAxiosRequestConfig } from 'axios'
+import * as Sentry from '@sentry/react'
 import {
   appAuthLoginPath,
   appAuthLogoutPath,
@@ -12,6 +13,7 @@ import {
   readRefreshToken,
   saveTokens,
 } from '@/shared/api/session'
+import { toPathPattern } from '@/shared/api/reportApiError'
 
 // 재발급 자신과 로그인은 인증 없이 호출한다. 이 경로의 401은 세션 만료가 아니다.
 const publicAuthPaths = [appAuthLoginPath, appAuthReissuePath]
@@ -20,8 +22,18 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   isSessionRetry?: boolean
 }
 
+// 서버가 만료·토큰 없음·권한 없음을 모두 403 으로 줘 상태 코드로는 구분되지 않는다.
+// 세션이 끝난 단계로 나눈다.
+type SessionEndReason =
+  'no-refresh-token' | 'reissue-failed' | 'rejected-after-reissue'
+
+interface ReissueFailure {
+  reason: 'no-refresh-token' | 'reissue-failed'
+  status?: number
+}
+
 // 동시에 401이 난 요청들이 재발급을 중복 호출하지 않도록 하나의 Promise를 공유한다.
-let pendingReissue: Promise<string | null> | null = null
+let pendingReissue: Promise<string | ReissueFailure> | null = null
 
 export function configureApiAuthentication(): void {
   api.interceptors.request.use((config) => {
@@ -59,26 +71,26 @@ export function configureApiAuthentication(): void {
 
       // 새 토큰으로 재시도했는데도 막히면 더 시도하지 않는다.
       if (config.isSessionRetry) {
-        endSession()
+        endExpiredSession('rejected-after-reissue', config.url, status)
         throw error
       }
 
-      const accessToken = await reissueSharedAccessToken()
+      const reissued = await reissueSharedAccessToken()
 
-      if (!accessToken) {
-        endSession()
+      if (typeof reissued !== 'string') {
+        endExpiredSession(reissued.reason, config.url, reissued.status)
         throw error
       }
 
       config.isSessionRetry = true
-      config.headers.set('Authorization', `Bearer ${accessToken}`)
+      config.headers.set('Authorization', `Bearer ${reissued}`)
 
       return api.request(config)
     },
   )
 }
 
-async function reissueSharedAccessToken(): Promise<string | null> {
+async function reissueSharedAccessToken(): Promise<string | ReissueFailure> {
   pendingReissue ??= requestReissue().finally(() => {
     pendingReissue = null
   })
@@ -86,10 +98,10 @@ async function reissueSharedAccessToken(): Promise<string | null> {
   return pendingReissue
 }
 
-async function requestReissue(): Promise<string | null> {
+async function requestReissue(): Promise<string | ReissueFailure> {
   const refreshToken = readRefreshToken()
 
-  if (!refreshToken) return null
+  if (!refreshToken) return { reason: 'no-refresh-token' }
 
   try {
     const tokens = await reissueAppToken({ refresh_token: refreshToken })
@@ -101,9 +113,32 @@ async function requestReissue(): Promise<string | null> {
     })
 
     return tokens.access_token
-  } catch {
-    return null
+  } catch (error) {
+    return { reason: 'reissue-failed', status: readErrorStatus(error) }
   }
+}
+
+// 사용자가 누르지 않은 로그아웃을 경고로 남긴다. 함께 실패한 요청들이 차례로 여기에 오므로
+// 저장소가 아직 비지 않은, 세션을 처음 끝내는 요청만 보낸다. 다른 탭에서 로그아웃해
+// 토큰이 이미 없는 경우도 여기서 걸러진다.
+function endExpiredSession(
+  reason: SessionEndReason,
+  url: string | undefined,
+  status: number | undefined,
+): void {
+  if (readAccessToken() || readRefreshToken()) {
+    Sentry.captureMessage('인증 실패로 세션 종료', {
+      level: 'warning',
+      tags: {
+        'session.end_reason': reason,
+        'session.status': status ?? 'none',
+        'api.path': toPathPattern(url),
+      },
+      fingerprint: ['session-end', reason],
+    })
+  }
+
+  endSession()
 }
 
 function isLogoutPath(url: string | undefined): boolean {

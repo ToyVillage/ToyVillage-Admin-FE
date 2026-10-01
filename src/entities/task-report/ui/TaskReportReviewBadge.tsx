@@ -15,6 +15,7 @@ const labels: Record<TaskReportBadgeStatus, string> = {
   APPROVED: '완료',
   REJECTED: '반려',
   PENDING: '심사대기',
+  RESUBMIT: '재심사대기',
   MISSING: '미제출',
 }
 
@@ -47,6 +48,9 @@ const Badge = styled.span<{ $status: TaskReportBadgeStatus }>`
     }
     if ($status === 'REJECTED') {
       return `background: ${theme.colors.warningBg}; color: ${theme.colors.warning};`
+    }
+    if ($status === 'RESUBMIT') {
+      return `background: ${theme.colors.resubmitBg}; color: ${theme.colors.resubmit};`
     }
     // 미제출(yot 2073:17289)은 흰 바탕에 테두리만 두른다. 테두리 1px 만큼 높이·여백을 줄여 다른 배지와 겉 크기를 맞춘다.
     if ($status === 'MISSING') {

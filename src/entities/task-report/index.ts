@@ -5,6 +5,7 @@ export type {
   TaskReportReviewStatus,
 } from './model/types'
 export {
+  isTaskReportReviewable,
   taskReportRejectionReasonMaxLength,
   taskReportReviewStatuses,
 } from './model/types'

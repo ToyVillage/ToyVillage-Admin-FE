@@ -311,7 +311,14 @@ const taskDetail = {
   reports: [
     { workReportId: 32, appAdminId: 3, name: '이승현', status: 'PENDING' },
   ],
-  progress: { total: 1, approved: 0, rejected: 0, pending: 1, missing: 0 },
+  progress: {
+    total: 1,
+    approved: 0,
+    rejected: 0,
+    pending: 1,
+    resubmit: 0,
+    missing: 0,
+  },
 }
 
 async function approveFromList(page: Page) {

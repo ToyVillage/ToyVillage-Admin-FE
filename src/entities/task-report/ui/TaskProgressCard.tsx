@@ -6,6 +6,8 @@ export interface TaskReportProgressCounts {
   approved: number
   rejected: number
   pending: number
+  /** 재심사대기(반려 후 재제출) */
+  resubmit: number
   /** 미제출. 조각을 그리지 않고 트랙 색으로 남긴다(yot 152:11536). */
   missing: number
 }
@@ -26,6 +28,7 @@ export function TaskProgressCard({ counts }: TaskProgressCardProps) {
     { key: 'approved', value: counts.approved, color: theme.colors.accent },
     { key: 'rejected', value: counts.rejected, color: theme.colors.warning },
     { key: 'pending', value: counts.pending, color: theme.colors.textGuide },
+    { key: 'resubmit', value: counts.resubmit, color: theme.colors.resubmit },
   ].filter((segment) => segment.value > 0)
 
   let offset = 0
@@ -59,7 +62,8 @@ export function TaskProgressCard({ counts }: TaskProgressCardProps) {
           전체 {counts.total} · 승인 {counts.approved} · 반려 {counts.rejected}
         </SummaryLine>{' '}
         <SummaryLine>
-          심사대기 {counts.pending} · 미제출 {counts.missing}
+          심사대기 {counts.pending} · 재심사대기 {counts.resubmit} · 미제출{' '}
+          {counts.missing}
         </SummaryLine>
       </Summary>
     </Card>

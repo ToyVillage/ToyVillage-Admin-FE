@@ -92,6 +92,7 @@ export function TaskDetailPage() {
         approved: task.progress.approved,
         rejected: task.progress.rejected,
         pending: task.progress.pending,
+        resubmit: task.progress.resubmit,
         missing: task.progress.missing,
       },
     [task],

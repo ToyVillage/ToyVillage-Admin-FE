@@ -6,6 +6,7 @@ export const taskReportReviewStatusLabels: Record<
   string
 > = {
   PENDING: '심사대기',
+  RESUBMIT: '재심사대기',
   APPROVED: '완료',
   REJECTED: '반려',
 }

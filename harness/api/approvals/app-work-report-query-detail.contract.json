@@ -198,6 +198,7 @@
               "constraints": [],
               "allowedValues": [
                 "PENDING",
+                "RESUBMIT",
                 "APPROVED",
                 "REJECTED"
               ]
