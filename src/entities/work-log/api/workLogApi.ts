@@ -24,6 +24,7 @@ import type {
   WorkLogServerQuestionType,
   WorkLogTemplateCreateQuestion,
   WorkLogTemplateCreateRequest,
+  WorkLogTemplateCreateResponse,
   WorkLogTemplateDetailResponse,
   WorkLogTemplateListItemResponse,
   WorkLogTemplateQueryAllRequest,
@@ -209,12 +210,12 @@ export async function getWorkLogFormDetail({
 // WORK_LOG_TEMPLATE_CREATE — 구역·질문 배열 순서가 그대로 정렬 순서가 된다.
 export async function createWorkLogForm(
   draft: WorkLogFormDraft,
-): Promise<WorkLogMessageResponse> {
+): Promise<WorkLogTemplateCreateResponse> {
   const body = toTemplateCreateRequest(draft)
 
   const { data } = await api.post<unknown>('/work-log/template', body)
 
-  if (!isMessageResponse(data)) {
+  if (!isTemplateCreateResponse(data)) {
     throw new Error('업무일지 양식 생성 응답 형식이 올바르지 않습니다.')
   }
 
@@ -515,6 +516,15 @@ function isTemplateOption(value: unknown): boolean {
     typeof option.content === 'string' &&
     typeof option.etcOption === 'boolean'
   )
+}
+
+function isTemplateCreateResponse(
+  value: unknown,
+): value is WorkLogTemplateCreateResponse {
+  if (typeof value !== 'object' || value === null) return false
+
+  const { templateId } = value as Record<string, unknown>
+  return Number.isSafeInteger(templateId) && (templateId as number) > 0
 }
 
 function isMessageResponse(value: unknown): value is WorkLogMessageResponse {

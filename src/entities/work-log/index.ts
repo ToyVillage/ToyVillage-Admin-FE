@@ -48,6 +48,7 @@ export type {
   WorkLogQueryAllRequest,
   WorkLogQueryRequest,
   WorkLogTemplateCreateRequest,
+  WorkLogTemplateCreateResponse,
   WorkLogTemplateQueryAllRequest,
   WorkLogTemplateQueryRequest,
 } from './api/types'
