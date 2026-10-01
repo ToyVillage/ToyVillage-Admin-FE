@@ -288,7 +288,14 @@ function taskDetail(assigneeIds: number[]) {
     createdAt: '2026-08-28T10:15:30',
     files: [],
     reports: [],
-    progress: { total: 2, approved: 0, rejected: 0, pending: 2, missing: 0 },
+    progress: {
+      total: 2,
+      approved: 0,
+      rejected: 0,
+      pending: 2,
+      resubmit: 0,
+      missing: 0,
+    },
   }
 }
 

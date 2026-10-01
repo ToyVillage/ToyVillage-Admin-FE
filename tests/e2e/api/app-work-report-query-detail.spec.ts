@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-// 승인된 시나리오(app-work-report-query-detail.test-scenarios.md: S1~S12)를 mock 으로 변환한 것.
+// 승인된 시나리오(app-work-report-query-detail.test-scenarios.md: S1~S12, S4-1)를 mock 으로 변환한 것.
 // 대상: GET /work-report/detail/{workReportId}. 조회는 진입 시 발생하므로 goto 전에 route 를 건다.
 // 실제 서버는 호출하지 않는다.
 
@@ -132,6 +132,21 @@ test('S4: 승인된 보고는 완료 배지를 보인다', async ({ page }) => {
   await page.goto('/task-reports/32')
 
   await expect(metaValue(page, '상태:')).toContainText('완료')
+})
+
+// #218: 반려 후 다시 제출된 보고. 아직 심사 대상이라 두 버튼이 남는다.
+test('S4-1: 재심사대기 보고는 재심사대기 배지와 심사 버튼을 보인다', async ({
+  page,
+}) => {
+  await page.route(detailPath, (route) =>
+    json(route, 200, { ...detail, status: 'RESUBMIT' }),
+  )
+
+  await page.goto('/task-reports/32')
+
+  await expect(metaValue(page, '상태:')).toContainText('재심사대기')
+  await expect(page.getByRole('button', { name: '반려하기' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '승인하기' })).toBeVisible()
 })
 
 test('S5: HTTP 404 이면 찾을 수 없음 화면에 머문다', async ({ page }) => {
@@ -272,7 +287,14 @@ test('S12: 업무 상세의 제출된 보고 줄에서 업무보고 상세로 �
           status: 'MISSING',
         },
       ],
-      progress: { total: 4, approved: 1, rejected: 1, pending: 1, missing: 1 },
+      progress: {
+        total: 4,
+        approved: 1,
+        rejected: 1,
+        pending: 1,
+        resubmit: 0,
+        missing: 1,
+      },
     }),
   )
   const detailPaths: string[] = []
