@@ -8,6 +8,8 @@
 - Requested page: 없음
 - Checked at: 2026-09-13T21:15:00+09:00
 - Exact match count: 1
+- 2026-10-01 보강(#218): staging Swagger `/v3/api-docs`(2026-10-01, #218 개발자 지시 "Swagger 보고 해") `GET /work-report/detail/{id}` · `WorkReportDetailResponse` 기준으로
+  `status` 허용값에 `RESUBMIT` 을 추가했다. Swagger enum 의 `MISSING` 은 보고가 없는 상태라 상세 조회 대상이 아니다.
 
 ## Basic Information
 
@@ -64,7 +66,7 @@
 | `files` | array\<object\> | true | false | — | 첨부 파일 목록. 비어 있을 수 있다. |
 | `files[].fileName` | string | true | false | `"inspection.pdf"` | 파일 이름 |
 | `files[].fileKey` | string | true | false | `"work-report/2026/08/inspection.pdf"` | 파일 키 |
-| `status` | enum | true | false | `"PENDING"` | 심사 상태 — 허용값 `PENDING`, `APPROVED`, `REJECTED` |
+| `status` | enum | true | false | `"PENDING"` | 심사 상태 — 허용값 `PENDING`, `RESUBMIT`, `APPROVED`, `REJECTED` |
 | `rejectionReason` | string | true | true | `null` | 반려 사유 |
 
 ## Error Responses

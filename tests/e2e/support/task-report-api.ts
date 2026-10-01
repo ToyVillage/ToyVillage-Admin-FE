@@ -12,7 +12,11 @@ export const workReportApprovePattern =
 export const workReportRejectPattern =
   /^https:\/\/[^/]+\/work-report\/reject\/[^/?]+(?:\?.*)?$/
 
-export type MockWorkReportStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type MockWorkReportStatus =
+  | 'PENDING'
+  | 'RESUBMIT'
+  | 'APPROVED'
+  | 'REJECTED'
 export type MockWorkReportPriority = 'HIGH' | 'MEDIUM' | 'LOW'
 
 export interface MockWorkReportFile {
@@ -66,7 +70,8 @@ function report(
   }
 }
 
-// 한 페이지는 10행이다. 페이지네이션이 보이도록 `심사대기` 12건(2페이지), `완료` 3건, `반려` 2건을 둔다.
+// 한 페이지는 10행이다. 페이지네이션이 보이도록 `심사대기` 12건(2페이지), `완료` 3건, `반려` 2건,
+// `재심사대기`(반려 후 재제출, #218) 3건을 둔다. 재심사대기는 기존 id 뒤(18–20)에 붙여 다른 시나리오의 id 를 바꾸지 않는다.
 // 1번은 Figma yot 1:3510 `심사대기` 첫 행과 상세(1:7503) 내용이다.
 export const mockWorkReports: MockWorkReport[] = [
   report(1, '이승현', 'PENDING', 'HIGH', '2026-07-03', { files: figmaFiles }),
@@ -86,6 +91,9 @@ export const mockWorkReports: MockWorkReport[] = [
   report(15, '김수인', 'APPROVED', 'MEDIUM', '2027-02-02'),
   report(16, '이지아', 'REJECTED', 'HIGH', '2027-02-15'),
   report(17, '이승현', 'REJECTED', 'LOW', '2027-02-27'),
+  report(18, '최유진', 'RESUBMIT', 'MEDIUM', '2027-03-04'),
+  report(19, '김유영', 'RESUBMIT', 'HIGH', '2027-03-11'),
+  report(20, '이지아', 'RESUBMIT', 'LOW', '2027-03-18'),
 ]
 
 export interface WorkReportApiRequests {
@@ -103,7 +111,7 @@ export interface WorkReportApiHandle {
 }
 
 export interface WorkReportApiOptions {
-  /** 초기 목록. 기본은 퍼블리싱 시나리오용 17건이다. */
+  /** 초기 목록. 기본은 퍼블리싱 시나리오용 20건이다. */
   reports?: MockWorkReport[]
   /** 승인·반려 응답 지연(ms). 진행 중 상태를 관찰할 때 쓴다. */
   mutationDelayMs?: number
@@ -149,6 +157,7 @@ export async function mockWorkReportApi(
       pendingCount: countBy(handle.reports, 'PENDING'),
       approvedCount: countBy(handle.reports, 'APPROVED'),
       rejectedCount: countBy(handle.reports, 'REJECTED'),
+      resubmitCount: countBy(handle.reports, 'RESUBMIT'),
     })
   })
 

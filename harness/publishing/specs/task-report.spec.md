@@ -14,6 +14,7 @@ figma:
     - 347:12859 # 목록 + 승인 실패 토스트
     - 347:12882 # 목록 + 반려 실패 토스트
     - 1:7527 # 상세 + 반려 실패 토스트
+    - 2716:24631 # 목록 + 재심사대기 탭 활성
 requires_functional_test: true
 paths: src/pages/task-reports, src/entities/task-report, src/features/review-task-report
 ---
@@ -22,14 +23,17 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 ## 상태와 근거
 
-- Status: Approved (yunho09, 2026-09-25 목록 표 `제목` 컬럼 추가 — #184, S2 재승인 · ③~⑤ 완료 · e2e freeze 35/35). ⑦ 육안 확인 대기.
+- Status: Draft (2026-10-01 `재심사대기` 심사 상태 추가 — #218, S3 수정 · S37–S39 추가). 게이트 ② 재승인 2026-10-01 kimjihwan8 · ③~⑤ 완료 · e2e freeze 38/38. ⑦ 육안 확인 대기.
+  직전: Approved (yunho09, 2026-09-25 목록 표 `제목` 컬럼 추가 — #184, S2 재승인 · ③~⑤ 완료 · e2e freeze 35/35). ⑦ 육안 확인 대기.
   직전: Approved (yunho09, 2026-09-13 상세 디자인 2차 수정·배지 `완료` 반영 — S4·S9 재승인 · ③~⑤ 완료 · e2e freeze 32/32). ⑦ 육안 확인 대기.
   직전: Approved (yunho09, S1–S4·S6–S33, 2026-09-13 yot 기준 재승인 · ③~⑤ 완료 · e2e freeze).
   이전: Approved (yunho09, S1–S24, 2026-09-11 재승인 · e2e freeze) — 폐기된 `toyvillage-dev`(`fkbMQaiPeIufKzjXXoWAPS`) 기준.
-- Last refreshed: 2026-09-25
+- Last refreshed: 2026-10-01
 - 기준 파일은 `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`), 페이지 `0:1` "토이빌리지" › 섹션 `웹 (operator)` ›
   `업무보고`(`300:12758`) › `업무보고 · 목록`(`311:12779`) / `업무보고 · 상세`(`311:12780`) / `업무보고 · 토스트`(`311:12781`).
 - 목록 화면 기준: `1:3510` (`task report`) — 표 `report list`(`141:9720`), 탭바 `report / 심사 상태 탭바`(`145:11718`)
+- `재심사대기` 탭 활성 목록 기준: `2716:24631` (`task report (재심사대기 tab)`) — 2026-10-01 추가.
+  배지는 `status / 업무 보고` 의 `Property 1=재심사대기` 변형(`2716:24609`, 배경 `#F0E8FF` · 글자 `#8A4DFF`).
 - 행 케밥 메뉴 기준: `337:12757` — `kebab menu`(`337:12775`)
 - 목록 위 반려 사유 모달 기준: `347:12834`
 - 상세 화면 기준: `1:7503` (`report management`) — `report / 보고 상세 카드`(`145:15468`)
@@ -59,7 +63,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 | 영역 | 구(`toyvillage-dev`) | yot |
 | --- | --- | --- |
-| 탭 | 심사대기·완료·반려·재제출 | **심사대기·완료·반려** (4번째 탭 hidden) |
+| 탭 | 심사대기·완료·반려·재제출 | **심사대기·재심사대기·완료·반려** (2026-10-01 `재심사대기` 추가, 마지막 `팀이름` 탭 hidden) |
 | 표 컬럼 | 담당자·제목·상태·우선순위·완료기한·공개범위 | **제목·담당자·상태·우선순위·완료기한 + 케밥** (제목은 2026-09-25 추가) |
 | 표 `상태` | 업무(task) 상태 pill | **심사 상태 배지**(`status / 업무 보고`) |
 | 행 동작 | 행 클릭 → 상세 | 행 클릭 → 상세 **+ 케밥 `승인하기`/`반려하기`** |
@@ -69,7 +73,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 ## 목적
 
-운영 관리자가 직원이 제출한 업무보고를 심사 상태(심사대기·완료·반려)별로 훑고, 목록에서 바로 또는
+운영 관리자가 직원이 제출한 업무보고를 심사 상태(심사대기·재심사대기·완료·반려)별로 훑고, 목록에서 바로 또는
 한 건을 열어 제출 내용과 첨부자료를 확인한 뒤 승인하거나 반려하고, 그 결과를 토스트로 확인한다.
 
 ## 범위
@@ -79,7 +83,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
   **승인·반려 성공/실패 토스트(2026-09-13 개발자 결정으로 범위 편입)**, 업무 상세에서 업무보고로의 진입,
   사이드바 `업무 보고 바로가기`
 - 제외: 실제 API 연동 계약(`/api` 스킬 담당 — `app-work-report-*` spec, 2026-09-13 연동), 보고 작성·수정·삭제(직원 앱),
-  재제출 상태·재제출 요청 처리(yot 에서 탭이 사라졌다), 공개 범위 표시, 검색·정렬·다중 선택,
+  직원 앱의 재제출 화면(반려된 보고를 다시 올리는 쪽), 공개 범위 표시, 검색·정렬·다중 선택,
   사이드바 자체 동작 계약(`sidebar.spec.md` 담당)
 
 ## 라우트와 진입
@@ -97,12 +101,13 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 1920px 데스크톱 기준, 본문 폭 1320, 좌측 x300. 페이지 배경 `background`.
 
 1. 타이틀 @300,124 (h122): `업무보고`(60 SemiBold, `text`) + `토이빌리지 업무 보고 관리`(32 Medium, `textGuide`). 등록 버튼 없음.
-2. 탭바 @300,278 (h46): `심사대기 n` `완료 n` `반려 n`. 활성 탭 SemiBold `text` + 하단선, 비활성 Medium `textGuide`.
-   컴포넌트의 4번째 탭은 `hidden` 이라 구현하지 않는다.
+2. 탭바 @300,278 (h46): `심사대기 n` `재심사대기 n` `완료 n` `반려 n`. 활성 탭 SemiBold `text` + 하단선, 비활성 Medium `textGuide`.
+   컴포넌트의 마지막 탭(`팀이름`)은 `hidden` 이라 구현하지 않는다.
 3. 표 @300,354 (w1320, h372 = 헤더 72 + 행 100 × 3): 헤더 배경 `tableHeaderStrong`, 행 `surface`, 행 구분선.
    컬럼(폭): `제목`(440) `담당자`(200) `상태`(200) `우선순위`(180) `완료기한`(220) + 헤더 텍스트 없는 케밥 칸(80). 셀 텍스트 좌측 여백 40.
    `제목` 셀은 22 Medium `text` 한 줄이며 칸을 넘으면 말줄임(…)한다(2026-09-25 Figma 갱신, #184).
    - `상태` 셀: 심사 상태 배지(h40, `status / 업무 보고`) — `task-detail` 담당자별 보고 줄과 같은 배지.
+     `재심사대기` 배지는 배경 `resubmitBg`(#F0E8FF) · 글자 `resubmit`(#8A4DFF).
    - `우선순위` 셀: 배지 42x40(`common / 뱃지 / 우선순위`) — 업무관리 목록과 같은 컴포넌트라 `entities/task` 의 `TaskPriorityBadge` 를 쓴다
      (상 `danger` · 중 `warning` · 하 회색). 구 디자인용 36px 원형 `TaskReportPriorityBadge` 는 삭제한다.
    - 케밥 칸: `⋮` 44x52 (행 안 x18 y24) — 기존 업무관리 목록의 `RowActionMenu` 규격.
@@ -153,7 +158,10 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 - `/task-reports` 진입 → 업무보고 목록을 조회한다. 로딩 중 `업무보고를 불러오는 중입니다.`, 실패하면 오류 안내.
 - 기본 활성 탭은 `심사대기` 이고, 그 심사 상태의 보고만 표시한다.
-- 탭 라벨은 `{상태명} {건수}` 형태로, 건수는 조회 응답의 상태별 건수를 쓴다. 탭은 `심사대기` `완료` `반려` 셋이다.
+- 탭 라벨은 `{상태명} {건수}` 형태로, 건수는 조회 응답의 상태별 건수를 쓴다. 탭은 `심사대기` `재심사대기` `완료` `반려` 넷이다.
+- `재심사대기` 는 반려된 보고를 직원이 다시 제출한 상태다. 심사 방법은 `심사대기` 와 같다(케밥·상세의 승인·반려가 그대로 동작하고,
+  승인하면 `완료`, 반려하면 `반려` 탭으로 옮겨간다). 상세의 승인·반려 버튼은 `심사대기`·`재심사대기` 보고에만 보인다
+  (심사가 끝난 `완료`·`반려` 보고는 숨긴다 — #159).
 - 탭 클릭 → 해당 심사 상태로 필터하고 1페이지로 되돌린다.
 - 한 페이지에 10건(2026-09-13 개발자 결정 — Figma 표 높이 기준 3건을 대체). 결과가 한 페이지를 넘으면 페이지네이션을 보인다.
 - 표의 `상태` 칸은 그 보고의 **심사 상태** 배지다.
@@ -205,18 +213,19 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
   `mutation-delay`, `mutation-log`, `fail`)를 제거했다. 요청·응답 계약은 `harness/api/approvals/app-work-report-*` 가 기준이다.
 - 반려 사유는 따로 저장하지 않고 반려 요청 body(`rejectionReason`, 1000자 이하)로만 보낸다.
 - e2e 는 `tests/e2e/support/task-report-api.ts` 의 page.route mock 을 쓴다. 데이터는 Figma 1페이지 행(이승현 / 심사대기 / 상 /
-  2026-07-03)으로 시작하고, 한 페이지 10건에서 페이지네이션이 보이도록 `심사대기` 12건, `완료` 3건, `반려` 2건을 둔다.
+  2026-07-03)으로 시작하고, 한 페이지 10건에서 페이지네이션이 보이도록 `심사대기` 12건, `재심사대기` 3건, `완료` 3건, `반려` 2건을 둔다.
   지연·실패는 mock 옵션으로 만든다.
     (기존 `toyvillage:resources:fail` 과 같은 규약).
 
 ## 컴포넌트 구조/props
 
 - `entities/task-report/model/types.ts`
-  - `taskReportReviewStatuses = ['PENDING','APPROVED','REJECTED']` — `RESUBMITTED` 제거
+  - `taskReportReviewStatuses = ['PENDING','RESUBMIT','APPROVED','REJECTED']` — 순서가 곧 탭 순서다.
+    `RESUBMIT` 은 서버 enum 이름 그대로다(staging Swagger `WorkReportListResponse`, 2026-10-01 — 예전 `RESUBMITTED` 와 다르다).
   - `TaskReport { id, taskId?, assigneeId, assigneeName, title, content, reviewStatus, priority, dueDate, attachments? }`
     — 표시 위치가 사라진 `taskStatus` · `visibility` 제거
   - `TaskReportListItem` — 표 렌더용 파생 타입(`id, assigneeName, title, reviewStatus, priority, dueDate`)
-- `entities/task-report/model/labels.ts` — 탭 라벨 `심사대기 / 완료 / 반려`
+- `entities/task-report/model/labels.ts` — 탭 라벨 `심사대기 / 재심사대기 / 완료 / 반려`
 - `entities/task-report/ui/TaskReportReviewBadge.tsx` (**신규 — `TaskReportSummaryCard` 안의 배지를 추출**) —
   심사 상태 배지. 업무 상세 보고 줄·목록 `상태` 칸·상세 요약행이 함께 쓴다. props: `status`.
 - `entities/task-report/ui/TaskReportTable.tsx` — `shared/ui/DataTable`. 컬럼 5개(제목 포함) + 케밥 칸. 케밥 칸 내용은 페이지가
@@ -235,11 +244,15 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 ## 토큰
 
-신규 색·폰트 토큰 없음. `get_metadata` 는 색 값을 주지 않으므로 색은 스크린샷 관찰과 기존 컴포넌트
+2026-10-01 신규 색 토큰 2개(게이트 ② 확인 대상): `resubmit`(#8A4DFF, 재심사대기 배지 글자) ·
+`resubmitBg`(#F0E8FF, 재심사대기 배지 배경). Figma `Property 1=재심사대기`(`2716:24609`) 실측값이다. 폰트 토큰은 없다.
+그 밖의 색은 `get_metadata` 가 색 값을 주지 않으므로 색은 스크린샷 관찰과 기존 컴포넌트
 (`TaskReportSummaryCard` 배지, `TaskPriorityBadge`, `Toast`, `RejectReasonDialog`)의 토큰을 따른다.
 
 ## 미결 사항
 
+- [x] **게이트 ② 재승인(`재심사대기`, #218)** — S3 수정 · S37–S39 추가(e2e 의 기존 S34–S36 과 겹치지 않게 S37 부터). 신규 색 토큰 `resubmit` · `resubmitBg`.
+      2026-10-01 kimjihwan8 승인.
 - [x] **게이트 ② 재승인(S4·S9 수정)** — 2026-09-13 yunho09 승인 · e2e 재변환·freeze·통과(32/32). 상세 2차 수정본에서 첨부자료가 별도 카드가 돼 S9 를 다시 고쳤고,
       TODO-4 결정(배지 `완료`)을 S4 에 넣었다. 초안 `harness/artifacts/publishing/task-report.scenario-draft.md`.
       (1차 수정본 S9 는 2026-09-13 승인·e2e 통과했지만 2차 수정본으로 다시 바뀐다.)
@@ -253,6 +266,7 @@ paths: src/pages/task-reports, src/entities/task-report, src/features/review-tas
 
 - **결과 표시 편입(2026-09-13):** 이전 슬라이스에서 이월했던 성공/실패 결과 표시를 이번에 구현한다. 실패는 토스트로 통일.
 - **공개 범위 제외(2026-09-13):** 목록 컬럼과 상세 요약행 모두 그리지 않는다.
-- **재제출 제거:** yot 탭바의 4번째 탭이 `hidden` 이고 서버 보고 상태(`TASK_QUERY` reports)에도 재제출이 없다.
+- **재제출 제거(2026-09) → `재심사대기` 로 다시 추가(2026-10-01, #218):** 반려된 보고를 직원이 다시 제출할 수 있게 되면서
+  서버에 `RESUBMIT` 상태와 목록 건수 `resubmitCount` 가 생겼다(staging Swagger). yot 탭바에 `재심사대기` 탭(2번째)이 추가됐다.
 - **이전 TODO-3(상태 컬럼 의미) 해결:** yot 목록 `상태` 칸이 `심사대기` 배지로 그려져 심사 상태로 확정됐다.
 - 반응형은 기존 페이지들과 같은 기준(980px 이하에서 카드/버튼 줄바꿈)을 따른다.

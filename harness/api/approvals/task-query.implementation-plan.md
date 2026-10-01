@@ -1,5 +1,9 @@
 # Implementation Plan — task-query
 
+> **2026-10-01 `재심사대기` 추가(#218)** — `src/entities/task/model/types.ts` 의 `taskReportStatuses` 에 `RESUBMIT`,
+> `TaskProgressCounts`·`TaskQueryProgressResponse` 에 `resubmit`, `isTaskQueryProgress` 가 `resubmit` 정수를 요구한다.
+> `TaskDetailPage` 는 `progress.resubmit` 을 진행도 카드에 넘긴다. (아래 `MISSING→PENDING` 매핑·`pending + missing` 합산 서술은 f585ae7 에서 이미 폐기됐다.)
+
 ## 승인 기준
 
 - `GET /tasks/{id}`, Content-Type `application/json`, Authorization Bearer

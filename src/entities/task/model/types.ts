@@ -12,11 +12,12 @@ export interface TaskAssignee {
   position: string | null
 }
 
-/** 담당자별 업무보고 심사 상태. `MISSING` 은 미제출이다. */
+/** 담당자별 업무보고 심사 상태. `MISSING` 은 미제출, `RESUBMIT` 은 반려 후 재제출이다. */
 export const taskReportStatuses = [
   'APPROVED',
   'REJECTED',
   'PENDING',
+  'RESUBMIT',
   'MISSING',
 ] as const
 export type TaskReportStatus = (typeof taskReportStatuses)[number]
@@ -36,6 +37,8 @@ export interface TaskProgressCounts {
   approved: number
   rejected: number
   pending: number
+  /** 재심사대기(반려 후 재제출) */
+  resubmit: number
   missing: number
 }
 

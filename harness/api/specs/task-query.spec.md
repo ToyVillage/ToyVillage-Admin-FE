@@ -99,7 +99,8 @@ mock 단일 조회(`getMockTask`)를 `TASK_QUERY` API 연동으로 교체한다.
 
 # 확인이 필요한 명세 항목
 
-1. `reports[].status`의 Allowed Values가 없다 — **2026-09-11 결정으로 진행**.
+1. ~~`reports[].status`의 Allowed Values가 없다~~ — **2026-10-01 해소**: staging Swagger `/v3/api-docs`(2026-10-01, #218 개발자 지시 "Swagger 보고 해") 기준 `PENDING`·`RESUBMIT`·`APPROVED`·`REJECTED`·`MISSING`.
+   `RESUBMIT` 은 `재심사대기` 배지, 진행도는 `progress.resubmit` 을 따로 센다(#218). 아래는 2026-09-11 당시 메모다.
    예시에 `APPROVED`, `REJECTED`, `MISSING`이 보이고 `progress`에는 `pending`이
    따로 있으므로, 제출 후 심사 전 상태를 `PENDING`으로 보고 네 값을 받는다.
    화면 대응은 `APPROVED`→`승인`, `REJECTED`→`반려`, `PENDING`→`심사대기`,

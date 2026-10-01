@@ -31,6 +31,8 @@
 
 오류 body는 Contract 형식 `{ message, status, timestamp, description }`을 쓴다.
 
+> **2026-10-01 `재심사대기`(`RESUBMIT`) 추가(#218)** — S15·S16·S17 수정. 미제출 분리(커밋 f585ae7)도 이 문서에 함께 맞춘다.
+
 ## Mock S1 — 상세 진입과 표시
 
 - 목적: 진입 시 해당 id로 한 번 조회하고 응답 값을 화면에 표시한다.
@@ -117,22 +119,22 @@
 ## Mock S15 — 담당자별 보고 현황 표시 (2026-09-11 추가)
 
 - 목적: `reports[]`가 담당자 전원이고 미제출 줄도 그려진다.
-- Mock response: HTTP 200, `reports` 4건
-  (`APPROVED` 31 · `REJECTED` 33 · `PENDING` 34 · `MISSING` null)
+- Mock response: HTTP 200, `reports` 5건
+  (`APPROVED` 31 · `REJECTED` 33 · `PENDING` 34 · `RESUBMIT` 35 · `MISSING` null)
 - 사용자 동작: `/tasks/12` 진입
-- 기대 결과: 줄 4개, 배지가 `완료`·`반려`·`심사대기`·`심사대기`
-  (`APPROVED` 배지 문구는 2026-09-13 `완료`로 변경)
-  (`MISSING` 도 `심사대기` 로 표시한다). 누를 수 있는 줄은 제출된 3개이고, 첫 줄을
+- 기대 결과: 줄 5개, 배지가 `완료`·`반려`·`심사대기`·`재심사대기`·`미제출`
+  (`APPROVED` 배지 문구는 2026-09-13 `완료`로 변경, `MISSING` 은 f585ae7 부터 `미제출`,
+  `RESUBMIT` 은 2026-10-01 `재심사대기`). 누를 수 있는 줄은 제출된 4개이고, 첫 줄을
   누르면 `/task-reports/31` 로 이동한다. `workReportId` 가 null 인 줄은 버튼이
   아니다(2026-09-13 업무보고 API 연동으로 진입 보류 해제).
 
-## Mock S16 — 진행도는 서버 집계를 쓰고 미제출을 심사대기에 합산 (2026-09-11 추가)
+## Mock S16 — 진행도는 서버 집계를 그대로 쓴다 (2026-09-11 추가, 2026-10-01 수정)
 
-- 목적: 클라이언트가 `reports`로 다시 세지 않고, 미제출을 심사대기에 합산한다.
-- Mock response: HTTP 200, `reports` 4건에 대해 `progress` 를 일부러 다르게
-  (`{ total: 9, approved: 5, rejected: 2, pending: 1, missing: 1 }`) 내려준다.
-- 기대 결과: 요약 문구가 `전체 9 · 승인 5 · 반려 2 · 심사대기 2` 이다
-  (`심사대기` 만 `pending + missing`, 나머지는 응답 값 그대로).
+- 목적: 클라이언트가 `reports`로 다시 세지 않고, 상태별 숫자를 합산 없이 그대로 쓴다.
+- Mock response: HTTP 200, `reports` 5건에 대해 `progress` 를 일부러 다르게
+  (`{ total: 10, approved: 5, rejected: 2, pending: 1, resubmit: 1, missing: 1 }`) 내려준다.
+- 기대 결과: 요약 문구가 `전체 10 · 승인 5 · 반려 2` / `심사대기 1 · 재심사대기 1 · 미제출 1` 이다.
+- 추가: `progress.resubmit` 이 없으면 Contract 형식 위반으로 오류 화면이다.
 
 ## Mock S17 — 허용값 밖의 보고 상태 (2026-09-11 추가, 2026-09-12 수정)
 
@@ -140,8 +142,9 @@
   와도 상세 화면을 살린다. 값 하나가 응답 검증을 깨 화면 전체를 날리면 안 된다.
 - Mock response: HTTP 200, `reports[0].status = "RESUBMITTED"`,
   `reports[1].status = "UNKNOWN"` (`workReportId` 는 null)
-- 기대 결과: 오류 화면 없이 줄 2개를 그리고 둘 다 `심사대기` 배지다
-  (제출된 줄은 `PENDING`, 미제출 줄은 `MISSING` 으로 낙관 처리한다)
+- 기대 결과: 오류 화면 없이 줄 2개를 그리고 첫 줄은 `심사대기`, 둘째 줄은 `미제출` 배지다
+  (제출된 줄은 `PENDING`, 미제출 줄은 `MISSING` 으로 낙관 처리한다. 서버 값은 `RESUBMIT` 이라
+  `RESUBMITTED` 는 여전히 모르는 값이다)
 
 ## Staging R1
 

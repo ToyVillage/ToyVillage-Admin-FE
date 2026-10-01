@@ -63,6 +63,7 @@ export async function getTaskReports({
     totalPageSize: data.totalPageSize,
     counts: {
       PENDING: data.pendingCount,
+      RESUBMIT: data.resubmitCount,
       APPROVED: data.approvedCount,
       REJECTED: data.rejectedCount,
     },
@@ -167,7 +168,8 @@ function isTaskReportQueryAllResponse(
     Number.isInteger(response.totalPageSize) &&
     Number.isInteger(response.pendingCount) &&
     Number.isInteger(response.approvedCount) &&
-    Number.isInteger(response.rejectedCount)
+    Number.isInteger(response.rejectedCount) &&
+    Number.isInteger(response.resubmitCount)
   )
 }
 

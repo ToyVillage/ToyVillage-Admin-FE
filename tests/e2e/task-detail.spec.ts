@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { mockTaskApi } from './support/task-api'
 import { mockWorkReportApi } from './support/task-report-api'
 
-// 승인된 시나리오(task-detail.approved.json, S1~S19)를 변환한 것.
+// 승인된 시나리오(task-detail.approved.json, S1~S20)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 상세 조회가 API 연동으로 바뀌어 localStorage mock 대신
 // `support/task-api` 의 page.route mock 을 쓴다(검증 의도는 그대로다).
@@ -77,14 +77,17 @@ test('S5: 업무보고 목록', async ({ page }) => {
   await expect(rows.nth(4)).toContainText('홍길동')
   await expect(rows.nth(4)).toContainText('미제출')
   await expect(rows.nth(4)).not.toContainText('심사대기')
+  // 서버 `RESUBMIT`(반려 후 재제출)은 `재심사대기` 배지다.
+  await expect(rows.nth(5)).toContainText('김민수')
+  await expect(rows.nth(5)).toContainText('재심사대기')
 })
 
-test('S5-1: 미제출 줄은 비활성', async ({ page }) => {
+test('S20: 미제출 줄 비활성', async ({ page }) => {
   await page.goto('/tasks/1')
 
-  // 미제출 줄은 버튼이 아니고 chevron 도 없다. 제출된 줄에만 chevron 이 있다.
+  // 미제출 줄은 버튼이 아니고 chevron 도 없다. 제출된 줄(재심사대기 포함)에만 chevron 이 있다.
   const missingRows = reportRows(page).filter({ hasText: '미제출' })
-  await expect(missingRows).toHaveCount(2)
+  await expect(missingRows).toHaveCount(1)
   await expect(missingRows.getByRole('button')).toHaveCount(0)
   await expect(missingRows.locator('svg')).toHaveCount(0)
   await expect(reportItems(page).first().locator('svg')).toHaveCount(1)
@@ -95,24 +98,28 @@ test('S6: 업무보고 상세 진입', async ({ page }) => {
   await mockWorkReportApi(page)
   await page.goto('/tasks/1')
 
-  // 제출된 4건만 버튼이다. 미제출(`workReportId: null`) 2줄은 누를 수 없다.
+  // 제출된 5건(재심사대기 포함)만 버튼이다. 미제출(`workReportId: null`) 1줄은 누를 수 없다.
   await expect(reportRows(page)).toHaveCount(6)
-  await expect(reportItems(page)).toHaveCount(4)
+  await expect(reportItems(page)).toHaveCount(5)
 
   await reportItems(page).first().click()
   await expect(page).toHaveURL(/\/task-reports\/31$/)
 })
 
 test('S7: 진행도 요약', async ({ page }) => {
-  // 미제출은 심사대기와 따로 센다.
+  // 심사대기·재심사대기·미제출을 합치지 않고 따로 센다.
   await page.goto('/tasks/1')
   await expect(page.getByText('전체 6 · 승인 2 · 반려 1')).toBeVisible()
-  await expect(page.getByText('심사대기 1 · 미제출 2')).toBeVisible()
+  await expect(
+    page.getByText('심사대기 1 · 재심사대기 1 · 미제출 1'),
+  ).toBeVisible()
 
   // 아무도 내지 않은 업무는 전부 미제출이다.
   await page.goto('/tasks/2')
   await expect(page.getByText('전체 1 · 승인 0 · 반려 0')).toBeVisible()
-  await expect(page.getByText('심사대기 0 · 미제출 1')).toBeVisible()
+  await expect(
+    page.getByText('심사대기 0 · 재심사대기 0 · 미제출 1'),
+  ).toBeVisible()
   await expect(reportRows(page).filter({ hasText: '미제출' })).toHaveCount(1)
 })
 
