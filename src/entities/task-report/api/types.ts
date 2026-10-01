@@ -28,6 +28,8 @@ export interface TaskReportQueryAllResponse {
   pendingCount: number
   approvedCount: number
   rejectedCount: number
+  /** 재심사대기(반려 후 재제출) 건수 */
+  resubmitCount: number
 }
 
 export interface TaskReportQueryAllErrorResponse {

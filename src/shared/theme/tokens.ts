@@ -36,6 +36,8 @@ export const tokens = {
     listDivider: '#F0F0F3', // 직원 계정 관리 표 머리행·행 구분선
     warning: '#FDB542', // 반려 상태 / 우선순위 중
     warningBg: '#FFE8C3', // 반려 상태 배경 / 우선순위 중 배경
+    resubmit: '#8A4DFF', // 재심사대기 배지 글자 / 진행도 조각
+    resubmitBg: '#F0E8FF', // 재심사대기 배지 배경
     warningText: '#8A5A00', // 법정지정분류 뱃지 글자 (warningBg 위)
     warningBadgeText: '#B7740A', // 직원 계정 `초기 비밀번호` 배지 글자 (warningBg 위)
     dangerBg: '#FFCECE', // 우선순위 상 배경 / 삭제 모달 아이콘 배경

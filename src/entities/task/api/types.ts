@@ -63,6 +63,7 @@ export interface TaskQueryProgressResponse {
   approved: number
   rejected: number
   pending: number
+  resubmit: number
   missing: number
 }
 

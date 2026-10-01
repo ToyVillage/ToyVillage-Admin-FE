@@ -257,7 +257,7 @@ function isTaskQueryProgress(
   const progress = value as Record<string, unknown>
 
   return (
-    ['total', 'approved', 'rejected', 'pending', 'missing'] as const
+    ['total', 'approved', 'rejected', 'pending', 'resubmit', 'missing'] as const
   ).every((key) => Number.isInteger(progress[key]))
 }
 

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   getTaskReport,
+  isTaskReportReviewable,
   TaskReportContentCard,
   TaskReportMetaRow,
 } from '@/entities/task-report'
@@ -113,7 +114,7 @@ export function TaskReportDetailPage() {
           </AttachmentCard>
         </Body>
 
-        {report.reviewStatus === 'PENDING' && (
+        {isTaskReportReviewable(report.reviewStatus) && (
           <TaskReportReviewActions
             reportId={report.id}
             onSuccess={(action) =>
