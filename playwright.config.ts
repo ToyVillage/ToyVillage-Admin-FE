@@ -4,6 +4,11 @@ import {
   analyticsMeasurementId,
   analyticsServerPort,
 } from './tests/e2e/support/analytics-server'
+import {
+  sentryBaseURL,
+  sentryDsn,
+  sentryServerPort,
+} from './tests/e2e/support/sentry-server'
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173'
 const serverURL = new URL(baseURL)
@@ -52,8 +57,9 @@ export default defineConfig({
       env: {
         VITE_API_BASE_URL: 'https://api.e2e.invalid',
         VITE_FILE_BASE_URL: 'https://cdn.e2e.invalid',
-        // 로컬 .env 에 측정 ID 가 있어도 테스트 방문이 GA 에 집계되지 않게 끈다.
+        // 로컬 .env 에 측정 ID·DSN 이 있어도 테스트 방문이 GA·Sentry 로 나가지 않게 끈다.
         VITE_GA_MEASUREMENT_ID: '',
+        VITE_SENTRY_DSN: '',
       },
       url: baseURL,
       reuseExistingServer: !process.env.CI,
@@ -66,8 +72,23 @@ export default defineConfig({
         VITE_API_BASE_URL: 'https://api.e2e.invalid',
         VITE_FILE_BASE_URL: 'https://cdn.e2e.invalid',
         VITE_GA_MEASUREMENT_ID: analyticsMeasurementId,
+        VITE_SENTRY_DSN: '',
       },
       url: analyticsBaseURL,
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    {
+      // Sentry 연동 검증(sentry.spec.ts) 전용. DSN 이 반드시 들어가야 하므로 재사용하지 않는다.
+      command: `yarn dev --host 127.0.0.1 --port ${sentryServerPort}`,
+      env: {
+        VITE_API_BASE_URL: 'https://api.e2e.invalid',
+        VITE_FILE_BASE_URL: 'https://cdn.e2e.invalid',
+        VITE_GA_MEASUREMENT_ID: '',
+        VITE_SENTRY_DSN: sentryDsn,
+        VITE_SENTRY_ENVIRONMENT: 'e2e',
+      },
+      url: sentryBaseURL,
       reuseExistingServer: false,
       timeout: 120_000,
     },
