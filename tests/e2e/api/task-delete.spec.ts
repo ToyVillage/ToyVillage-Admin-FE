@@ -160,6 +160,60 @@ test('S9: HTTP 201은 승인된 성공 Status가 아니므로 거부한다', asy
   await expectDeleteFailure(page, 1)
 })
 
+test('S10: HTTP 409이면 업무보고가 있어 삭제할 수 없다고 알린다(상세)', async ({
+  page,
+}) => {
+  await mockDeleteError(
+    page,
+    409,
+    '해당 업무에 대한 업무 보고가 이미 존재합니다.',
+  )
+
+  await openDeleteTarget(page)
+  await confirmDelete(page)
+
+  await expect(page.getByRole('alert')).toContainText(
+    '업무보고가 등록된 업무는 삭제할 수 없습니다',
+  )
+  await expect(page.getByText('데이터 삭제에 실패했습니다')).toHaveCount(0)
+  await expect(page).toHaveURL(/\/tasks\/1$/)
+  await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  await expect(menuTrigger(page)).toBeEnabled()
+})
+
+test('S11: HTTP 409이면 업무보고가 있어 삭제할 수 없다고 알린다(목록)', async ({
+  page,
+}) => {
+  await mockDeleteError(
+    page,
+    409,
+    '해당 업무에 대한 업무 보고가 이미 존재합니다.',
+  )
+
+  await page.goto('/tasks')
+  const rows = page.getByTestId('task-row')
+  await expect(rows.first()).toBeVisible()
+  const rowCount = await rows.count()
+
+  await rows
+    .first()
+    .getByRole('button', { name: /업무 메뉴 열기/ })
+    .click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
+  await page
+    .getByRole('alertdialog')
+    .getByRole('button', { name: '확인', exact: true })
+    .click()
+
+  await expect(page.getByRole('alert')).toContainText(
+    '업무보고가 등록된 업무는 삭제할 수 없습니다',
+  )
+  await expect(page.getByText('데이터 삭제에 실패했습니다')).toHaveCount(0)
+  await expect(page).toHaveURL(/\/tasks$/)
+  await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  await expect(rows).toHaveCount(rowCount)
+})
+
 async function openDeleteTarget(page: Page, id = 1) {
   await page.goto(`/tasks/${id}`)
   await expect(menuTrigger(page)).toBeVisible()
