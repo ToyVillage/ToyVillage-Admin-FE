@@ -6,8 +6,9 @@ import {
   SkeletonStatus,
 } from '@/shared/ui'
 
-// Figma `업무보고 상세 (스켈레톤)`(2238:20288) — 뒤로가기·요약행 라벨·`첨부자료`·심사 버튼은
+// Figma `업무보고 상세 (스켈레톤)`(2238:20288) — 뒤로가기·요약행 라벨·`첨부자료`는
 // 실제 UI 이고 서버가 주는 값만 막대다. 뒤로가기는 page 가 그린다.
+// 심사 버튼은 심사 가능 상태에서만 그리므로 상태를 알기 전인 스켈레톤에는 두지 않는다.
 export function TaskReportDetailSkeleton() {
   return (
     <SkeletonStatus>
@@ -29,14 +30,6 @@ export function TaskReportDetailSkeleton() {
           <AttachmentChipsSkeleton />
         </SkeletonCard>
       </Cards>
-      <Actions>
-        <RejectButton type="button" disabled>
-          반려하기
-        </RejectButton>
-        <ApproveButton type="button" disabled>
-          승인하기
-        </ApproveButton>
-      </Actions>
     </SkeletonStatus>
   )
 }
@@ -69,32 +62,4 @@ const Cards = styled.div`
   flex-direction: column;
   gap: 32px;
   margin-top: 32px;
-`
-
-const Actions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 24px;
-  margin-top: 64px;
-`
-
-// 실제 심사 버튼(`TaskReportReviewActions`)과 같은 모양. 조회 중에는 누를 수 없다.
-const ReviewButton = styled.button`
-  height: 60px;
-  padding: 0 32px;
-  border-radius: 12px;
-  font-size: 20px;
-  font-weight: 600;
-`
-
-const RejectButton = styled(ReviewButton)`
-  border: 1px solid ${({ theme }) => theme.colors.danger};
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.danger};
-`
-
-const ApproveButton = styled(ReviewButton)`
-  border: 0;
-  background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.surface};
 `
