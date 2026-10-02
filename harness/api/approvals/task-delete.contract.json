@@ -100,6 +100,23 @@
         }
 ,
         {
+          "status": 409,
+          "description": "해당 업무에 대한 업무보고가 이미 존재함",
+          "body": {
+            "type": "object",
+            "nullable": false,
+            "description": "해당 업무에 대한 업무보고가 이미 존재함",
+            "fields": [
+              { "name": "message", "location": "response", "type": "string", "required": true, "nullable": false, "default": null, "example": "해당 업무에 대한 업무 보고가 이미 존재합니다.", "description": "오류 메시지", "constraints": [] },
+              { "name": "status", "location": "response", "type": "integer", "required": true, "nullable": false, "default": null, "example": 409, "description": "HTTP 상태 코드", "constraints": [] },
+              { "name": "timestamp", "location": "response", "type": "datetime", "required": true, "nullable": false, "default": null, "example": "2026-02-06T19:56:53.62201", "description": "오류 발생 시각", "constraints": [] },
+              { "name": "description", "location": "response", "type": "string", "required": true, "nullable": false, "default": null, "example": "에러 설명", "description": "오류 설명", "constraints": [] }
+            ]
+          },
+          "noContent": false
+        }
+,
+        {
           "status": 500,
           "description": "예상하지 못한 서버 오류",
           "body": {
@@ -118,11 +135,11 @@
     ]
   },
   "source": {
-    "notionDatabase": "https://app.notion.com/p/3cb7a4d6147480f0b86be38a68a2598b",
-    "notionDataSource": "collection://e407a4d6-1474-83ba-8868-87ab2b3811e4",
-    "resolvedNotionPage": "https://app.notion.com/p/8777a4d6147483ab9f79812d73580d3f",
-    "requestedNotionPage": "https://app.notion.com/p/8777a4d6147483ab9f79812d73580d3f",
-    "checkedAt": "2026-08-29T13:51:08+09:00",
+    "notionDatabase": "https://app.notion.com/p/3ed7a4d6147480a6acdfd303ab9531c8",
+    "notionDataSource": "collection://9df7a4d6-1474-839c-abb2-070e88bf667e",
+    "resolvedNotionPage": "https://app.notion.com/p/1707a4d6147483c9ae1b81e7043f72c3",
+    "requestedNotionPage": "https://app.notion.com/p/1707a4d6147483c9ae1b81e7043f72c3",
+    "checkedAt": "2026-10-02T18:44:51+09:00",
     "apiIdMatchCount": 1,
     "databaseValues": {
       "apiId": "TASK_DELETE", "method": "DELETE", "path": "/tasks/{id}",

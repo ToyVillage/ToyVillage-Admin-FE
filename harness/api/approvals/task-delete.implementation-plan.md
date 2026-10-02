@@ -6,7 +6,7 @@
 - Path `id`: required, nullable false, 양의 integer로 동결
 - Query Parameters, Request Body: 없음으로 동결
 - 성공 Status `200`, body `{ message: string }` required로 동결
-- 오류 400/401/403/404/500 body 필드 모두 required로 동결
+- 오류 400/401/403/404/409/500 body 필드 모두 required로 동결
 - 실제 서버 테스트 disabled
 
 ## 재사용할 기존 코드
@@ -77,3 +77,20 @@
 - 성공 응답이 200이 아니거나 `message`가 없으면 Contract 재승인
 - 단일 조회·목록 API를 추측해 추가하지 않는다
 - 승인 Contract 밖의 필드가 필요하면 ⑧로 돌아간다
+
+## 409 추가 (#222, 2026-10-02)
+
+Notion 명세에 409(해당 업무에 업무보고가 이미 있어 삭제 거부)가 추가됐다.
+삭제는 이제 상세(`TaskDetailPage`) 케밥과 목록(`TaskListPage`) 행 메뉴가 맡는다.
+
+- `src/entities/task/api/taskApi.ts`에 `isTaskHasReportError(error)` 추가:
+  `isAxiosError(error) && error.response?.status === 409`
+  (기존 `isDuplicateFormNameError` 와 같은 판별 패턴). `index.ts` export.
+- `src/pages/tasks/TaskDetailPage.tsx`: `onError(error)`에서 409면
+  `업무보고가 등록된 업무는 삭제할 수 없습니다`, 그 외는 기존
+  `데이터 삭제에 실패했습니다` error 토스트. 다이얼로그 닫기·초점 복귀는 유지.
+- `src/pages/tasks/TaskListPage.tsx`: 토스트 키 `delete-has-report` 추가,
+  409면 이 키, 그 외는 `delete-error`.
+- 캐시: 409 도 실패라 무효화·제거하지 않는다.
+- Sentry: 409 는 `reportApiError` 대상이 아니다(변경 없음).
+- 테스트: `tests/e2e/api/task-delete.spec.ts`에 S10·S11 추가.

@@ -2,7 +2,7 @@
 feature: task-delete
 api_id: TASK_DELETE
 target_page: src/pages/tasks/TaskDetailPage.tsx
-notion_page: https://app.notion.com/p/8777a4d6147483ab9f79812d73580d3f
+notion_page: https://app.notion.com/p/1707a4d6147483c9ae1b81e7043f72c3
 requires_functional_test: true
 real_server:
   enabled: false
@@ -42,6 +42,9 @@ real_server:
 - 삭제 오류를 성공이나 localStorage mock 삭제로 숨기지 않는다.
 - 실패하면 상세 화면에 머물고 기존 `데이터 삭제에 실패했습니다` 토스트를
   표시하며 다시 삭제할 수 있어야 한다.
+- HTTP 409(해당 업무에 업무보고가 이미 있음)는 일반 실패와 구분해
+  `업무보고가 등록된 업무는 삭제할 수 없습니다` 토스트를 표시한다. 목록 행
+  메뉴의 삭제도 같다. 업무와 캐시는 그대로 둔다.
 
 # 캐시 갱신 기대
 
