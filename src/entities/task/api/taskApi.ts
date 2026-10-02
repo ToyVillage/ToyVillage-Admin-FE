@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios'
 import { api } from '@/shared/api/axios'
 import {
   taskPriorities,
@@ -165,6 +166,11 @@ export async function deleteTask({
   }
 
   return data
+}
+
+/** 업무보고가 이미 달린 업무지시는 서버가 409 로 삭제를 거부한다. */
+export function isTaskHasReportError(error: unknown): boolean {
+  return isAxiosError(error) && error.response?.status === 409
 }
 
 function isTaskQueryAllResponse(
