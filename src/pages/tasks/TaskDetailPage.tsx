@@ -124,7 +124,7 @@ export function TaskDetailPage() {
         setDeleteDialogOpen(false)
         setDeleteError(
           isTaskHasReportError(error)
-            ? '업무보고가 등록된 업무는 삭제할 수 없습니다'
+            ? '업무보고가 등록된 업무는\n삭제할 수 없습니다'
             : '데이터 삭제에 실패했습니다',
         )
         focusMenuTrigger()

@@ -52,7 +52,7 @@ const toastByKey: Record<
   'delete-error': { variant: 'error', message: '데이터 삭제에 실패했습니다' },
   'delete-has-report': {
     variant: 'error',
-    message: '업무보고가 등록된 업무는 삭제할 수 없습니다',
+    message: '업무보고가 등록된 업무는\n삭제할 수 없습니다',
   },
   'create-success': {
     variant: 'success',
