@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   deleteTask,
   getTasks,
+  isTaskHasReportError,
   TaskTable,
   type TaskStatus,
 } from '@/entities/task'
@@ -33,7 +34,8 @@ const tabStatuses: Record<string, TaskStatus | undefined> = {
   지연: 'EXPIRED',
 }
 
-type TaskListToastKey = 'delete-success' | 'delete-error' | 'create-success'
+type TaskListToastKey =
+  'delete-success' | 'delete-error' | 'delete-has-report' | 'create-success'
 
 interface TaskListLocationState {
   toast?: TaskListToastKey
@@ -48,6 +50,10 @@ const toastByKey: Record<
     message: '데이터 삭제에 성공했습니다',
   },
   'delete-error': { variant: 'error', message: '데이터 삭제에 실패했습니다' },
+  'delete-has-report': {
+    variant: 'error',
+    message: '업무보고가 등록된 업무는 삭제할 수 없습니다',
+  },
   'create-success': {
     variant: 'success',
     message: '데이터 생성에 성공했습니다',
@@ -139,10 +145,12 @@ export function TaskListPage() {
         setLocalToast('delete-success')
         focusMenuTrigger(targetId)
       },
-      onError: () => {
+      onError: (error) => {
         deletingRef.current = false
         setDeleteTargetId(null)
-        setLocalToast('delete-error')
+        setLocalToast(
+          isTaskHasReportError(error) ? 'delete-has-report' : 'delete-error',
+        )
         focusMenuTrigger(targetId)
       },
     })
