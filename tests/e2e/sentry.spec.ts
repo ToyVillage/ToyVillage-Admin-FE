@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 import { sentryBaseURL } from './support/sentry-server'
+import { mockTaskApi } from './support/task-api'
 
 // 가짜 DSN 으로 나가는 envelope 를 가로채 Sentry 로 무엇이 가는지 검증한다.
 // 실제 Sentry 로는 아무것도 나가지 않는다.
@@ -8,6 +9,7 @@ const reissueApiPath = /^https:\/\/[^/]+\/app\/auth\/reissue(?:\?.*)?$/
 const noticeListApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
 const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
+const noticeDetailApiPath = /^https:\/\/[^/]+\/notice\/\d+(?:\?.*)?$/
 
 const sessionEndMessage = '인증 실패로 세션 종료'
 
@@ -82,6 +84,45 @@ test.describe('요청 실패', () => {
     })
     expect(apiEvents()[0].fingerprint).toEqual(['api', 'GET', '/notice', '400'])
     expect(events.filter((event) => event.tags?.['request.kind'])).toEqual([])
+  })
+
+  test('404 는 경고 수준으로 보낸다', async ({ page }) => {
+    const events = captureSentryEvents(page)
+    await page.route(noticeDetailApiPath, (route) =>
+      route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify(errorBody(404, '공지사항을 찾을 수 없습니다.')),
+      }),
+    )
+
+    await page.goto(`${sentryBaseURL}/notices/list/12`)
+
+    await expect.poll(() => findApiEvents(events, 404)).not.toHaveLength(0)
+    const [event] = findApiEvents(events, 404)
+    expect(event.level).toBe('warning')
+    expect(event.fingerprint).toEqual(['api', 'GET', '/notice/:id', '404'])
+  })
+
+  // 업무보고가 달린 업무지시를 지우면 서버가 409 를 준다(isTaskHasReportError).
+  test('409 는 경고 수준으로 보낸다', async ({ page }) => {
+    const events = captureSentryEvents(page)
+    // captureSentryEvents 보다 나중에 등록해야 API mock 이 먼저 잡는다.
+    await mockTaskApi(page, { deleteStatus: 409 })
+
+    await page.goto(`${sentryBaseURL}/tasks`)
+    await page
+      .getByTestId('task-row')
+      .first()
+      .getByRole('button', { name: /업무 메뉴 열기/ })
+      .click()
+    await page.getByRole('menuitem', { name: '삭제' }).click()
+    await page.getByRole('button', { name: '확인' }).click()
+
+    await expect.poll(() => findApiEvents(events, 409)).not.toHaveLength(0)
+    const [event] = findApiEvents(events, 409)
+    expect(event.level).toBe('warning')
+    expect(event.fingerprint).toEqual(['api', 'DELETE', '/tasks/:id', '409'])
   })
 })
 
@@ -188,6 +229,10 @@ function findException(events: SentryEvent[], value: string) {
   return events.filter((event) =>
     event.exception?.values?.some((exception) => exception.value === value),
   )
+}
+
+function findApiEvents(events: SentryEvent[], status: number) {
+  return events.filter((event) => event.tags?.['api.status'] === status)
 }
 
 function findSessionEnd(events: SentryEvent[]) {
