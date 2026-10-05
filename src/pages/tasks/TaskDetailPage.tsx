@@ -2,7 +2,12 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { deleteTask, getTask, TaskInfoRow } from '@/entities/task'
+import {
+  deleteTask,
+  getTask,
+  isTaskHasReportError,
+  TaskInfoRow,
+} from '@/entities/task'
 import {
   TaskProgressCard,
   TaskReportSummaryCard,
@@ -42,7 +47,8 @@ export function TaskDetailPage() {
   const menuTriggerRef = useRef<HTMLButtonElement | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteFailed, setDeleteFailed] = useState(false)
+  // 삭제 실패 토스트 문구. null 이면 숨긴다.
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   // 다운로드 실패가 연달아 나도 토스트를 새로 띄우도록 매번 값을 바꾼다. 0 이면 숨긴다.
   const [downloadErrorId, setDownloadErrorId] = useState(0)
   const dismissDownloadError = useCallback(() => setDownloadErrorId(0), [])
@@ -113,10 +119,14 @@ export function TaskDetailPage() {
         await queryClient.invalidateQueries({ queryKey: ['tasks'] })
         navigate('/tasks', { state: { toast: 'delete-success' } })
       },
-      onError: () => {
+      onError: (error) => {
         deletingRef.current = false
         setDeleteDialogOpen(false)
-        setDeleteFailed(true)
+        setDeleteError(
+          isTaskHasReportError(error)
+            ? '업무보고가 등록된 업무는\n삭제할 수 없습니다'
+            : '데이터 삭제에 실패했습니다',
+        )
         focusMenuTrigger()
       },
     })
@@ -233,11 +243,11 @@ export function TaskDetailPage() {
         />
       )}
 
-      {deleteFailed && (
+      {deleteError && (
         <Toast
           variant="error"
-          message="데이터 삭제에 실패했습니다"
-          onDismiss={() => setDeleteFailed(false)}
+          message={deleteError}
+          onDismiss={() => setDeleteError(null)}
         />
       )}
 

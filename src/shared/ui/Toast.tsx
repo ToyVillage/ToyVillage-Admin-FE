@@ -107,8 +107,10 @@ const Icon = styled.svg<{ $variant: ToastVariant }>`
     $variant === 'error' ? theme.colors.danger : theme.colors.success};
 `
 
+// 문구의 `\n` 은 줄바꿈으로 보인다.
 const Message = styled.p`
   margin: 0;
+  white-space: pre-line;
   color: ${({ theme }) => theme.colors.text};
   font-size: 28px;
   font-weight: 500;

@@ -4,14 +4,14 @@
 
 - API ID 검색 결과: exact match 1건
 - Notion database:
-  `https://app.notion.com/p/3cb7a4d6147480f0b86be38a68a2598b`
+  `https://app.notion.com/p/3ed7a4d6147480a6acdfd303ab9531c8`
 - Notion data source:
-  `collection://e407a4d6-1474-83ba-8868-87ab2b3811e4`
+  `collection://9df7a4d6-1474-839c-abb2-070e88bf667e`
 - Resolved page:
-  `https://app.notion.com/p/8777a4d6147483ab9f79812d73580d3f`
+  `https://app.notion.com/p/1707a4d6147483c9ae1b81e7043f72c3`
 - Requested page:
-  `https://app.notion.com/p/8777a4d6147483ab9f79812d73580d3f`
-- Checked at: `2026-08-29T13:51:08+09:00`
+  `https://app.notion.com/p/1707a4d6147483c9ae1b81e7043f72c3`
+- Checked at: `2026-10-02T18:44:51+09:00`
 
 ## Basic Information
 
@@ -67,6 +67,8 @@
 - HTTP 401: 토큰이 잘못되었거나 파싱할 수 없음
 - HTTP 403: 권한 없음 (`message` 예시는 빈 문자열)
 - HTTP 404: 존재하지 않는 업무지시
+- HTTP 409: 해당 업무에 대한 업무보고가 이미 존재함
+  (`message` 예시 `해당 업무에 대한 업무 보고가 이미 존재합니다.`)
 - HTTP 500: 예상하지 못한 서버 오류
 - 공통 필드: `message`(string), `status`(integer), `timestamp`(datetime),
   `description`(string)
@@ -87,6 +89,9 @@
 - 성공 Status는 Notion 원문 `200`을 그대로 유지했다.
 - HTTP 오류 예시의 JSON 주석은 문서 표기이며 Contract JSON에는 포함하지 않는다.
 - 실제 서버 테스트는 비활성화한다.
+- 2026-10-02 Notion 명세에 추가된 409(업무보고가 이미 있는 업무지시 삭제 거부)를
+  반영했다(#222). Notion 원문은 409 설명을 `업무지시를 찾을 수 없습니다.`로
+  404 와 같게 적었으나, `message` 예시가 업무보고 존재를 말하므로 그 뜻으로 동결했다.
 
 ## Backend Questions
 

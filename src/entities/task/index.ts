@@ -10,6 +10,7 @@ export { taskPriorities, taskStatuses } from './model/types'
 export {
   createTask,
   deleteTask,
+  isTaskHasReportError,
   getTask,
   getTasks,
   updateTask,
