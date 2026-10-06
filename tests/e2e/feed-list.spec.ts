@@ -41,6 +41,7 @@ test('S1: 목록 진입 기본 표시', async ({ page }) => {
   await expect(page.getByText('종', { exact: true })).toBeVisible()
   await expect(page.getByText('개체명')).toBeVisible()
   await expect(page.getByText('먹이 종류 · 급여량')).toBeVisible()
+  await expect(page.getByText('잔량', { exact: true })).toBeVisible()
   await expect(page.getByText('급여자')).toBeVisible()
   // 급여일시는 날짜·시간 두 열로 나뉜다.
   await expect(page.getByText('급여날짜')).toBeVisible()
@@ -221,6 +222,7 @@ test('S13: 열 폭보다 긴 값은 한 줄로 말줄임한다', async ({ page }
         animalTaxonomic: 'FISH',
         feedType: '사료',
         feedAmount: 1,
+        remainingAmount: 0,
         name: '관리자',
         feedDateTime: `${todayIsoDate()}T09:30:00`,
         significant: '정상',
@@ -263,6 +265,53 @@ test('S12: 조회날짜 목록을 펼치면 선택된 항목이 보이게 스크
 
   await expect(list.getByRole('option', { selected: true })).toBeInViewport()
   expect(await list.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
+})
+
+test('S15: 잔량 열은 급여량 오른쪽에 kg 로 표시한다', async ({ page }) => {
+  await page.goto('/feeds')
+
+  // 잔량이 남은 기록과 다 먹은(0) 기록.
+  const lara = rows(page).filter({ hasText: '라라' })
+  await expect(lara).toContainText('닭가슴살 2.5kg')
+  await expect(lara.getByText('0.3kg', { exact: true })).toBeVisible()
+  const leo = rows(page).filter({ hasText: '레오' })
+  await expect(leo.getByText('0kg', { exact: true })).toBeVisible()
+
+  // 열 순서: 먹이 종류 · 급여량 → 잔량 → 급여자
+  const headers = await page
+    .getByText(/^(먹이 종류 · 급여량|잔량|급여자)$/)
+    .allTextContents()
+  expect(headers).toEqual(['먹이 종류 · 급여량', '잔량', '급여자'])
+})
+
+test('S16: 잔량이 없는 기록은 잔량 칸을 비운다', async ({ page }) => {
+  await mockFeedApi(page, {
+    feedLogs: [
+      {
+        feedLogId: 1,
+        animalId: 1,
+        animalKind: '표범',
+        animalName: '레오',
+        animalTaxonomic: 'MAMMALS',
+        feedType: '생닭',
+        feedAmount: 1.2,
+        remainingAmount: null,
+        name: '김수인',
+        feedDateTime: `${todayIsoDate()}T09:30:00`,
+        significant: '정상',
+      },
+    ],
+  })
+
+  await page.goto('/feeds')
+
+  await expect(rows(page)).toHaveCount(1)
+  await expect(rows(page).first()).toContainText('생닭 1.2kg')
+  await expect(
+    rows(page)
+      .first()
+      .getByText(/^[\d.]+kg$/),
+  ).toHaveCount(0)
 })
 
 test('S11: 분류 탭에 해당 개체가 없는 빈 상태', async ({ page }) => {

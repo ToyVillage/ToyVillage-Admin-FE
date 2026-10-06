@@ -72,7 +72,9 @@ test('S2: 수정을 고르면 기존 값이 채워진 수정 화면으로 간다
   }
   await expect(field(page, '먹이 종류')).toHaveValue('생닭')
   await expect(field(page, '급여량')).toHaveValue('1.2')
-  await expect(page.getByText('kg', { exact: true })).toBeVisible()
+  await expect(field(page, '잔량')).toHaveValue('0')
+  // 급여량·잔량 칸 모두 `kg` 가 입력칸 밖에 고정으로 붙는다.
+  await expect(page.getByText('kg', { exact: true })).toHaveCount(2)
   await expect(field(page, '특이사항')).toHaveValue(
     '평소보다 식욕이 왕성함. 잔반 없음.',
   )
@@ -137,7 +139,7 @@ test('S6: 급여량에는 숫자만 들어가고 0 이하는 숫자 오류를 �
   await expect(amount).toHaveValue('2')
   await amount.fill('1.2.3')
   await expect(amount).toHaveValue('1.23')
-  await expect(page.getByText('kg', { exact: true })).toBeVisible()
+  await expect(page.getByText('kg', { exact: true }).first()).toBeVisible()
 
   await amount.fill('0')
   await saveButton(page).click()
@@ -145,6 +147,31 @@ test('S6: 급여량에는 숫자만 들어가고 0 이하는 숫자 오류를 �
     '급여량을 숫자로 입력해주세요!',
   ])
   await expect(page).toHaveURL(/\/feeds\/1\/edit$/)
+})
+
+test('S6-1: 잔량은 숫자만 받고 0 을 허용하며, 비우면 오류를 보인다', async ({
+  page,
+  feedApi,
+}) => {
+  await openEdit(page)
+  const remaining = field(page, '잔량')
+
+  await remaining.fill('조금')
+  await expect(remaining).toHaveValue('')
+  await saveButton(page).click()
+  await expect(page.getByRole('alert')).toContainText(['잔량을 입력해주세요!'])
+  await expect(page).toHaveURL(/\/feeds\/1\/edit$/)
+  expect(feedApi.updates).toHaveLength(0)
+
+  await remaining.fill('0.5 kg')
+  await expect(remaining).toHaveValue('0.5')
+  await saveButton(page).click()
+  await expect(page.getByText('데이터 수정에 성공했습니다')).toBeVisible()
+  expect(feedApi.updates).toHaveLength(1)
+  expect(feedApi.updates[0].body).toMatchObject({
+    remainingAmount: 0.5,
+    feedUnit: 'KGL',
+  })
 })
 
 test('S7: 오류 줄은 다음 제출 때 다시 검증해야 사라진다', async ({ page }) => {
