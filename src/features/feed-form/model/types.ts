@@ -4,9 +4,13 @@ export interface FeedFormValues {
   feedType: string
   /** 입력 원문(숫자만). 단위 `kg` 는 입력칸 밖에 고정으로 붙는다. */
   feedAmount: string
+  /** 입력 원문(숫자만). 급여량과 같이 `kg` 가 입력칸 밖에 고정으로 붙는다. */
+  remainingAmount: string
   /** 입력 원문(제출 시 trim). 선택 항목이다. */
   note: string
 }
 
 /** 카드 아래 인라인 오류 줄 문구. 특이사항은 선택이라 오류가 없다. */
-export type FeedFormErrors = Partial<Record<'feedType' | 'feedAmount', string>>
+export type FeedFormErrors = Partial<
+  Record<'feedType' | 'feedAmount' | 'remainingAmount', string>
+>

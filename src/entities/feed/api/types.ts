@@ -81,13 +81,19 @@ export interface FeedQueryRequest {
   feedLogId: number
 }
 
-/** `PUT /feed-log/admin/{feedLogId}` 요청(`FeedLogRequest`). 네 값 모두 필수다. */
+/** 급여량·잔량 단위. `GML`·`KGL` 중 화면은 kg 만 쓰므로 `KGL` 로 고정한다. */
+export type FeedUnit = 'KGL'
+
+/** `PUT /feed-log/admin/{feedLogId}` 요청(`FeedLogRequest`). 여섯 값 모두 필수다. */
 export interface FeedLogUpdateRequest {
   /** 급여 일시. 화면에서 바꾸지 않으므로 상세 응답 원본을 그대로 보낸다. */
   feedDateTime: string
   feedType: string
   /** kg 단위 실수 */
   feedAmount: number
+  /** kg 단위 실수. 0 이상이다. */
+  remainingAmount: number
+  feedUnit: FeedUnit
   /** 특이사항. 비우면 빈 문자열 */
   significant: string
 }

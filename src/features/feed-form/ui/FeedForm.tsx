@@ -12,13 +12,14 @@ import { FormFieldCard, scrollToFirstFieldError } from '@/shared/ui'
 import type { FeedFormErrors, FeedFormValues } from '../model/types'
 import {
   parseFeedAmount,
+  parseRemainingAmount,
   sanitizeFeedAmountInput,
   validateFeedForm,
 } from '../model/validation'
 
 const feedTypeErrorId = 'feed-type-error'
 const feedAmountErrorId = 'feed-amount-error'
-const feedAmountUnitId = 'feed-amount-unit'
+const remainingAmountErrorId = 'remaining-amount-error'
 
 interface FeedFormProps {
   feed: FeedRecordDetail
@@ -27,7 +28,7 @@ interface FeedFormProps {
   onDirtyChange: (isDirty: boolean) => void
 }
 
-// Figma `feeding correction` 폼(2429:24038). 먹이 종류·급여량·특이사항만 고치고
+// Figma `feeding correction` 폼(2429:24038). 먹이 종류·급여량·잔량·특이사항만 고치고
 // 대상 개체·급여일시·급여자는 읽기 전용이다. 필수 오류는 카드 아래 인라인 줄로 보인다.
 export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
   const queryClient = useQueryClient()
@@ -35,8 +36,11 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
   const noteRef = useRef<HTMLTextAreaElement>(null)
   // 급여량은 숫자만 편집한다(`1.2kg` → `1.2`). `kg` 는 지울 수 없는 고정 단위다.
   const initialFeedAmount = sanitizeFeedAmountInput(feed.feedAmount)
+  // 잔량이 없는 기록(잔량 도입 전)은 빈 칸으로 시작해 저장 전에 입력받는다.
+  const initialRemainingAmount = sanitizeFeedAmountInput(feed.remainingAmount)
   const [feedType, setFeedType] = useState(feed.feedType)
   const [feedAmount, setFeedAmount] = useState(initialFeedAmount)
+  const [remainingAmount, setRemainingAmount] = useState(initialRemainingAmount)
   const [note, setNote] = useState(feed.note)
   const [errors, setErrors] = useState<FeedFormErrors>({})
 
@@ -47,9 +51,19 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
     onDirtyChange(
       feedType !== feed.feedType ||
         feedAmount !== initialFeedAmount ||
+        remainingAmount !== initialRemainingAmount ||
         note !== feed.note,
     )
-  }, [feed, feedAmount, feedType, initialFeedAmount, note, onDirtyChange])
+  }, [
+    feed,
+    feedAmount,
+    feedType,
+    initialFeedAmount,
+    initialRemainingAmount,
+    note,
+    onDirtyChange,
+    remainingAmount,
+  ])
 
   // Figma 특이사항 입력 160px 를 최소 높이로 두고, 내용이 늘면 박스가 함께 늘어난다.
   useEffect(() => {
@@ -63,7 +77,12 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
     event.preventDefault()
     if (submittingRef.current || mutation.isPending) return
 
-    const values: FeedFormValues = { feedType, feedAmount, note }
+    const values: FeedFormValues = {
+      feedType,
+      feedAmount,
+      remainingAmount,
+      note,
+    }
     const nextErrors = validateFeedForm(values)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
@@ -83,6 +102,13 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
           feedAmount === initialFeedAmount
             ? feed.feedAmountValue
             : (parseFeedAmount(feedAmount) ?? 0),
+        remainingAmount:
+          remainingAmount === initialRemainingAmount &&
+          feed.remainingAmountValue != null
+            ? feed.remainingAmountValue
+            : (parseRemainingAmount(remainingAmount) ?? 0),
+        // 화면은 kg 만 다룬다.
+        feedUnit: 'KGL',
         significant: note.trim(),
       },
       {
@@ -151,33 +177,29 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
           error={errors.feedAmount}
           errorId={feedAmountErrorId}
         >
-          <AmountBox htmlFor="feed-amount">
-            {/* 입력 폭을 글자만큼 맞춰 `kg` 가 숫자 바로 뒤에 붙게 한다(Figma `1.2kg`). */}
-            <AmountSizer>
-              <AmountMirror aria-hidden="true">
-                {feedAmount || ' '}
-              </AmountMirror>
-              <AmountInput
-                id="feed-amount"
-                aria-required="true"
-                inputMode="decimal"
-                // 기본 폭(20글자)을 없애 폭이 복제 글자를 따라가게 한다.
-                size={1}
-                maxLength={10}
-                aria-describedby={
-                  errors.feedAmount
-                    ? `${feedAmountUnitId} ${feedAmountErrorId}`
-                    : feedAmountUnitId
-                }
-                value={feedAmount}
-                autoComplete="off"
-                onChange={(event) =>
-                  setFeedAmount(sanitizeFeedAmountInput(event.target.value))
-                }
-              />
-            </AmountSizer>
-            <AmountUnit id={feedAmountUnitId}>kg</AmountUnit>
-          </AmountBox>
+          <KgAmountInput
+            id="feed-amount"
+            value={feedAmount}
+            errorId={errors.feedAmount ? feedAmountErrorId : undefined}
+            onChange={setFeedAmount}
+          />
+        </FormFieldCard>
+
+        <FormFieldCard
+          label="잔량"
+          labelSize={32}
+          htmlFor="remaining-amount"
+          error={errors.remainingAmount}
+          errorId={remainingAmountErrorId}
+        >
+          <KgAmountInput
+            id="remaining-amount"
+            value={remainingAmount}
+            errorId={
+              errors.remainingAmount ? remainingAmountErrorId : undefined
+            }
+            onChange={setRemainingAmount}
+          />
         </FormFieldCard>
 
         <FormFieldCard label="특이사항" labelSize={32} htmlFor="feed-note">
@@ -204,6 +226,43 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
         </Actions>
       </Footer>
     </Form>
+  )
+}
+
+interface KgAmountInputProps {
+  id: string
+  value: string
+  /** 오류가 있을 때만 넘긴다. */
+  errorId?: string
+  onChange: (value: string) => void
+}
+
+// 급여량·잔량 칸. 숫자만 편집한다(`1.2kg` → `1.2`). `kg` 는 지울 수 없는 고정 단위다.
+function KgAmountInput({ id, value, errorId, onChange }: KgAmountInputProps) {
+  const unitId = `${id}-unit`
+
+  return (
+    <AmountBox htmlFor={id}>
+      {/* 입력 폭을 글자만큼 맞춰 `kg` 가 숫자 바로 뒤에 붙게 한다(Figma `1.2kg`). */}
+      <AmountSizer>
+        <AmountMirror aria-hidden="true">{value || ' '}</AmountMirror>
+        <AmountInput
+          id={id}
+          aria-required="true"
+          inputMode="decimal"
+          // 기본 폭(20글자)을 없애 폭이 복제 글자를 따라가게 한다.
+          size={1}
+          maxLength={10}
+          aria-describedby={errorId ? `${unitId} ${errorId}` : unitId}
+          value={value}
+          autoComplete="off"
+          onChange={(event) =>
+            onChange(sanitizeFeedAmountInput(event.target.value))
+          }
+        />
+      </AmountSizer>
+      <AmountUnit id={unitId}>kg</AmountUnit>
+    </AmountBox>
   )
 }
 
@@ -236,7 +295,7 @@ const TextInput = styled.input`
   font-weight: 500;
 `
 
-// 급여량 칸. 겉모양은 TextInput 과 같고, 칸 어디를 눌러도 입력에 초점이 간다.
+// 급여량·잔량 칸. 겉모양은 TextInput 과 같고, 칸 어디를 눌러도 입력에 초점이 간다.
 const AmountBox = styled.label`
   display: flex;
   width: 100%;
@@ -251,20 +310,22 @@ const AmountBox = styled.label`
   font-weight: 500;
 `
 
-// 보이지 않는 복제 글자와 입력을 같은 칸에 겹쳐 입력 폭이 글자 폭을 따라가게 한다.
+// 보이지 않는 복제 글자가 폭을 정하고, 입력은 그 위에 겹친다.
+// 입력을 흐름에서 빼야 입력 자체의 기본 폭이 끼어들지 않는다(한 글자일 때 `kg` 앞이 벌어진다).
 const AmountSizer = styled.span`
-  display: inline-grid;
+  position: relative;
+  display: inline-block;
   min-width: 1ch;
 `
 
 const AmountMirror = styled.span`
-  grid-area: 1 / 1;
   visibility: hidden;
   white-space: pre;
 `
 
 const AmountInput = styled.input`
-  grid-area: 1 / 1;
+  position: absolute;
+  inset: 0;
   width: 100%;
   min-width: 0;
   padding: 0;
