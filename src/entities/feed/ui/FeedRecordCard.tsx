@@ -13,25 +13,19 @@ interface FeedRecordCardProps {
   observationHref: string | null
 }
 
-// Figma `749:14672` (basic info). 개체 사진 + 개체명·분류 + 급여 기록 필드 5종.
-export function FeedRecordCard({
-  feed,
-  observationHref,
-}: FeedRecordCardProps) {
+// Figma `749:14672` (basic info). 개체 사진 + 개체명·분류 + 급여 기록 필드 7종.
+export function FeedRecordCard({ feed, observationHref }: FeedRecordCardProps) {
   return (
     <Card>
       {/* 개체 상세 카드와 같은 사진 컴포넌트를 쓴다. 못 불러오면 `사진 없음` 이 대신 온다. */}
-      <Photo
-        src={feed.animalPhotoUrl ?? ''}
-        alt={`${feed.animalName} 사진`}
-      />
+      <Photo src={feed.animalPhotoUrl ?? ''} alt={`${feed.animalName} 사진`} />
       <Info>
         <Titles>
           <AnimalName>{feed.animalName}</AnimalName>
           {/* 급여 API 가 분류를 주지 않으면 배지를 그리지 않는다. */}
           {feed.species && <AnimalSpeciesBadge species={feed.species} />}
         </Titles>
-        {/* 특이사항은 길어질 수 있어 마지막 칸에 둔다 — 오른쪽에 다른 값이 없어
+        {/* 특이사항은 길어질 수 있어 마지막 줄을 혼자 쓴다 — 두 열에 걸쳐
             남은 폭을 그대로 쓴다. */}
         <Fields>
           <Row>
@@ -44,7 +38,10 @@ export function FeedRecordCard({
           </Row>
           <Row>
             <Field label="급여자" value={feed.feederName} />
-            <Field label="특이사항" value={feed.note} />
+            <Field label="잔량" value={feed.remainingAmount} />
+          </Row>
+          <Row>
+            <WideField label="특이사항" value={feed.note} />
           </Row>
         </Fields>
       </Info>
@@ -62,9 +59,15 @@ export function FeedRecordCard({
   )
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+interface FieldProps {
+  label: string
+  value: string
+  className?: string
+}
+
+function Field({ label, value, className }: FieldProps) {
   return (
-    <FieldBox>
+    <FieldBox className={className}>
       <FieldLabel>{label}</FieldLabel>
       <FieldValue>{value}</FieldValue>
     </FieldBox>
@@ -182,6 +185,11 @@ const FieldBox = styled.div`
   gap: 16px;
 `
 
+// 두 열을 모두 차지한다.
+const WideField = styled(Field)`
+  grid-column: 1 / -1;
+`
+
 const FieldLabel = styled.span`
   width: 118px;
   flex: 0 0 118px;
@@ -198,6 +206,3 @@ const FieldValue = styled.span`
   font-weight: 500;
   line-height: 1.2;
 `
-
-
-

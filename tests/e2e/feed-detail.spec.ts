@@ -74,8 +74,19 @@ test('S1: 상세 진입 기본 표시', async ({ page }) => {
   await expect(page.getByText('급여자').first()).toBeVisible()
   await expect(page.getByText('먹이 종류', { exact: true })).toBeVisible()
   await expect(page.getByText('급여량', { exact: true })).toBeVisible()
+  await expect(page.getByText('잔량', { exact: true }).first()).toBeVisible()
   await expect(page.getByText('특이사항').first()).toBeVisible()
   await expect(page.getByRole('heading', { name: '급여 이력' })).toBeVisible()
+})
+
+test('S1-2: 급여 기록 카드에 잔량을 kg 로 보인다', async ({ page }) => {
+  await page.goto('/feeds/4')
+
+  const card = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: '우니' }) })
+  await expect(card.getByText('1.8kg', { exact: true })).toBeVisible()
+  await expect(card.getByText('0.2kg', { exact: true })).toBeVisible()
 })
 
 test('S2: 목록에서 상세로, 뒤로가기로 목록으로', async ({ page }) => {
@@ -120,7 +131,21 @@ test('S4: 급여 이력 표의 열 구성', async ({ page }) => {
   await expect(page.getByText('급여시간').last()).toBeVisible()
   await expect(page.getByText('급여자').last()).toBeVisible()
   await expect(page.getByText('먹이 종류 · 급여량')).toBeVisible()
+  await expect(page.getByText('잔량', { exact: true }).last()).toBeVisible()
   await expect(page.getByText('특이사항').last()).toBeVisible()
+})
+
+test('S4-1: 급여 이력 행마다 잔량을 보인다', async ({ page }) => {
+  await page.goto('/feeds/1')
+
+  // 최신 급여가 위다: 오늘(0) · 어제(0) · 그제(0.2).
+  await expect(historyRows(page)).toHaveCount(3)
+  await expect(
+    historyRows(page).nth(0).getByText('0kg', { exact: true }),
+  ).toBeVisible()
+  await expect(
+    historyRows(page).nth(2).getByText('0.2kg', { exact: true }),
+  ).toBeVisible()
 })
 
 test('S5: `관찰 및 특이사항 보러가기` 로 개체 상세로 간다', async ({ page }) => {

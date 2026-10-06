@@ -41,6 +41,14 @@ const columns: DataTableColumn[] = [
     width: 250,
     render: (row) => <StrongCell value={String(row.feed ?? '')} />,
   },
+  // 잔량은 잘리면 안 되는 숫자라 날짜·시간처럼 좌우 여백을 줄인다.
+  {
+    key: 'remainingAmount',
+    header: '잔량',
+    width: 140,
+    paddingX: 24,
+    render: (row) => <StrongCell value={String(row.remainingAmount ?? '')} />,
+  },
   {
     key: 'note',
     header: '특이사항',
@@ -49,7 +57,7 @@ const columns: DataTableColumn[] = [
 ]
 
 // 열 폭 합계(마지막 `특이사항` 은 최소 260 로 본다).
-export const feedHistoryTableMinWidth = 200 + 140 + 170 + 250 + 260
+export const feedHistoryTableMinWidth = 200 + 140 + 170 + 250 + 140 + 260
 
 const appearance = {
   headerBackground: 'tableHeaderStrong',
@@ -72,6 +80,7 @@ export function FeedHistoryTable({
         fedTime: record.fedTime,
         feeder: record.feederName,
         feed: formatFeedLabel(record.feedType, record.feedAmount),
+        remainingAmount: record.remainingAmount,
         note: record.note,
       }))}
       columns={columns}

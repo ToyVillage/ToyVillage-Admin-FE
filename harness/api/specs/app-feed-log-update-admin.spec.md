@@ -35,10 +35,12 @@ real_server:
 # 기대 성공 동작
 
 - `저장하기` → 검증 통과 시 PUT `/feed-log/admin/{feedLogId}` 를 한 번 보낸다.
-- 본문은 Swagger `FeedLogRequest` 의 필수 4개를 모두 보낸다.
+- 본문은 Swagger `FeedLogRequest` 의 필수 6개를 모두 보낸다(2026-10-06, #228 `remainingAmount`·`feedUnit` 추가).
   - `feedDateTime`: 상세 조회 응답의 `feedDateTime` 원본 문자열 그대로(화면에서 바꿀 수 없는 값)
   - `feedType`: 입력값 trim
   - `feedAmount`: 입력값을 kg 숫자로 읽은 값(`1.2kg` → 1.2)
+  - `remainingAmount`: 잔량 입력값을 kg 숫자로 읽은 값(0 허용, `0.3kg` → 0.3). 입력하지 않고 고치지 않았다면 상세 응답 원래 값
+  - `feedUnit`: 항상 `'KGL'`(enum `GML`|`KGL`). 개발자 결정(2026-10-06): 단위는 항상 kg 이며 응답의 `feedUnit` 은 무시한다.
   - `significant`: 입력값 trim(비우면 빈 문자열)
 - 200 `{ message }` 성공 시 기존 동작 유지: 목록(`['feeds','list']`)과 그 기록 상세를 무효화하고,
   진입 전 조건의 목록으로 이동해 `데이터 수정에 성공했습니다` 토스트를 띄운다.
@@ -62,6 +64,8 @@ real_server:
 - 급여 기록 삭제는 이 작업 범위 밖이다. 작성 당시(2026-09-28)에는 삭제 엔드포인트가 없었고, 이후 추가된
   DELETE `/feed-log/admin/{feedLogId}` 는 `app-feed-log-delete-admin` 에서 연동했다.
 - 실제 서버 테스트는 비활성화한다.
+
+- 상세 응답의 `remainingAmount` 가 null/없음(기능 추가 이전 기록)이면 잔량 입력이 빈 칸으로 시작하며, 채우기 전에는 저장할 수 없다(`잔량을 입력해주세요!`).
 
 # 확인이 필요한 명세 항목
 

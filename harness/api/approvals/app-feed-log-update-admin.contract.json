@@ -1,7 +1,7 @@
 {
   "apiId": "APP_FEED_LOG_UPDATE_ADMIN",
   "name": "관리자 급여일지 수정",
-  "description": "앱 관리자가 급여일지 한 건의 급여일시·먹이 종류·급여량·특이사항을 수정하는 기능",
+  "description": "앱 관리자가 급여일지 한 건의 급여일시·먹이 종류·급여량·잔량·특이사항을 수정하는 기능",
   "method": "PUT",
   "path": "/feed-log/admin/{feedLogId}",
   "authentication": {
@@ -87,6 +87,34 @@
         ]
       },
       {
+        "name": "remainingAmount",
+        "location": "body",
+        "type": "number",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": 0.3,
+        "description": "잔량(kg, float). 0 허용",
+        "constraints": [
+          "float",
+          "min 0"
+        ]
+      },
+      {
+        "name": "feedUnit",
+        "location": "body",
+        "type": "string",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": "KGL",
+        "description": "급여 단위(enum GML|KGL). 개발자 결정(2026-10-06)으로 항상 KGL(kg)만 보낸다",
+        "constraints": [
+          "enum GML, KGL",
+          "always KGL"
+        ]
+      },
+      {
         "name": "significant",
         "location": "body",
         "type": "string",
@@ -102,6 +130,8 @@
       "feedDateTime": "2026-09-03T09:30:00",
       "feedType": "생닭",
       "feedAmount": 1.2,
+      "remainingAmount": 0.3,
+      "feedUnit": "KGL",
       "significant": "평소보다 식욕이 왕성함."
     }
   },

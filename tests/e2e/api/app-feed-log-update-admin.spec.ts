@@ -29,6 +29,7 @@ test('S1: 수정 저장', async ({ page }) => {
 
   await field(page, '먹이 종류').fill('닭가슴살')
   await field(page, '급여량').fill('2.5kg')
+  await field(page, '잔량').fill('0.3kg')
   await field(page, '특이사항').fill('잔반 조금 남김')
   await saveButton(page).click()
 
@@ -41,6 +42,8 @@ test('S1: 수정 저장', async ({ page }) => {
     feedDateTime: `${todayIsoDate()}T09:30:00`,
     feedType: '닭가슴살',
     feedAmount: 2.5,
+    remainingAmount: 0.3,
+    feedUnit: 'KGL',
     significant: '잔반 조금 남김',
   })
   await expect.poll(() => api.requests.list).toBeGreaterThan(listRequests)
@@ -59,6 +62,8 @@ test('S2: 급여량 표기 변환과 공백 제거', async ({ page }) => {
     feedDateTime: `${todayIsoDate()}T09:30:00`,
     feedType: '생닭',
     feedAmount: 2,
+    remainingAmount: 0,
+    feedUnit: 'KGL',
     significant: '',
   })
 })
@@ -74,6 +79,8 @@ test('S3: 변경 없이 저장', async ({ page }) => {
     feedDateTime: `${todayIsoDate()}T09:30:00`,
     feedType: '생닭',
     feedAmount: 1.2,
+    remainingAmount: 0,
+    feedUnit: 'KGL',
     significant: '평소보다 식욕이 왕성함. 잔반 없음.',
   })
 })
@@ -152,4 +159,25 @@ test('S8: 수정 후 상세 재조회', async ({ page }) => {
   await expect(main.getByText('2.5kg').first()).toBeVisible()
   await expect(main.getByText('잔반 조금 남김').first()).toBeVisible()
   await expect(main.getByText('생닭')).toHaveCount(0)
+})
+
+test('S9: 잔량이 없는 기록은 잔량을 입력해야 저장한다', async ({ page }) => {
+  const api = await mockFeedApi(page)
+  api.feedLogs[0].remainingAmount = null
+  await page.goto('/feeds')
+  await page.getByRole('button', { name: '표범 · 레오 급여 기록 메뉴' }).click()
+  await page.getByRole('menuitem', { name: '수정' }).click()
+  await expect(field(page, '잔량')).toHaveValue('')
+
+  await saveButton(page).click()
+  await expect(page.getByRole('alert')).toContainText(['잔량을 입력해주세요!'])
+  expect(api.updates).toHaveLength(0)
+
+  await field(page, '잔량').fill('0')
+  await saveButton(page).click()
+  await expect(page.getByText('데이터 수정에 성공했습니다')).toBeVisible()
+  expect(api.updates[0].body).toMatchObject({
+    remainingAmount: 0,
+    feedUnit: 'KGL',
+  })
 })

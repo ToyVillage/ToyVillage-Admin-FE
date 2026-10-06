@@ -31,6 +31,9 @@ export function FeedDetailSkeleton() {
             </Row>
             <Row>
               <FieldSkeleton label="급여자" value={70} />
+              <FieldSkeleton label="잔량" value={40} />
+            </Row>
+            <Row>
               <FieldSkeleton label="특이사항" value={320} />
             </Row>
           </Fields>

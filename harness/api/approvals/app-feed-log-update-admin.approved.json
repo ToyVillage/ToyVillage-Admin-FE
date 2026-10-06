@@ -1,15 +1,15 @@
 {
   "feature": "app-feed-log-update-admin",
   "apiId": "APP_FEED_LOG_UPDATE_ADMIN",
-  "approvedAt": "2026-09-28T10:56:15.346Z",
+  "approvedAt": "2026-10-06T01:53:11.677Z",
   "approvedBy": "kimjihwan8",
-  "taskSpecHash": "8936b75fddd4c28e421b23e579a7bf7cf5a654bc334bace632c0e4a9955a36fa",
-  "contractHash": "eaa66c40ff1ebc72929ad9d34bbb324fd57c8b1c3633326d3e392c8fd9942605",
-  "contractMarkdownHash": "970a2a78b42c3d66acbf46317959b3bf69e7e10f8066ab1608f8300fca1a86c6",
-  "planHash": "46bc15634c30159ee5f04c78b205e6148a64aee8e5f3048920b3a17fa7ae7ba8",
-  "scenarioHash": "72927a2124a7b11f02e82fd220736162ca74b9982c25d0125038a5c74467dfea",
-  "testHash": "17ed21ae3007acb476607f173f91ca338f4ee74a40f4967ff4fcdf83b1d4a867",
+  "taskSpecHash": "f39b109bb330d95f3b9bbc386d6dc9e2ab32f267c9a2f920bf2a157f5d4e604f",
+  "contractHash": "fe8278d20878d91419f6415cf43c0ede6e86f43b4e56d4b30b4541b3f5be1dea",
+  "contractMarkdownHash": "f76846a0f3d78e20348067082f542f2d7bf1b3f9dc13977c9e87f201d01ff10a",
+  "planHash": "52d2d5c0368205d8208bc3f21a21c9a3c11c953853c5639e289f3dea4e176753",
+  "scenarioHash": "f99ade157c889844eb55134e21dc0d4cc7cbc7386eea98ef03ba9eb79d4150c4",
+  "testHash": "a70ca14a732fd711f677a381ccd9a9f74c809b3efaef654429edd4aac1e3be79",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-28T10:56:15.769Z"
+  "testApprovedAt": "2026-10-06T01:53:11.845Z"
 }

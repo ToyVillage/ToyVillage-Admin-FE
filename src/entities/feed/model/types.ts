@@ -10,7 +10,7 @@ export const animalTaxonomicBySpecies = {
   어류: 'FISH',
 } as const satisfies Record<AnimalSpecies, string>
 
-// 급여 기록 한 건. 목록 표의 `대상 개체`/`먹이 종류 · 급여량`/`급여자`/`급여일시` 열에 대응한다.
+// 급여 기록 한 건. 목록 표의 `대상 개체`/`먹이 종류 · 급여량`/`잔량`/`급여자`/`급여일시` 열에 대응한다.
 export interface FeedRecord {
   id: string
   /**
@@ -26,6 +26,8 @@ export interface FeedRecord {
   feedType: string
   /** 급여량 표기. 명세는 실수라 `1.2kg` 형태다. */
   feedAmount: string
+  /** 잔량 표기. `0.2kg` 형태이고, 값이 없는 기록은 빈 문자열이다. */
+  remainingAmount: string
   feederName: string
   /** YYYY-MM-DD */
   fedDate: string
@@ -43,6 +45,8 @@ export interface FeedHistoryRecord {
   feederName: string
   feedType: string
   feedAmount: string
+  /** 잔량 표기. 값이 없는 기록은 빈 문자열이다. */
+  remainingAmount: string
   /** 특이사항. 이력 응답의 `significant` 다. 값이 없으면 빈 문자열이다. */
   note: string
 }
@@ -55,6 +59,8 @@ export interface FeedRecordDetail extends FeedRecord {
   feedDateTime: string
   /** 상세 응답의 `feedAmount` 원본(kg). `feedAmount` 표기는 소수 둘째 자리로 반올림돼 있다. */
   feedAmountValue: number
+  /** 상세 응답의 `remainingAmount` 원본(kg). 값이 없는 기록은 null 이다. */
+  remainingAmountValue: number | null
   /** 특이사항. 상세 응답의 `significant` 다. 값이 없으면 빈 문자열이다. */
   note: string
   animalPhotoUrl?: string
