@@ -14,7 +14,7 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
 ## 상태와 근거
 
 - Status: Active
-- Last refreshed: 2026-09-15
+- Last refreshed: 2026-10-06
 - 기준 프레임: Figma `749:14665` ("individual detail" — 먹이 급여 상세).
   상위 섹션은 `749:14863` ("먹이 급여 관리")이고, 형제 프레임 `748:14288`(목록)은
   `harness/publishing/specs/feed-list.spec.md` 가 담당한다.
@@ -44,15 +44,17 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
 - 급여 기록 카드
   - 왼쪽에 개체 사진(180×180, radius 20)이 있다. 사진이 없으면 같은 자리에 빈 사각형을 둔다.
   - 개체명(40px)과 그 오른쪽에 분류 뱃지(예: `포유류`)가 붙는다.
-  - 필드는 2열 3행이다.
-    - 1행: `급여일시` / `급여자`
-    - 2행: `먹이 종류` / `급여량`
-    - 3행: `특이사항` (왼쪽 열만, 값이 가로로 길게 이어진다)
-  - `급여일시` 는 `YYYY.MM.DD HH:mm` 형식이다.
+  - 필드는 2열 4행이다(2026-10-06, #228 `잔량` 추가).
+    - 1행: `급여날짜` / `먹이 종류`
+    - 2행: `급여시간` / `급여량`
+    - 3행: `급여자` / `잔량`
+    - 4행: `특이사항` (마지막 행, 두 열에 걸쳐 가로로 길게 이어진다)
+  - `잔량` 은 급여량과 같은 kg 형식이다(예: `0.3kg`, `0kg`). 응답의 `remainingAmount` 가 null/없음이면 빈 값이다.
   - 카드 오른쪽 위에 `관찰 및 특이사항 보러가기` 버튼이 있다.
     이동 대상 화면이 아직 없으므로 **비활성 항목**으로 렌더링한다(`aria-disabled`, 클릭해도 이동하지 않는다).
 - `급여 이력` 섹션 헤더는 제목 `급여 이력` 과 건수(`N건`)를 나란히 보여준다. 건수는 표의 행 수와 같다.
-- 급여 이력 표의 열은 `급여일시` / `급여자` / `먹이 종류 · 급여량` / `특이사항` 다.
+- 급여 이력 표의 열은 `급여날짜` / `급여시간` / `급여자` / `먹이 종류 · 급여량` / `잔량` / `특이사항` 다.
+  - 행마다 `잔량` 을 급여량과 같은 kg 형식으로 보이며, 값이 없으면 빈 칸이다.
   - 표는 페이지네이션이 없고 이력 전체를 한 번에 보여준다.
   - `특이사항` 이 열 폭을 넘으면 한 줄로 자르고 말줄임표로 끝낸다.
   - 행은 클릭 대상이 아니다.
@@ -70,7 +72,7 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
 ## 컴포넌트 구조/props
 
 - `FeedDetailPage` — `/feeds/:id` 화면.
-- `FeedRecordCard { feed }` (entities/feed/ui) — 사진·개체명·분류 뱃지·필드 5종(2열 3행)·비활성 버튼을 그린다.
+- `FeedRecordCard { feed }` (entities/feed/ui) — 사진·개체명·분류 뱃지·필드 6종(2열 4행)·비활성 버튼을 그린다.
 - `AnimalSpeciesBadge { species }` (entities/feed/ui) — Figma `individual / 성별 뱃지`(`161:11782`) 규격의 pill.
   분류 라벨을 blue 배경(`colors.accentBg`) + blue 텍스트(`colors.accent`)로 표시한다.
 - `SectionHeader { title, count }` (shared/ui) — Figma `section header`(`127:9419`)의 `plain` variant.
@@ -84,7 +86,7 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
   의미 이름 후보: `color.tableDivider`. 중간 게이트에서 확정한다.
 - 급여 이력 표의 헤더 글자는 SemiBold(600)로, 목록 화면 표의 헤더(Medium 500)와 다르다.
   `DataTable` 의 `appearance` 에 헤더 굵기 옵션 추가가 필요한지 중간 게이트에서 판단한다.
-- 표 열 폭: `급여일시` 240 / `급여자` 190 / `먹이 종류 · 급여량` 250 / `특이사항` 나머지.
+- 표 열 폭: `급여날짜` 200 / `급여시간` 140 / `급여자` 170 / `먹이 종류 · 급여량` 250 / `잔량` 140(좌우 여백 24px) / `특이사항` 나머지.
 - 카드 필드 라벨 폭은 118px, 라벨과 값 사이 간격은 16px 다.
 - 스타일은 Emotion 을 사용한다. solid color/font family 는 theme 의미 토큰을 쓰고,
   px·rgba·spacing·radius 등 구현값은 styled 블록에 직접 작성한다.

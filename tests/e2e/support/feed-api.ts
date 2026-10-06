@@ -24,6 +24,8 @@ export interface MockFeedLog {
   animalTaxonomic: MockTaxonomic
   feedType: string
   feedAmount: number
+  /** 잔량(kg). 잔량 도입 전 기록처럼 null 일 수 있다. */
+  remainingAmount: number | null
   /** 급여자명 */
   name: string
   /** `YYYY-MM-DDTHH:mm:ss` */
@@ -50,21 +52,21 @@ function isoDate(date: Date): string {
 // 오늘 급여 6건(포유류 4 · 파충류 1 · 조류 1 · 어류 0)으로 4행 페이지네이션 2쪽을 만든다.
 // 7·8번은 지난 날짜의 `레오`(개체 1) 급여라 목록에는 없고 급여 이력에만 나온다.
 export const mockFeedLogs: MockFeedLog[] = [
-  feedLog(1, 1, '표범', '레오', 'MAMMALS', '생닭', 1.2, '김수인', `${todayIsoDate()}T09:30:00`, '평소보다 식욕이 왕성함. 잔반 없음.'),
-  feedLog(2, 2, '사자', '심바', 'MAMMALS', '소고기', 3, '박도현', `${todayIsoDate()}T09:10:00`, '정상'),
-  feedLog(3, 3, '호랑이', '라라', 'MAMMALS', '닭가슴살', 2.5, '김수인', `${todayIsoDate()}T08:40:00`, '잔반 없음'),
-  feedLog(4, 4, '곰', '우니', 'MAMMALS', '사료', 1.8, '이서준', `${todayIsoDate()}T08:20:00`, '정상'),
-  feedLog(5, 5, '이구아나', '동식이', 'REPTILES', '채소', 0.3, '김수인', `${todayIsoDate()}T08:00:00`, '활동량이 많아 보임.'),
-  feedLog(6, 6, '앵무', '초코', 'BIRDS', '견과', 0.1, '이서준', `${todayIsoDate()}T07:40:00`, '정상'),
+  feedLog(1, 1, '표범', '레오', 'MAMMALS', '생닭', 1.2, 0, '김수인', `${todayIsoDate()}T09:30:00`, '평소보다 식욕이 왕성함. 잔반 없음.'),
+  feedLog(2, 2, '사자', '심바', 'MAMMALS', '소고기', 3, 0, '박도현', `${todayIsoDate()}T09:10:00`, '정상'),
+  feedLog(3, 3, '호랑이', '라라', 'MAMMALS', '닭가슴살', 2.5, 0.3, '김수인', `${todayIsoDate()}T08:40:00`, '잔반 없음'),
+  feedLog(4, 4, '곰', '우니', 'MAMMALS', '사료', 1.8, 0.2, '이서준', `${todayIsoDate()}T08:20:00`, '정상'),
+  feedLog(5, 5, '이구아나', '동식이', 'REPTILES', '채소', 0.3, 0, '김수인', `${todayIsoDate()}T08:00:00`, '활동량이 많아 보임.'),
+  feedLog(6, 6, '앵무', '초코', 'BIRDS', '견과', 0.1, 0, '이서준', `${todayIsoDate()}T07:40:00`, '정상'),
   // 페이지 크기가 10 이라 오늘치가 두 페이지에 걸치도록 6건을 더 둔다.
-  feedLog(20, 20, '치타', '바람', 'MAMMALS', '생닭', 1.1, '김수인', `${todayIsoDate()}T07:20:00`, '정상'),
-  feedLog(21, 21, '늑대', '달', 'MAMMALS', '소고기', 2.2, '박도현', `${todayIsoDate()}T07:10:00`, '정상'),
-  feedLog(22, 22, '여우', '노을', 'MAMMALS', '사료', 0.9, '이서준', `${todayIsoDate()}T07:00:00`, '정상'),
-  feedLog(23, 23, '너구리', '구름', 'MAMMALS', '사료', 0.7, '김수인', `${todayIsoDate()}T06:50:00`, '정상'),
-  feedLog(24, 24, '거북', '바위', 'REPTILES', '채소', 0.2, '박도현', `${todayIsoDate()}T06:40:00`, '정상'),
-  feedLog(25, 25, '올빼미', '밤', 'BIRDS', '견과', 0.1, '이서준', `${todayIsoDate()}T06:30:00`, '정상'),
-  feedLog(7, 1, '표범', '레오', 'MAMMALS', '닭가슴살', 2.5, '김수인', `${shiftedIsoDate(-1)}T17:20:00`, '잔반 없음'),
-  feedLog(8, 1, '표범', '레오', 'MAMMALS', '소고기', 3, '박도현', `${shiftedIsoDate(-2)}T09:15:00`, '정상'),
+  feedLog(20, 20, '치타', '바람', 'MAMMALS', '생닭', 1.1, 0, '김수인', `${todayIsoDate()}T07:20:00`, '정상'),
+  feedLog(21, 21, '늑대', '달', 'MAMMALS', '소고기', 2.2, 0, '박도현', `${todayIsoDate()}T07:10:00`, '정상'),
+  feedLog(22, 22, '여우', '노을', 'MAMMALS', '사료', 0.9, 0, '이서준', `${todayIsoDate()}T07:00:00`, '정상'),
+  feedLog(23, 23, '너구리', '구름', 'MAMMALS', '사료', 0.7, 0, '김수인', `${todayIsoDate()}T06:50:00`, '정상'),
+  feedLog(24, 24, '거북', '바위', 'REPTILES', '채소', 0.2, 0, '박도현', `${todayIsoDate()}T06:40:00`, '정상'),
+  feedLog(25, 25, '올빼미', '밤', 'BIRDS', '견과', 0.1, 0, '이서준', `${todayIsoDate()}T06:30:00`, '정상'),
+  feedLog(7, 1, '표범', '레오', 'MAMMALS', '닭가슴살', 2.5, 0, '김수인', `${shiftedIsoDate(-1)}T17:20:00`, '잔반 없음'),
+  feedLog(8, 1, '표범', '레오', 'MAMMALS', '소고기', 3, 0.2, '박도현', `${shiftedIsoDate(-2)}T09:15:00`, '정상'),
 ]
 
 function feedLog(
@@ -75,6 +77,7 @@ function feedLog(
   animalTaxonomic: MockTaxonomic,
   feedType: string,
   feedAmount: number,
+  remainingAmount: number | null,
   name: string,
   feedDateTime: string,
   significant: string,
@@ -87,6 +90,7 @@ function feedLog(
     animalTaxonomic,
     feedType,
     feedAmount,
+    remainingAmount,
     name,
     feedDateTime,
     significant,
@@ -234,6 +238,8 @@ export async function mockFeedApi(
           if (typeof body.feedType === 'string') target.feedType = body.feedType
           if (typeof body.feedAmount === 'number')
             target.feedAmount = body.feedAmount
+          if (typeof body.remainingAmount === 'number')
+            target.remainingAmount = body.remainingAmount
           if (typeof body.significant === 'string')
             target.significant = body.significant
         }
@@ -265,6 +271,8 @@ export async function mockFeedApi(
       animalImageUrl: { fileName: 'leo.png', fileKey: 'animal/leo.png' },
       feedType: target.feedType,
       feedAmount: target.feedAmount,
+      remainingAmount: target.remainingAmount,
+      feedUnit: 'KGL',
       feedDateTime: target.feedDateTime,
       significant: target.significant,
     })
@@ -281,6 +289,8 @@ function toListItem(item: MockFeedLog) {
     animalName: item.animalName,
     feedType: item.feedType,
     feedAmount: item.feedAmount,
+    remainingAmount: item.remainingAmount,
+    feedUnit: 'KGL',
     feedDateTime: item.feedDateTime,
   }
 }
@@ -291,6 +301,8 @@ function toHistoryItem(item: MockFeedLog) {
     staffName: item.name,
     feedType: item.feedType,
     feedAmount: item.feedAmount,
+    remainingAmount: item.remainingAmount,
+    feedUnit: 'KGL',
     feedDateTime: item.feedDateTime,
     significant: item.significant,
   }

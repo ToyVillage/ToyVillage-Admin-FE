@@ -1,7 +1,7 @@
 import { isAxiosError } from 'axios'
 import { api } from '@/shared/api/axios'
 import { storedFileUrl } from '@/shared/api/fileStorage'
-import { formatFeedAmount } from '../model/format'
+import { formatFeedAmount, formatRemainingAmount } from '../model/format'
 import type {
   FeedHistoryRecord,
   FeedRecord,
@@ -23,7 +23,7 @@ export interface FeedListPage {
 }
 
 // 목록은 날짜로 조회하고 분류 탭은 `animalTaxonomic` 으로 서버가 거른다.
-// 표의 네 열이 모두 목록 응답에 있어 행별 추가 조회가 없다.
+// 표의 열이 모두 목록 응답에 있어 행별 추가 조회가 없다.
 export async function getFeeds({
   date,
   animalTaxonomic = null,
@@ -56,6 +56,7 @@ export async function getFeeds({
         animalName: item.animalName,
         feedType: item.feedType,
         feedAmount: formatFeedAmount(item.feedAmount),
+        remainingAmount: formatRemainingAmount(item.remainingAmount ?? null),
         feederName: item.staffName,
         fedDate,
         fedTime,
@@ -90,10 +91,12 @@ export async function getFeedDetail({
     animalManageId: data.animalId,
     feedDateTime: data.feedDateTime,
     feedAmountValue: data.feedAmount,
+    remainingAmountValue: data.remainingAmount ?? null,
     animalType: data.animalKind,
     animalName: data.animalName,
     feedType: data.feedType,
     feedAmount: formatFeedAmount(data.feedAmount),
+    remainingAmount: formatRemainingAmount(data.remainingAmount ?? null),
     feederName: data.staffName,
     fedDate,
     fedTime,
@@ -136,6 +139,7 @@ export async function getFeedHistory(
           feederName: item.staffName,
           feedType: item.feedType,
           feedAmount: formatFeedAmount(item.feedAmount),
+          remainingAmount: formatRemainingAmount(item.remainingAmount ?? null),
           note: item.significant ?? '',
         },
         feedDateTime: item.feedDateTime,
@@ -215,6 +219,11 @@ function isNullableString(value: unknown): boolean {
   return value === null || value === undefined || typeof value === 'string'
 }
 
+// 잔량은 나중에 추가된 필드라 그 전 기록은 null 이거나 빠져 올 수 있다.
+function isNullableNumber(value: unknown): boolean {
+  return value === null || value === undefined || typeof value === 'number'
+}
+
 function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
   if (typeof value !== 'object' || value === null) return false
 
@@ -233,6 +242,7 @@ function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
         typeof feedLog.animalName === 'string' &&
         typeof feedLog.feedType === 'string' &&
         typeof feedLog.feedAmount === 'number' &&
+        isNullableNumber(feedLog.remainingAmount) &&
         typeof feedLog.feedDateTime === 'string'
       )
     }) &&
@@ -254,6 +264,7 @@ function isFeedLogAdminDetailResponse(
     typeof detail.animalName === 'string' &&
     typeof detail.feedType === 'string' &&
     typeof detail.feedAmount === 'number' &&
+    isNullableNumber(detail.remainingAmount) &&
     typeof detail.feedDateTime === 'string' &&
     isNullableString(detail.significant)
   )
@@ -277,6 +288,7 @@ function isFeedLogHistoryResponse(
         typeof feedLog.staffName === 'string' &&
         typeof feedLog.feedType === 'string' &&
         typeof feedLog.feedAmount === 'number' &&
+        isNullableNumber(feedLog.remainingAmount) &&
         typeof feedLog.feedDateTime === 'string' &&
         isNullableString(feedLog.significant)
       )
