@@ -7,7 +7,7 @@
 - 개발자 지시로 staging Swagger `https://api-stag.toyvillage.kr/v3/api-docs/app` 의
   `PUT /feed-log/admin/{feedLogId}`(operationId `updateAdminFeedLog`)를 기준으로 삼는다.
 - `source.notionDatabase`/`resolvedNotionPage` 에는 Swagger 문서 URL을 기록했다.
-- Checked at: 2026-09-28
+- Checked at: 2026-09-28 (2026-10-06 `remainingAmount`·`feedUnit` 추가 반영)
 - Exact match count: 1 (Swagger paths 중 `PUT /feed-log/admin/{feedLogId}` 1건)
 
 ## Basic Information
@@ -41,10 +41,12 @@
 | feedDateTime | string(date-time) | true | false | 2026-09-03T09:30:00 | — |
 | feedType | string | true | false | 생닭 | minLength 1 |
 | feedAmount | number(float) | true | false | 1.2 | kg |
+| remainingAmount | number(float) | true | false | 0.3 | kg, 0 이상(0 허용) |
+| feedUnit | string(enum) | true | false | KGL | `GML` \| `KGL`. 개발자 결정(2026-10-06)으로 항상 `KGL` 만 보낸다 |
 | significant | string | true | false | 평소보다 식욕이 왕성함. | — |
 
 ```json
-{ "feedDateTime": "2026-09-03T09:30:00", "feedType": "생닭", "feedAmount": 1.2, "significant": "평소보다 식욕이 왕성함." }
+{ "feedDateTime": "2026-09-03T09:30:00", "feedType": "생닭", "feedAmount": 1.2, "remainingAmount": 0.3, "feedUnit": "KGL", "significant": "평소보다 식욕이 왕성함." }
 ```
 
 ## Success Responses

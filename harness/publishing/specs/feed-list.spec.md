@@ -14,7 +14,7 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui, src/features/sidebar
 ## 상태와 근거
 
 - Status: Active
-- Last refreshed: 2026-09-28
+- Last refreshed: 2026-10-06
 - 기준 프레임: Figma `748:14288` ("worklog main" — 먹이 급여 관리 목록).
   상위 섹션은 `749:14863` ("먹이 급여 관리")이고, 형제 프레임 `749:14665`(상세)는
   `harness/publishing/specs/feed-detail.spec.md` 가 담당한다.
@@ -54,8 +54,9 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui, src/features/sidebar
 - 분류 탭은 `전체` `포유류` `파충류` `조류` `어류` 다.
   탭 클릭 → 그 분류의 급여 내역만 남고 1페이지로 리셋된다. `전체` 는 모든 분류를 보여준다.
   조회날짜 선택값은 탭을 바꿔도 유지된다.
-- 표의 열은 `종` / `개체명` / `먹이 종류 · 급여량` / `급여자` / `급여날짜` / `급여시간` / 케밥이다.
+- 표의 열은 `종` / `개체명` / `먹이 종류 · 급여량` / `잔량` / `급여자` / `급여날짜` / `급여시간` / 케밥이다(2026-10-06, #228 `잔량` 추가).
   - `먹이 종류 · 급여량` 은 `<먹이 종류> <급여량>` 형식이다(예: `생닭 1.2kg`).
+  - `잔량` 은 급여량과 같은 kg 형식이다(예: `0.3kg`, `0kg`). 응답의 `remainingAmount` 가 null/없음이면(기능 추가 이전 기록) 칸을 비운다.
   - `급여날짜` 는 `YYYY.MM.DD`, `급여시간` 은 `HH:mm` 형식이다.
   - 케밥 열의 동작은 `feed-edit.spec.md` 를 따른다.
 - 행 클릭 → `/feeds/:id` 로 이동한다.
@@ -87,8 +88,9 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui, src/features/sidebar
 
 - Figma 우상단 `내역 내보내기` 버튼(`1:10456`)은 `_mask-export-btn` 흰 사각형으로 덮여 있다. **구현하지 않는다.**
   행 케밥은 수정 기능 추가로 다시 보인다(2026-09-28, `feed-edit.spec.md`).
-- 열 폭은 `종` 200 / `개체명` 180 / `먹이 종류 · 급여량` 나머지(최소 320) / `급여자` 180 /
-  `급여날짜` 220 / `급여시간` 140 / 케밥 80 이다. 날짜·시간 열은 좌우 여백 24px 이다.
+- 열 폭은 `종` 180 / `개체명` 180 / `먹이 종류 · 급여량` 나머지(최소 260) / `잔량` 140 / `급여자` 160 /
+  `급여날짜` 180 / `급여시간` 140 / 케밥 80 이다. 잔량·날짜·시간 열은 좌우 여백 24px 이다.
+  (#228) `종` 은 Figma 140 이지만 좌우 여백 40px 을 빼면 `호랑이` 가 잘려 180 으로 넓혔다.
 - 표 행 구분선 색은 `#848491`(`colors.textGuide`)이다. 업무 표의 기본 구분선(`#727272`)과 다르다.
 - 스타일은 Emotion 을 사용한다. solid color/font family 는 theme 의미 토큰을 쓰고,
   px·rgba·spacing·radius 등 구현값은 styled 블록에 직접 작성한다.

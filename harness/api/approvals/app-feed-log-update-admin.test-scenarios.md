@@ -6,20 +6,20 @@
 
 ## Mock S1 — 수정 저장
 
-- 사용자 동작: 먹이 종류 `닭가슴살`, 급여량 `2.5kg`, 특이사항 `잔반 조금 남김` → 저장
+- 사용자 동작: 먹이 종류 `닭가슴살`, 급여량 `2.5kg`, 잔량 `0.3kg`, 특이사항 `잔반 조금 남김` → 저장
 - Mock request: PUT `/feed-log/admin/1`, Bearer 헤더, body
-  `{ "feedDateTime": "<오늘>T09:30:00", "feedType": "닭가슴살", "feedAmount": 2.5, "significant": "잔반 조금 남김" }`
+  `{ "feedDateTime": "<오늘>T09:30:00", "feedType": "닭가슴살", "feedAmount": 2.5, "remainingAmount": 0.3, "feedUnit": "KGL", "significant": "잔반 조금 남김" }`
 - 기대 결과: PUT 1회, 목록 이동, `데이터 수정에 성공했습니다` 토스트, 목록 GET 재요청
 
 ## Mock S2 — 급여량 표기 변환과 공백 제거
 
 - 사용자 동작: 먹이 종류 `  생닭 `, 급여량 `2 kg`, 특이사항 비움 → 저장
-- 기대 결과: body `feedType: "생닭"`, `feedAmount: 2`, `significant: ""`, `feedDateTime` 원본 유지
+- 기대 결과: body `feedType: "생닭"`, `feedAmount: 2`, `remainingAmount: 0`, `feedUnit: "KGL"`, `significant: ""`, `feedDateTime` 원본 유지
 
 ## Mock S3 — 변경 없이 저장
 
 - 사용자 동작: 아무것도 바꾸지 않고 저장
-- 기대 결과: 원래 값 그대로 PUT 1회(`feedAmount: 1.2`)
+- 기대 결과: 원래 값 그대로 PUT 1회(`feedAmount: 1.2`, `remainingAmount: 0`, `feedUnit: "KGL"`)
 
 ## Mock S4 — 검증 실패
 
@@ -48,3 +48,10 @@
 - 사용자 동작: S1 저장 후 목록에서 1행을 눌러 상세로 이동
 - 기대 결과: 저장(PUT) 이후 상세 GET 을 한 번 이상 다시 요청한다(캐시된 옛 값을 쓰지 않는다).
   재요청 시점은 저장 직후(수정 화면이 아직 떠 있을 때)일 수도, 상세 진입 시일 수도 있다.
+
+## Mock S9 — 잔량이 없는 기록은 잔량을 입력해야 저장한다
+
+- 사전 조건: 상세 응답의 `remainingAmount` 가 null(기능 추가 이전 기록)
+- 사용자 동작: 잔량이 빈 입력인지 확인 → 그대로 저장 → 잔량에 `0` 입력 → 저장
+- 기대 결과: 첫 저장은 `잔량을 입력해주세요!` 가 보이고 PUT 요청이 없다. 두 번째 저장은 PUT 1회,
+  body `remainingAmount: 0`, `feedUnit: "KGL"`, 수정 성공 토스트

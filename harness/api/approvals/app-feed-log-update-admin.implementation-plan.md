@@ -3,7 +3,7 @@
 ## 승인 기준
 
 - `PUT /feed-log/admin/{feedLogId}`, Bearer, role `ADMIN`(Swagger 미기재 — 같은 컨트롤러 기준)
-- body `FeedLogRequest` 4개 필수: `feedDateTime`(date-time), `feedType`(minLength 1), `feedAmount`(float), `significant`(string)
+- body `FeedLogRequest` 6개 필수: `feedDateTime`(date-time), `feedType`(minLength 1), `feedAmount`(float), `remainingAmount`(float, 0 허용), `feedUnit`(enum `GML`|`KGL`, 항상 `KGL`), `significant`(string)
 - 성공 200 `{ message }`, 오류 403/404/405/500
 - 실제 서버 테스트 disabled
 
@@ -20,7 +20,7 @@
 ## 저장 흐름
 
 1. 폼 검증(기존) 통과
-2. `updateFeed({ feedLogId, feedDateTime, feedType, feedAmount, significant })`
+2. `updateFeed({ feedLogId, feedDateTime, feedType, feedAmount, remainingAmount, feedUnit: 'KGL', significant })`
 3. `api.put<unknown>` → 200 이고 `message` 가 string 이면 성공, 아니면 형식 오류로 실패 처리
 4. 성공: `['feeds','list']`·`feedQueryKeys.detail(id)` 무효화 → 목록 이동 + `데이터 수정에 성공했습니다`
 5. 실패: 폼 유지, 입력 보존, `저장하지 못했습니다. 다시 시도해 주세요.`
@@ -43,6 +43,12 @@
 
 - 이 계획의 승인 항목은 모두 권장안대로 확정한다(Swagger 기준 연동, `feedDateTime` 원본 전송).
 - 삭제: 목록 케밥 `삭제` 는 Figma 대로 두고 mock 을 유지한다. 백엔드가 삭제 API 를 만들면 별도 작업으로 연동한다.
+
+## 변경 (2026-10-06, #228 잔량)
+
+- Swagger `FeedLogRequest` 가 `remainingAmount`·`feedUnit` 을 필수로 요구한다. 개발자 결정: 단위는 항상 kg, PUT 은 항상 `feedUnit: 'KGL'`, 응답의 `feedUnit` 은 무시한다.
+- 변경 파일: `src/entities/feed/api/types.ts`·`feedApi.ts`, `src/entities/feed/model/*`, `src/features/feed-form/*`(잔량 입력·검증), `tests/e2e/api/app-feed-log-update-admin.spec.ts`(S1–S3 본문 갱신, S9 추가).
+- 잔량이 없는 기록(null)은 빈 입력으로 시작해 채워야 저장된다(시나리오 S9).
 
 ## 재승인 (2026-09-28)
 
