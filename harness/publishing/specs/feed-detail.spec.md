@@ -60,7 +60,9 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
   - 행은 클릭 대상이 아니다.
 - 급여 이력이 없으면 → 행 대신 `급여 이력이 없습니다.` 를 표시하고 섹션 헤더의 건수는 `0건` 이다.
   (Figma 에 빈 상태 프레임이 없어 저장소의 빈 상태 규약을 따랐다 — 중간 게이트에서 문구를 확정한다.)
-- 로딩 중에는 같은 레이아웃의 빈 카드·빈 표를 두어 박스가 튀지 않게 하고, 진입 시 스크롤은 맨 위로 둔다.
+- 로딩 중에는 별도 스켈레톤 대신 실제 급여 기록 카드·`급여 이력` 섹션·이력 표를 그대로 그리고
+  서버 값 자리(사진·개체명·필드 값·이력 행)만 막대로 채운다. 불러온 뒤 카드·필드·섹션 위치가 바뀌지 않는다(#231).
+  섹션 헤더의 건수는 불러온 뒤에 붙는다. 진입 시 스크롤은 맨 위로 둔다.
 
 ## 데이터
 
@@ -72,7 +74,8 @@ paths: src/pages/feeds, src/entities/feed, src/shared/ui
 ## 컴포넌트 구조/props
 
 - `FeedDetailPage` — `/feeds/:id` 화면.
-- `FeedRecordCard { feed }` (entities/feed/ui) — 사진·개체명·분류 뱃지·필드 6종(2열 4행)·비활성 버튼을 그린다.
+- `FeedRecordCard { feed?, species?, observationHref }` (entities/feed/ui) — 사진·개체명·분류 뱃지·필드 7종(2열 4행)·버튼을 그린다.
+  `feed` 가 없으면 조회 중 상태로 같은 카드를 그리고 서버 값 자리만 막대로 채운다.
 - `AnimalSpeciesBadge { species }` (entities/feed/ui) — Figma `individual / 성별 뱃지`(`161:11782`) 규격의 pill.
   분류 라벨을 blue 배경(`colors.accentBg`) + blue 텍스트(`colors.accent`)로 표시한다.
 - `SectionHeader { title, count }` (shared/ui) — Figma `section header`(`127:9419`)의 `plain` variant.
