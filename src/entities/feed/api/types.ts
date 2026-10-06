@@ -1,4 +1,4 @@
-// staging OpenAPI(App 그룹, tag `feed-log-controller`)에서 프론트가 쓰는 3개 엔드포인트의 응답 스키마.
+// staging OpenAPI(App 그룹, tag `feed-log-controller`)에서 프론트가 쓰는 엔드포인트의 요청·응답 스키마.
 // 런타임 값은 신뢰하지 않고 `unknown` 으로 받은 뒤 feedApi 에서 검증한다.
 
 /** 목록·상세·이력이 공통으로 쓰는 개체 분류. 목록 필터 query 값이기도 하다. */
@@ -19,6 +19,8 @@ export interface FeedLogListItemResponse {
   animalName: string
   feedType: string
   feedAmount: number
+  /** 잔량(kg). 잔량 도입 전 기록은 null 이거나 빠져 올 수 있다. */
+  remainingAmount?: number | null
   /** ISO date-time */
   feedDateTime: string
 }
@@ -40,6 +42,8 @@ export interface FeedLogAdminDetailResponse {
   animalImageUrl?: { fileName: string; fileKey: string } | null
   feedType: string
   feedAmount: number
+  /** 잔량(kg). 잔량 도입 전 기록은 null 이거나 빠져 올 수 있다. */
+  remainingAmount?: number | null
   feedDateTime: string
   /** 특이사항. 값이 없으면 null 이다. */
   significant: string | null
@@ -52,6 +56,8 @@ export interface FeedLogHistoryItemResponse {
   staffName: string
   feedType: string
   feedAmount: number
+  /** 잔량(kg). 잔량 도입 전 기록은 null 이거나 빠져 올 수 있다. */
+  remainingAmount?: number | null
   feedDateTime: string
   /** 특이사항. 값이 없으면 null 이다. */
   significant: string | null

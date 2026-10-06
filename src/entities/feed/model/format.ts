@@ -27,3 +27,8 @@ export function formatFeedLabel(feedType: string, feedAmount: string): string {
 export function formatFeedAmount(feedAmount: number): string {
   return `${Number(feedAmount.toFixed(2))}kg`
 }
+
+/** 잔량도 급여량과 같은 kg 표기다. 잔량 도입 전 기록처럼 값이 없으면 빈 문자열이다. */
+export function formatRemainingAmount(remainingAmount: number | null): string {
+  return remainingAmount == null ? '' : formatFeedAmount(remainingAmount)
+}
