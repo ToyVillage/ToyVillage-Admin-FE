@@ -2,6 +2,8 @@
 
 이 저장소에서 하네스 작업을 시작하기 전에 [`harness/README.md`](harness/README.md)를 확인하고 작업 유형의 RUNBOOK을 따른다.
 
+커밋·PR·브랜치·이슈 작업은 작업 유형과 관계없이 [`harness/shared/team-rules.md`](harness/shared/team-rules.md)를 따른다.
+
 ## 퍼블리싱 (Figma → 코드)
 
 Figma 프레임을 코드로 옮겨달라는(퍼블리싱) 요청이면(예: "notice-list 퍼블리싱해줘"), **[`.claude/skills/publishing/SKILL.md`](.claude/skills/publishing/SKILL.md)를 읽고 그 절차를 따른다.** (Claude는 `/publishing <feature>` 슬래시로 같은 파일을 사용한다.)
