@@ -212,11 +212,12 @@ test('S7: HTTP 400 이면 오류 화면을 표시한다', async ({ page }) => {
   await expectListError(page)
 })
 
-test('S8: HTTP 401 이면 오류 화면을 표시한다', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S8: HTTP 401 이면 로그인으로 간다', async ({ page }) => {
   await mockList(page, 401, errorBody(401, '만료된 토큰입니다.'))
   await page.goto('/tasks')
 
-  await expectListError(page)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S9: HTTP 500 이면 오류 화면을 표시한다', async ({ page }) => {
