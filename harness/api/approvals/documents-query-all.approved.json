@@ -1,15 +1,15 @@
 {
   "feature": "documents-query-all",
   "apiId": "DOCUMENTS_QUERY_ALL",
-  "approvedAt": "2026-09-17T07:51:05.100Z",
-  "approvedBy": "kimjihwan8",
+  "approvedAt": "2026-10-08T07:12:58.093Z",
+  "approvedBy": "yunho09",
   "taskSpecHash": "14df996b3a5fd8b20afb9d6722539379e4f9574a9250c462359c911a300b8c42",
   "contractHash": "6d6aa184ca344e1315473be6a20314c162412d284682dfcc1fc1a93ec205b95b",
   "contractMarkdownHash": "5979d978595a6653fbd94cdbebb466a73becbd3b477fdab9d61f20511fa2f7fb",
   "planHash": "1c3161236831b9abb9c4dfaba17626da550d0336b8185435999c6a94fa569c5c",
-  "scenarioHash": "d9e9fb9e2f91ccdd3e5d687a7d5e5bc006a7cb2a7ff862b987f0abffff9e7920",
-  "testHash": "f31b1f795ca441c5efbd9215ed9fdbfbd559a940a0ed1c9d479cdd4c23644d32",
+  "scenarioHash": "acbcf190f75f2a39ceed37ca47cb7edb0643688cb4eb263e8036d921c6f1fc08",
+  "testHash": "1e78e7e641e8f1978cfe018d67231bbb62c624227a6bd7c3f7a3cd2a98730bf6",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T07:51:05.555Z"
+  "testApprovedAt": "2026-10-08T07:12:58.286Z"
 }
