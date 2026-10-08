@@ -197,9 +197,9 @@ test('S6: 응답 전에는 로딩 상태를 표시한다', async ({ page }) => {
   })
 
   await page.goto('/tasks')
-  await expect(page.getByRole('status')).toContainText(
-    '업무를 불러오는 중입니다.',
-  )
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
 
   release?.()
   await expect(rows(page)).toHaveCount(3)
