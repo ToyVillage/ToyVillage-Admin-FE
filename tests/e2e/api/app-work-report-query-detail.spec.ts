@@ -105,7 +105,8 @@ test('S2: 첨부 파일이 없어도 상세를 표시한다', async ({ page }) =
   ).toHaveCount(0)
 })
 
-test('S3: 반려된 보고는 반려 배지를 보이고 사유는 표시하지 않는다', async ({
+// 2026-09-19 이미 심사된 보고는 심사 버튼을 숨긴다(221097b).
+test('S3: 반려된 보고는 반려 배지를 보이고 사유와 심사 버튼은 표시하지 않는다', async ({
   page,
 }) => {
   await page.route(detailPath, (route) =>
@@ -120,8 +121,8 @@ test('S3: 반려된 보고는 반려 배지를 보이고 사유는 표시하지 
 
   await expect(metaValue(page, '상태:')).toContainText('반려')
   await expect(page.getByText('근거 자료가 빠졌습니다.')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: '반려하기' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '승인하기' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '반려하기' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '승인하기' })).toHaveCount(0)
 })
 
 test('S4: 승인된 보고는 완료 배지를 보인다', async ({ page }) => {
