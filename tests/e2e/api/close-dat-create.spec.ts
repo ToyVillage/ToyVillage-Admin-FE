@@ -3,6 +3,8 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 const apiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
+  // 목록 달력은 오늘이 속한 달을 연다. 일정 데이터(2026-07)가 보이도록 날짜를 고정한다.
+  await page.clock.setFixedTime(new Date('2026-07-28T12:00:00'))
   await page.addInitScript(() => {
     window.localStorage.setItem('accessToken', 'close-date-create-test-token')
   })

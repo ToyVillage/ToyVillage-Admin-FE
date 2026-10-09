@@ -73,6 +73,8 @@ test('S3: 서버 오류를 mock 또는 빈 배열로 숨기지 않는다', async
 })
 
 test('S4: 휴무 일정 카드는 상세 경로를 가리킨다', async ({ page }) => {
+  // 목록 달력은 오늘이 속한 달을 연다. 일정 데이터(2026-07)가 보이도록 날짜를 고정한다.
+  await page.clock.setFixedTime(new Date('2026-07-28T12:00:00'))
   await page.route(apiPath, async (route) => {
     await route.fulfill({
       status: 200,
