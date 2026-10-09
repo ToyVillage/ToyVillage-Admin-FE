@@ -41,9 +41,10 @@ test('S1: route ID로 업무를 한 번 삭제하고 목록으로 이동해 성�
   await confirmDelete(page)
 
   await expect(page).toHaveURL(/\/tasks$/)
-  await expect(page.getByRole('status')).toContainText(
-    '데이터 삭제에 성공했습니다',
-  )
+  // 목록 스켈레톤도 status 라 토스트 문구로 좁힌다.
+  await expect(
+    page.getByRole('status').filter({ hasText: '데이터 삭제에 성공했습니다' }),
+  ).toBeVisible()
   expect(deleteRequestCount).toBe(1)
   expect(deleteRequestPath).toBe('/tasks/1')
   expect(deleteRequestBody).toBeNull()
