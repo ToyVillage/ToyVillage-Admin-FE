@@ -51,8 +51,13 @@ test('작성 후 뒤로가기를 누르면 이탈 확인 모달을 표시하고 
   await expect(dialog).toHaveCSS('border-radius', '20px')
   await expect(dialog.getByRole('button', { name: '취소' })).toBeFocused()
 
-  const bounds = await dialog.boundingBox()
-  expect(bounds).toEqual({ x: 660, y: 354, width: 600, height: 300 })
+  // 열림 애니메이션(scale)이 끝난 뒤의 크기를 비교한다.
+  // 가로 위치는 오버레이(scrollbar-gutter 를 뺀 폭)의 가운데다.
+  const overlay = await dialog.locator('..').boundingBox()
+  const centerX = (overlay?.width ?? 0) / 2 - 300
+  await expect
+    .poll(() => dialog.boundingBox())
+    .toEqual({ x: centerX, y: 354, width: 600, height: 300 })
 
   if (process.env.CAPTURE_VISUAL_ARTIFACT === '1') {
     await page.screenshot({
@@ -153,8 +158,13 @@ test('S4: 빈 폼은 제목 오류 모달을 표시하고 확인 후 첫 입력�
   await expect(dialog).toHaveCSS('border-radius', '20px')
   await expect(dialog.getByRole('button', { name: '확인' })).toBeFocused()
 
-  const bounds = await dialog.boundingBox()
-  expect(bounds).toEqual({ x: 680, y: 380, width: 560, height: 320 })
+  // 열림 애니메이션(scale)이 끝난 뒤의 크기를 비교한다.
+  // 가로 위치는 오버레이(scrollbar-gutter 를 뺀 폭)의 가운데다.
+  const overlay = await dialog.locator('..').boundingBox()
+  const centerX = (overlay?.width ?? 0) / 2 - 280
+  await expect
+    .poll(() => dialog.boundingBox())
+    .toEqual({ x: centerX, y: 380, width: 560, height: 320 })
 
   await dialog.getByRole('button', { name: '확인' }).click()
   await expect(dialog).toBeHidden()

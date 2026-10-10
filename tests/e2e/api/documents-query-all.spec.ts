@@ -84,11 +84,12 @@ test('S3: 500 서버 오류 → 별도 오류 화면 없이 빈 상태', async (
   await expect(page.getByText('불러오지 못했습니다')).toHaveCount(0)
 })
 
-test('S4: 401 만료된 토큰 → 별도 오류 화면 없이 빈 상태', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S4: 401 만료된 토큰 → 로그인으로 간다', async ({ page }) => {
   await routeStatus(page, 401, errorBody(401, '만료된 토큰입니다.'))
   await page.goto('/notices/resources')
 
-  await expect(page.getByText('등록된 자료가 없습니다.')).toBeVisible()
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S5: 다음 페이지 이동 시 page 파라미터로 재요청', async ({ page }) => {

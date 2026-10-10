@@ -72,7 +72,7 @@ test('S2: 법정지정분류가 없으면 빈 값 표기다', async ({ page }) =
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
 
-test('S3: 응답 전에는 불러오는 중 문구다', async ({ page }) => {
+test('S3: 응답 전에는 스켈레톤을 표시한다', async ({ page }) => {
   let release: () => void = () => {}
   const released = new Promise<void>((resolve) => (release = resolve))
   await page.route(kindItemPattern, async (route) => {
@@ -82,7 +82,9 @@ test('S3: 응답 전에는 불러오는 중 문구다', async ({ page }) => {
   })
   await page.goto('/species/1')
 
-  await expect(page.getByText('종 정보를 불러오는 중입니다.')).toBeVisible()
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
   release()
   await expect(page.getByRole('heading', { name: '카피바라' })).toBeVisible()
 })

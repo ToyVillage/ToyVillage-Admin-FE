@@ -275,10 +275,10 @@ test('S15: 개체 삭제 뒤 목록에 돌아오면 다시 조회한다', async 
     .click()
   await expect(page.getByText('데이터 삭제에 성공했습니다')).toBeVisible()
 
+  // 2026-09-20 목록 page 를 URL 이 소유한다(77fb1f1). 돌아오면 2페이지 그대로다.
   await page.goBack()
-  await expect(page).toHaveURL(/\/species$/)
+  await expect(page).toHaveURL(/\/species\?page=2$/)
   await expect.poll(() => api.count('kind.list')).toBeGreaterThan(before)
-  await pageButton(page, 2).click()
   await expect(
     rows(page).filter({ hasText: '카피바라' }).locator(':scope > div').nth(3),
   ).toHaveText('2')

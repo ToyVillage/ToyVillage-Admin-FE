@@ -41,9 +41,10 @@ test('S1: route ID로 업무를 한 번 삭제하고 목록으로 이동해 성�
   await confirmDelete(page)
 
   await expect(page).toHaveURL(/\/tasks$/)
-  await expect(page.getByRole('status')).toContainText(
-    '데이터 삭제에 성공했습니다',
-  )
+  // 목록 스켈레톤도 status 라 토스트 문구로 좁힌다.
+  await expect(
+    page.getByRole('status').filter({ hasText: '데이터 삭제에 성공했습니다' }),
+  ).toBeVisible()
   expect(deleteRequestCount).toBe(1)
   expect(deleteRequestPath).toBe('/tasks/1')
   expect(deleteRequestBody).toBeNull()
@@ -65,23 +66,23 @@ test('S2: HTTP 400이면 현재 화면에서 다시 삭제할 수 있다', async
   await expect.poll(() => deleteRequestCount).toBe(2)
 })
 
-test('S3: HTTP 401이면 상세 화면과 입력값을 유지한다', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S3: HTTP 401이면 로그인으로 간다', async ({ page }) => {
   await mockDeleteError(page, 401, '만료된 토큰입니다.')
 
   await openDeleteTarget(page)
   await confirmDelete(page)
 
-  await expectDeleteFailure(page, 1)
-  await expect(page.getByRole('heading', { name: '업무 제목' })).toBeVisible()
+  await expect(page).toHaveURL(/\/login$/)
 })
 
-test('S4: HTTP 403이면 삭제 성공으로 처리하지 않는다', async ({ page }) => {
+test('S4: HTTP 403이면 로그인으로 간다', async ({ page }) => {
   await mockDeleteError(page, 403, '')
 
   await openDeleteTarget(page)
   await confirmDelete(page)
 
-  await expectDeleteFailure(page, 1)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S5: HTTP 404이면 삭제 성공으로 처리하지 않는다', async ({ page }) => {

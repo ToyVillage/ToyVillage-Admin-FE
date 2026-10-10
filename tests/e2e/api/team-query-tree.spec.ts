@@ -156,11 +156,12 @@ test('S6: 직원이 없으면 오류가 아니라 빈 상태다', async ({ page 
   )
 })
 
-test('S7: 401이면 오류를 드러내고 제출을 막는다', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S7: 401이면 로그인으로 간다', async ({ page }) => {
   await mockTree(page, 401, errorBody(401, '만료된 토큰입니다.'))
   await page.goto('/tasks/create')
 
-  await expectTreeError(page)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S8: 404여도 같은 오류 처리를 한다', async ({ page }) => {

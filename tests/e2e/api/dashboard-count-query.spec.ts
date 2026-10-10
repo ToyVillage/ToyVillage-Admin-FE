@@ -93,11 +93,13 @@ for (const [name, body] of [
   })
 }
 
-test('S6: 응답 대기 중 로딩 문구', async ({ page }) => {
+test('S6: 응답 대기 중 스켈레톤', async ({ page }) => {
   await mockDashboardApi(page, { delayMs: { count: 2000 } })
   await page.goto('/')
 
-  await expect(page.getByText('대시보드를 불러오는 중입니다.')).toBeVisible()
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
   await expect(kpi(page, 3, '먹이 급여 기록')).toBeVisible()
 })
 

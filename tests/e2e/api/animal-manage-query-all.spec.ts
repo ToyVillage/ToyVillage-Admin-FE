@@ -229,7 +229,7 @@ for (const status of [401, 403]) {
   })
 }
 
-test('S12: 응답 전에는 불러오는 중 문구다', async ({ page }) => {
+test('S12: 응답 전에는 스켈레톤을 표시한다', async ({ page }) => {
   let release: () => void = () => {}
   const released = new Promise<void>((resolve) => (release = resolve))
   await page.route(kindAnimalsPattern, async (route) => {
@@ -238,7 +238,9 @@ test('S12: 응답 전에는 불러오는 중 문구다', async ({ page }) => {
   })
   await page.goto('/species/1')
 
-  await expect(page.getByText('종 정보를 불러오는 중입니다.')).toBeVisible()
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
   release()
   await expect(rows(page)).toHaveCount(3)
 })
