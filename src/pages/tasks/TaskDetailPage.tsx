@@ -49,6 +49,8 @@ export function TaskDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   // 삭제 실패 토스트 문구. null 이면 숨긴다.
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  // 삭제에 성공하면 화면을 떠나는 동안 상세를 다시 조회하지 않게 끈다.
+  const [deleted, setDeleted] = useState(false)
   // 다운로드 실패가 연달아 나도 토스트를 새로 띄우도록 매번 값을 바꾼다. 0 이면 숨긴다.
   const [downloadErrorId, setDownloadErrorId] = useState(0)
   const dismissDownloadError = useCallback(() => setDownloadErrorId(0), [])
@@ -71,7 +73,7 @@ export function TaskDetailPage() {
   } = useQuery({
     queryKey: ['tasks', id],
     queryFn: () => getTask({ id: Number(id) }),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && !deleted,
   })
 
   const deleteMutation = useMutation({
@@ -115,6 +117,7 @@ export function TaskDetailPage() {
     deleteMutation.mutate(undefined, {
       onSuccess: async () => {
         deletingRef.current = false
+        setDeleted(true)
         queryClient.removeQueries({ queryKey: ['tasks', id] })
         await queryClient.invalidateQueries({ queryKey: ['tasks'] })
         navigate('/tasks', { state: { toast: 'delete-success' } })
