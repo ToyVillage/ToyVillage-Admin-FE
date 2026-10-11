@@ -47,9 +47,9 @@
 - 입력: contract.json
 - Prompt: 없음
 - 산출물: validator 결과
-- 검증: `yarn harness:api:validate <feature>` 통과
-- STOP: `api-input-contract.md`의 STOP 조건 하나라도 충족
-- 다음 단계: exit 0
+- 검증: `yarn harness:api:validate <feature>` 통과, `yarn harness:api:swagger --contract harness/artifacts/api/<feature>.contract.json`으로 스테이징 Swagger와 대조
+- STOP: `api-input-contract.md`의 STOP 조건 하나라도 충족, Swagger와 다른 항목이 있는데 어느 쪽이 맞는지 개발자 확인이 없음
+- 다음 단계: exit 0, Swagger 차이는 개발자가 정한 쪽으로 계약을 고치거나 `swagger-known-diffs.json`에 사유와 함께 기록
 - 승인: 불필요
 
 ## ⑥ 기존 프로젝트 API 구조 분석
