@@ -4,6 +4,8 @@ const closeScheduleApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 const closeScheduleDetailApiPath = /^https:\/\/[^/]+\/close-day\/[^/?]+(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
+  // 목록 달력은 오늘이 속한 달을 연다. 일정 데이터(2026-07)가 보이도록 날짜를 고정한다.
+  await page.clock.setFixedTime(new Date('2026-07-28T12:00:00'))
   await page.addInitScript(() => {
     window.localStorage.setItem('accessToken', 'close-date-update-test-token')
   })
@@ -80,20 +82,15 @@ test('S2: HTTP 400이면 입력을 유지하고 다시 제출할 수 있다', as
   await expect.poll(() => updateRequestCount).toBe(2)
 })
 
-test('S3: HTTP 401이면 입력과 수정 화면을 유지한다', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S3: HTTP 401이면 로그인으로 간다', async ({ page }) => {
   await mockUpdateError(page, 401, '만료된 토큰입니다.')
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '인증 오류 휴무일')
   await page.getByRole('button', { name: '저장하기' }).click()
 
-  await expectUpdateFailure(
-    page,
-    7,
-    '2026-07-12',
-    '2026-07-13',
-    '인증 오류 휴무일',
-  )
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S4: HTTP 404이면 수정 성공으로 처리하지 않는다', async ({ page }) => {

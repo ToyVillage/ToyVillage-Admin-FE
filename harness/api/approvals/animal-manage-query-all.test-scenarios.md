@@ -127,7 +127,8 @@ handler가 응답한다. 이 feature의 대상은 `individualListPattern`
 
 - Mock response: 지연된 HTTP 200 기본 목록 응답
   (`individualListDelayMs`)
-- 기대 결과: 응답 전 `종 정보를 불러오는 중입니다.` 표시, 응답 후 표 3행
+- 기대 결과: 응답 전 `불러오는 중` 스켈레톤(`role=status`, `aria-busy=true`) 표시, 응답 후 표 3행
+  (스켈레톤 도입으로 로딩 문구 삭제 반영, 2026-10-08 #237)
 
 ## Mock S13 — 행 클릭 이동(animalManageId)
 

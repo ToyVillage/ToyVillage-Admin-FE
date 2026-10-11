@@ -509,13 +509,13 @@ test('S30: 키보드 조작', async ({ page }) => {
   await cardTrigger.focus()
   await expectFocusOutline(cardTrigger)
   await page.keyboard.press('Enter')
-  await expect(
-    page.getByRole('menu', { name: '동식이 개체 메뉴 열기' }),
-  ).toBeVisible()
+  // 닫히는 메뉴는 애니메이션 동안 남아 있으므로 항목은 열린 메뉴 안에서 찾는다.
+  const cardMenu = page.getByRole('menu', { name: '동식이 개체 메뉴 열기' })
+  await expect(cardMenu).toBeVisible()
   await page.keyboard.press('Tab')
-  await expect(page.getByRole('menuitem', { name: '수정' })).toBeFocused()
+  await expect(cardMenu.getByRole('menuitem', { name: '수정' })).toBeFocused()
   await page.keyboard.press('Tab')
-  await expect(page.getByRole('menuitem', { name: '삭제' })).toBeFocused()
+  await expect(cardMenu.getByRole('menuitem', { name: '삭제' })).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(deleteDialog(page)).toBeVisible()
   await page.keyboard.press('Escape')
@@ -526,12 +526,13 @@ test('S30: 키보드 조작', async ({ page }) => {
   await rowTrigger.focus()
   await expectFocusOutline(rowTrigger)
   await page.keyboard.press('Enter')
-  await expect(
-    page.getByRole('menu', { name: `${firstTitle} 관찰 메뉴 열기` }),
-  ).toBeVisible()
+  const rowMenu = page.getByRole('menu', {
+    name: `${firstTitle} 관찰 메뉴 열기`,
+  })
+  await expect(rowMenu).toBeVisible()
   await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
   await page.keyboard.press('Tab')
-  await expect(page.getByRole('menuitem', { name: '수정' })).toBeFocused()
+  await expect(rowMenu.getByRole('menuitem', { name: '수정' })).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(
     /\/species\/1\/individuals\/1\/observations\/1\/edit$/,

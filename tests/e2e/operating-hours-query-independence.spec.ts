@@ -31,7 +31,8 @@ test('휴무일 조회가 대기 중이어도 운영시간을 독립적으로 �
 
   await page.goto('/notices/guide/hours/2026-07-13')
 
-  await expect(page.getByText('휴무일을 조회하는 중입니다.')).toBeVisible()
+  // 조회 중 문구는 스켈레톤으로 바뀌었다. 휴무일 요청이 응답 없이 멈춰 있는지로 확인한다.
+  await expect.poll(() => pendingCloseScheduleRoute).toBeDefined()
   await expect(page.getByLabel('영업 시작 시')).toHaveValue('09')
   await expect(page.getByLabel('영업 종료 시')).toHaveValue('06')
 

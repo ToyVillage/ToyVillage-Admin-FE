@@ -108,11 +108,8 @@ test('S3: 승인에 성공하면 업무관리 캐시를 무효화한다', async 
     .click()
   await expect(page).toHaveURL(/\/task-reports\/32$/)
   await page.getByRole('button', { name: '승인하기' }).click()
-  await expect(page).toHaveURL(/\/task-reports$/)
 
-  await page.goBack()
-  await page.goBack()
-
+  // 심사 후에는 들어온 곳(업무 상세)으로 돌아간다.
   await expect(page).toHaveURL(/\/tasks\/12$/)
   await expect.poll(() => taskDetailRequests).toBe(2)
 })

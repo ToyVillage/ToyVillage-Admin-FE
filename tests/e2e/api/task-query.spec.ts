@@ -150,9 +150,9 @@ test('S5: 응답 전에는 로딩 상태를 표시한다', async ({ page }) => {
   })
 
   await page.goto('/tasks/12')
-  await expect(page.getByRole('status')).toContainText(
-    '업무를 불러오는 중입니다.',
-  )
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
 
   release?.()
   await expect(
@@ -168,18 +168,19 @@ test('S6: HTTP 404 면 찾을 수 없음 화면을 표시한다', async ({ page 
   await expect(page).toHaveURL(/\/tasks\/12$/)
 })
 
-test('S7: HTTP 403 도 같은 오류 화면이다', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S7: HTTP 403 이면 로그인으로 간다', async ({ page }) => {
   await mockDetail(page, 403, { ...errorBody(403, ''), message: '' })
   await page.goto('/tasks/12')
 
-  await expectDetailError(page)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
-test('S8: HTTP 401 도 같은 오류 화면이다', async ({ page }) => {
+test('S8: HTTP 401 이면 로그인으로 간다', async ({ page }) => {
   await mockDetail(page, 401, errorBody(401, '만료된 토큰입니다.'))
   await page.goto('/tasks/12')
 
-  await expectDetailError(page)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S9: HTTP 500 도 같은 오류 화면이다', async ({ page }) => {

@@ -62,7 +62,7 @@ test('S2: 기타정보가 비면 — 로 표시한다', async ({ page }) => {
   ).toContainText('—')
 })
 
-test('S3: 응답 전에는 불러오는 중 문구다', async ({ page }) => {
+test('S3: 응답 전에는 스켈레톤을 표시한다', async ({ page }) => {
   let release: () => void = () => {}
   const released = new Promise<void>((resolve) => (release = resolve))
   await page.route(animalItemPattern, async (route) => {
@@ -72,7 +72,9 @@ test('S3: 응답 전에는 불러오는 중 문구다', async ({ page }) => {
   })
   await page.goto(detailUrl)
 
-  await expect(page.getByText('개체를 불러오는 중입니다.')).toBeVisible()
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
   release()
   await expect(page.getByRole('img', { name: '무궁이 사진' })).toBeVisible()
 })
