@@ -1,0 +1,40 @@
+name: API Swagger
+
+# 승인된 API 계약과 스테이징 Swagger 를 비교한다(scripts/check-api-swagger.mjs).
+# 백엔드가 Swagger 를 바꾸면 계약과 무관한 PR 이 막히지 않도록 필수 검사로 두지 않고,
+# 계약을 건드린 PR 과 매일 아침 실행으로 알린다.
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'harness/api/**'
+      - 'scripts/check-api-swagger.mjs'
+      - '.github/workflows/api-swagger.yml'
+  schedule:
+    # 매일 09:00 KST
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  swagger:
+    name: 계약 vs Swagger
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      # 스크립트는 Node 내장 모듈만 써서 의존성 설치가 필요 없다.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: node scripts/check-api-swagger.mjs --markdown swagger-report.md
+        env:
+          SWAGGER_USERNAME: ${{ secrets.SWAGGER_USERNAME }}
+          SWAGGER_PASSWORD: ${{ secrets.SWAGGER_PASSWORD }}
+      - if: always()
+        run: |
+          if [ -f swagger-report.md ]; then cat swagger-report.md >> "$GITHUB_STEP_SUMMARY"; fi
