@@ -17,6 +17,15 @@ import {
   writeJson,
 } from './api-harness-lib.mjs'
 import {
+  checkContracts,
+  defaultSwaggerBaseUrl,
+  fetchApiDocs,
+  formatReport,
+  loadDotEnv,
+  readContract,
+  readKnownDiffs,
+} from './check-api-swagger.mjs'
+import {
   validateRealFixtureSource,
   validateRealTestSource,
 } from './validate-real-api-source.mjs'
@@ -140,17 +149,44 @@ export function approveApi({
   return approval
 }
 
-function main() {
+// 계약 승인 전에 그 기능의 계약을 스테이징 Swagger 와 비교한다. 알려진 차이에 없는 차이가 있으면 승인하지 않는다.
+// 계약은 승인으로만 바뀌므로 여기서 막으면 승인된 계약은 항상 Swagger 와 대조된 상태다(RUNBOOK ⑧).
+async function checkSwagger({ root, feature, specPath }) {
+  loadDotEnv(root)
+  const apiDocs = specPath
+    ? JSON.parse(readFileSync(resolve(specPath), 'utf8'))
+    : await fetchApiDocs(process.env.SWAGGER_BASE_URL ?? defaultSwaggerBaseUrl)
+  const result = checkContracts({
+    contracts: [readContract(apiPaths(root, feature).contractJson)],
+    apiDocs,
+    knownDiffs: readKnownDiffs(root),
+  })
+  if (result.newDiffs.length > 0) {
+    throw new Error(
+      `Swagger 와 다른 항목이 있어 승인하지 않음 — 계약을 고치거나 어느 쪽이 맞는지 정해 swagger-known-diffs.json 에 사유와 함께 기록\n${formatReport(result)}`,
+    )
+  }
+}
+
+async function main() {
   const args = process.argv.slice(2)
   const feature = args[0]
   if (!feature || feature.startsWith('--')) {
     console.error(
-      'usage: approve-api.mjs <feature> --by <developer> [--freeze|--freeze-real] [--root path]',
+      'usage: approve-api.mjs <feature> --by <developer> [--freeze|--freeze-real] [--swagger-spec api-docs.json] [--root path]',
     )
     process.exit(2)
   }
   const root = resolve(parseOption(args, '--root') ?? repositoryRoot)
+  const freezing = args.includes('--freeze') || args.includes('--freeze-real')
   try {
+    if (!freezing) {
+      await checkSwagger({
+        root,
+        feature,
+        specPath: parseOption(args, '--swagger-spec'),
+      })
+    }
     const approval = approveApi({
       root,
       feature,

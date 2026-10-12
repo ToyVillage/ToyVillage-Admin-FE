@@ -46,4 +46,4 @@
 ## S9: 날짜 정렬
 - Given: 자료 목록이 보인다(기본 최신순).
 - When: 검색바 오른쪽 필터에서 `오래된순` 을 고른다.
-- Then: `orderDirection=ASC` 로 다시 조회하고 첫 페이지로 돌아간다.
+- Then: `sort=createdAt,asc` 로 다시 조회하고 첫 페이지로 돌아간다. (2026-10-12 서버가 `orderDirection`을 무시해 `sort`로 변경, #242)

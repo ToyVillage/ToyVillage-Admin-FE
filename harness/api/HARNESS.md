@@ -1,6 +1,6 @@
 # API Integration Harness
 
-Notion API 명세를 바로 코드로 옮기지 않고 검증 가능한 API Contract로 고정한 뒤, 프로젝트의 기존 API 구조에 맞춰 구현하는 하네스이다.
+Notion API 명세와 스테이징 Swagger를 함께 보고, 바로 코드로 옮기지 않고 검증 가능한 API Contract로 고정한 뒤, 프로젝트의 기존 API 구조에 맞춰 구현하는 하네스이다.
 
 ## 흐름
 
@@ -8,8 +8,9 @@ Notion API 명세를 바로 코드로 옮기지 않고 검증 가능한 API Cont
 API 연동 요청
 → API ID로 Notion API 검색
 → API 상세 명세 조회
-→ API Contract 생성
-→ Contract 검증
+→ 같은 API를 스테이징 Swagger에서 조회
+→ API Contract 생성 (Notion + Swagger)
+→ Contract 검증 (Swagger 대조 포함)
 → 기존 프로젝트 API 구조 분석
 → 구현 계획 작성
 → 테스트 시나리오 작성
@@ -29,9 +30,10 @@ API 연동 요청
 - 승인된 Contract, 구현 계획, 테스트 시나리오만 구현 기준으로 사용한다.
 - 명세에 없는 Method, Path, 권한, 타입, enum, 응답 필드를 추측하지 않는다.
 - 데이터베이스와 상세 페이지 값이 다르면 중단한다.
+- Notion과 Swagger 값이 다르면 중단하고 개발자가 기준을 정한다. Notion에 빠진 값은 Swagger로 채우고 출처를 남긴다.
 - 기존 공통 Axios, 타입, TanStack Query, Query Key 패턴을 우선한다.
 - 승인 이후 기준 파일이 바뀌면 재승인한다.
-- 실제 서버 요청과 Notion 수정은 자동 실행하지 않는다.
+- 실제 서버 요청과 Notion 수정은 자동 실행하지 않는다. Swagger 문서(`/v3/api-docs`) 조회는 API 호출이 아니므로 여기에 해당하지 않는다.
 - 실제 서버 검증은 승인된 staging 설정, 동결된 전용 테스트, 명시적 실행 확인이 모두 있을 때만 수행한다.
 
 ## 조회 순서
@@ -42,7 +44,9 @@ API 연동 요청
 4. 데이터베이스의 Method, Path, 인증 정보를 읽는다.
 5. 상세 페이지의 Request와 Response를 읽는다.
 6. 중복 속성을 비교한다.
-7. 일치할 때만 Contract를 생성한다.
+7. 같은 Method·Path로 스테이징 Swagger operation을 조회한다.
+8. Notion과 Swagger의 파라미터·필드·타입·응답 코드를 비교한다.
+9. 일치하거나 다른 값마다 개발자가 기준을 정했을 때만 Contract를 생성한다.
 
 사용자가 API ID와 Notion URL을 함께 제공하면 검색 결과와 URL이 같은 API인지 비교한다. 다르면 중단한다.
 
@@ -52,6 +56,7 @@ API 연동 요청
 
 ```text
 <feature>.notion-source.md
+<feature>.swagger-source.json
 <feature>.contract.md
 <feature>.contract.json
 <feature>.project-analysis.md

@@ -17,7 +17,7 @@ interface StoredOpenTime {
 }
 
 export interface OpenTimeApiOptions {
-  /** 저장·수정 응답 상태. 201 이 아니면 mock 을 바꾸지 않는다. */
+  /** 201 이면 성공(등록 201·수정 200 으로 응답), 아니면 그 status 로 실패하고 mock 을 바꾸지 않는다. */
   saveStatus?: number
   onSave?: (method: string, body: unknown) => void
 }
@@ -85,7 +85,8 @@ export async function mockOpenTimeApi(
       startOpenTime: `${body.startOpenTime}:00`,
       endOpenTime: `${body.endOpenTime}:00`,
     })
-    await json(route, 201, { message: '운영시간이 수정되었습니다.' })
+    // 실서버 수정 성공은 200 이다(2026-10-12 확인).
+    await json(route, 200, { message: '운영시간이 수정되었습니다.' })
   })
 }
 

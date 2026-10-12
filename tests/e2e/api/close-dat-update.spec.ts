@@ -171,10 +171,10 @@ test('S6: pending 중 중복 제출을 막고 수정 상태를 표시한다', as
   expect(updateRequestCount).toBe(1)
 })
 
-test('S7: HTTP 201 body가 Contract와 다르면 성공 처리하지 않는다', async ({
+test('S7: HTTP 200 body가 Contract와 다르면 성공 처리하지 않는다', async ({
   page,
 }) => {
-  await mockUpdateResponse(page, 201, { result: 'ok' })
+  await mockUpdateResponse(page, 200, { result: 'ok' })
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '응답 오류 휴무일')
@@ -402,8 +402,9 @@ async function fulfillCloseScheduleList(
 }
 
 async function fulfillUpdateSuccess(route: Route) {
+  // 실서버 수정 성공은 200 이다(2026-10-12 확인).
   await route.fulfill({
-    status: 201,
+    status: 200,
     contentType: 'application/json',
     body: JSON.stringify({ message: '휴무일이 수정되었습니다.' }),
   })

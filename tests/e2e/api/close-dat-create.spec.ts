@@ -218,8 +218,11 @@ async function expectCreateFailure(
 }
 
 async function fulfillCreateSuccess(route: Route) {
+  // 실서버 생성 성공은 201 과 message 다(2026-10-12 확인).
   await route.fulfill({
-    status: 200,
+    status: 201,
+    contentType: 'application/json',
+    body: JSON.stringify({ message: '휴무일이 생성되었습니다.' }),
   })
 }
 

@@ -49,7 +49,9 @@
 
 ## Success Responses
 
-### HTTP 201
+### HTTP 200
+
+(2026-10-12 스테이징 실서버 확인: 성공은 200. Notion·이전 계약의 201은 오류, #242)
 
 ```json
 {
@@ -58,7 +60,7 @@
 ```
 
 - `message`는 required, nullable false string
-- 201 외 status는 성공으로 처리하지 않는다.
+- 200 외 status는 성공으로 처리하지 않는다.
 
 ## Error Responses
 

@@ -3,7 +3,7 @@
 ## 변경/생성 파일
 
 1. `src/entities/resource/api/getDocuments.ts`
-   - request 타입: `DocumentsQueryAllRequest { page: number; size: number; keyword?: string; orderDirection?: DocumentOrderDirection; types?: DocumentType[] }`, `DocumentOrderDirection = 'ASC' | 'DESC'`.
+   - request 타입: `DocumentsQueryAllRequest { page: number; size: number; keyword?: string; sort?: DocumentSort; types?: DocumentType[] }`, `DocumentSort = 'createdAt,asc' | 'createdAt,desc'` (2026-10-12 `orderDirection`→`sort`, #242).
    - response 타입: `DocumentsPage { resources: Resource[]; totalPageSize: number }`.
    - `getDocuments(params)` → `api.get<unknown>('/documents', { params, paramsSerializer: { indexes: null } })`.
      `indexes: null` 은 배열 파라미터를 `types[]=` 가 아니라 `types=PDF&types=JPG` 로 보내기 위한 설정이다.
@@ -14,7 +14,7 @@
 3. `src/entities/resource/index.ts`
    - `getDocuments`, 타입 `DocumentsQueryAllRequest`/`DocumentsPage`/`DocumentOrderDirection` export.
 4. `src/pages/notices/resources/ResourceListPage.tsx`
-   - 서버 사이드 페이지네이션 + 필터: `useQuery({ queryKey: ['resources','list',{ page, size: 10, keyword, types }], queryFn: () => getDocuments({ page: page-1, size: 10, keyword, orderDirection: 'DESC', types }), placeholderData: prev })`.
+   - 서버 사이드 페이지네이션 + 필터: `useQuery({ queryKey: ['resources','list',{ page, size: 10, keyword, types }], queryFn: () => getDocuments({ page: page-1, size: 10, keyword, sort: 'createdAt,desc', types }), placeholderData: prev })`.
    - 파일 유형 탭 → `types` 파라미터. '전체' 탭이면 `types` 를 보내지 않는다. 탭·검색 변경 시 1페이지로 리셋.
    - `pageCount = max(1, totalPageSize)`. URL `?page=` 가 `pageCount` 를 넘으면 마지막 페이지로 `replace` 보정한다.
    - 디자인에 로딩/오류 화면이 없으므로 상태 카드 없이 빈 목록만 렌더. 빈 상태 높이 `EMPTY_MIN_HEIGHT`.

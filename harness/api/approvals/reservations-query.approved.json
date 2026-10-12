@@ -1,15 +1,15 @@
 {
   "feature": "reservations-query",
   "apiId": "RESERVATION_ADMIN_QUERY",
-  "approvedAt": "2026-09-20T06:13:33.577Z",
-  "approvedBy": "kimjihwan8",
+  "approvedAt": "2026-10-12T07:11:03.885Z",
+  "approvedBy": "yunho09",
   "taskSpecHash": "978f49fa9e7ba8e6bbfd978f8e78657e2fff60af07b53cabd20f6b1dbea8bedd",
-  "contractHash": "b8d9ff8d1a72d852ab47c0979cb1dd25cef6b0f6c31d1860ad55f7e3ae5051ee",
-  "contractMarkdownHash": "0c50797307b6d386724b6fb8332b0c9ac347fe3daf941cd3a71800327a417f74",
+  "contractHash": "a005caa63cbc1de654ea06df40734fc75b633f487f6b5fdf7459305724404955",
+  "contractMarkdownHash": "3c4c14c81a723e849922d8106e8f4825e2d9cd6d2c5bb26a7e78a174600462b7",
   "planHash": "6b2419ed582d36709cd829fabd64603bdef4ef90253ffe994872ed34837c40bf",
-  "scenarioHash": "2f074a633dfefe3b3d1be48d9e650ee71fb7291f0ee58b8c5260443d9d5fd454",
-  "testHash": "c2d95107fdc00a1c0a474b259fd79e8d18e8651f96440ef1d644581564a5c6a1",
+  "scenarioHash": "3d4a4d9e3c8c6d0b4c0b26088765f7195c69e1a956c203f03e12e5fa3ef5051b",
+  "testHash": "16e1c3c1ef5231c22a3990d8f362cfc8184a4b874314b0b0e10163b0ead0c316",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-20T06:13:33.735Z"
+  "testApprovedAt": "2026-10-12T07:11:04.061Z"
 }

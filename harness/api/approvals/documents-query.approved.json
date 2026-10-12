@@ -1,15 +1,15 @@
 {
   "feature": "documents-query",
   "apiId": "DOCUMENTS_QUERY",
-  "approvedAt": "2026-09-17T07:51:06.006Z",
-  "approvedBy": "kimjihwan8",
+  "approvedAt": "2026-10-12T07:11:01.041Z",
+  "approvedBy": "yunho09",
   "taskSpecHash": "4cba0c0d8f4b356154b4282fbeb9f2e4a394869050d7d890fc380d3a96339456",
-  "contractHash": "579ccc1e339a36eafd51978bedaf4213895177b67e4ef670816f4a566e3a424d",
-  "contractMarkdownHash": "55d51f3c8d21f6ffd8cfcb1ebd902b61f6a4881805f5ffac561441868548e13d",
+  "contractHash": "b331b0d83157e8015fec54544cc9594789662ef1c0baa11d3e47684c54569508",
+  "contractMarkdownHash": "d7508d61a1e9827c943201264dea2a2f1778182fe0b9f4b2193da49b64302518",
   "planHash": "59808ce6a273249046a32c0b63008014c66a410a3e590a281dbccac3384a1362",
-  "scenarioHash": "0ad3d12fc352811833cf7a264755386250c09e90af4d65720583f7e0bac9f068",
-  "testHash": "68255eb0e5433433cb91d1487ce31d388a179b9f552cfa60ffc69ad8a4dc95f7",
+  "scenarioHash": "5d46b2d7495c93a0578f628f1f9974ded26aff4edbd2b1ac50b9317836ae77c9",
+  "testHash": "3cfea049b3c9e0658bf2aa1a56bf355d5b802ce9f0d0dc5099b16b7439de7bb8",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T07:51:06.459Z"
+  "testApprovedAt": "2026-10-12T07:11:01.218Z"
 }

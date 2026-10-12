@@ -1,0 +1,151 @@
+{
+  "description": "사람이 확인한 계약·Swagger 차이. 사유가 빈 항목은 아직 어느 쪽이 맞는지 확인하지 않은 것이다.",
+  "diffs": [
+    {
+      "feature": "animal-kind-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "animal-legal-status-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "animal-manage-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "animal-manage-query-all",
+      "kind": "response",
+      "contract": [],
+      "swagger": [
+        "sort"
+      ],
+      "reason": "Spring Page 응답의 sort 객체. 화면에서 쓰지 않음"
+    },
+    {
+      "feature": "animal-observation-query-all",
+      "kind": "response",
+      "contract": [],
+      "swagger": [
+        "sort"
+      ],
+      "reason": "Spring Page 응답의 sort 객체. 화면에서 쓰지 않음"
+    },
+    {
+      "feature": "app-admin-employee-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "close-dat-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201과 message (2026-10-12 스테이징 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "close-dat-query-by-date",
+      "kind": "query",
+      "contract": [
+        "date"
+      ],
+      "swagger": [],
+      "reason": "서버가 date 를 무시하고 전체를 준다(2026-10-12 스테이징 확인). 화면이 날짜로 거르므로 계약은 Notion 명세대로 둔다"
+    },
+    {
+      "feature": "documents-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "documents-update",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "notice-delete",
+      "kind": "status",
+      "contract": [
+        200
+      ],
+      "swagger": [
+        204
+      ],
+      "reason": "실서버는 200과 message (2026-10-12 스테이징 확인). Swagger 가 204 로 잘못 표기"
+    },
+    {
+      "feature": "notice-query-all",
+      "kind": "query",
+      "contract": [],
+      "swagger": [
+        "sort"
+      ],
+      "reason": "sort 는 실서버에서 동작하지만 화면이 쓰지 않는다(2026-10-12 스테이징 확인)"
+    },
+    {
+      "feature": "open-time-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-10-12 스테이징 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "task-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    }
+  ]
+}

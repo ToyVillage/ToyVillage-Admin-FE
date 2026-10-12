@@ -3,15 +3,16 @@
 ## Mock S1 — 정상 조회
 
 - 목적: route 날짜 조회 결과가 폼 초기값에 표시되는지 확인
-- Mock request: `GET /api/open-time/2026-07-01`
-- Mock response: HTTP `201`, 승인된 운영시간 객체
+- Mock request: `GET /api/open-time/date?date=2026-07-01`
+- Mock response: HTTP `200`, 승인된 운영시간 1건 배열
+  (2026-10-12 실서버 확인: 경로 `/open-time/date`, 성공 200, #242)
 - 사용자 동작: `/notices/guide/hours/2026-07-01` 진입
 - 기대 결과: 영업 시작 `09:00`, 영업 종료 `18:00` 표시
 
 ## Mock S2 — 서버 오류
 
 - 목적: 조회 오류를 기본 영업시간으로 숨기지 않는지 확인
-- Mock request: `GET /api/open-time/2026-07-01`
+- Mock request: `GET /api/open-time/date?date=2026-07-01`
 - Mock response: HTTP `500`, 승인된 공통 오류 객체
 - 사용자 동작: 운영시간 상세 route 진입
 - 기대 결과: 접근 가능한 오류 alert 표시, 폼 미표시
@@ -19,8 +20,8 @@
 ## Mock S3 — 잘못된 성공 응답
 
 - 목적: Contract 필수 필드가 누락된 응답을 거부하는지 확인
-- Mock request: `GET /api/open-time/2026-07-01`
-- Mock response: HTTP `201`, `endOpenTime` 누락 객체
+- Mock request: `GET /api/open-time/date?date=2026-07-01`
+- Mock response: HTTP `200`, `endOpenTime` 누락 객체 배열
 - 사용자 동작: 운영시간 상세 route 진입
 - 기대 결과: 접근 가능한 오류 alert 표시, 응답 값을 폼에 사용하지 않음
 

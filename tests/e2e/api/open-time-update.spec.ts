@@ -38,7 +38,7 @@ test('S1: 저장값 있는 날짜는 조회 id로 수정 API를 한 번 호출�
       body: request.postDataJSON(),
       headers: request.headers(),
     })
-    await json(route, 201, { message: '운영시간이 수정되었습니다.' })
+    await json(route, 200, { message: '운영시간이 수정되었습니다.' })
   })
   await page.route(createPath, async (route) => {
     createCount += 1
@@ -119,7 +119,7 @@ test('S7: 연속 클릭에도 수정 요청은 한 번만 전송한다', async (
   await page.route(updatePath, async (route) => {
     updateCount += 1
     await gate
-    await json(route, 201, { message: '운영시간이 수정되었습니다.' })
+    await json(route, 200, { message: '운영시간이 수정되었습니다.' })
   })
 
   await page.goto(hoursPath)
@@ -136,11 +136,11 @@ test('S7: 연속 클릭에도 수정 요청은 한 번만 전송한다', async (
   expect(updateCount).toBe(1)
 })
 
-test('S8: HTTP 200은 Contract 성공 status가 아니므로 거부한다', async ({
+test('S8: HTTP 201은 Contract 성공 status가 아니므로 거부한다', async ({
   page,
 }) => {
   await page.route(updatePath, (route) =>
-    json(route, 200, { message: '운영시간이 수정되었습니다.' }),
+    json(route, 201, { message: '운영시간이 수정되었습니다.' }),
   )
   await editAndSave(page)
   await expectSaveFailure(page)

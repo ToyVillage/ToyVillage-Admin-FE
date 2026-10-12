@@ -32,13 +32,23 @@
 - 다음 단계: 누락과 명시적 `없음`이 구분됨
 - 승인: 불필요
 
+## ③-1 Swagger 조회
+
+- 입력: ③에서 확인한 Method·Path
+- Prompt: 없음
+- 산출물: `harness/artifacts/api/<feature>.swagger-source.json`
+- 검증: `yarn harness:api:swagger-source <feature> <METHOD> <path>` 통과 (스테이징 Swagger에서 같은 operation을 찾음)
+- STOP: Swagger에 같은 Method·Path가 없음, Swagger 인증 정보(`SWAGGER_USERNAME`·`SWAGGER_PASSWORD`) 없음
+- 다음 단계: Notion 원문과 Swagger operation이 짝지어짐
+- 승인: 불필요
+
 ## ④ API Contract 생성
 
-- 입력: 검증된 Notion 원문
+- 입력: 검증된 Notion 원문과 `<feature>.swagger-source.json`
 - Prompt: `prompts/create-contract.md`
-- 산출물: `<feature>.contract.md`, `<feature>.contract.json`
+- 산출물: `<feature>.contract.md`, `<feature>.contract.json` (`source.swagger`에 Swagger 출처 기록)
 - 검증: `api-input-contract.md`의 구조와 출처 필드 충족
-- STOP: 명세 값을 추측해야 함
+- STOP: 명세 값을 추측해야 함, Notion과 Swagger가 다른데 개발자가 기준을 정하지 않음
 - 다음 단계: JSON Contract 생성 완료
 - 승인: 불필요
 
@@ -47,9 +57,9 @@
 - 입력: contract.json
 - Prompt: 없음
 - 산출물: validator 결과
-- 검증: `yarn harness:api:validate <feature>` 통과
-- STOP: `api-input-contract.md`의 STOP 조건 하나라도 충족
-- 다음 단계: exit 0
+- 검증: `yarn harness:api:validate <feature>` 통과, `yarn harness:api:swagger --contract harness/artifacts/api/<feature>.contract.json`으로 스테이징 Swagger와 대조
+- STOP: `api-input-contract.md`의 STOP 조건 하나라도 충족, Swagger와 다른 항목이 있는데 어느 쪽이 맞는지 개발자 확인이 없음
+- 다음 단계: exit 0, Swagger 차이는 개발자가 정한 쪽으로 계약을 고치거나 `swagger-known-diffs.json`에 사유와 함께 기록
 - 승인: 불필요
 
 ## ⑥ 기존 프로젝트 API 구조 분석
@@ -77,8 +87,8 @@
 - 입력: task spec, Contract, 계획, 테스트 시나리오
 - Prompt: 없음
 - 산출물: `harness/api/approvals/<feature>.*`, `<feature>.approved.json`
-- 검증: `yarn harness:api:approve <feature> --by <developer>`가 모든 해시를 생성
-- STOP: 승인 거절, 필수 파일 누락, Contract 검증 실패
+- 검증: `yarn harness:api:approve <feature> --by <developer>`가 Contract를 스테이징 Swagger와 다시 비교한 뒤 모든 해시를 생성 (`--freeze`는 비교하지 않음)
+- STOP: 승인 거절, 필수 파일 누락, Contract 검증 실패, `swagger-known-diffs.json`에 없는 Swagger 차이, Swagger 접속 불가
 - 다음 단계: `yarn harness:api:gate <feature>` 통과
 - 승인: 필수
 
