@@ -1,6 +1,8 @@
 ---
 feature: <feature-slug>
 api_id: <API_ID>
+# Notion 에 명세가 없으면 source: swagger 와 swagger.method·path·roles 를 채운다
+source: notion
 target_page: <src path>
 notion_page:
 requires_functional_test: true

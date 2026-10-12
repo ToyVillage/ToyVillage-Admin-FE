@@ -4,6 +4,38 @@
 
 작업은 `harness/api/specs/<feature>.spec.md`를 사용한다. `api_id`가 필수이며 `notion_page`는 선택이다.
 
+Notion에 명세가 없는 API는 개발자 확인 후 스테이징 Swagger를 원본으로 쓴다. `api_id`는 개발자가 정한 `UPPER_SNAKE_CASE`이다.
+
+```yaml
+source: swagger
+swagger:
+  method: GET
+  path: /work-log # Swagger 경로. path 변수 이름이 달라도 찾는다
+  roles: [ADMIN] # Swagger에 역할 정보가 없어 개발자가 정한다
+```
+
+## Swagger 원본 계약
+
+`yarn harness:api:from-swagger <feature>`가 `contract.json`·`contract.md`를 만든다. 경로·파라미터·요청/응답 필드·타입·enum·성공/오류 코드는 Swagger에서 채우고, 출처는 다음처럼 남긴다.
+
+```json
+"source": {
+  "kind": "swagger",
+  "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs",
+  "operationId": "getWorkLogList",
+  "method": "GET",
+  "path": "/work-log",
+  "checkedAt": "2026-10-12T00:00:00.000Z"
+}
+```
+
+Swagger(springdoc)에 없는 값은 개발자 확인으로만 고친다.
+
+- 접근 역할: spec의 `swagger.roles`
+- 응답 필드 필수 여부: Swagger가 표시하지 않아 모두 `required: false`로 나온다
+- 생성 API 성공 코드: 실서버가 201인데 Swagger가 200으로 적은 경우가 있다(`swagger-known-diffs.json` 참고)
+- 이름·설명·예시: Swagger에 summary·example이 없어 operationId와 `null`로 둔다
+
 ## 명세 상세 페이지 순서
 
 1. Basic Information

@@ -7,12 +7,14 @@
 - 입력: `harness/api/specs/<feature>.spec.md`
 - Prompt: 없음
 - 산출물: 확인된 feature, API ID, 대상 경로
-- 검증: frontmatter 필수 값과 `real_server` 설정
-- STOP: API ID 누락, spec 누락, production 환경, staging 외 실제 서버, HTTP 주소, 빈 허용 method
-- 다음 단계: API ID가 하나로 확정됨
+- 검증: frontmatter 필수 값과 `real_server` 설정. 명세 원본 `source`는 `notion`(기본) 또는 `swagger`
+- STOP: API ID 누락, spec 누락, production 환경, staging 외 실제 서버, HTTP 주소, 빈 허용 method, `source: swagger`인데 `swagger.method`·`swagger.path`·`swagger.roles` 누락
+- 다음 단계: API ID와 명세 원본이 하나로 확정됨. `source: swagger`면 ②③을 건너뛰고 ④로 간다
 - 승인: 불필요
 
 ## ② API ID로 Notion API 검색
+
+`source: notion`일 때만 한다. Notion에 명세가 없는 API는 개발자에게 확인한 뒤 spec을 `source: swagger`로 바꾼다.
 
 - 입력: API ID, 선택적 Notion URL
 - Prompt: `prompts/create-contract.md`
@@ -34,11 +36,11 @@
 
 ## ④ API Contract 생성
 
-- 입력: 검증된 Notion 원문
-- Prompt: `prompts/create-contract.md`
-- 산출물: `<feature>.contract.md`, `<feature>.contract.json`
+- 입력: 검증된 Notion 원문, 또는 `source: swagger`면 스테이징 Swagger operation
+- Prompt: `prompts/create-contract.md` (Notion), 없음 (Swagger)
+- 산출물: `<feature>.contract.md`, `<feature>.contract.json`. Swagger는 `yarn harness:api:from-swagger <feature>`가 둘 다 만든다
 - 검증: `api-input-contract.md`의 구조와 출처 필드 충족
-- STOP: 명세 값을 추측해야 함
+- STOP: 명세 값을 추측해야 함. Swagger에 없는 값(접근 역할·응답 필드 필수 여부·생성 API의 실제 성공 코드)은 개발자 확인 없이 채우지 않음
 - 다음 단계: JSON Contract 생성 완료
 - 승인: 불필요
 
