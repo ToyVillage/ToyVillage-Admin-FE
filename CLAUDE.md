@@ -8,7 +8,7 @@
 
 Figma 프레임을 코드로 옮겨달라는(퍼블리싱) 요청이면 `/publishing <feature>` 스킬을 쓰거나 **[`.claude/skills/publishing/SKILL.md`](.claude/skills/publishing/SKILL.md)를 읽고 그 절차를 따른다.**
 
-## API 연동 (Notion 명세 → 프론트엔드)
+## API 연동 (Notion·Swagger 명세 → 프론트엔드)
 
 API 연동 요청이면 `/api <feature>` 스킬을 쓰거나 **[`.claude/skills/api/SKILL.md`](.claude/skills/api/SKILL.md)를 읽고 `harness/api/RUNBOOK.md`를 따른다.**
 
