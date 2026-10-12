@@ -9,7 +9,7 @@
 - Mock request: `PUT /api/open-time/5`
 - Request headers: `Content-Type: application/json`, `Authorization: Bearer ...`
 - Request body: `{"openDate":"2026-07-13","startOpenTime":"09:30","endOpenTime":"18:00"}`
-- Mock response: HTTP 201, `{"message":"운영시간이 수정되었습니다."}`
+- Mock response: HTTP 200, `{"message":"운영시간이 수정되었습니다."}`
 - 사용자 동작: `/notices/guide/hours/2026-07-13`에서 시작 오전 09:30, 종료 오후 06:00으로 바꾸고 `저장하기`
 - 기대 결과: PUT 1회(path `/open-time/5`), POST 요청 없음, body가 위와 같음, `/notices/guide`로 이동
 
@@ -39,14 +39,15 @@
 
 ## Mock S7 — 중복 저장 방지
 
-- Mock response: 지연된 HTTP 201
+- Mock response: 지연된 HTTP 200
 - 사용자 동작: `저장하기` 연속 클릭
 - 기대 결과: PUT 1회, 완료 후 이동
 
 ## Mock S8 — Contract 밖 성공 응답
 
-- Mock response: HTTP 200 `{"message":"운영시간이 수정되었습니다."}`
+- Mock response: HTTP 201 `{"message":"운영시간이 수정되었습니다."}`
 - 기대 결과: 성공 이동하지 않고 실패 문구 표시
+  (2026-10-12 실서버 성공 코드가 200으로 확인돼 거부 대상을 201로 바꿈, #242)
 
 ## Mock S9 — 검증 실패는 요청 전 차단
 

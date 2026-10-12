@@ -98,7 +98,7 @@
   "responses": {
     "success": [
       {
-        "status": 201,
+        "status": 200,
         "description": "운영 시간 수정 기능 완료",
         "body": {
           "type": "object",
