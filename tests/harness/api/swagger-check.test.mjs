@@ -157,6 +157,26 @@ test('계약과 Swagger 의 차이를 항목별로 찾는다', () => {
   ])
 })
 
+test('계약이 성공 코드를 여러 개 선언하면 Swagger 에 빠진 코드도 차이로 본다', () => {
+  const diffs = compareContracts(
+    [
+      {
+        feature: 'notice-create',
+        method: 'POST',
+        path: '/tasks',
+        status: [200, 201],
+        query: [],
+        request: ['title', 'priority'],
+        response: [],
+      },
+    ],
+    readSwaggerOperations(apiDocs),
+  )
+  assert.deepEqual(diffs, [
+    { feature: 'notice-create', kind: 'status', contract: [201], swagger: [] },
+  ])
+})
+
 test('알려진 차이는 실패에서 빼고, 사라진 알려진 차이는 따로 알린다', () => {
   const status = {
     feature: 'task-create',

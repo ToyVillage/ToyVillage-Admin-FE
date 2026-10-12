@@ -169,11 +169,13 @@ export function compareContracts(contracts, operations) {
       continue
     }
 
-    if (
-      contract.status.length > 0 &&
-      !contract.status.some((status) => operation.status.includes(status))
-    ) {
-      push('status', contract.status, operation.status)
+    // 계약이 성공 코드를 여러 개 선언하면(200·201) 하나만 겹쳐도 나머지 누락을 놓치므로 집합 전체를 비교한다.
+    if (contract.status.length > 0) {
+      const statusContract = onlyIn(contract.status, operation.status)
+      const statusSwagger = onlyIn(operation.status, contract.status)
+      if (statusContract.length || statusSwagger.length) {
+        push('status', statusContract, statusSwagger)
+      }
     }
 
     const queryContract = onlyIn(contract.query, operation.query)

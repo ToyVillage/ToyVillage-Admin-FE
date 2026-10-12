@@ -149,6 +149,15 @@
     },
     {
       "feature": "notice-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [],
+      "reason": ""
+    },
+    {
+      "feature": "notice-create",
       "kind": "response",
       "contract": [],
       "swagger": [
