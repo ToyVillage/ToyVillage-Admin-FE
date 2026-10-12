@@ -93,9 +93,24 @@ export function parseTaskSpec(path) {
           .map((item) => item.trim())
           .filter(Boolean)
 
+  const list = (raw) =>
+    raw
+      .replace(/^\[/, '')
+      .replace(/\]$/, '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+
   return {
     feature: value('feature'),
     apiId: value('api_id'),
+    // 명세 원본. Notion 에 명세가 없는 API 는 swagger 로 둔다(RUNBOOK ②).
+    source: value('source') || 'notion',
+    swagger: {
+      method: nested('swagger', 'method').toUpperCase(),
+      path: nested('swagger', 'path'),
+      roles: list(nested('swagger', 'roles')),
+    },
     targetPage: value('target_page'),
     notionPage: value('notion_page'),
     requiresFunctionalTest: value('requires_functional_test') !== 'false',
@@ -296,6 +311,24 @@ function validateResponse(response, path, errors) {
   }
 }
 
+// Swagger 에서 만든 계약의 출처. Notion 검색 결과 대신 어느 문서의 어느 operation 인지 남긴다.
+function validateSwaggerSource(contract, source, errors) {
+  requireString(source.swaggerUrl, 'source.swaggerUrl', errors)
+  if (!hasOwn(source, 'operationId'))
+    errors.push('source.operationId: 속성 누락')
+  requireString(source.checkedAt, 'source.checkedAt', errors)
+  if (
+    typeof source.checkedAt === 'string' &&
+    Number.isNaN(Date.parse(source.checkedAt))
+  ) {
+    errors.push('source.checkedAt: ISO date 형식 필요')
+  }
+  if (source.method !== contract.method)
+    errors.push('source method와 contract method 불일치')
+  if (source.path !== contract.path)
+    errors.push('source path와 contract path 불일치')
+}
+
 function normalizeComparable(value) {
   return JSON.stringify(value)
 }
@@ -437,6 +470,8 @@ export function validateApiContract(contract) {
   const source = contract.source
   if (!source || typeof source !== 'object' || Array.isArray(source)) {
     errors.push('source: object 필요')
+  } else if (source.kind === 'swagger') {
+    validateSwaggerSource(contract, source, errors)
   } else {
     requireString(source.notionDatabase, 'source.notionDatabase', errors)
     if (!hasOwn(source, 'notionDataSource'))

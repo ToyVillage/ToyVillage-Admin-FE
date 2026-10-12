@@ -25,6 +25,7 @@
     "harness:api:gate": "node scripts/api-gate-check.mjs",
     "harness:api:policy": "node scripts/check-api-policy.mjs",
     "harness:api:swagger": "node scripts/check-api-swagger.mjs",
+    "harness:api:from-swagger": "node scripts/create-contract-from-swagger.mjs",
     "test:harness": "node --test tests/harness/*.test.mjs tests/harness/api/*.test.mjs",
     "e2e:setup": "yarn playwright install chromium",
     "preview": "vite preview"

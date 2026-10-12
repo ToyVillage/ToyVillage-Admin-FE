@@ -15,7 +15,7 @@ import {
   writeJson,
 } from './api-harness-lib.mjs'
 
-const defaultSwaggerBaseUrl = 'https://api-stag.toyvillage.kr'
+export const defaultSwaggerBaseUrl = 'https://api-stag.toyvillage.kr'
 const httpMethods = ['get', 'post', 'put', 'patch', 'delete']
 
 export const knownDiffsPath = (root) =>
@@ -265,7 +265,7 @@ export function formatReport({
   return lines.join('\n')
 }
 
-async function fetchApiDocs(baseUrl) {
+export async function fetchApiDocs(baseUrl) {
   const username = process.env.SWAGGER_USERNAME
   const password = process.env.SWAGGER_PASSWORD
   if (!username || !password) {
@@ -284,7 +284,7 @@ async function fetchApiDocs(baseUrl) {
   return response.json()
 }
 
-function loadDotEnv(root) {
+export function loadDotEnv(root) {
   const path = join(root, '.env')
   // 이미 있는 환경 변수(CI secrets)는 덮어쓰지 않는다.
   if (existsSync(path)) process.loadEnvFile(path)
