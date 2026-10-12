@@ -87,8 +87,8 @@
 - 입력: task spec, Contract, 계획, 테스트 시나리오
 - Prompt: 없음
 - 산출물: `harness/api/approvals/<feature>.*`, `<feature>.approved.json`
-- 검증: `yarn harness:api:approve <feature> --by <developer>`가 모든 해시를 생성
-- STOP: 승인 거절, 필수 파일 누락, Contract 검증 실패
+- 검증: `yarn harness:api:approve <feature> --by <developer>`가 Contract를 스테이징 Swagger와 다시 비교한 뒤 모든 해시를 생성 (`--freeze`는 비교하지 않음)
+- STOP: 승인 거절, 필수 파일 누락, Contract 검증 실패, `swagger-known-diffs.json`에 없는 Swagger 차이, Swagger 접속 불가
 - 다음 단계: `yarn harness:api:gate <feature>` 통과
 - 승인: 필수
 
