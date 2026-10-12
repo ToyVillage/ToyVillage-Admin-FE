@@ -12,7 +12,7 @@
   `Authorization: Bearer ...`
 - Request body:
   `{"title":"수정된 휴관일","startCloseTime":"2026-07-12","endCloseTime":"2026-07-13"}`
-- Mock response: HTTP 201,
+- Mock response: HTTP 200,
   `{"message":"휴관일이 수정되었습니다."}`
 - 후속 Mock request: `GET /api/close-day`
 - 후속 Mock response: 수정된 휴관일을 포함한 HTTP 200 목록
@@ -59,7 +59,7 @@
 
 - 목적: 연속 submit이 발생해도 수정 요청을 한 번만 보낸다.
 - Mock request: 지연된 `PUT /api/close-day/7`
-- Mock response: HTTP 201,
+- Mock response: HTTP 200,
   `{"message":"휴관일이 수정되었습니다."}`
 - 사용자 동작: 같은 form에서 submit 동작을 연속 발생
 - 기대 결과: PUT 요청 횟수 1회, pending 중 버튼 disabled와 `저장 중`,
@@ -67,9 +67,9 @@
 
 ## Mock S7 — Contract 응답 형식 위반
 
-- 목적: HTTP 201 body가 Contract와 다르면 성공 이동하지 않는다.
+- 목적: HTTP 200 body가 Contract와 다르면 성공 이동하지 않는다. (2026-10-12 실서버 확인, #242)
 - Mock request: `PUT /api/close-day/7`
-- Mock response: HTTP 201, `{"result":"ok"}`
+- Mock response: HTTP 200, `{"result":"ok"}`
 - 사용자 동작: 유효한 입력으로 수정 제출
 - 기대 결과: 수정 화면과 입력을 유지하고 오류 상태를 표시
 
