@@ -38,6 +38,10 @@
 
 ### HTTP 200 — 예약 상세 객체
 
+> 2026-10-12 스테이징 실서버 확인(#242)으로 수정. 아래 성공 응답이 실제 응답이다.
+
+- 실서버 응답에는 아래 표 외에 `id`, `visitSiteCount`, `visitSiteDate`, `visitSiteTime`, `visitSiteExitTime`가 더 있다. 화면은 아직 쓰지 않는다.
+
 ```json
 {
   "counselDate": "2026-07-02",

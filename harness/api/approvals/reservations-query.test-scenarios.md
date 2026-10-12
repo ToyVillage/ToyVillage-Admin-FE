@@ -5,7 +5,7 @@ Playwright `page.route()` 기반 mock. 대상: `GET /reservation/{id}`. 수정 �
 
 ## 조회 성공
 
-- S1. 200 상세 응답 → 편집 폼(ReservationForm) 필드에 매핑 값 채움:
+- S1. 200 상세 응답(실서버의 `id`, `visitSite*` 필드 포함, 2026-10-12 #242) → 편집 폼(ReservationForm) 필드에 매핑 값 채움:
   - 단체명 = `title`, 지역 = `location`, 예약인 이름 = `reservationName`
   - 대표자 연락처 = `leaderPhoneNumber`, 총 인원 = `reservationCount`, 인솔자 인원 = `leaderCount`
   - 입장료 = `money`(천단위 콤마), 상담일 = `counselDate`(yyyy.MM.dd), 방문일 = `visitDate`
