@@ -32,13 +32,23 @@
 - 다음 단계: 누락과 명시적 `없음`이 구분됨
 - 승인: 불필요
 
+## ③-1 Swagger 조회
+
+- 입력: ③에서 확인한 Method·Path
+- Prompt: 없음
+- 산출물: `harness/artifacts/api/<feature>.swagger-source.json`
+- 검증: `yarn harness:api:swagger-source <feature> <METHOD> <path>` 통과 (스테이징 Swagger에서 같은 operation을 찾음)
+- STOP: Swagger에 같은 Method·Path가 없음, Swagger 인증 정보(`SWAGGER_USERNAME`·`SWAGGER_PASSWORD`) 없음
+- 다음 단계: Notion 원문과 Swagger operation이 짝지어짐
+- 승인: 불필요
+
 ## ④ API Contract 생성
 
-- 입력: 검증된 Notion 원문
+- 입력: 검증된 Notion 원문과 `<feature>.swagger-source.json`
 - Prompt: `prompts/create-contract.md`
-- 산출물: `<feature>.contract.md`, `<feature>.contract.json`
+- 산출물: `<feature>.contract.md`, `<feature>.contract.json` (`source.swagger`에 Swagger 출처 기록)
 - 검증: `api-input-contract.md`의 구조와 출처 필드 충족
-- STOP: 명세 값을 추측해야 함
+- STOP: 명세 값을 추측해야 함, Notion과 Swagger가 다른데 개발자가 기준을 정하지 않음
 - 다음 단계: JSON Contract 생성 완료
 - 승인: 불필요
 
