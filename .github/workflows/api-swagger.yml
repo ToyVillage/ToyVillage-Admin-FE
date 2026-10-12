@@ -1,19 +1,16 @@
 name: API Swagger
 
 # 승인된 API 계약과 스테이징 Swagger 를 비교한다(scripts/check-api-swagger.mjs).
-# 백엔드가 Swagger 를 바꾸면 계약과 무관한 PR 이 막히지 않도록 필수 검사로 두지 않고,
-# 계약을 건드린 PR 과 매일 아침 실행으로 알린다.
+# 계약을 건드린 PR 에서만 돈다. 백엔드가 Swagger 를 바꾸면 계약과 무관한 PR 이 막히지 않도록 필수 검사로 두지 않는다.
 on:
   pull_request:
     branches: [develop]
     paths:
       - 'harness/api/**'
+      - 'scripts/api-harness-lib.mjs'
       - 'scripts/check-api-swagger.mjs'
+      - 'scripts/fetch-swagger-source.mjs'
       - '.github/workflows/api-swagger.yml'
-  schedule:
-    # 매일 09:00 KST
-    - cron: '0 0 * * *'
-  workflow_dispatch:
 
 permissions:
   contents: read
