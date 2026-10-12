@@ -1,0 +1,237 @@
+{
+  "description": "사람이 확인한 계약·Swagger 차이. 사유가 빈 항목은 아직 어느 쪽이 맞는지 확인하지 않은 것이다.",
+  "diffs": [
+    {
+      "feature": "animal-kind-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "animal-legal-status-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "animal-manage-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "animal-manage-query-all",
+      "kind": "response",
+      "contract": [],
+      "swagger": [
+        "sort"
+      ],
+      "reason": "Spring Page 응답의 sort 객체. 화면에서 쓰지 않음"
+    },
+    {
+      "feature": "animal-observation-query-all",
+      "kind": "response",
+      "contract": [],
+      "swagger": [
+        "sort"
+      ],
+      "reason": "Spring Page 응답의 sort 객체. 화면에서 쓰지 않음"
+    },
+    {
+      "feature": "app-admin-employee-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "close-dat-create",
+      "kind": "response",
+      "contract": [],
+      "swagger": [
+        "message"
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "close-dat-delete",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "close-dat-query-by-date",
+      "kind": "query",
+      "contract": [
+        "date"
+      ],
+      "swagger": [],
+      "reason": ""
+    },
+    {
+      "feature": "close-dat-update",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "documents-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "documents-query-all",
+      "kind": "query",
+      "contract": [
+        "orderDirection"
+      ],
+      "swagger": [
+        "sort"
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "documents-query",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "documents-update",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "notice-create",
+      "kind": "response",
+      "contract": [],
+      "swagger": [
+        "message"
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "notice-delete",
+      "kind": "status",
+      "contract": [
+        200
+      ],
+      "swagger": [
+        204
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "notice-query-all",
+      "kind": "query",
+      "contract": [],
+      "swagger": [
+        "sort"
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "open-time-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "open-time-query-by-date",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "open-time-update",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "reservations-query",
+      "kind": "response",
+      "contract": [],
+      "swagger": [
+        "id",
+        "visitSiteCount",
+        "visitSiteDate",
+        "visitSiteExitTime",
+        "visitSiteTime"
+      ],
+      "reason": ""
+    },
+    {
+      "feature": "task-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    }
+  ]
+}
