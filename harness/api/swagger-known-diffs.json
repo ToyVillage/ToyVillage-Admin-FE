@@ -241,6 +241,17 @@
         200
       ],
       "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "close-dat-create",
+      "kind": "status",
+      "contract": [
+        201
+      ],
+      "swagger": [
+        200
+      ],
+      "reason": "실서버는 201과 message (2026-10-12 스테이징 확인). Swagger 가 200 으로 잘못 표기"
     }
   ]
 }

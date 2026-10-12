@@ -7,7 +7,9 @@
   "authentication": {
     "required": true,
     "type": "Bearer",
-    "roles": ["ADMIN"]
+    "roles": [
+      "ADMIN"
+    ]
   },
   "contentType": "application/json",
   "headers": [
@@ -20,7 +22,9 @@
       "default": null,
       "example": "Bearer <access-token>",
       "description": "Bearer access token",
-      "constraints": ["Bearer scheme"]
+      "constraints": [
+        "Bearer scheme"
+      ]
     }
   ],
   "pathParameters": [],
@@ -37,7 +41,9 @@
         "default": null,
         "example": "휴관",
         "description": "휴관일 제목",
-        "constraints": ["trim 후 비어 있지 않은 값"]
+        "constraints": [
+          "trim 후 비어 있지 않은 값"
+        ]
       },
       {
         "name": "startCloseTime",
@@ -48,7 +54,10 @@
         "default": null,
         "example": "2026-07-10",
         "description": "휴관 시작일",
-        "constraints": ["YYYY-MM-DD", "실제 달력 날짜"]
+        "constraints": [
+          "YYYY-MM-DD",
+          "실제 달력 날짜"
+        ]
       },
       {
         "name": "endCloseTime",
@@ -75,10 +84,27 @@
   "responses": {
     "success": [
       {
-        "status": 200,
-        "description": "휴관일 생성 성공",
-        "body": null,
-        "noContent": true
+        "status": 201,
+        "description": "휴무일 생성 성공",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "생성 결과",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "휴무일이 생성되었습니다.",
+              "description": "결과 메시지",
+              "constraints": []
+            }
+          ]
+        }
       }
     ],
     "errors": [
@@ -266,7 +292,9 @@
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": ["ADMIN"]
+        "roles": [
+          "ADMIN"
+        ]
       }
     },
     "detailValues": {
@@ -276,7 +304,9 @@
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": ["ADMIN"]
+        "roles": [
+          "ADMIN"
+        ]
       }
     }
   }
