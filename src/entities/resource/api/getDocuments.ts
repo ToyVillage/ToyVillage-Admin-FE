@@ -2,14 +2,15 @@ import { api } from '@/shared/api/axios'
 import { documentTypeToFileType } from '../model/types'
 import type { DocumentType, FileType, Resource } from '../model/types'
 
-export type DocumentOrderDirection = 'ASC' | 'DESC'
+// 서버는 Spring `sort` 만 받는다. `orderDirection` 은 무시된다(2026-10-12 스테이징 확인).
+export type DocumentSort = 'createdAt,asc' | 'createdAt,desc'
 
 // DOCUMENTS_QUERY_ALL (GET /documents) 요청 파라미터.
 export interface DocumentsQueryAllRequest {
   page: number
   size: number
   keyword?: string
-  orderDirection?: DocumentOrderDirection
+  sort?: DocumentSort
   // 자료 타입 필터. 선택된 타입에 해당하는 자료만 조회된다(미지정이면 전체).
   types?: DocumentType[]
 }

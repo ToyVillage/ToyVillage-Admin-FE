@@ -135,7 +135,7 @@ export function ResourceListPage() {
         size: PAGE_SIZE,
         keyword: debouncedKeyword || undefined,
         // 최신순 = 등록일 내림차순. 오래된순이 ASC 다.
-        orderDirection: sort === 'oldest' ? 'ASC' : 'DESC',
+        sort: sort === 'oldest' ? 'createdAt,asc' : 'createdAt,desc',
         types,
       }),
     placeholderData: (previousData) => previousData,
