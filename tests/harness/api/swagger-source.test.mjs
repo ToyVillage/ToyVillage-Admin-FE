@@ -195,6 +195,21 @@ test('계약 source.swagger 는 선택이고, 있으면 Method·Path 가 계약�
     }),
     [],
   )
+  // 2026-09 공지 계약처럼 출처만 남긴 형식도 받는다.
+  assert.deepEqual(
+    validateApiContract({
+      ...contract,
+      source: {
+        ...contract.source,
+        swagger: {
+          swaggerUrl: swagger.swaggerUrl,
+          checkedAt: swagger.checkedAt,
+          note: 'Swagger 채택',
+        },
+      },
+    }),
+    [],
+  )
   assert.deepEqual(
     validateApiContract({
       ...contract,

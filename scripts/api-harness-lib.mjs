@@ -527,16 +527,13 @@ export function validateApiContract(contract) {
 }
 
 // Notion 과 함께 대조한 스테이징 Swagger operation(RUNBOOK ③-1). 2026-10 이전 계약에는 없다.
+// 2026-09 공지 계약 4개는 `{ swaggerUrl, checkedAt, note }` 만 남겼으므로 method·path·operationId 는 있을 때만 본다.
 function validateSwaggerSource(contract, swagger, errors) {
   if (!swagger || typeof swagger !== 'object' || Array.isArray(swagger)) {
     errors.push('source.swagger: object 또는 null 필요')
     return
   }
   requireString(swagger.swaggerUrl, 'source.swagger.swaggerUrl', errors)
-  if (!hasOwn(swagger, 'operationId'))
-    errors.push('source.swagger.operationId: 속성 누락')
-  requireString(swagger.method, 'source.swagger.method', errors)
-  requireString(swagger.path, 'source.swagger.path', errors)
   requireString(swagger.checkedAt, 'source.swagger.checkedAt', errors)
   if (
     typeof swagger.checkedAt === 'string' &&
@@ -547,9 +544,12 @@ function validateSwaggerSource(contract, swagger, errors) {
   // path 변수 이름은 Notion 과 Swagger 가 다를 수 있다(`{id}` vs `{taskId}`).
   const comparablePath = (path) =>
     typeof path === 'string' ? path.replace(/\{[^}]*\}/g, '{}') : path
-  if (swagger.method !== contract.method)
+  if (hasOwn(swagger, 'method') && swagger.method !== contract.method)
     errors.push('source.swagger method와 contract method 불일치')
-  if (comparablePath(swagger.path) !== comparablePath(contract.path))
+  if (
+    hasOwn(swagger, 'path') &&
+    comparablePath(swagger.path) !== comparablePath(contract.path)
+  )
     errors.push('source.swagger path와 contract path 불일치')
 }
 
