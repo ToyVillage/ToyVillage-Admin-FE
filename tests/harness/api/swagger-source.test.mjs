@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 import { validateApiContract } from '../../../scripts/api-harness-lib.mjs'
 import {
   compareContracts,
   readSwaggerOperations,
 } from '../../../scripts/check-api-swagger.mjs'
-import { createContractFromSwagger } from '../../../scripts/create-contract-from-swagger.mjs'
+import { extractSwaggerSource } from '../../../scripts/fetch-swagger-source.mjs'
 
 const commonError = {
   content: {
@@ -91,37 +92,34 @@ const apiDocs = {
   },
 }
 
-const spec = {
-  apiId: 'WORK_LOG_UPDATE',
-  swagger: { method: 'PATCH', path: '/work-log/{id}', roles: ['ADMIN'] },
-}
-
-function create(overrides = {}) {
-  return createContractFromSwagger({
+function extract(method = 'PATCH', path = '/work-log/{id}') {
+  return extractSwaggerSource({
     apiDocs,
-    spec: { ...spec, ...overrides },
+    method,
+    path,
     swaggerUrl: 'https://api.example/v3/api-docs',
     checkedAt: '2026-10-12T00:00:00.000Z',
   })
 }
 
-test('Swagger operation 으로 검증을 통과하는 계약을 만든다', () => {
-  const contract = create()
+test('Notion 의 Method·Path 로 Swagger operation 을 계약 필드 모양으로 뽑는다', () => {
+  const source = extract()
 
-  assert.deepEqual(validateApiContract(contract), [])
-  // path 변수 이름은 task spec 이 아니라 Swagger 경로를 따른다.
-  assert.equal(contract.path, '/work-log/{workLogId}')
-  assert.deepEqual(contract.authentication, {
-    required: true,
-    type: 'Bearer',
-    roles: ['ADMIN'],
+  // path 변수 이름이 Notion(`{id}`)과 달라도 찾고, Swagger 경로를 출처에 남긴다.
+  assert.deepEqual(source.source, {
+    swaggerUrl: 'https://api.example/v3/api-docs',
+    operationId: 'updateWorkLog',
+    method: 'PATCH',
+    path: '/work-log/{workLogId}',
+    checkedAt: '2026-10-12T00:00:00.000Z',
   })
+  assert.equal(source.authenticated, true)
   assert.deepEqual(
-    contract.queryParameters.map(({ name }) => name),
+    source.queryParameters.map(({ name }) => name),
     ['page', 'size', 'sort'],
   )
 
-  const [title, status, writtenAt, answers] = contract.requestBody.fields
+  const [title, status, writtenAt, answers] = source.requestBody.fields
   assert.equal(title.required, true)
   assert.deepEqual(title.constraints, ['maxLength: 50'])
   assert.equal(status.type, 'enum')
@@ -135,37 +133,26 @@ test('Swagger operation 으로 검증을 통과하는 계약을 만든다', () =
   )
 
   assert.deepEqual(
-    contract.responses.errors.map(({ status, noContent }) => [
-      status,
-      noContent,
-    ]),
+    source.responses.errors.map(({ status, noContent }) => [status, noContent]),
     [
       [403, true],
       [500, false],
     ],
   )
-  assert.deepEqual(contract.source, {
-    kind: 'swagger',
-    swaggerUrl: 'https://api.example/v3/api-docs',
-    operationId: 'updateWorkLog',
-    method: 'PATCH',
-    path: '/work-log/{workLogId}',
-    checkedAt: '2026-10-12T00:00:00.000Z',
-  })
 })
 
-test('만든 계약은 같은 Swagger 와 비교하면 차이가 없다', () => {
-  const contract = create()
+test('뽑은 값을 계약으로 쓰면 같은 Swagger 와 비교해 차이가 없다', () => {
+  const source = extract()
   const diffs = compareContracts(
     [
       {
         feature: 'work-log-update',
-        method: contract.method,
-        path: contract.path,
-        status: contract.responses.success.map(({ status }) => status),
-        query: contract.queryParameters.map(({ name }) => name),
-        request: contract.requestBody.fields.map(({ name }) => name),
-        response: contract.responses.success[0].body.fields.map(
+        method: source.source.method,
+        path: source.source.path,
+        status: source.responses.success.map(({ status }) => status),
+        query: source.queryParameters.map(({ name }) => name),
+        request: source.requestBody.fields.map(({ name }) => name),
+        response: source.responses.success[0].body.fields.map(
           ({ name }) => name,
         ),
       },
@@ -175,16 +162,50 @@ test('만든 계약은 같은 Swagger 와 비교하면 차이가 없다', () => 
   assert.deepEqual(diffs, [])
 })
 
-test('역할은 추측하지 않는다 — task spec 에 없으면 검증에서 막힌다', () => {
-  const errors = validateApiContract(
-    create({ swagger: { ...spec.swagger, roles: [] } }),
+test('Swagger 에 없는 Method·Path 면 STOP 한다', () => {
+  assert.throws(
+    () => extract('DELETE'),
+    /Swagger 에 DELETE \/work-log\/\{id\} 가 없음/,
   )
-  assert.ok(errors.includes('authentication.roles: 인증 API는 접근 역할 필요'))
 })
 
-test('Swagger 에 없는 operation 이면 만들지 않는다', () => {
-  assert.throws(
-    () => create({ swagger: { ...spec.swagger, method: 'DELETE' } }),
-    /Swagger 에 DELETE \/work-log\/\{id\} 가 없음/,
+test('계약 source.swagger 는 선택이고, 있으면 Method·Path 가 계약과 맞아야 한다', () => {
+  const contract = JSON.parse(
+    readFileSync(
+      new URL(
+        '../../../harness/api/approvals/task-query.contract.json',
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  )
+  assert.deepEqual(validateApiContract(contract), [])
+
+  const swagger = {
+    swaggerUrl: 'https://api.example/v3/api-docs',
+    operationId: 'getDetail',
+    method: 'GET',
+    path: '/tasks/{taskId}',
+    checkedAt: '2026-10-12T00:00:00.000Z',
+  }
+  assert.deepEqual(
+    validateApiContract({
+      ...contract,
+      source: { ...contract.source, swagger },
+    }),
+    [],
+  )
+  assert.deepEqual(
+    validateApiContract({
+      ...contract,
+      source: {
+        ...contract.source,
+        swagger: { ...swagger, path: '/tasks', checkedAt: 'x' },
+      },
+    }),
+    [
+      'source.swagger.checkedAt: ISO date 형식 필요',
+      'source.swagger path와 contract path 불일치',
+    ],
   )
 })

@@ -1,20 +1,14 @@
 #!/usr/bin/env node
 
-// Notion 에 명세가 없는 API 의 계약 초안을 스테이징 Swagger 에서 만든다(RUNBOOK ②④, source: swagger).
-// 경로·파라미터·요청/응답 필드·타입·필수 여부·성공/오류 코드는 Swagger 에서 채운다.
-// Swagger 에 없는 값(접근 역할, 설명, 예시)은 추측하지 않는다. 역할은 task spec 의 swagger.roles 에서만 받는다.
+// RUNBOOK ③-1: Notion 명세에서 확인한 메서드·경로로 스테이징 Swagger 의 같은 API 를 찾아
+// harness/artifacts/api/<feature>.swagger-source.json 에 저장한다. ④ 계약 생성은 Notion 원문과 이 파일을 함께 본다.
+// 필드는 계약과 같은 모양(name·type·required·nullable·constraints…)으로 뽑아 바로 대조할 수 있게 한다.
+// Swagger(springdoc)에 없는 값(접근 역할, 응답 필드 필수 여부, 설명·예시)은 채우지 않는다.
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import {
-  apiPaths,
-  parseOption,
-  parseTaskSpec,
-  repositoryRoot,
-  validateApiContract,
-  writeJson,
-} from './api-harness-lib.mjs'
+import { parseOption, repositoryRoot, writeJson } from './api-harness-lib.mjs'
 import {
   defaultSwaggerBaseUrl,
   fetchApiDocs,
@@ -162,18 +156,6 @@ function responseOf(status, response, builder) {
   }
 }
 
-const authorizationHeader = {
-  name: 'Authorization',
-  location: 'header',
-  type: 'string',
-  required: true,
-  nullable: false,
-  default: null,
-  example: 'Bearer <access-token>',
-  description: 'JWT 액세스 토큰',
-  constraints: ['Bearer 스킴'],
-}
-
 export function findOperation(apiDocs, method, path) {
   const target = `${method.toUpperCase()} ${normalizePath(path)}`
   for (const [swaggerPath, item] of Object.entries(apiDocs.paths ?? {})) {
@@ -188,13 +170,13 @@ export function findOperation(apiDocs, method, path) {
   return undefined
 }
 
-export function createContractFromSwagger({
+export function extractSwaggerSource({
   apiDocs,
-  spec,
+  method,
+  path,
   swaggerUrl,
   checkedAt,
 }) {
-  const { method, path, roles } = spec.swagger
   const found = findOperation(apiDocs, method, path)
   if (!found) throw new Error(`Swagger 에 ${method} ${path} 가 없음`)
   const { swaggerPath, operation } = found
@@ -263,100 +245,35 @@ export function createContractFromSwagger({
     .map(([status, response]) => responseOf(status, response, builder))
 
   return {
-    apiId: spec.apiId,
-    name: operation.summary || operation.operationId || `${method} ${path}`,
-    description: operation.description ?? '',
-    method,
-    path: swaggerPath,
-    authentication: authenticated
-      ? { required: true, type: 'Bearer', roles }
-      : { required: false, type: null, roles: [] },
-    contentType: request.contentType ?? 'application/json',
-    headers: authenticated ? [authorizationHeader] : [],
-    pathParameters,
-    queryParameters,
-    requestBody,
-    responses: { success, errors },
+    // 계약 source.swagger 에 그대로 옮기는 출처.
     source: {
-      kind: 'swagger',
       swaggerUrl,
       operationId: operation.operationId ?? null,
       method,
       path: swaggerPath,
       checkedAt,
     },
+    // Swagger 는 역할을 구분하지 않는다. 인증 여부만 남긴다.
+    authenticated,
+    contentType: request.contentType ?? 'application/json',
+    pathParameters,
+    queryParameters,
+    requestBody,
+    responses: { success, errors },
   }
-}
-
-function fieldRows(fields, prefix = '') {
-  return fields.flatMap((field) => [
-    `| ${prefix}${field.name} | ${field.type}${field.allowedValues ? ` (${field.allowedValues.join(', ')})` : ''} | ${field.required} | ${field.nullable} | ${field.constraints.join(', ') || '—'} |`,
-    ...fieldRows(field.fields ?? [], `${prefix}${field.name}.`),
-  ])
-}
-
-function fieldTable(title, fields) {
-  if (fields.length === 0) return [`## ${title}`, '', '없음', '']
-  return [
-    `## ${title}`,
-    '',
-    '| 이름 | 타입 | 필수 | null | 제약 |',
-    '|---|---|---|---|---|',
-    ...fieldRows(fields),
-    '',
-  ]
-}
-
-export function contractMarkdown(contract) {
-  const responses = [
-    ...contract.responses.success,
-    ...contract.responses.errors,
-  ].flatMap((response) => [
-    ...fieldTable(
-      `응답 ${response.status} ${response.description}`.trim(),
-      response.body?.fields ?? [],
-    ),
-  ])
-  return [
-    `# ${contract.apiId} — ${contract.method} ${contract.path}`,
-    '',
-    `> Swagger 에서 생성: ${contract.source.swaggerUrl} · operationId \`${contract.source.operationId}\` · ${contract.source.checkedAt}`,
-    '> 접근 역할·설명·예시는 Swagger 에 없어 task spec 과 개발자 확인으로 채운다.',
-    '',
-    `- 인증: ${contract.authentication.required ? `${contract.authentication.type} · 역할 ${contract.authentication.roles.join(', ') || '(미정)'}` : '없음'}`,
-    `- Content-Type: ${contract.contentType}`,
-    '',
-    ...fieldTable('Path 파라미터', contract.pathParameters),
-    ...fieldTable('Query 파라미터', contract.queryParameters),
-    ...fieldTable('요청 Body', contract.requestBody?.fields ?? []),
-    ...responses,
-  ].join('\n')
 }
 
 async function main() {
   const args = process.argv.slice(2)
-  const feature = args[0]
-  if (!feature || feature.startsWith('--')) {
+  const [feature, rawMethod, path] = args
+  if (!feature || !rawMethod || !path || feature.startsWith('--')) {
     console.error(
-      'usage: create-contract-from-swagger.mjs <feature> [--spec api-docs.json] [--root path]',
+      'usage: fetch-swagger-source.mjs <feature> <METHOD> <path> [--spec api-docs.json] [--root path]',
     )
     process.exit(2)
   }
+  const method = rawMethod.toUpperCase()
   const root = resolve(parseOption(args, '--root') ?? repositoryRoot)
-  const paths = apiPaths(root, feature)
-  const spec = parseTaskSpec(paths.spec)
-  if (spec.source !== 'swagger') {
-    console.error(
-      '[api-swagger-contract] task spec 의 source 가 swagger 가 아님',
-    )
-    process.exit(2)
-  }
-  if (!spec.swagger.method || !spec.swagger.path) {
-    console.error(
-      '[api-swagger-contract] task spec 에 swagger.method·swagger.path 필요',
-    )
-    process.exit(2)
-  }
 
   loadDotEnv(root)
   const baseUrl = process.env.SWAGGER_BASE_URL ?? defaultSwaggerBaseUrl
@@ -367,42 +284,38 @@ async function main() {
       ? JSON.parse(readFileSync(resolve(specPath), 'utf8'))
       : await fetchApiDocs(baseUrl)
   } catch (error) {
-    console.error(`[api-swagger-contract] ${error.message}`)
+    console.error(`[api-swagger-source] ${error.message}`)
     process.exit(2)
   }
 
-  let contract
+  let source
   try {
-    contract = createContractFromSwagger({
+    source = extractSwaggerSource({
       apiDocs,
-      spec,
+      method,
+      path,
       swaggerUrl: specPath
         ? resolve(specPath)
         : new URL('/v3/api-docs', baseUrl).href,
       checkedAt: new Date().toISOString(),
     })
   } catch (error) {
-    console.error(`[api-swagger-contract] ${error.message}`)
+    // Notion 경로가 Swagger 에 없으면 어느 쪽이 맞는지 정해야 하므로 STOP 한다.
+    console.error(`[api-swagger-source] STOP: ${error.message}`)
     process.exit(1)
   }
 
-  if (existsSync(paths.contractJson) && !args.includes('--force')) {
-    console.error(
-      `[api-swagger-contract] 이미 있음: ${paths.contractJson} (덮어쓰려면 --force)`,
-    )
-    process.exit(1)
-  }
-  writeJson(paths.contractJson, contract)
-  writeFileSync(paths.contractMarkdown, `${contractMarkdown(contract)}\n`)
-  console.log(`[api-swagger-contract] 생성: ${paths.contractJson}`)
-
-  const errors = validateApiContract(contract)
-  if (errors.length > 0) {
-    console.error(
-      `[api-swagger-contract] 계약 검증 실패 — 직접 채울 값\n- ${errors.join('\n- ')}`,
-    )
-    process.exit(1)
-  }
+  const out = join(
+    root,
+    'harness',
+    'artifacts',
+    'api',
+    `${feature}.swagger-source.json`,
+  )
+  writeJson(out, source)
+  console.log(
+    `[api-swagger-source] ${method} ${source.source.path} (${source.source.operationId}) → ${out}`,
+  )
 }
 
 if (
