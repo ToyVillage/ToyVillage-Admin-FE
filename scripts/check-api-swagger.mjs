@@ -230,12 +230,14 @@ export function formatReport({
   knownDiffs,
   resolvedDiffs,
 }) {
+  // 사유가 빈 알려진 차이는 실패로 보지는 않지만 어느 쪽이 맞는지 아직 모른다. 매번 따로 보여 준다.
+  const unverified = knownDiffs.filter(({ reason }) => !reason)
   const differing = new Set(
     [...newDiffs, ...knownDiffs].map(({ feature }) => feature),
   )
   const lines = [
     `계약 ${contracts.length}개 · Swagger 와 같음 ${contracts.length - differing.size}개 · 다름 ${differing.size}개`,
-    `새 차이 ${newDiffs.length}건 · 알려진 차이 ${knownDiffs.length}건 · 해소된 알려진 차이 ${resolvedDiffs.length}건`,
+    `새 차이 ${newDiffs.length}건 · 알려진 차이 ${knownDiffs.length}건(사유 미확인 ${unverified.length}건) · 해소된 알려진 차이 ${resolvedDiffs.length}건`,
   ]
   const table = (title, rows, withReason) => {
     if (rows.length === 0) return
@@ -261,7 +263,16 @@ export function formatReport({
   }
   table('새 차이 (확인 필요)', newDiffs, false)
   table('해소된 알려진 차이 (목록에서 지울 것)', resolvedDiffs, true)
-  table('알려진 차이', knownDiffs, true)
+  table(
+    '사유 미확인 알려진 차이 (어느 쪽이 맞는지 확인할 것)',
+    unverified,
+    true,
+  )
+  table(
+    '알려진 차이',
+    knownDiffs.filter(({ reason }) => reason),
+    true,
+  )
   return lines.join('\n')
 }
 
@@ -277,6 +288,8 @@ export async function fetchApiDocs(baseUrl) {
     headers: {
       Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`,
     },
+    // 스테이징이 응답하지 않아도 매일 도는 CI 가 멈추지 않게 끊는다.
+    signal: AbortSignal.timeout(30_000),
   })
   if (!response.ok) {
     throw new Error(`Swagger 조회 실패: HTTP ${response.status}`)
