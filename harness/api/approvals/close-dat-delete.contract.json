@@ -47,7 +47,7 @@
   "responses": {
     "success": [
       {
-        "status": 201,
+        "status": 200,
         "description": "휴관일 삭제 완료",
         "body": {
           "type": "object",
