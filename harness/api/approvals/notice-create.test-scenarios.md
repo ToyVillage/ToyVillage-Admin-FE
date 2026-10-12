@@ -7,7 +7,7 @@
 - Request headers: `Content-Type: application/json`, `Authorization: Bearer ...`
 - Request body:
   `{"title":"API 생성 공지","teamIds":[],"content":"API 생성 내용","files":[]}`
-- Mock response: HTTP 201, response body 없음
+- Mock response: HTTP 200, `{"message":"공지사항이 생성되었습니다."}` (2026-10-12 실서버 확인, #242)
 - 후속 Mock request: `GET /api/notice?page=0&size=10`
 - 후속 Mock response: 생성된 공지를 포함한 HTTP 200 목록
 - 사용자 동작: 생성 페이지에서 제목과 내용을 입력하고 `생성하기` 클릭
@@ -50,15 +50,15 @@
 
 - 목적: 연속 submit이 발생해도 생성 요청을 한 번만 보낸다.
 - Mock request: `POST /api/notice`
-- Mock response: 지연된 HTTP 201, response body 없음
+- Mock response: 지연된 HTTP 200, `{"message":"..."}`
 - 사용자 동작: 같은 form에서 submit event를 연속 발생
 - 기대 결과: POST 요청 횟수 1회, 완료 후 목록으로 이동
 
-## Mock S6 — 실제 서버 HTTP 200 성공
+## Mock S6 — HTTP 201 성공 허용
 
-- 목적: 실제 서버에서 확인한 HTTP 200을 생성 성공으로 처리한다.
+- 목적: 실서버 성공은 200이지만 HTTP 201도 생성 성공으로 처리한다(코드가 200·201을 허용, 2026-10-12 #242).
 - Mock request: `POST /api/notice`
-- Mock response: HTTP 200, response body 없음
+- Mock response: HTTP 201, response body 없음
 - 사용자 동작: 유효한 제목과 내용을 입력하고 `생성하기` 클릭
 - 기대 결과: `/notices/list`로 이동해 갱신된 목록을 표시
 
@@ -89,7 +89,7 @@
 - Mock request: `POST /api/notice`
 - Request body:
   `{"title":"팀 공지","teamIds":[1,3],"content":"팀 공지 내용","files":[]}`
-- Mock response: HTTP 201, response body 없음
+- Mock response: HTTP 200, `{"message":"..."}`
 - 사용자 동작: `동물 관리팀`, `사육팀` 체크 후 제목·내용 입력, `생성하기` 클릭
 - 기대 결과: request `teamIds`가 `[1, 3]`, 목록으로 이동
 - 테스트: `tests/e2e/api/notice-create.spec.ts` S6
