@@ -68,18 +68,18 @@
       "constraints": []
     },
     {
-      "name": "orderDirection",
+      "name": "sort",
       "location": "query",
       "type": "enum",
       "allowedValues": [
-        "ASC",
-        "DESC"
+        "createdAt,asc",
+        "createdAt,desc"
       ],
       "required": false,
       "nullable": false,
       "default": null,
-      "example": "DESC",
-      "description": "정렬 방향 (최신순 DESC / 오래된순 ASC)",
+      "example": "createdAt,desc",
+      "description": "정렬 (최신순 createdAt,desc / 오래된순 createdAt,asc). 서버는 orderDirection 을 무시한다(2026-10-12 스테이징 확인, #242)",
       "constraints": []
     },
     {

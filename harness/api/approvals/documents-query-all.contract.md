@@ -38,7 +38,7 @@
 | page           | integer      | false    | 0       | —                    | page 번호 (0부터)       |
 | size           | integer      | false    | 10      | —                    | page 사이즈             |
 | keyword        | string       | false    | 없음    | —                    | 제목 검색 키워드        |
-| orderDirection | enum         | false    | 없음    | ASC, DESC            | 정렬 방향               |
+| sort           | enum         | false    | 없음    | createdAt,asc, createdAt,desc | 정렬 (서버는 `orderDirection`을 무시, 2026-10-12 확인) |
 | types          | array\<enum\> | false    | 없음    | PDF, JPG, PNG, OTHER | 자료 type 필터(복수 선택) |
 
 ## Request Body
@@ -47,7 +47,7 @@
 
 ## Request Example
 
-`GET /documents?page=0&size=10&keyword=자료&orderDirection=DESC&types=PDF&types=JPG`
+`GET /documents?page=0&size=10&keyword=자료&sort=createdAt,desc&types=PDF&types=JPG`
 
 ## Success Responses
 
@@ -76,7 +76,7 @@
 
 ## Validation and Constraints
 
-- page ≥ 0(기본 0), size ≥ 1(기본 10), orderDirection ∈ {ASC, DESC}, keyword 제목 부분 일치.
+- page ≥ 0(기본 0), size ≥ 1(기본 10), sort ∈ {createdAt,asc, createdAt,desc}, keyword 제목 부분 일치.
 - types 미지정이면 전체 type 조회. 값은 `PDF`, `JPG`, `PNG`, `OTHER`.
 
 ## Notes
