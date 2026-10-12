@@ -48,7 +48,7 @@
   "responses": {
     "success": [
       {
-        "status": 201,
+        "status": 200,
         "description": "자료 상세 (명세 표기상 201)",
         "noContent": false,
         "body": {

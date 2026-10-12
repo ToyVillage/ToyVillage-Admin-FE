@@ -34,7 +34,7 @@ async function routeDetail(page: Page, status: number, body: unknown) {
 }
 
 test('S1: 상세 조회 성공 → 읽기 전용 상세에 제목·첨부 표시', async ({ page }) => {
-  await routeDetail(page, 201, detail)
+  await routeDetail(page, 200, detail)
   await page.goto('/notices/resources/7')
 
   await expect(
