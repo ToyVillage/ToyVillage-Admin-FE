@@ -17,7 +17,7 @@
 
 | API ID | Name | Description | Method | Full Path | Content-Type |
 | --- | --- | --- | --- | --- | --- |
-| `OPEN_TIME_QUERY_BY_DATE` | 운영 시간 날짜별 조회 | 운영시간 날짜별 조회 기능 | `GET` | `/open-time/{open-time-id}` | `application/json` |
+| `OPEN_TIME_QUERY_BY_DATE` | 운영 시간 날짜별 조회 | 운영시간 날짜별 조회 기능 | `GET` | `/open-time/date` | `application/json` |
 
 ## Authentication and Authorization
 
@@ -33,13 +33,13 @@
 
 ## Path Parameters
 
-| Name | Type | Required | Nullable | Default | Example | Constraints |
-| --- | --- | --- | --- | --- | --- | --- |
-| `open-time-id` | string | true | false | 없음 | `2026-07-01` | `YYYY-MM-DD`, 실제 달력 날짜 |
+없음
 
 ## Query Parameters
 
-없음
+| Name | Type | Required | Nullable | Default | Example | Constraints |
+| --- | --- | --- | --- | --- | --- | --- |
+| `date` | string | true | false | 없음 | `2026-07-01` | `YYYY-MM-DD`, 실제 달력 날짜 |
 
 ## Request Body
 
@@ -47,23 +47,25 @@
 
 ## Request Example
 
-`GET /open-time/2026-07-01`
+`GET /open-time/date?date=2026-07-01`
 
 ## Success Responses
 
-### HTTP 201
+### HTTP 200
+
+> 2026-10-12 스테이징 실서버 확인(#242)으로 수정. 아래 성공 응답이 실제 응답이다.
 
 ```json
-{
+[{
   "id": 1,
   "openDate": "2026-07-21",
   "startOpenTime": "09:00:00",
   "endOpenTime": "18:00:00"
-}
+}]
 ```
 
-- 응답 객체와 모든 필드는 required, nullable false
-- `id`는 positive integer
+- 응답은 1건 배열이다. 모든 필드는 required
+- `id`는 positive integer. 그 날짜에 저장값이 없으면 `null`이고 시간은 기본값(11:00~18:00)이다
 - `openDate`는 `YYYY-MM-DD`
 - `startOpenTime`, `endOpenTime`은 `HH:mm:ss`
 

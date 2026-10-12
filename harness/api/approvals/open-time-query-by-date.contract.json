@@ -3,7 +3,7 @@
   "name": "운영 시간 날짜별 조회",
   "description": "운영시간 날짜별 조회 기능",
   "method": "GET",
-  "path": "/open-time/{open-time-id}",
+  "path": "/open-time/date",
   "authentication": {
     "required": true,
     "type": "Bearer",
@@ -28,15 +28,16 @@
       ]
     }
   ],
-  "pathParameters": [
+  "pathParameters": [],
+  "queryParameters": [
     {
-      "name": "open-time-id",
-      "location": "path",
+      "name": "date",
+      "location": "query",
       "type": "string",
       "required": true,
       "nullable": false,
       "default": null,
-      "example": "2026-07-01",
+      "example": "2026-07-21",
       "description": "조회할 운영 날짜",
       "constraints": [
         "YYYY-MM-DD",
@@ -44,29 +45,29 @@
       ]
     }
   ],
-  "queryParameters": [],
   "requestBody": null,
   "responses": {
     "success": [
       {
-        "status": 201,
+        "status": 200,
         "description": "선택 날짜의 운영시간",
+        "noContent": false,
         "body": {
-          "type": "object",
+          "type": "array<object>",
           "nullable": false,
-          "description": "선택 날짜의 운영시간",
+          "description": "선택 날짜의 운영시간 1건 배열",
           "fields": [
             {
               "name": "id",
               "location": "response",
               "type": "integer",
               "required": true,
-              "nullable": false,
+              "nullable": true,
               "default": null,
               "example": 1,
-              "description": "운영시간 ID",
+              "description": "운영시간 ID. 저장값이 없는 날짜는 null 이고 나머지는 기본 운영시간이다",
               "constraints": [
-                "positive integer"
+                "positive integer 또는 null"
               ]
             },
             {
@@ -110,8 +111,7 @@
               ]
             }
           ]
-        },
-        "noContent": false
+        }
       }
     ],
     "errors": [
@@ -351,7 +351,7 @@
     "databaseValues": {
       "apiId": "OPEN_TIME_QUERY_BY_DATE",
       "method": "GET",
-      "path": "/open-time/{open-time-id}",
+      "path": "/open-time/date",
       "authentication": {
         "required": true,
         "type": "Bearer",
@@ -364,7 +364,7 @@
     "detailValues": {
       "apiId": "OPEN_TIME_QUERY_BY_DATE",
       "method": "GET",
-      "path": "/open-time/{open-time-id}",
+      "path": "/open-time/date",
       "authentication": {
         "required": true,
         "type": "Bearer",
