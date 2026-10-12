@@ -88,7 +88,8 @@ export async function updateOperatingHours({
 
   const { data, status } = await api.put<unknown>(`/open-time/${id}`, request)
 
-  if (status !== 201 || !isMessageResponse(data)) {
+  // 실서버 수정 성공은 200 이다(2026-10-12 확인). 등록은 201.
+  if (status !== 200 || !isMessageResponse(data)) {
     throw new Error('운영시간 수정 응답이 올바르지 않습니다.')
   }
 
