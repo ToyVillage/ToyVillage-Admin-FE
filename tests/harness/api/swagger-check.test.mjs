@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 import {
+  checkContracts,
   classifyDiffs,
   compareContracts,
   normalizePath,
@@ -175,6 +176,44 @@ test('계약이 성공 코드를 여러 개 선언하면 Swagger 에 빠진 코�
   assert.deepEqual(diffs, [
     { feature: 'notice-create', kind: 'status', contract: [201], swagger: [] },
   ])
+})
+
+test('승인 검사는 그 기능의 알려진 차이만 넘기고 나머지 차이는 새 차이로 본다', () => {
+  const contract = {
+    feature: 'task-create',
+    method: 'POST',
+    path: '/tasks',
+    status: [201],
+    query: [],
+    request: ['title', 'priority'],
+    response: [],
+  }
+  const known = {
+    feature: 'task-create',
+    kind: 'status',
+    contract: [201],
+    swagger: [200],
+    reason: '실서버 201',
+  }
+
+  const passed = checkContracts({
+    contracts: [contract],
+    apiDocs,
+    knownDiffs: [known, { ...known, feature: 'other' }],
+  })
+  assert.deepEqual(passed.newDiffs, [])
+  // 다른 기능의 알려진 차이는 해소된 차이로 섞이지 않는다.
+  assert.deepEqual(passed.resolvedDiffs, [])
+
+  const rejected = checkContracts({
+    contracts: [contract],
+    apiDocs,
+    knownDiffs: [{ ...known, feature: 'other' }],
+  })
+  assert.deepEqual(
+    rejected.newDiffs.map(({ kind }) => kind),
+    ['status'],
+  )
 })
 
 test('알려진 차이는 실패에서 빼고, 사라진 알려진 차이는 따로 알린다', () => {

@@ -223,6 +223,24 @@ export function classifyDiffs(diffs, knownDiffs) {
   }
 }
 
+// 계약 목록을 Swagger 와 비교하고, 그 기능들의 알려진 차이로 새 차이·알려진 차이·해소된 차이를 나눈다.
+export function checkContracts({ contracts, apiDocs, knownDiffs }) {
+  const diffs = compareContracts(contracts, readSwaggerOperations(apiDocs))
+  const features = new Set(contracts.map(({ feature }) => feature))
+  return {
+    contracts,
+    ...classifyDiffs(
+      diffs,
+      knownDiffs.filter(({ feature }) => features.has(feature)),
+    ),
+  }
+}
+
+export function readKnownDiffs(root) {
+  const path = knownDiffsPath(root)
+  return existsSync(path) ? readJson(path).diffs : []
+}
+
 const formatValues = (values) =>
   values.length ? values.map((value) => `\`${value}\``).join(', ') : '—'
 
@@ -330,12 +348,10 @@ async function main() {
   const contracts = contractPath
     ? [readContract(resolve(contractPath))]
     : readContracts(root)
-  const diffs = compareContracts(contracts, readSwaggerOperations(apiDocs))
   const knownPath = knownDiffsPath(root)
-  const allKnown = existsSync(knownPath) ? readJson(knownPath).diffs : []
-  const features = new Set(contracts.map(({ feature }) => feature))
-  const known = allKnown.filter(({ feature }) => features.has(feature))
-  const result = { contracts, ...classifyDiffs(diffs, known) }
+  const known = readKnownDiffs(root)
+  const diffs = compareContracts(contracts, readSwaggerOperations(apiDocs))
+  const result = checkContracts({ contracts, apiDocs, knownDiffs: known })
 
   if (args.includes('--write-known')) {
     if (contractPath) {
