@@ -1,15 +1,15 @@
 {
   "feature": "reservations-admin-query-all",
   "apiId": "RESERVATION_ADMIN_QUERY_ALL",
-  "approvedAt": "2026-10-13T00:39:30.797Z",
+  "approvedAt": "2026-10-13T00:50:08.467Z",
   "approvedBy": "yunho09",
   "taskSpecHash": "3b92e43b632aa3ee35cddd40bfa2b1742633493dbf032c99d0d4daaf7cc7db07",
   "contractHash": "717969cb22d6a3926dd7a2b204baa3fcb6162d5203a86cfe84b61a29f4d92417",
-  "contractMarkdownHash": "593f4d12c3e395cc759cc6453690807bd074a458704d1a94c11a88107cf5be2b",
+  "contractMarkdownHash": "66faf3242a457baeb09e1a186010dc219246177a52bf05f5403dbf2c2876cbe9",
   "planHash": "54c645de7289ef1c3e1d336ba7cbbd0f6d8bfcf2cab2b954577f0663de2b3090",
   "scenarioHash": "5c039c2367b9206bb5965a6b23edeac2c5a90a27024e7b808db7958053b8d71e",
   "testHash": "183803d1014470b2be45e4c74817bdbf94c95d4ed91672841fb1e01cd2a4d9e1",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-10-13T00:39:30.968Z"
+  "testApprovedAt": "2026-10-13T00:50:08.674Z"
 }
