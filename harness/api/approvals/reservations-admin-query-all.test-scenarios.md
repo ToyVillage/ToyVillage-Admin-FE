@@ -13,7 +13,7 @@
 ## Mock S2 — 상태 필터 전환
 
 - 목적: 상태 카드 선택이 `status` 파라미터로 서버에 반영된다.
-- Mock request: `GET /api/reservation?status=SITE_VISIT_COMPLETED&sort=COUNSEL_DATE&page=1`
+- Mock request: `GET /api/reservation?status=SITE_VISIT_COMPLETED&sort=COUNSEL_DATE&page=1&size=10`
 - Mock response: HTTP 200, 해당 상태 목록. 카운트는 필터와 무관하게 전체 기준 유지
 - 사용자 동작: '사전답사 완료' 카드 클릭
 - 기대 결과: 요청 query에 `status=SITE_VISIT_COMPLETED` 포함, 카운트 값은 불변, 목록만 교체
