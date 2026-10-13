@@ -43,6 +43,7 @@
 | `page` | integer | true | false | `1` | minimum 1 |
 | `size` | integer | true | false | `10` | positive integer |
 | `teamId` | integer | false | false | 없음 | int64. 생략하면 전체 목록. 존재하지 않으면 404 `TEAM_NOT_FOUND`(Swagger 신규 확인) |
+| `sort` | array\<string\> | false | false | 없음 | Spring Pageable 형식 `필드,asc` 또는 `필드,desc`. 실서버에서 동작하지만 화면은 보내지 않는다(2026-10-12 스테이징 확인, #246) |
 
 ## Request Body
 

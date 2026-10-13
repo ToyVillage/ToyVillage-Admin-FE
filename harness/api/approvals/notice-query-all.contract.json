@@ -70,6 +70,19 @@
         "Swagger 기준(2026-09-18) 신규 추가",
         "존재하지 않는 팀 ID면 404 TEAM_NOT_FOUND"
       ]
+    },
+    {
+      "name": "sort",
+      "location": "query",
+      "type": "array<string>",
+      "required": false,
+      "nullable": false,
+      "default": null,
+      "example": "createdAt,desc",
+      "description": "정렬. 실서버에서 동작하지만 화면은 보내지 않는다(2026-10-12 스테이징 확인, #246)",
+      "constraints": [
+        "Spring Pageable 형식 `필드,asc` 또는 `필드,desc`"
+      ]
     }
   ],
   "requestBody": null,
