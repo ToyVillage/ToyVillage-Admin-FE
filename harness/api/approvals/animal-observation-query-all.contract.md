@@ -54,6 +54,7 @@
 - **200** — 관찰 및 특이사항 목록 페이지 응답. 목록에는 제목·작성일·작성자·첨부파일 전체가 포함되며 본문은 상세 조회에서 반환.
   - `content`: array\<object\> — `animalObservationId`(integer), `title`(string), `createdAt`(string, 예시 `2026-09-16`), `authorName`(string), `files`: array\<object\> — `fileName`(string), `fileKey`(string)
   - `pageable`: object — `pageNumber`(integer), `pageSize`(integer), `offset`(integer), `paged`(boolean), `unpaged`(boolean)
+  - `sort`: object — `empty`, `sorted`, `unsorted`(boolean). Spring Page 정렬 정보로 화면은 쓰지 않는다(스테이징 Swagger 기준, #246)
   - `totalPages`(integer), `totalElements`(integer), `size`(integer), `number`(integer), `first`(boolean), `last`(boolean), `numberOfElements`(integer), `empty`(boolean)
 
 ## Error Responses

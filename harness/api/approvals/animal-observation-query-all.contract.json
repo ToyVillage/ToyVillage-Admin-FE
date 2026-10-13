@@ -262,6 +262,52 @@
             },
             {
               "location": "body",
+              "required": false,
+              "nullable": false,
+              "default": null,
+              "example": null,
+              "description": "Spring Page 정렬 정보. 화면은 쓰지 않는다(스테이징 Swagger 기준, #246)",
+              "constraints": [],
+              "name": "sort",
+              "type": "object",
+              "fields": [
+                {
+                  "location": "body",
+                  "required": false,
+                  "nullable": false,
+                  "default": null,
+                  "example": null,
+                  "description": "정렬 조건이 없는지",
+                  "constraints": [],
+                  "name": "empty",
+                  "type": "boolean"
+                },
+                {
+                  "location": "body",
+                  "required": false,
+                  "nullable": false,
+                  "default": null,
+                  "example": null,
+                  "description": "정렬되었는지",
+                  "constraints": [],
+                  "name": "sorted",
+                  "type": "boolean"
+                },
+                {
+                  "location": "body",
+                  "required": false,
+                  "nullable": false,
+                  "default": null,
+                  "example": null,
+                  "description": "정렬되지 않았는지",
+                  "constraints": [],
+                  "name": "unsorted",
+                  "type": "boolean"
+                }
+              ]
+            },
+            {
+              "location": "body",
               "required": true,
               "nullable": false,
               "default": null,
