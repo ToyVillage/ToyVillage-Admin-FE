@@ -318,6 +318,15 @@ test('--all reports only features whose committed approval no longer matches', (
   ])
 })
 
+test('--all passes --require-test through to each feature', () => {
+  const { root, feature } = fixtureRoot()
+  approveApi({ root, feature, approvedBy: 'developer' })
+  assert.deepEqual(checkAllApiGates({ root }), [])
+  assert.deepEqual(checkAllApiGates({ root, requireTest: true }), [
+    { feature, errors: ['testHash 누락: approve-api --freeze 필요'] },
+  ])
+})
+
 test('staging real API test is frozen and verified separately', () => {
   const { root, feature } = fixtureRoot({ realServer: true })
   approveApi({ root, feature, approvedBy: 'developer' })

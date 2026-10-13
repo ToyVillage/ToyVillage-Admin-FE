@@ -149,14 +149,21 @@ export function checkApiGate({
 }
 
 // 승인 기록이 있는 기능 전부의 게이트를 검사한다. CI 는 runtime 산출물이 없어 커밋된 승인본만 본다.
-export function checkAllApiGates({ root }) {
+export function checkAllApiGates({
+  root,
+  requireTest = false,
+  requireRealTest = false,
+}) {
   const approvals = join(root, 'harness', 'api', 'approvals')
   return readdirSync(approvals)
     .filter((name) => name.endsWith('.approved.json'))
     .sort()
     .map((name) => {
       const feature = name.replace(/\.approved\.json$/, '')
-      return { feature, errors: checkApiGate({ root, feature }) }
+      return {
+        feature,
+        errors: checkApiGate({ root, feature, requireTest, requireRealTest }),
+      }
     })
     .filter(({ errors }) => errors.length > 0)
 }
@@ -172,7 +179,11 @@ function main() {
   }
   const root = resolve(parseOption(args, '--root') ?? repositoryRoot)
   if (feature === '--all') {
-    const failures = checkAllApiGates({ root })
+    const failures = checkAllApiGates({
+      root,
+      requireTest: args.includes('--require-test'),
+      requireRealTest: args.includes('--require-real-test'),
+    })
     if (failures.length > 0) {
       for (const failure of failures) {
         console.error(
