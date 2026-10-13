@@ -66,10 +66,10 @@
       "type": "integer",
       "required": false,
       "nullable": false,
-      "default": 0,
-      "example": 0,
-      "description": "페이지 번호. 0부터 시작.",
-      "constraints": ["0부터 시작"]
+      "default": 1,
+      "example": 1,
+      "description": "페이지 번호. 1부터 시작(화면 페이지 번호 그대로).",
+      "constraints": ["1부터 시작"]
     },
     {
       "name": "size",

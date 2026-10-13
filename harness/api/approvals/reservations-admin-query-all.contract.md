@@ -38,7 +38,7 @@
 | status | enum | false | false | (없음) | BEFORE_SITE_VISIT, SITE_VISIT_COMPLETED, VISIT_COMPLETED | 상태 필터, 생략 시 전체 |
 | title | string | false | false | (없음) | — | 단체명 부분 일치, 공백뿐이면 전체 |
 | sort | enum | false | false | RESERVATION_DATE | COUNSEL_DATE, RESERVATION_DATE | 정렬 기준(내림차순, 동률 시 id 내림차순) |
-| page | integer | false | false | 0 | — | 페이지 번호(0부터) |
+| page | integer | false | false | 1 | — | 페이지 번호(1부터) |
 | size | integer | false | false | 3 | — | 페이지 크기(프론트 미전송 권장) |
 
 ## Request Body
@@ -47,7 +47,7 @@
 
 ## Request Example
 
-`GET /reservation?status=BEFORE_SITE_VISIT&title=대구&sort=COUNSEL_DATE&page=0`
+`GET /reservation?status=BEFORE_SITE_VISIT&title=대구&sort=COUNSEL_DATE&page=1`
 
 ## Success Responses
 
@@ -79,7 +79,7 @@
 
 - `status`, `sort` 는 정의된 enum 외 값 전송 시 400.
 - `title` 은 공백만 있으면 전체 조회로 처리.
-- `page` 는 0부터 시작.
+- `page` 는 1부터 시작(화면 페이지 번호 그대로 전송, 2026-09-18 `49ee490`).
 
 ## Notes
 
