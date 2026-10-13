@@ -5,7 +5,10 @@ import { dirname, join } from 'node:path'
 import test from 'node:test'
 import ts from 'typescript'
 import { approveApi } from '../../../scripts/approve-api.mjs'
-import { checkApiGate } from '../../../scripts/api-gate-check.mjs'
+import {
+  checkAllApiGates,
+  checkApiGate,
+} from '../../../scripts/api-gate-check.mjs'
 import {
   parseTaskSpec,
   sha256File,
@@ -299,6 +302,20 @@ test('approval hashes pass and changed approval source fails the gate', () => {
     checkApiGate({ root, feature }).join('\n'),
     /runtime implementation plan/,
   )
+})
+
+test('--all reports only features whose committed approval no longer matches', () => {
+  const { root, feature } = fixtureRoot()
+  approveApi({ root, feature, approvedBy: 'developer' })
+  const test = join(root, 'tests', 'e2e', 'api', `${feature}.spec.ts`)
+  write(test, "await page.route('**/api/notice', () => {})\n")
+  approveApi({ root, feature, freeze: true })
+  assert.deepEqual(checkAllApiGates({ root }), [])
+
+  writeFileSync(test, `${readFileSync(test, 'utf8')}// changed\n`)
+  assert.deepEqual(checkAllApiGates({ root }), [
+    { feature, errors: ['API e2e test 승인 해시 불일치'] },
+  ])
 })
 
 test('staging real API test is frozen and verified separately', () => {
