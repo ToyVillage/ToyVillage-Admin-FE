@@ -35,24 +35,6 @@
       "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
     },
     {
-      "feature": "animal-manage-query-all",
-      "kind": "response",
-      "contract": [],
-      "swagger": [
-        "sort"
-      ],
-      "reason": "Spring Page 응답의 sort 객체. 화면에서 쓰지 않음"
-    },
-    {
-      "feature": "animal-observation-query-all",
-      "kind": "response",
-      "contract": [],
-      "swagger": [
-        "sort"
-      ],
-      "reason": "Spring Page 응답의 sort 객체. 화면에서 쓰지 않음"
-    },
-    {
       "feature": "app-admin-employee-create",
       "kind": "status",
       "contract": [
@@ -61,7 +43,7 @@
       "swagger": [
         200
       ],
-      "reason": ""
+      "reason": "실서버는 201 (2026-09-29 employeeApi.ts 주석 기준, 이번에 스테이징으로 다시 확인하지는 않음). Swagger 가 200 으로 잘못 표기"
     },
     {
       "feature": "close-dat-create",
@@ -75,15 +57,6 @@
       "reason": "실서버는 201과 message (2026-10-12 스테이징 확인). Swagger 가 200 으로 잘못 표기"
     },
     {
-      "feature": "close-dat-query-by-date",
-      "kind": "query",
-      "contract": [
-        "date"
-      ],
-      "swagger": [],
-      "reason": "서버가 date 를 무시하고 전체를 준다(2026-10-12 스테이징 확인). 화면이 날짜로 거르므로 계약은 Notion 명세대로 둔다"
-    },
-    {
       "feature": "documents-create",
       "kind": "status",
       "contract": [
@@ -92,18 +65,7 @@
       "swagger": [
         200
       ],
-      "reason": ""
-    },
-    {
-      "feature": "documents-update",
-      "kind": "status",
-      "contract": [
-        201
-      ],
-      "swagger": [
-        200
-      ],
-      "reason": ""
+      "reason": "실서버는 201과 message (2026-10-13 스테이징 확인). Swagger 가 200 으로 잘못 표기"
     },
     {
       "feature": "notice-delete",
@@ -115,15 +77,6 @@
         204
       ],
       "reason": "실서버는 200과 message (2026-10-12 스테이징 확인). Swagger 가 204 로 잘못 표기"
-    },
-    {
-      "feature": "notice-query-all",
-      "kind": "query",
-      "contract": [],
-      "swagger": [
-        "sort"
-      ],
-      "reason": "sort 는 실서버에서 동작하지만 화면이 쓰지 않는다(2026-10-12 스테이징 확인)"
     },
     {
       "feature": "open-time-create",
