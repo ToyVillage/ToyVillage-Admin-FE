@@ -24,7 +24,7 @@
 
 4. **수정** `src/pages/notices/reservations/NoticeReservationsPage.tsx`
    - `useQuery({ queryKey:['reservations','list',{status,title,sort,page}], queryFn: () => getAdminReservations(...) })`.
-   - UI 상태 → 파라미터 매핑(active→status, query→title, sort→sort, page(1-based)→page-1).
+   - UI 상태 → 파라미터 매핑(active→status, query→title, sort→sort, page(1-based)→page 그대로(1-based)).
    - `counts`는 API 응답의 `data.counts` 사용(클라이언트 reduce 제거).
    - `pageCount`는 `data.totalPages` 사용, 목록은 `data.reservations` 그대로 표시(클라이언트 slice/filter/sort 제거).
    - 상태·검색·정렬 변경 시 첫 페이지 복귀 로직 유지.

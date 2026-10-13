@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   apiPaths,
@@ -148,16 +148,56 @@ export function checkApiGate({
   return errors
 }
 
+// 승인 기록이 있는 기능 전부의 게이트를 검사한다. CI 는 runtime 산출물이 없어 커밋된 승인본만 본다.
+export function checkAllApiGates({
+  root,
+  requireTest = false,
+  requireRealTest = false,
+}) {
+  const approvals = join(root, 'harness', 'api', 'approvals')
+  return readdirSync(approvals)
+    .filter((name) => name.endsWith('.approved.json'))
+    .sort()
+    .map((name) => {
+      const feature = name.replace(/\.approved\.json$/, '')
+      return {
+        feature,
+        errors: checkApiGate({ root, feature, requireTest, requireRealTest }),
+      }
+    })
+    .filter(({ errors }) => errors.length > 0)
+}
+
 function main() {
   const args = process.argv.slice(2)
   const feature = args[0]
-  if (!feature || feature.startsWith('--')) {
+  if (!feature || (feature.startsWith('--') && feature !== '--all')) {
     console.error(
-      'usage: api-gate-check.mjs <feature> [--require-test|--require-real-test] [--root path]',
+      'usage: api-gate-check.mjs <feature|--all> [--require-test|--require-real-test] [--root path]',
     )
     process.exit(2)
   }
   const root = resolve(parseOption(args, '--root') ?? repositoryRoot)
+  if (feature === '--all') {
+    const failures = checkAllApiGates({
+      root,
+      requireTest: args.includes('--require-test'),
+      requireRealTest: args.includes('--require-real-test'),
+    })
+    if (failures.length > 0) {
+      for (const failure of failures) {
+        console.error(
+          `[api-gate] invalid: ${failure.feature}\n- ${failure.errors.join('\n- ')}`,
+        )
+      }
+      console.error(
+        `[api-gate] ${failures.length}개 기능의 승인 기록이 현재 파일과 다름 — 테스트만 바뀌었으면 approve-api --freeze, 명세·계약·시나리오가 바뀌었으면 재승인 후 --freeze`,
+      )
+      process.exit(1)
+    }
+    console.log('[api-gate] valid: 모든 승인 기록')
+    return
+  }
   const errors = checkApiGate({
     root,
     feature,

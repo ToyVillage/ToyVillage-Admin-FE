@@ -1,9 +1,9 @@
 # Test Scenarios — DOCUMENTS_UPDATE (Mock)
 
-Playwright `page.route()` mock. 대상: `PUT /documents/{id}`. 상세는 `GET /documents/{id}` mock 으로 폼을 띄운 뒤 수정 제출한다.
+Playwright `page.route()` mock. 대상: `PUT /documents/{id}`. 수정 화면(`/notices/resources/{id}/edit`)에서 `GET /documents/{id}` mock 으로 폼을 띄운 뒤 수정 제출한다. 상세 화면(`/notices/resources/{id}`)은 읽기 전용이다.
 
 ## 수정 성공
-- S1. 상세(GET) → 폼 표시 → 제목 변경 후 저장 → `PUT /documents/{id}`가 `201 { message: "자료 수정 성공" }` → 목록 복귀. 이때 `files`는 기존 파일 키가 그대로 보존된다(파일 손실 없음).
+- S1. 수정 화면 진입(GET) → 폼 표시 → 제목 변경 후 저장 → `PUT /documents/{id}`가 `201 { message: "자료 수정 성공" }` → 목록 복귀. 이때 `files`는 기존 파일 키가 그대로 보존된다(파일 손실 없음).
 - S5. 새 파일 첨부 → 즉시 업로드로 새 `fileKey` 확보 → 저장 시 `files`가 기존 키 + 새 키로 병합 전송된다.
 - S7. 기존 첨부 파일 제거 → 저장 시 `files`에서 해당 키가 빠지고 남은 키만 전송된다.
 
@@ -18,3 +18,6 @@ Playwright `page.route()` mock. 대상: `PUT /documents/{id}`. 상세는 `GET /d
 
 ## 정리
 - Mock 은 서버 상태를 만들지 않음. 실제 서버 테스트 미실행(`real_server.enabled: false`).
+
+## 2026-10-13 변경 (#244)
+- 자료 상세가 읽기 전용으로 바뀌어 수정 폼이 `/notices/resources/{id}/edit`로 옮겨진 것(2026-09-20 `4de71b9`)을 반영했다. API 동작 변경 없음.
