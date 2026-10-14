@@ -25,11 +25,7 @@ function OperatingHoursDetail({ date }: { date: string }) {
     queryKey: ['close-schedules', 'by-date', date],
     queryFn: () => getCloseSchedulesByDate({ date }),
   })
-  // 스테이징은 date 파라미터를 무시하고 전체 휴관일을 돌려준다(2026-09-17 확인).
-  // 그대로 첫 항목을 쓰면 날짜와 무관한 일정이 보이므로 이 날짜를 포함하는 일정만 고른다.
-  const firstSchedule = schedules.find(
-    (schedule) => schedule.startDate <= date && date <= schedule.endDate,
-  )
+  const firstSchedule = schedules[0]
 
   return (
     <Page>
