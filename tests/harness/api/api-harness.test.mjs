@@ -197,7 +197,10 @@ test('API ID missing or duplicate match fails', () => {
 
   const duplicate = validContract()
   duplicate.source.apiIdMatchCount = 2
-  assert.match(validateApiContract(duplicate).join('\n'), /정확히 1/)
+  assert.match(
+    validateApiContract(duplicate).join('\n'),
+    /0\(Swagger만\) 또는 1/,
+  )
 })
 
 test('full path, authentication, nullable, enum, and success response are enforced', () => {

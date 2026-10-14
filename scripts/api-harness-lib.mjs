@@ -437,6 +437,15 @@ export function validateApiContract(contract) {
   const source = contract.source
   if (!source || typeof source !== 'object' || Array.isArray(source)) {
     errors.push('source: object 필요')
+  } else if (source.apiIdMatchCount === 0) {
+    // Notion 에 없는 API 는 Swagger 만 출처로 쓴다(RUNBOOK ②). Notion 출처 값은 없다.
+    if (!source.swagger || typeof source.swagger !== 'object') {
+      errors.push('source.swagger: Notion 검색 결과가 0건이면 필요')
+    } else {
+      requireString(source.swagger.method, 'source.swagger.method', errors)
+      requireString(source.swagger.path, 'source.swagger.path', errors)
+      validateSwaggerSource(contract, source.swagger, errors)
+    }
   } else {
     requireString(source.notionDatabase, 'source.notionDatabase', errors)
     if (!hasOwn(source, 'notionDataSource'))
@@ -451,7 +460,7 @@ export function validateApiContract(contract) {
     }
     requireString(source.checkedAt, 'source.checkedAt', errors)
     if (source.apiIdMatchCount !== 1)
-      errors.push('source.apiIdMatchCount: 정확히 1이어야 함')
+      errors.push('source.apiIdMatchCount: 0(Swagger만) 또는 1이어야 함')
 
     const databaseValues = source.databaseValues
     const detailValues = source.detailValues
@@ -497,7 +506,11 @@ export function validateApiContract(contract) {
       errors.push('source apiId와 contract apiId 불일치')
     if (databaseValues?.method !== contract.method)
       errors.push('source method와 contract method 불일치')
-    if (databaseValues?.path !== contract.path)
+    // Notion 과 Swagger 경로가 달라 개발자가 Swagger 를 택했으면 계약은 Swagger 경로를 따른다.
+    if (
+      databaseValues?.path !== contract.path &&
+      comparablePath(source.swagger?.path) !== comparablePath(contract.path)
+    )
       errors.push('source path와 contract path 불일치')
     if (
       databaseValues?.authentication &&
@@ -526,7 +539,12 @@ export function validateApiContract(contract) {
   return errors
 }
 
-// Notion 과 함께 대조한 스테이징 Swagger operation(RUNBOOK ③-1). 2026-10 이전 계약에는 없다.
+// path 변수 이름은 Notion 과 Swagger 가 다를 수 있다(`{id}` vs `{taskId}`).
+function comparablePath(path) {
+  return typeof path === 'string' ? path.replace(/\{[^}]*\}/g, '{}') : path
+}
+
+// Notion 과 함께 조회한 스테이징 Swagger operation(RUNBOOK ②). 2026-10 이전 계약에는 없다.
 // 2026-09 공지 계약 4개는 `{ swaggerUrl, checkedAt, note }` 만 남겼으므로 method·path·operationId 는 있을 때만 본다.
 function validateSwaggerSource(contract, swagger, errors) {
   if (!swagger || typeof swagger !== 'object' || Array.isArray(swagger)) {
@@ -541,9 +559,6 @@ function validateSwaggerSource(contract, swagger, errors) {
   ) {
     errors.push('source.swagger.checkedAt: ISO date 형식 필요')
   }
-  // path 변수 이름은 Notion 과 Swagger 가 다를 수 있다(`{id}` vs `{taskId}`).
-  const comparablePath = (path) =>
-    typeof path === 'string' ? path.replace(/\{[^}]*\}/g, '{}') : path
   if (hasOwn(swagger, 'method') && swagger.method !== contract.method)
     errors.push('source.swagger method와 contract method 불일치')
   if (

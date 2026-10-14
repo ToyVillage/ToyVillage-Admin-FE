@@ -7,7 +7,7 @@ description: >
 
 # API integration entrypoint
 
-1. `harness/api/RUNBOOK.md`를 읽고 ①–⑭ 단계(③-1 Swagger 조회 포함)를 순서대로 따른다.
+1. `harness/api/RUNBOOK.md`를 읽고 ①–⑭ 단계(② Notion·Swagger 함께 조회 포함)를 순서대로 따른다.
 2. 규칙은 `harness/api/api-rules.md`, 입력 계약은 `harness/api/api-input-contract.md`를 참조한다.
 3. API ID가 없거나 Contract STOP 조건이 있으면 구현하지 않고 백엔드 질문 목록을 반환한다.
 4. 개발자 승인 전에는 API 코드를 구현하거나 테스트 코드를 작성하지 않는다.

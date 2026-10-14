@@ -12,19 +12,23 @@
 - 다음 단계: API ID가 하나로 확정됨
 - 승인: 불필요
 
-## ② API ID로 Notion API 검색
+## ② Notion과 Swagger 함께 조회
 
-- 입력: API ID, 선택적 Notion URL
+- 입력: API ID, 선택적 Notion URL, 선택적 Method·Path(Notion에 없는 API일 때 개발자가 준다)
 - Prompt: `prompts/create-contract.md`
-- 산출물: `harness/artifacts/api/<feature>.notion-source.md`
-- 검증: API ID 정확 일치 결과가 1개
-- STOP: 0개, 2개 이상, API ID 누락, 접근 권한 없음
-- 다음 단계: 단일 데이터베이스 행과 상세 페이지 식별
+- 산출물: `harness/artifacts/api/<feature>.notion-source.md`(Notion에 있을 때), `harness/artifacts/api/<feature>.swagger-source.json`
+- 검증:
+  - API ID로 Notion을 검색한다. 정확히 일치하는 결과가 1개면 그 Method·Path로, 0개면 개발자가 준 Method·Path로 `yarn harness:api:swagger-source <feature> <METHOD> <path>`를 실행한다.
+  - Notion 경로가 Swagger에 없으면 개발자에게 Swagger에서 같은 API의 Method·Path를 확인받아 다시 실행한다(Notion 경로가 틀린 경우). 계약 경로는 ④에서 개발자가 정한다.
+  - Notion 1개 + Swagger 있음 → ③으로. 둘의 Method·Path·파라미터·필드·성공 코드는 ④에서 비교한다.
+  - Notion 0개 + Swagger 있음 → Swagger만으로 진행. ③은 건너뛰고, 계약 `source.apiIdMatchCount`는 0이다.
+- STOP: Notion 결과 2개 이상, Notion 0개인데 Method·Path를 모름, 개발자가 확인한 Method·Path로도 Swagger operation이 없음, Swagger 인증 정보(`SWAGGER_USERNAME`·`SWAGGER_PASSWORD`) 없음, Notion 접근 권한 없음
+- 다음 단계: Notion 원문(있으면)과 Swagger operation이 짝지어짐
 - 승인: 불필요
 
 ## ③ API 상세 명세 조회
 
-- 입력: ②의 데이터베이스 행과 상세 페이지
+- 입력: ②의 데이터베이스 행과 상세 페이지 (Notion에 없는 API는 건너뜀)
 - Prompt: `prompts/create-contract.md`
 - 산출물: notion-source 보강
 - 검증: Basic, 인증, 요청, 성공 응답, 오류 응답 섹션 구분
@@ -32,23 +36,13 @@
 - 다음 단계: 누락과 명시적 `없음`이 구분됨
 - 승인: 불필요
 
-## ③-1 Swagger 조회
-
-- 입력: ③에서 확인한 Method·Path
-- Prompt: 없음
-- 산출물: `harness/artifacts/api/<feature>.swagger-source.json`
-- 검증: `yarn harness:api:swagger-source <feature> <METHOD> <path>` 통과 (스테이징 Swagger에서 같은 operation을 찾음)
-- STOP: Swagger에 같은 Method·Path가 없음, Swagger 인증 정보(`SWAGGER_USERNAME`·`SWAGGER_PASSWORD`) 없음
-- 다음 단계: Notion 원문과 Swagger operation이 짝지어짐
-- 승인: 불필요
-
 ## ④ API Contract 생성
 
-- 입력: 검증된 Notion 원문과 `<feature>.swagger-source.json`
+- 입력: 검증된 Notion 원문(있으면)과 `<feature>.swagger-source.json`
 - Prompt: `prompts/create-contract.md`
 - 산출물: `<feature>.contract.md`, `<feature>.contract.json` (`source.swagger`에 Swagger 출처 기록)
 - 검증: `api-input-contract.md`의 구조와 출처 필드 충족
-- STOP: 명세 값을 추측해야 함, Notion과 Swagger가 다른데 개발자가 기준을 정하지 않음
+- STOP: 명세 값을 추측해야 함, Notion과 Swagger가 다른데 개발자가 기준을 정하지 않음, Swagger만으로 진행하는데 Swagger에 없는 값(접근 역할·응답 필드 필수 여부)을 개발자가 정하지 않음
 - 다음 단계: JSON Contract 생성 완료
 - 승인: 불필요
 

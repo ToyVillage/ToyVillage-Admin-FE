@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// RUNBOOK ③-1: Notion 명세에서 확인한 메서드·경로로 스테이징 Swagger 의 같은 API 를 찾아
+// RUNBOOK ②: Notion 명세(없으면 개발자가 준) 메서드·경로로 스테이징 Swagger 의 같은 API 를 찾아
 // harness/artifacts/api/<feature>.swagger-source.json 에 저장한다. ④ 계약 생성은 Notion 원문과 이 파일을 함께 본다.
 // 필드는 계약과 같은 모양(name·type·required·nullable·constraints…)으로 뽑아 바로 대조할 수 있게 한다.
 // Swagger(springdoc)에 없는 값(접근 역할, 응답 필드 필수 여부, 설명·예시)은 채우지 않는다.
