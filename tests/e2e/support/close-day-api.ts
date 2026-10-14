@@ -1,12 +1,14 @@
 import type { Page, Route } from '@playwright/test'
 
 // 휴무일 관리 화면(목록·수정)이 쓰는 API mock.
-// 대상: GET·POST /close-day, PUT·DELETE /close-day/{id}.
+// 대상: GET·POST /close-day, GET /close-day/date, PUT·DELETE /close-day/{id}.
 // 실제 서버는 호출하지 않는다. 생성·삭제·수정은 mock 목록에 반영해 재조회 결과가 바뀐다.
 
 export const closeDayListPattern = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 export const closeDayItemPattern =
   /^https:\/\/[^/]+\/close-day\/([^/?]+)(?:\?.*)?$/
+export const closeDayByDatePattern =
+  /^https:\/\/[^/]+\/close-day\/date(?:\?.*)?$/
 
 export interface MockCloseDay {
   id: number
@@ -119,6 +121,18 @@ export async function mockCloseDayApi(
     }
 
     await route.fallback()
+  })
+
+  // 영업시간 상세의 날짜별 조회. 나중에 등록한 route 가 먼저 잡으므로 위 `/close-day/{id}` 보다 우선한다.
+  await page.route(closeDayByDatePattern, async (route) => {
+    const date = new URL(route.request().url()).searchParams.get('date') ?? ''
+    await json(
+      route,
+      200,
+      store.filter(
+        (item) => item.startCloseTime <= date && date <= item.endCloseTime,
+      ),
+    )
   })
 }
 

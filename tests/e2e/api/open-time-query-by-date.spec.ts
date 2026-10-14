@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
-const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
+const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\/date)?(?:\?.*)?$/
 
 // 운영안내 화면은 휴무일도 함께 불러온다. 이 스펙의 대상이 아니므로
 // 성공으로 고정해 영업시간 오류만 화면에 남게 한다.

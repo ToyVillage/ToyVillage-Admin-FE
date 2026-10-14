@@ -30,7 +30,7 @@ export async function mockOpenTimeApi(
   let nextId = 1
 
   // 휴무일 관리 화면(뒤로가기·저장 후 이동)과 영업시간 제목 아래 휴무 요약 조회.
-  await page.route(/^https:\/\/[^/]+\/close-day(?:\?.*)?$/, async (route) => {
+  await page.route(/^https:\/\/[^/]+\/close-day(?:\/date)?(?:\?.*)?$/, async (route) => {
     await json(route, 200, [])
   })
 

@@ -3,7 +3,7 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 const reissueApiPath = /^https:\/\/[^/]+\/app\/auth\/reissue(?:\?.*)?$/
 const loginApiPath = /^https:\/\/[^/]+\/app\/auth\/login(?:\?.*)?$/
 const noticeListApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
-const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
+const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\/date)?(?:\?.*)?$/
 const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
 
 const origin = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173'
