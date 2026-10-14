@@ -224,3 +224,76 @@ test('계약 source.swagger 는 선택이고, 있으면 Method·Path 가 계약�
     ],
   )
 })
+
+test('Notion 에 없는 API 는 source.swagger 만으로 계약을 받는다', () => {
+  const contract = JSON.parse(
+    readFileSync(
+      new URL(
+        '../../../harness/api/approvals/task-query.contract.json',
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  )
+  const swagger = {
+    swaggerUrl: 'https://api.example/v3/api-docs',
+    operationId: 'getDetail',
+    method: 'GET',
+    path: '/tasks/{taskId}',
+    checkedAt: '2026-10-14T00:00:00.000Z',
+  }
+  assert.deepEqual(
+    validateApiContract({
+      ...contract,
+      source: { apiIdMatchCount: 0, swagger },
+    }),
+    [],
+  )
+  assert.deepEqual(
+    validateApiContract({ ...contract, source: { apiIdMatchCount: 0 } }),
+    ['source.swagger: Notion 검색 결과가 0건이면 필요'],
+  )
+  assert.deepEqual(
+    validateApiContract({
+      ...contract,
+      source: { apiIdMatchCount: 0, swagger: { ...swagger, path: '/tasks' } },
+    }),
+    ['source.swagger path와 contract path 불일치'],
+  )
+})
+
+test('Notion 과 Swagger 경로가 다르면 계약은 둘 중 하나와 맞아야 한다', () => {
+  const contract = JSON.parse(
+    readFileSync(
+      new URL(
+        '../../../harness/api/approvals/task-query.contract.json',
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  )
+  const notionPath = (path) => ({
+    ...contract.source,
+    databaseValues: { ...contract.source.databaseValues, path },
+    detailValues: { ...contract.source.detailValues, path },
+  })
+  const swagger = {
+    swaggerUrl: 'https://api.example/v3/api-docs',
+    method: 'GET',
+    path: '/tasks/{taskId}',
+    checkedAt: '2026-10-14T00:00:00.000Z',
+  }
+  // 개발자가 Swagger 경로를 택함: Notion 은 /task/{id}, 계약·Swagger 는 /tasks/{id}
+  assert.deepEqual(
+    validateApiContract({
+      ...contract,
+      source: { ...notionPath('/task/{id}'), swagger },
+    }),
+    [],
+  )
+  // Swagger 출처가 없으면 Notion 경로와 맞아야 한다.
+  assert.deepEqual(
+    validateApiContract({ ...contract, source: notionPath('/task/{id}') }),
+    ['source path와 contract path 불일치'],
+  )
+})
