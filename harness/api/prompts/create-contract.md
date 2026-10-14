@@ -4,7 +4,7 @@ API ID로 Notion 데이터베이스를 검색하고, 같은 API의 스테이징 
 
 1. Notion 검색 결과가 정확히 1개면 원문을 `harness/artifacts/api/<feature>.notion-source.md`에 출처와 함께 정리하고, 데이터베이스와 상세 페이지의 API ID, Method, Path, 인증 정보를 비교한다. 누락과 명시적 `없음`을 구분한다.
 2. Notion 검색 결과가 0개면 개발자에게 Method·Path를 받는다. 모르면 STOP한다.
-3. 1 또는 2의 Method·Path로 `yarn harness:api:swagger-source <feature> <METHOD> <path>`를 실행해 Swagger operation을 `<feature>.swagger-source.json`에 저장한다. Swagger에 없으면 STOP한다.
+3. 1 또는 2의 Method·Path로 `yarn harness:api:swagger-source <feature> <METHOD> <path>`를 실행해 Swagger operation을 `<feature>.swagger-source.json`에 저장한다. Notion 경로가 Swagger에 없으면 개발자에게 Swagger에서 같은 API의 Method·Path를 확인받아 다시 실행하고, 그 경로로도 없으면 STOP한다.
 4. Notion이 있으면 Notion과 Swagger를 항목별로 비교한다: Method·Path, path·query 파라미터, 요청 필드, 응답 필드, 타입·enum·nullable, 성공·오류 코드.
    - 같으면 그대로 쓴다.
    - Notion에 빠진 값(타입·enum·필드)은 Swagger 값으로 채우고 contract.md에 `Swagger 보충`으로 표시한다.

@@ -19,9 +19,10 @@
 - 산출물: `harness/artifacts/api/<feature>.notion-source.md`(Notion에 있을 때), `harness/artifacts/api/<feature>.swagger-source.json`
 - 검증:
   - API ID로 Notion을 검색한다. 정확히 일치하는 결과가 1개면 그 Method·Path로, 0개면 개발자가 준 Method·Path로 `yarn harness:api:swagger-source <feature> <METHOD> <path>`를 실행한다.
+  - Notion 경로가 Swagger에 없으면 개발자에게 Swagger에서 같은 API의 Method·Path를 확인받아 다시 실행한다(Notion 경로가 틀린 경우). 계약 경로는 ④에서 개발자가 정한다.
   - Notion 1개 + Swagger 있음 → ③으로. 둘의 Method·Path·파라미터·필드·성공 코드는 ④에서 비교한다.
   - Notion 0개 + Swagger 있음 → Swagger만으로 진행. ③은 건너뛰고, 계약 `source.apiIdMatchCount`는 0이다.
-- STOP: Notion 결과 2개 이상, Notion 0개인데 Method·Path를 모름, Swagger에 같은 Method·Path가 없음, Swagger 인증 정보(`SWAGGER_USERNAME`·`SWAGGER_PASSWORD`) 없음, Notion 접근 권한 없음
+- STOP: Notion 결과 2개 이상, Notion 0개인데 Method·Path를 모름, 개발자가 확인한 Method·Path로도 Swagger operation이 없음, Swagger 인증 정보(`SWAGGER_USERNAME`·`SWAGGER_PASSWORD`) 없음, Notion 접근 권한 없음
 - 다음 단계: Notion 원문(있으면)과 Swagger operation이 짝지어짐
 - 승인: 불필요
 
