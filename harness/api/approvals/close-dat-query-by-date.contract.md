@@ -17,7 +17,7 @@
 
 | API ID | Name | Description | Method | Full Path | Content-Type |
 | --- | --- | --- | --- | --- | --- |
-| `CLOSE_DAT_QUERY_BY_DATE` | 휴관일 날짜별 조회 | 휴관일 날짜별 조회 기능 | `GET` | `/close-day` | `application/json` |
+| `CLOSE_DAT_QUERY_BY_DATE` | 휴관일 날짜별 조회 | 휴관일 날짜별 조회 기능 | `GET` | `/close-day/date` | `application/json` |
 
 ## Authentication and Authorization
 
@@ -47,7 +47,7 @@
 
 ## Request Example
 
-`GET /close-day?date=2026-07-25`
+`GET /close-day/date?date=2026-07-25`
 
 ## Success Responses
 
@@ -86,6 +86,7 @@
 
 ## Notes
 
+- 2026-10-14 스테이징 Swagger·실서버 확인으로 경로를 `/close-day/date`로 고쳤다(#246). `/close-day`는 전체 조회라 `date`를 무시하고 전부 준다. `/close-day/date`는 그 날짜의 휴무만 주고, 없으면 `[]`, `date`가 없으면 500.
 - Notion query parameter 하위 문서의 `/logs`는 2026-07-28 사용자 결정으로
   오타로 처리하고 database endpoint `/close-day`를 사용한다.
 - Notion의 성공 상태 `201`은 사용자 결정으로 `200`으로 동결한다.

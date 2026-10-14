@@ -3,7 +3,7 @@
   "name": "휴관일 날짜별 조회",
   "description": "휴관일 날짜별 조회 기능",
   "method": "GET",
-  "path": "/close-day",
+  "path": "/close-day/date",
   "authentication": {
     "required": true,
     "type": "Bearer",
@@ -292,7 +292,7 @@
     "databaseValues": {
       "apiId": "CLOSE_DAT_QUERY_BY_DATE",
       "method": "GET",
-      "path": "/close-day",
+      "path": "/close-day/date",
       "authentication": {
         "required": true,
         "type": "Bearer",
@@ -305,7 +305,7 @@
     "detailValues": {
       "apiId": "CLOSE_DAT_QUERY_BY_DATE",
       "method": "GET",
-      "path": "/close-day",
+      "path": "/close-day/date",
       "authentication": {
         "required": true,
         "type": "Bearer",

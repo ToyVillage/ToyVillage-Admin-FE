@@ -3,7 +3,7 @@
 ## Mock S1 — 날짜별 정상 조회
 
 - 목적: 상세 route date를 query parameter로 전달하고 휴무 정보를 표시한다.
-- Mock request: `GET /api/close-day?date=2026-07-13`
+- Mock request: `GET /api/close-day/date?date=2026-07-13`
 - Mock response: HTTP 200, 휴무 일정 1건 배열
 - 사용자 동작: `/notices/guide/hours/2026-07-13` 진입
 - 기대 결과: `date=2026-07-13` GET 요청 1회,
@@ -12,7 +12,7 @@
 ## Mock S2 — 빈 결과
 
 - 목적: 휴무 일정이 없는 성공 응답을 오류와 구분한다.
-- Mock request: `GET /api/close-day?date=2026-07-14`
+- Mock request: `GET /api/close-day/date?date=2026-07-14`
 - Mock response: HTTP 200, `[]`
 - 사용자 동작: `/notices/guide/hours/2026-07-14` 진입
 - 기대 결과: 영업시간 입력 폼(`저장하기`) 표시, 휴무 일정 보조 정보 없음
@@ -20,7 +20,7 @@
 ## Mock S3 — 정의되지 않은 HTTP 404
 
 - 목적: Contract에서 제거한 HTTP 404를 빈 결과로 해석하지 않는다.
-- Mock request: `GET /api/close-day?date=2026-07-13`
+- Mock request: `GET /api/close-day/date?date=2026-07-13`
 - Mock response: HTTP 404
 - 사용자 동작: 날짜 상세 화면 진입
 - 기대 결과: 휴무일 조회 실패 alert 표시, 영업시간 입력 폼 미표시
@@ -28,7 +28,7 @@
 ## Mock S4 — 서버 오류
 
 - 목적: 오류를 빈 배열로 숨기지 않는다.
-- Mock request: `GET /api/close-day?date=2026-07-13`
+- Mock request: `GET /api/close-day/date?date=2026-07-13`
 - Mock response: HTTP 500 Contract 오류 body
 - 사용자 동작: 날짜 상세 화면 진입
 - 기대 결과: 휴무일 조회 실패 alert 표시, 영업시간 입력 폼 미표시
@@ -44,7 +44,7 @@
 ## Mock S6 — 잘못된 성공 응답
 
 - 목적: Contract 밖의 응답을 상세 데이터로 사용하지 않는다.
-- Mock request: `GET /api/close-day?date=2026-07-13`
+- Mock request: `GET /api/close-day/date?date=2026-07-13`
 - Mock response: HTTP 200, 필수 필드가 누락된 배열
 - 사용자 동작: 날짜 상세 화면 진입
 - 기대 결과: 조회 실패 alert 표시, 잘못된 휴무 정보와 영업시간 폼 미표시
@@ -70,3 +70,7 @@
 ## 2026-10-13 변경 (#244)
 
 - 화면 용어가 휴관에서 휴무로 바뀌어(2026-09-23) 기대 문구를 `휴무 일정: 정기 휴무`, 휴무일 조회 실패로 고쳤다. S2는 운영시간 수정이 가능해져 `저장하기` 폼 표시를 확인한다. API 동작 변경 없음.
+
+## 2026-10-14 변경 (#246)
+
+- 경로를 `/close-day`에서 `/close-day/date`로 고쳤다. `/close-day`는 전체 조회라 `date`를 무시한다(스테이징 실서버 확인). 시나리오의 요청·기대 결과는 경로만 바뀐다.
