@@ -42,7 +42,10 @@ API ID 검색은 exact match 결과 수를 Contract의 `source.apiIdMatchCount`�
 
 ## Swagger 대조
 
-Notion 명세와 함께 같은 Method·Path의 스테이징 Swagger operation을 본다(`yarn harness:api:swagger-source`). 결과는 `<feature>.swagger-source.json`에 계약과 같은 필드 모양으로 저장된다.
+Notion 명세와 함께 같은 Method·Path의 스테이징 Swagger operation을 본다(`yarn harness:api:swagger-source`, RUNBOOK ②). 결과는 `<feature>.swagger-source.json`에 계약과 같은 필드 모양으로 저장된다.
+
+- Notion에 없는 API는 개발자가 준 Method·Path로 Swagger만 보고 계약을 만든다. `source`는 `apiIdMatchCount: 0`과 `swagger`(method·path 필수)만 둔다. Swagger에 없는 접근 역할·응답 필드 필수 여부는 개발자에게 묻는다.
+- Notion과 Swagger의 경로가 달라 개발자가 Swagger를 택했으면 계약 경로는 `source.swagger.path`와 같아야 하고, `databaseValues.path`에는 Notion 원래 경로를 그대로 둔다.
 
 - 둘이 같으면 그대로 쓴다.
 - Notion에 빠진 값은 Swagger로 채우고 contract.md에 출처를 표시한다.
@@ -159,11 +162,14 @@ databaseValues
 detailValues
 ```
 
-`databaseValues`와 `detailValues`는 최소한 API ID, Method, Path, 인증 정보를 각각 보존한다. validator가 두 값과 Contract를 비교한다.
+`databaseValues`와 `detailValues`는 최소한 API ID, Method, Path, 인증 정보를 각각 보존한다. validator가 두 값과 Contract를 비교한다. 경로는 Notion 경로나 `source.swagger.path` 중 하나와 같으면 통과한다.
+
+Notion에 없는 API는 위 Notion 출처 값 대신 `apiIdMatchCount: 0`과 `source.swagger`를 기록한다.
 
 ## STOP 조건
 
-- API ID 없음, 중복, 검색 결과 없음
+- API ID 없음, 중복
+- Notion 검색 결과가 없는데 Swagger에서도 같은 Method·Path를 찾지 못함
 - Method 또는 Full Path 없음
 - Path에 Query String 포함
 - 데이터베이스와 상세 페이지의 API ID, Method, Path, 인증 정보 불일치
