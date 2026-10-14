@@ -51,10 +51,10 @@ async function routePut(
   })
 }
 
-test('S1: 수정 성공(201) → 기존 file key 재전송, 목록 복귀', async ({ page }) => {
+test('S1: 수정 성공(200) → 기존 file key 재전송, 목록 복귀', async ({ page }) => {
   let putBody: { title?: string; type?: string; files?: unknown } = {}
   await routePut(page, {
-    status: 201,
+    status: 200,
     body: { message: '자료 수정 성공' },
     onBody: (body) => {
       putBody = body as typeof putBody
@@ -119,7 +119,7 @@ test('S5: 새 파일 추가 → 기존 키 + 새 업로드 키 병합 전송(파
     })
   })
   await routePut(page, {
-    status: 201,
+    status: 200,
     body: { message: '자료 수정 성공' },
     onBody: (body) => {
       putBody = body as typeof putBody
@@ -143,7 +143,7 @@ test('S5: 새 파일 추가 → 기존 키 + 새 업로드 키 병합 전송(파
 test('S7: 기존 파일 제거 → 남은 키만 전송', async ({ page }) => {
   let putBody: { files?: unknown } = {}
   await routePut(page, {
-    status: 201,
+    status: 200,
     body: { message: '자료 수정 성공' },
     onBody: (body) => {
       putBody = body as typeof putBody

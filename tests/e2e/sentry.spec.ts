@@ -7,7 +7,7 @@ import { mockTaskApi } from './support/task-api'
 
 const reissueApiPath = /^https:\/\/[^/]+\/app\/auth\/reissue(?:\?.*)?$/
 const noticeListApiPath = /^https:\/\/[^/]+\/notice(?:\?.*)?$/
-const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
+const closeDayApiPath = /^https:\/\/[^/]+\/close-day(?:\/date)?(?:\?.*)?$/
 const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
 const noticeDetailApiPath = /^https:\/\/[^/]+\/notice\/\d+(?:\?.*)?$/
 

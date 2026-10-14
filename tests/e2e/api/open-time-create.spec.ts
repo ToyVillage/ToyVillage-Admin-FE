@@ -7,7 +7,7 @@ const date = '2026-07-13'
 const hoursPath = `/notices/guide/hours/${date}`
 
 test.beforeEach(async ({ page }) => {
-  await page.route(/^https:\/\/[^/]+\/close-day(?:\?.*)?$/, (route) =>
+  await page.route(/^https:\/\/[^/]+\/close-day(?:\/date)?(?:\?.*)?$/, (route) =>
     json(route, 200, []),
   )
   await page.route(byDatePath, (route) =>

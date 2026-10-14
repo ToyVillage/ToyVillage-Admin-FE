@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 
-const closeScheduleApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
+const closeScheduleApiPath = /^https:\/\/[^/]+\/close-day(?:\/date)?(?:\?.*)?$/
 const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
 
 async function mockOperatingHours(page: Page, date: string) {

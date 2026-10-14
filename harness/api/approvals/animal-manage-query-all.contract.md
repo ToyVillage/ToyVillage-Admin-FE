@@ -56,6 +56,7 @@
 - **200** — Spring Pageable 형식의 개체 목록
   - `content`: array\<object\> — `animalManageId`(integer), `animalName`(string), `animalGender`(enum: MAN·WOMAN·UNKNOWN), `birthYear`(integer)
   - `pageable`: object — `pageNumber`, `pageSize`, `offset`(integer), `paged`, `unpaged`(boolean)
+  - `sort`: object — `empty`, `sorted`, `unsorted`(boolean). Spring Page 정렬 정보로 화면은 쓰지 않는다(스테이징 Swagger 기준, #246)
   - `totalPages`, `totalElements`, `size`, `number`, `numberOfElements`: integer
   - `first`, `last`, `empty`: boolean
 

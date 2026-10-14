@@ -2,7 +2,7 @@
 
 ## 승인 기준
 
-- 요청은 `GET /close-day?date=YYYY-MM-DD`이다.
+- 요청은 `GET /close-day/date?date=YYYY-MM-DD`이다(2026-10-14 경로 수정, #246).
 - `/logs`는 사용자 결정으로 Notion 오타로 처리한다.
 - 성공 status는 `200`, 결과 없음은 `[]`이다.
 - HTTP `404`는 Contract에 정의하지 않으며, 반환되면 빈 결과가 아닌 조회
@@ -32,7 +32,7 @@
 - `CloseDateQueryByDateRequest`를 `{ date: string }`으로 작성한다.
 - 응답과 오류 body는 기존 전체 조회의 item/error 구조를 재사용하되 API
   이름이 드러나는 별도 response alias를 제공한다.
-- `getCloseSchedulesByDate({ date })`는 공통 Axios로 `/close-day`를
+- `getCloseSchedulesByDate({ date })`는 공통 Axios로 `/close-day/date`를
   조회하고 Axios `params`에 `date`만 전달한다.
 - request date는 HTTP 호출 전에 실제 달력 날짜의 `YYYY-MM-DD`인지
   검증한다.

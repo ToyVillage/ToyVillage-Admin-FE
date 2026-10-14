@@ -65,7 +65,7 @@ export async function mockDocumentApi(
   page: Page,
   {
     documents = createMockDocuments(),
-    updateStatus = 201,
+    updateStatus = 200,
     deleteStatus = 200,
   }: DocumentApiOptions = {},
 ): Promise<DocumentApiHandle> {
