@@ -191,14 +191,15 @@ test.describe('개인정보', () => {
     await page.goto(`${sentryBaseURL}/tasks`)
     await expect(page.getByTestId('task-row').first()).toBeVisible()
     // 직원 이름이 라벨에 들어간 버튼을 누른 뒤 에러를 낸다.
+    // 라벨에 `"]` 가 섞여도(파일 이름 등) 값이 남지 않아야 한다.
     await page.evaluate(() => {
       const button = document.createElement('button')
-      button.setAttribute('aria-label', '홍길동 삭제')
+      button.setAttribute('aria-label', '문서"]홍길동 삭제')
       button.title = '홍길동'
       button.textContent = '삭제'
       document.body.append(button)
     })
-    await page.getByRole('button', { name: '홍길동 삭제' }).click()
+    await page.getByRole('button', { name: '문서"]홍길동 삭제' }).click()
     await page.evaluate(() => {
       setTimeout(() => {
         throw new Error('라벨 확인용 오류')
