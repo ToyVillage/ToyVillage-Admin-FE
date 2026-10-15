@@ -37,6 +37,19 @@ export function initSentry(): void {
         maskAllText: true,
         maskAllInputs: true,
         blockAllMedia: true,
+        // 기본값(title·placeholder·aria-label)에 이미지 설명 alt 를 더한다.
+        maskAttributes: ['title', 'placeholder', 'aria-label', 'alt'],
+        // 녹화 안의 클릭 기록도 아래 beforeBreadcrumb 와 같이 라벨 값을 지운다.
+        beforeAddRecordingEvent(event) {
+          if (event.data.tag === 'breadcrumb') {
+            const breadcrumb = event.data.payload
+            if (breadcrumb.category.startsWith('ui.') && breadcrumb.message) {
+              breadcrumb.message = stripLabels(breadcrumb.message)
+            }
+          }
+
+          return event
+        },
       }),
     ],
     // 직원 수가 적어 샘플링하면 데이터가 거의 안 쌓인다. 전부 기록한다.
@@ -46,6 +59,10 @@ export function initSentry(): void {
     replaysOnErrorSampleRate: 1,
     ignoreErrors: ['ResizeObserver loop'],
     beforeBreadcrumb(breadcrumb) {
+      if (breadcrumb.category?.startsWith('ui.') && breadcrumb.message) {
+        breadcrumb.message = stripLabels(breadcrumb.message)
+      }
+
       // 이동·요청 기록의 주소에도 검색어가 남지 않게 한다.
       const data = breadcrumb.data
       if (data) {
@@ -75,6 +92,12 @@ export function initSentry(): void {
       return event
     },
   })
+}
+
+// 클릭 기록은 누른 요소를 `button[aria-label="홍길동 삭제"]`처럼 남긴다.
+// 라벨에 직원·파일 이름이 들어가므로 aria-label·title·alt 값은 지우고 속성 이름만 남긴다.
+function stripLabels(message: string): string {
+  return message.replace(/\[(aria-label|title|alt)="[\s\S]*?"\]/g, '[$1]')
 }
 
 // 목록 화면의 검색어·필터에 직원 이름이 섞일 수 있어 쿼리스트링을 뗀다.
