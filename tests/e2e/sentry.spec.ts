@@ -19,6 +19,7 @@ interface SentryEvent {
   exception?: { values?: { type?: string; value?: string }[] }
   tags?: Record<string, unknown>
   fingerprint?: string[]
+  breadcrumbs?: { category?: string; message?: string }[]
 }
 
 function session(tokens: Record<string, string>) {
@@ -177,6 +178,42 @@ test.describe('강제 로그아웃', () => {
       'session.status': 401,
       'api.path': '/notice',
     })
+  })
+})
+
+test.describe('개인정보', () => {
+  test.use({ storageState: session({ accessToken: 'a1' }) })
+
+  test('클릭 기록에 버튼 라벨 값을 보내지 않는다', async ({ page }) => {
+    const events = captureSentryEvents(page)
+    await mockTaskApi(page)
+
+    await page.goto(`${sentryBaseURL}/tasks`)
+    await expect(page.getByTestId('task-row').first()).toBeVisible()
+    // 직원 이름이 라벨에 들어간 버튼을 누른 뒤 에러를 낸다.
+    await page.evaluate(() => {
+      const button = document.createElement('button')
+      button.setAttribute('aria-label', '홍길동 삭제')
+      button.title = '홍길동'
+      button.textContent = '삭제'
+      document.body.append(button)
+    })
+    await page.getByRole('button', { name: '홍길동 삭제' }).click()
+    await page.evaluate(() => {
+      setTimeout(() => {
+        throw new Error('라벨 확인용 오류')
+      })
+    })
+
+    await expect
+      .poll(() => findException(events, '라벨 확인용 오류'))
+      .toHaveLength(1)
+    const [event] = findException(events, '라벨 확인용 오류')
+    const click = event.breadcrumbs?.findLast(
+      (breadcrumb) => breadcrumb.category === 'ui.click',
+    )
+    expect(click?.message).toContain('button[aria-label][title]')
+    expect(JSON.stringify(event)).not.toContain('홍길동')
   })
 })
 
