@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
@@ -41,6 +41,15 @@ interface PendingDelete {
   id: string
 }
 
+// 다른 화면에서 이동해 오며 넘겨받는 결과 알림.
+interface WorkLogListLocationState {
+  toast?: 'form-save-success'
+}
+
+const toastMessageByKey = {
+  'form-save-success': '양식 저장에 성공했습니다',
+} as const
+
 interface ListParams {
   tab: WorkLogTab
   date: string
@@ -58,6 +67,19 @@ export function WorkLogListPage() {
   const [openKebabId, setOpenKebabId] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  // 양식 저장 결과는 이동 state 로 받는다. 닫을 때 state 를 비워 새로고침해도 다시 뜨지 않게 한다.
+  const stateToast = (location.state as WorkLogListLocationState | null)?.toast
+  const stateToastMessage = stateToast ? toastMessageByKey[stateToast] : null
+
+  const dismissToast = useCallback(() => {
+    setToastMessage(null)
+    if (stateToast) {
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      })
+    }
+  }, [location.pathname, location.search, navigate, stateToast])
 
   // 알 수 없는 탭 값은 기본 탭으로 본다(spec).
   const tab: WorkLogTab = searchParams.get('tab') === 'forms' ? 'forms' : 'logs'
@@ -261,6 +283,11 @@ export function WorkLogListPage() {
                   state: { listSearch: location.search },
                 })
               }
+              onEdit={(id) =>
+                navigate(`/work-logs/forms/${id}/edit`, {
+                  state: { listSearch: location.search },
+                })
+              }
               onDelete={handleRequestDelete}
               openKebabId={openKebabId}
               onOpenKebabChange={setOpenKebabId}
@@ -279,11 +306,11 @@ export function WorkLogListPage() {
         />
       )}
 
-      {toastMessage && (
+      {(toastMessage ?? stateToastMessage) && (
         <Toast
           variant="success"
-          message={toastMessage}
-          onDismiss={() => setToastMessage(null)}
+          message={toastMessage ?? stateToastMessage ?? ''}
+          onDismiss={dismissToast}
         />
       )}
     </Page>

@@ -12,6 +12,7 @@ import type { WorkLogForm } from '../model/types'
 interface WorkLogFormTableProps {
   forms: WorkLogForm[]
   onRowClick: (id: string) => void
+  onEdit: (id: string) => void
   onDelete: (id: string) => void
   openKebabId: string | null
   onOpenKebabChange: (id: string | null) => void
@@ -38,6 +39,7 @@ const emptyColumns: DataTableColumn[] = [
 export function WorkLogFormTable({
   forms,
   onRowClick,
+  onEdit,
   onDelete,
   openKebabId,
   onOpenKebabChange,
@@ -70,6 +72,7 @@ export function WorkLogFormTable({
                 onOpenChange={(open) => onOpenKebabChange(open ? row.id : null)}
                 ariaLabel={`${String(row.name)} 관리 메뉴`}
                 items={[
+                  { label: '수정', onSelect: () => onEdit(row.id) },
                   {
                     label: '삭제',
                     tone: 'danger',
