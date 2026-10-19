@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import {
   createBrowserRouter,
   Navigate,
@@ -6,61 +7,6 @@ import {
   type RouteObject,
 } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
-import { DashboardPage } from '@/pages/dashboard'
-import { LoginPage } from '@/pages/login'
-import {
-  CreateNoticePage,
-  EditNoticePage,
-  NoticeDetailPage,
-  NoticeListPage,
-} from '@/pages/notices/notice'
-import {
-  CreateResourcePage,
-  ResourceDetailPage,
-  ResourceListPage,
-  ResourceViewPage,
-} from '@/pages/notices/resources'
-import {
-  CloseScheduleDetailPage,
-  CreateCloseSchedulePage,
-  EditCloseSchedulePage,
-  NoticeGuidePage,
-  OperatingHoursPage,
-} from '@/pages/notices/guide'
-import {
-  CreateReservationPage,
-  NoticeReservationsPage,
-  ReservationEditPage,
-  ReservationViewPage,
-} from '@/pages/notices/reservations'
-import {
-  CreateTaskPage,
-  EditTaskPage,
-  TaskDetailPage,
-  TaskListPage,
-} from '@/pages/tasks'
-import { TaskReportDetailPage, TaskReportListPage } from '@/pages/task-reports'
-import { EditFeedPage, FeedDetailPage, FeedListPage } from '@/pages/feeds'
-import {
-  CreateWorkLogFormPage,
-  WorkLogDetailPage,
-  WorkLogFormDetailPage,
-  WorkLogListPage,
-} from '@/pages/work-logs'
-import {
-  CreateIndividualPage,
-  CreateSpeciesPage,
-  EditIndividualPage,
-  EditObservationPage,
-  EditSpeciesPage,
-  IndividualDetailPage,
-  ObservationDetailPage,
-  ObservationRedirectPage,
-  SpeciesDetailPage,
-  SpeciesListPage,
-} from '@/pages/species'
-import { TeamSettingsPage } from '@/pages/settings/teams'
-import { StaffAccountsPage } from '@/pages/settings/accounts'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
 import { RouteErrorPage } from '@/app/RouteErrorPage'
@@ -87,10 +33,19 @@ function AppLayout() {
   )
 }
 
+// 화면마다 청크를 나눠 그 경로에 처음 들어갈 때 받는다.
+// 배럴(`@/pages/tasks`)이 아니라 페이지 파일을 가리켜야 화면 단위로 나뉜다.
+function lazyPage<Name extends string>(
+  load: () => Promise<Record<NoInfer<Name>, ComponentType>>,
+  name: Name,
+): RouteObject['lazy'] {
+  return async () => ({ Component: (await load())[name] })
+}
+
 const routes: RouteObject[] = [
   {
     path: '/login',
-    element: <LoginPage />,
+    lazy: lazyPage(() => import('@/pages/login/LoginPage'), 'LoginPage'),
     errorElement: <RouteErrorPage />,
   },
   {
@@ -101,113 +56,319 @@ const routes: RouteObject[] = [
       {
         element: <AppLayout />,
         children: [
-          { path: '/', element: <DashboardPage /> },
+          {
+            path: '/',
+            lazy: lazyPage(
+              () => import('@/pages/dashboard/DashboardPage'),
+              'DashboardPage',
+            ),
+          },
           {
             path: '/notices',
             element: <Navigate to="/notices/list" replace />,
             handle: redirectOnlyRouteHandle,
           },
-          { path: '/notices/list', element: <NoticeListPage /> },
-          { path: '/notices/list/create', element: <CreateNoticePage /> },
-          { path: '/notices/list/:id', element: <NoticeDetailPage /> },
-          { path: '/notices/list/:id/edit', element: <EditNoticePage /> },
-          { path: '/notices/guide', element: <NoticeGuidePage /> },
+          {
+            path: '/notices/list',
+            lazy: lazyPage(
+              () => import('@/pages/notices/notice/NoticeListPage'),
+              'NoticeListPage',
+            ),
+          },
+          {
+            path: '/notices/list/create',
+            lazy: lazyPage(
+              () => import('@/pages/notices/notice/CreateNoticePage'),
+              'CreateNoticePage',
+            ),
+          },
+          {
+            path: '/notices/list/:id',
+            lazy: lazyPage(
+              () => import('@/pages/notices/notice/NoticeDetailPage'),
+              'NoticeDetailPage',
+            ),
+          },
+          {
+            path: '/notices/list/:id/edit',
+            lazy: lazyPage(
+              () => import('@/pages/notices/notice/EditNoticePage'),
+              'EditNoticePage',
+            ),
+          },
+          {
+            path: '/notices/guide',
+            lazy: lazyPage(
+              () => import('@/pages/notices/guide/NoticeGuidePage'),
+              'NoticeGuidePage',
+            ),
+          },
           {
             path: '/notices/guide/create',
-            element: <CreateCloseSchedulePage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/guide/CreateCloseSchedulePage'),
+              'CreateCloseSchedulePage',
+            ),
           },
           {
             path: '/notices/guide/:id',
-            element: <CloseScheduleDetailPage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/guide/CloseScheduleDetailPage'),
+              'CloseScheduleDetailPage',
+            ),
           },
           {
             path: '/notices/guide/:id/edit',
-            element: <EditCloseSchedulePage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/guide/EditCloseSchedulePage'),
+              'EditCloseSchedulePage',
+            ),
           },
           {
             path: '/notices/guide/hours/:date',
-            element: <OperatingHoursPage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/guide/OperatingHoursPage'),
+              'OperatingHoursPage',
+            ),
           },
-          { path: '/notices/resources', element: <ResourceListPage /> },
+          {
+            path: '/notices/resources',
+            lazy: lazyPage(
+              () => import('@/pages/notices/resources/ResourceListPage'),
+              'ResourceListPage',
+            ),
+          },
           {
             path: '/notices/resources/create',
-            element: <CreateResourcePage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/resources/CreateResourcePage'),
+              'CreateResourcePage',
+            ),
           },
           {
             path: '/notices/resources/:id',
-            element: <ResourceViewPage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/resources/ResourceViewPage'),
+              'ResourceViewPage',
+            ),
           },
           {
             path: '/notices/resources/:id/edit',
-            element: <ResourceDetailPage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/resources/ResourceDetailPage'),
+              'ResourceDetailPage',
+            ),
           },
           {
             path: '/notices/reservations',
-            element: <NoticeReservationsPage />,
+            lazy: lazyPage(
+              () =>
+                import('@/pages/notices/reservations/NoticeReservationsPage'),
+              'NoticeReservationsPage',
+            ),
           },
           {
             path: '/notices/reservations/create',
-            element: <CreateReservationPage />,
+            lazy: lazyPage(
+              () =>
+                import('@/pages/notices/reservations/CreateReservationPage'),
+              'CreateReservationPage',
+            ),
           },
           {
             path: '/notices/reservations/:id',
-            element: <ReservationViewPage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/reservations/ReservationViewPage'),
+              'ReservationViewPage',
+            ),
           },
           {
             path: '/notices/reservations/:id/edit',
-            element: <ReservationEditPage />,
+            lazy: lazyPage(
+              () => import('@/pages/notices/reservations/ReservationEditPage'),
+              'ReservationEditPage',
+            ),
           },
-          { path: '/tasks', element: <TaskListPage /> },
-          { path: '/tasks/create', element: <CreateTaskPage /> },
-          { path: '/tasks/:id', element: <TaskDetailPage /> },
-          { path: '/tasks/:id/edit', element: <EditTaskPage /> },
-          { path: '/task-reports', element: <TaskReportListPage /> },
-          { path: '/task-reports/:id', element: <TaskReportDetailPage /> },
-          { path: '/feeds', element: <FeedListPage /> },
-          { path: '/feeds/:id', element: <FeedDetailPage /> },
-          { path: '/feeds/:id/edit', element: <EditFeedPage /> },
-          { path: '/work-logs', element: <WorkLogListPage /> },
+          {
+            path: '/tasks',
+            lazy: lazyPage(
+              () => import('@/pages/tasks/TaskListPage'),
+              'TaskListPage',
+            ),
+          },
+          {
+            path: '/tasks/create',
+            lazy: lazyPage(
+              () => import('@/pages/tasks/CreateTaskPage'),
+              'CreateTaskPage',
+            ),
+          },
+          {
+            path: '/tasks/:id',
+            lazy: lazyPage(
+              () => import('@/pages/tasks/TaskDetailPage'),
+              'TaskDetailPage',
+            ),
+          },
+          {
+            path: '/tasks/:id/edit',
+            lazy: lazyPage(
+              () => import('@/pages/tasks/EditTaskPage'),
+              'EditTaskPage',
+            ),
+          },
+          {
+            path: '/task-reports',
+            lazy: lazyPage(
+              () => import('@/pages/task-reports/TaskReportListPage'),
+              'TaskReportListPage',
+            ),
+          },
+          {
+            path: '/task-reports/:id',
+            lazy: lazyPage(
+              () => import('@/pages/task-reports/TaskReportDetailPage'),
+              'TaskReportDetailPage',
+            ),
+          },
+          {
+            path: '/feeds',
+            lazy: lazyPage(
+              () => import('@/pages/feeds/FeedListPage'),
+              'FeedListPage',
+            ),
+          },
+          {
+            path: '/feeds/:id',
+            lazy: lazyPage(
+              () => import('@/pages/feeds/FeedDetailPage'),
+              'FeedDetailPage',
+            ),
+          },
+          {
+            path: '/feeds/:id/edit',
+            lazy: lazyPage(
+              () => import('@/pages/feeds/EditFeedPage'),
+              'EditFeedPage',
+            ),
+          },
+          {
+            path: '/work-logs',
+            lazy: lazyPage(
+              () => import('@/pages/work-logs/WorkLogListPage'),
+              'WorkLogListPage',
+            ),
+          },
           // `create` 가 `:id` 로 잡히지 않도록 구체 경로를 먼저 둔다.
           // splat 으로 두어 1단계와 2단계(`/zones`)가 같은 화면을 다시 마운트하지 않게 한다.
           {
             path: '/work-logs/forms/create/*',
-            element: <CreateWorkLogFormPage />,
+            lazy: lazyPage(
+              () => import('@/pages/work-logs/CreateWorkLogFormPage'),
+              'CreateWorkLogFormPage',
+            ),
           },
-          { path: '/work-logs/forms/:id', element: <WorkLogFormDetailPage /> },
-          { path: '/work-logs/:id', element: <WorkLogDetailPage /> },
-          { path: '/species', element: <SpeciesListPage /> },
+          {
+            path: '/work-logs/forms/:id',
+            lazy: lazyPage(
+              () => import('@/pages/work-logs/WorkLogFormDetailPage'),
+              'WorkLogFormDetailPage',
+            ),
+          },
+          {
+            path: '/work-logs/:id',
+            lazy: lazyPage(
+              () => import('@/pages/work-logs/WorkLogDetailPage'),
+              'WorkLogDetailPage',
+            ),
+          },
+          {
+            path: '/species',
+            lazy: lazyPage(
+              () => import('@/pages/species/SpeciesListPage'),
+              'SpeciesListPage',
+            ),
+          },
           // 정적 경로 `create` 가 `:speciesId` 보다 우선한다(React Router 경로 순위).
-          { path: '/species/create', element: <CreateSpeciesPage /> },
-          { path: '/species/:speciesId', element: <SpeciesDetailPage /> },
-          { path: '/species/:speciesId/edit', element: <EditSpeciesPage /> },
+          {
+            path: '/species/create',
+            lazy: lazyPage(
+              () => import('@/pages/species/CreateSpeciesPage'),
+              'CreateSpeciesPage',
+            ),
+          },
+          {
+            path: '/species/:speciesId',
+            lazy: lazyPage(
+              () => import('@/pages/species/SpeciesDetailPage'),
+              'SpeciesDetailPage',
+            ),
+          },
+          {
+            path: '/species/:speciesId/edit',
+            lazy: lazyPage(
+              () => import('@/pages/species/EditSpeciesPage'),
+              'EditSpeciesPage',
+            ),
+          },
           {
             path: '/species/:speciesId/individuals/create',
-            element: <CreateIndividualPage />,
+            lazy: lazyPage(
+              () => import('@/pages/species/CreateIndividualPage'),
+              'CreateIndividualPage',
+            ),
           },
           {
             path: '/species/:speciesId/individuals/:individualId/edit',
-            element: <EditIndividualPage />,
+            lazy: lazyPage(
+              () => import('@/pages/species/EditIndividualPage'),
+              'EditIndividualPage',
+            ),
           },
           {
             path: '/species/:speciesId/individuals/:individualId',
-            element: <IndividualDetailPage />,
+            lazy: lazyPage(
+              () => import('@/pages/species/IndividualDetailPage'),
+              'IndividualDetailPage',
+            ),
           },
           {
             path: '/species/:speciesId/individuals/:individualId/observations/:observationId',
-            element: <ObservationDetailPage />,
+            lazy: lazyPage(
+              () => import('@/pages/species/ObservationDetailPage'),
+              'ObservationDetailPage',
+            ),
           },
           {
             path: '/species/:speciesId/individuals/:individualId/observations/:observationId/edit',
-            element: <EditObservationPage />,
+            lazy: lazyPage(
+              () => import('@/pages/species/EditObservationPage'),
+              'EditObservationPage',
+            ),
           },
           // 종 ID 를 모르는 곳(대시보드)에서 여는 관찰 경로. 개체 조회 후 위 상세 경로로 옮긴다.
           {
             path: '/individuals/:individualId/observations/:observationId',
-            element: <ObservationRedirectPage />,
+            lazy: lazyPage(
+              () => import('@/pages/species/ObservationRedirectPage'),
+              'ObservationRedirectPage',
+            ),
             handle: redirectOnlyRouteHandle,
           },
-          { path: '/settings/teams', element: <TeamSettingsPage /> },
-          { path: '/settings/accounts', element: <StaffAccountsPage /> },
+          {
+            path: '/settings/teams',
+            lazy: lazyPage(
+              () => import('@/pages/settings/teams/TeamSettingsPage'),
+              'TeamSettingsPage',
+            ),
+          },
+          {
+            path: '/settings/accounts',
+            lazy: lazyPage(
+              () => import('@/pages/settings/accounts/StaffAccountsPage'),
+              'StaffAccountsPage',
+            ),
+          },
           // 계정 생성은 목록 화면의 모달로 옮겼다. 옛 주소는 목록으로 보낸다.
           {
             path: '/settings/accounts/create',
@@ -225,8 +386,15 @@ const routes: RouteObject[] = [
 const sentryCreateBrowserRouter =
   Sentry.wrapCreateBrowserRouterV7(createBrowserRouter)
 
+// 청크는 수십 ms 안에 오고 조회 대기는 화면별 스켈레톤이 보여 주므로 따로 로딩 UI를 두지 않는다.
+// 다른 화면으로 갈 때는 청크가 올 때까지 이전 화면이 남고, 첫 진입에서는 빈 화면이다.
+// 빈 fallback 을 명시해 두지 않으면 React Router 가 HydrateFallback 이 없다고 경고한다.
 const router = sentryCreateBrowserRouter([
-  { element: <RootLayout />, children: routes },
+  {
+    element: <RootLayout />,
+    hydrateFallbackElement: <></>,
+    children: routes,
+  },
 ])
 
 // Data router를 사용해 생성 화면의 이탈 시도를 일관되게 차단한다.
