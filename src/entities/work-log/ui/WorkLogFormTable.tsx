@@ -25,21 +25,23 @@ interface WorkLogFormTableProps {
 
 // Figma `479:14491` 의 열 구성. `항목`(600~760) 열은 헤더도 셀도 비어 있는
 // 미사용 열이라 `양식` 열 760 에 합쳐 구현한다(spec 비고).
-// `양식` 열은 폭을 고정하지 않고 남는 폭을 채운다. 1320 에서는 Figma 대로 760 이 되고,
-// 화면이 좁아지면 이 열만 줄어 케밥이 표 밖으로 밀려나지 않는다.
+// `양식` 열은 폭을 고정하지 않고 남는 폭을 채운다. 화면이 좁아지면 이 열만 줄어
+// 케밥이 표 밖으로 밀려나지 않는다.
+// 날짜는 글자 폭이 일정해 Figma 의 280 대신 180 으로 줄이고, 그만큼 작성자(로그인 아이디)에
+// 준다(2026-10-19 사용자 결정). 빈 상태는 케밥 열(80)이 없어 날짜가 260 이다.
 const emptyColumns: DataTableColumn[] = [
   { key: 'name', header: '양식', render: renderNameCell },
   {
     key: 'authorName',
     header: '작성자',
-    width: 200,
+    width: 300,
     paddingX: 24,
     render: renderAuthorCell,
   },
   {
     key: 'date',
     header: '날짜',
-    width: 360,
+    width: 260,
     paddingX: 24,
     render: renderDateCell,
   },
@@ -64,14 +66,14 @@ export function WorkLogFormTable({
           {
             key: 'authorName',
             header: '작성자',
-            width: 200,
+            width: 300,
             paddingX: 24,
             render: renderAuthorCell,
           },
           {
             key: 'date',
             header: '날짜',
-            width: 280,
+            width: 180,
             paddingX: 24,
             render: renderDateCell,
           },
