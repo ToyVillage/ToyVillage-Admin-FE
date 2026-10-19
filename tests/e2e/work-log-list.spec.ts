@@ -164,6 +164,55 @@ test('S10-1: 양식 목록에 작성자가 보인다', async ({ page }) => {
   await expect(formRows(page).first()).toContainText('관리자')
 })
 
+test('S10-2: 긴 작성자는 날짜 열을 침범하지 않는다', async ({
+  page,
+  workLogApi,
+}) => {
+  const longWriter = 'scenario.manager.with.a.very.long.login.id'
+  workLogApi.templates[0].writer = longWriter
+  await page.goto('/work-logs?tab=forms')
+
+  const row = formRows(page).first()
+  const author = row.getByText(longWriter)
+  await expect(author).toBeVisible()
+  const date = row.getByText(/^\d{4}\.\d{2}\.\d{2}$/)
+
+  const authorBox = await author.boundingBox()
+  const dateBox = await date.boundingBox()
+  expect(authorBox && dateBox).toBeTruthy()
+  // 말줄임돼 작성자 글자가 날짜 앞에서 끝난다.
+  expect(authorBox!.x + authorBox!.width).toBeLessThanOrEqual(dateBox!.x)
+  await expect(author).toHaveCSS('text-overflow', 'ellipsis')
+})
+
+test('S10-3: 화면이 좁아도 케밥이 표 안에 있고 가로 스크롤이 없다', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1024, height: 900 })
+
+  for (const [tab, rows] of [
+    ['forms', formRows(page)],
+    ['logs', logRows(page)],
+  ] as const) {
+    await page.goto(`/work-logs?tab=${tab}`)
+    const row = rows.first()
+    await expect(row).toBeVisible()
+
+    const rowBox = await row.boundingBox()
+    const kebabBox = await kebab(row).boundingBox()
+    expect(rowBox && kebabBox, tab).toBeTruthy()
+    expect(kebabBox!.x + kebabBox!.width, tab).toBeLessThanOrEqual(
+      rowBox!.x + rowBox!.width,
+    )
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      ),
+      tab,
+    ).toBeLessThanOrEqual(0)
+  }
+})
+
 test('S11: 양식 생성하기 이동', async ({ page }) => {
   await page.goto('/work-logs')
   await page.getByRole('link', { name: '양식 생성하기' }).click()
