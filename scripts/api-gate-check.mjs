@@ -7,6 +7,7 @@ import {
   apiPaths,
   parseOption,
   parseTaskSpec,
+  readApprovers,
   readJson,
   repositoryRoot,
   sha256File,
@@ -36,10 +37,12 @@ export function checkApiGate({
   let approval
   let spec
   let contract
+  let approvers
   try {
     approval = readJson(paths.approval)
     spec = parseTaskSpec(paths.spec)
     contract = readJson(paths.approvedContractJson)
+    approvers = readApprovers(root)
   } catch (error) {
     return [error.message]
   }
@@ -47,6 +50,11 @@ export function checkApiGate({
   if (approval.feature !== feature) errors.push('승인 feature 불일치')
   if (!approval.approvedBy || !approval.approvedAt)
     errors.push('승인자 또는 승인 시각 누락')
+  for (const key of ['approvedBy', 'testApprovedBy', 'realTestApprovedBy']) {
+    if (approval[key] && !approvers.includes(approval[key])) {
+      errors.push(`승인자 목록에 없는 ${key}: ${approval[key]}`)
+    }
+  }
   if (spec.feature !== feature) errors.push('task spec feature 불일치')
   if (
     !spec.apiId ||
@@ -191,7 +199,7 @@ function main() {
         )
       }
       console.error(
-        `[api-gate] ${failures.length}개 기능의 승인 기록이 현재 파일과 다름 — 테스트만 바뀌었으면 approve-api --freeze, 명세·계약·시나리오가 바뀌었으면 재승인 후 --freeze`,
+        `[api-gate] ${failures.length}개 기능의 승인 기록이 현재 파일과 다름 — yarn harness:api:changes <feature> 로 승인 이후 바뀐 부분을 확인하고, 테스트만 바뀌었으면 approve-api --freeze, 명세·계약·시나리오가 바뀌었으면 재승인`,
       )
       process.exit(1)
     }
@@ -205,7 +213,9 @@ function main() {
     requireRealTest: args.includes('--require-real-test'),
   })
   if (errors.length > 0) {
-    console.error(`[api-gate] invalid\n- ${errors.join('\n- ')}`)
+    console.error(
+      `[api-gate] invalid\n- ${errors.join('\n- ')}\n바뀐 부분 확인: yarn harness:api:changes ${feature}`,
+    )
     process.exit(1)
   }
   console.log(`[api-gate] valid: ${feature}`)
