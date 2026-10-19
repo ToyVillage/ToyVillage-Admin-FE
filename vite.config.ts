@@ -26,6 +26,32 @@ export default defineConfig({
   ],
   build: {
     sourcemap: sentryAuthToken ? 'hidden' : false,
+    // 첫 화면에 쓰는 라이브러리를 화면 코드와 다른 청크로 뗀다.
+    // 화면 코드만 바뀐 배포에서는 라이브러리 청크 이름(해시)이 그대로라 다시 받지 않는다.
+    // 지연 로딩되는 화면에서만 쓰는 라이브러리(pdfjs 등)는 그 화면 청크에 남긴다.
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: 'react',
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom)[\\/]/,
+              tags: ['$initial'],
+            },
+            {
+              name: 'sentry',
+              test: /[\\/]node_modules[\\/]@sentry[\\/]/,
+              tags: ['$initial'],
+            },
+            {
+              name: 'vendor',
+              test: /[\\/]node_modules[\\/]/,
+              tags: ['$initial'],
+            },
+          ],
+        },
+      },
+    },
   },
   resolve: {
     alias: {
