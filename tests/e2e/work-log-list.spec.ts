@@ -142,15 +142,75 @@ test('S9: 삭제 취소', async ({ page }) => {
   await expect(page.getByRole('button', { name: '3 페이지' })).toBeVisible()
 })
 
-// 업무일지 양식은 수정 기능이 없다(명세: 삭제 후 새로 생성). 케밥에는 삭제만 있다.
-test('S10: 양식 관리 케밥에는 수정이 없다', async ({ page }) => {
+// 양식 수정 화면은 양식 관리 케밥의 `수정`으로만 들어간다(#255).
+test('S10: 양식 관리 케밥의 수정으로 수정 화면에 들어간다', async ({
+  page,
+}) => {
   await page.goto('/work-logs?tab=forms')
 
   await kebab(formRows(page).first()).click()
 
   const menu = page.getByRole('menu')
+  await expect(menu.getByRole('menuitem')).toHaveCount(2)
   await expect(menu.getByRole('menuitem', { name: '삭제' })).toBeVisible()
-  await expect(menu.getByRole('menuitem', { name: '수정' })).toHaveCount(0)
+  await menu.getByRole('menuitem', { name: '수정' }).click()
+
+  await expect(page).toHaveURL(/\/work-logs\/forms\/1\/edit$/)
+})
+
+test('S10-1: 양식 목록에 작성자가 보인다', async ({ page }) => {
+  await page.goto('/work-logs?tab=forms')
+
+  await expect(formRows(page).first()).toContainText('관리자')
+})
+
+test('S10-2: 긴 작성자는 날짜 열을 침범하지 않는다', async ({
+  page,
+  workLogApi,
+}) => {
+  const longWriter = 'scenario.manager.with.a.very.long.login.id'
+  workLogApi.templates[0].writer = longWriter
+  await page.goto('/work-logs?tab=forms')
+
+  const row = formRows(page).first()
+  const author = row.getByText(longWriter)
+  await expect(author).toBeVisible()
+  const date = row.getByText(/^\d{4}\.\d{2}\.\d{2}$/)
+
+  const authorBox = await author.boundingBox()
+  const dateBox = await date.boundingBox()
+  expect(authorBox && dateBox).toBeTruthy()
+  // 말줄임돼 작성자 글자가 날짜 앞에서 끝난다.
+  expect(authorBox!.x + authorBox!.width).toBeLessThanOrEqual(dateBox!.x)
+  await expect(author).toHaveCSS('text-overflow', 'ellipsis')
+})
+
+test('S10-3: 화면이 좁아도 케밥이 표 안에 있고 가로 스크롤이 없다', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1024, height: 900 })
+
+  for (const [tab, rows] of [
+    ['forms', formRows(page)],
+    ['logs', logRows(page)],
+  ] as const) {
+    await page.goto(`/work-logs?tab=${tab}`)
+    const row = rows.first()
+    await expect(row).toBeVisible()
+
+    const rowBox = await row.boundingBox()
+    const kebabBox = await kebab(row).boundingBox()
+    expect(rowBox && kebabBox, tab).toBeTruthy()
+    expect(kebabBox!.x + kebabBox!.width, tab).toBeLessThanOrEqual(
+      rowBox!.x + rowBox!.width,
+    )
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      ),
+      tab,
+    ).toBeLessThanOrEqual(0)
+  }
 })
 
 test('S11: 양식 생성하기 이동', async ({ page }) => {

@@ -8,10 +8,14 @@ import {
   workLogFormEditorTypeOptions,
   workLogFormOptionIcons,
 } from '@/entities/work-log'
-import { SelectMenu } from '@/shared/ui'
+import { SelectMenu, ToggleSwitch } from '@/shared/ui'
 import closeIcon from '@/shared/ui/assets/close.svg'
 import trashIcon from '@/shared/ui/assets/trash.svg'
-import { addQuestionOption, changeQuestionType, hasOptions } from '../model/draft'
+import {
+  addQuestionOption,
+  changeQuestionType,
+  hasOptions,
+} from '../model/draft'
 
 interface WorkLogFormQuestionEditorProps {
   question: WorkLogFormDraftQuestion
@@ -22,6 +26,8 @@ interface WorkLogFormQuestionEditorProps {
   onChange: (question: WorkLogFormDraftQuestion) => void
   onRemove: () => void
 }
+
+const namePlaceholder = '항목을 입력해주세요'
 
 // Figma 1:4440 / 1:4486 / 1:4532 — 편집 가능한 질문 카드 하나.
 export function WorkLogFormQuestionEditor({
@@ -73,16 +79,29 @@ export function WorkLogFormQuestionEditor({
     <Card $invalid={invalid} data-testid="work-log-form-question">
       <Inner>
         <HeaderRow>
-          <NameInput
-            autoFocus={autoFocus}
-            value={question.label}
-            placeholder="항목을 입력해주세요"
-            aria-label={`${questionNumber}번 항목 이름`}
-            aria-invalid={invalid || undefined}
-            onChange={(event) =>
-              onChange({ ...question, label: event.target.value })
-            }
-          />
+          <NameField>
+            <NameInput
+              autoFocus={autoFocus}
+              value={question.label}
+              placeholder={namePlaceholder}
+              aria-label={`${questionNumber}번 항목 이름`}
+              aria-invalid={invalid || undefined}
+              onChange={(event) =>
+                onChange({ ...question, label: event.target.value })
+              }
+            />
+            {question.required && (
+              // input 안에는 색이 다른 글자를 넣을 수 없어, 같은 글꼴로 값을 투명하게 깔고
+              // 그 바로 뒤에 `*` 를 얹는다(Figma 2779:25012 — 질문명 뒤 6px).
+              <NameRequiredMark
+                aria-hidden="true"
+                data-testid="question-required-mark"
+              >
+                <NameMirror>{question.label || namePlaceholder}</NameMirror>
+                <Required>*</Required>
+              </NameRequiredMark>
+            )}
+          </NameField>
           <SelectMenu
             value={question.type ?? ''}
             options={workLogFormEditorTypeOptions}
@@ -93,7 +112,6 @@ export function WorkLogFormQuestionEditor({
             variant="field"
             placeholder="선택"
             maxListHeight={400}
-            requiredMark
           />
           <RemoveQuestionSlot>
             <IconButton
@@ -169,7 +187,10 @@ export function WorkLogFormQuestionEditor({
                 {question.options.length > 0 && !hasEtc && (
                   <>
                     <AddSeparator> 또는 </AddSeparator>
-                    <AddLink type="button" onClick={() => handleOptionAdd(true)}>
+                    <AddLink
+                      type="button"
+                      onClick={() => handleOptionAdd(true)}
+                    >
                       기타 추가
                     </AddLink>
                   </>
@@ -181,6 +202,15 @@ export function WorkLogFormQuestionEditor({
           // 선택지가 없는 유형은 답변 자리만 보여준다. 양식 정의라 입력 요소를 두지 않는다.
           <TextAnswer>텍스트</TextAnswer>
         )}
+
+        <RequiredFooter>
+          <RequiredLabel aria-hidden="true">필수</RequiredLabel>
+          <ToggleSwitch
+            checked={question.required}
+            aria-label={`${questionNumber}번 항목 필수`}
+            onChange={(required) => onChange({ ...question, required })}
+          />
+        </RequiredFooter>
       </Inner>
     </Card>
   )
@@ -207,11 +237,18 @@ const HeaderRow = styled.div`
   flex-wrap: wrap;
 `
 
-const NameInput = styled.input`
+const NameField = styled.div`
+  position: relative;
   display: flex;
   min-width: 0;
-  height: 64px;
   flex: 1 1 320px;
+`
+
+const NameInput = styled.input`
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 64px;
   align-items: center;
   padding: 20px 24px;
   border: 0;
@@ -230,6 +267,45 @@ const NameInput = styled.input`
     outline: 2px solid ${({ theme }) => theme.colors.accent};
     outline-offset: 2px;
   }
+`
+
+// 입력값과 같은 자리·글꼴로 겹쳐 그린다. 값보다 길어지면 입력칸 안에서 잘린다.
+const NameRequiredMark = styled.span`
+  position: absolute;
+  inset: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  pointer-events: none;
+  font-size: 22px;
+  font-weight: 500;
+  white-space: pre;
+`
+
+const NameMirror = styled.span`
+  visibility: hidden;
+`
+
+const Required = styled.span`
+  flex: 0 0 auto;
+  color: ${({ theme }) => theme.colors.danger};
+`
+
+// Figma `worklog / 필수 설정`(2775:24914) — 위 구분선, 오른쪽 끝에 `필수` + 토글.
+const RequiredFooter = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid ${({ theme }) => theme.colors.tableHeaderStrong};
+`
+
+const RequiredLabel = styled.span`
+  color: ${({ theme }) => theme.colors.textBody};
+  font-size: 22px;
+  font-weight: 500;
 `
 
 // Figma 헤더행 오른쪽 100x64 자리. 상세 화면에서는 비어 있고 편집에서는 삭제 버튼이 들어간다.

@@ -288,6 +288,13 @@ const routes: RouteObject[] = [
             ),
           },
           {
+            path: '/work-logs/forms/:id/edit/*',
+            element: lazyPage(
+              () => import('@/pages/work-logs/EditWorkLogFormPage'),
+              'EditWorkLogFormPage',
+            ),
+          },
+          {
             path: '/work-logs/forms/:id',
             element: lazyPage(
               () => import('@/pages/work-logs/WorkLogFormDetailPage'),

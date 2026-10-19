@@ -38,9 +38,11 @@ export {
   getWorkLogDetail,
   getWorkLogForms,
   getWorkLogFormDetail,
+  getWorkLogFormDraft,
   getWorkLogs,
   isDuplicateFormNameError,
   isWorkLogNotFoundError,
+  updateWorkLogForm,
   type WorkLogFormListPage,
   type WorkLogListPage,
 } from './api/workLogApi'
@@ -56,6 +58,7 @@ export { WorkLogTable } from './ui/WorkLogTable'
 export { WorkLogFormTable } from './ui/WorkLogFormTable'
 export { WorkLogFormFilter } from './ui/WorkLogFormFilter'
 export { WorkLogSheet } from './ui/WorkLogSheet'
+export { WorkLogRequiredLegend } from './ui/WorkLogRequiredLegend'
 export { WorkLogFormPreviewDialog } from './ui/WorkLogFormPreviewDialog'
 export { WorkLogFormQuestionCard } from './ui/WorkLogFormQuestionCard'
 export { WorkLogFormWizardSteps } from './ui/WorkLogFormWizardSteps'

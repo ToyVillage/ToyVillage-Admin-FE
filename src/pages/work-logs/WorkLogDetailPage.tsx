@@ -6,6 +6,7 @@ import {
   getWorkLogDetail,
   isWorkLogNotFoundError,
   workLogQueryKeys,
+  WorkLogRequiredLegend,
   WorkLogSheet,
 } from '@/entities/work-log'
 import { BackLink, Toast } from '@/shared/ui'
@@ -77,6 +78,7 @@ export function WorkLogDetailPage() {
           <MetaItem>
             {detail ? `작성자: ${detail.authorName}` : ''}
           </MetaItem>
+          <Legend />
         </Meta>
         <SheetArea>
           <WorkLogSheet
@@ -142,6 +144,7 @@ const Content = styled.div`
 
 const Meta = styled.header`
   display: flex;
+  width: 100%;
   min-height: 38px;
   align-items: flex-end;
   gap: 20px;
@@ -161,6 +164,12 @@ const MetaItem = styled.span`
   font-size: 22px;
   font-weight: 500;
   line-height: 1.2;
+`
+
+// Figma 2783:25009 — 메타 줄 오른쪽 끝, 세로 가운데.
+const Legend = styled(WorkLogRequiredLegend)`
+  align-self: center;
+  margin-left: auto;
 `
 
 const SheetArea = styled.div`

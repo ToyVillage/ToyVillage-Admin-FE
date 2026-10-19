@@ -2,6 +2,7 @@ import styled from '@emotion/styled'
 import {
   DataTable,
   KebabMenu,
+  TruncatedText,
   type DataTableColumn,
   type DataTablePagination,
   type DataTableRow,
@@ -23,9 +24,11 @@ interface WorkLogTableProps {
 }
 
 // Figma `1:3420` 의 열 구성. 케밥 열(80)은 헤더 텍스트가 없다.
+// `양식` 열은 폭을 고정하지 않고 남는 폭을 채운다(1320 에서 Figma 의 760·840 과 같다).
+// 화면이 좁아지면 이 열만 줄어 케밥이 표 밖으로 밀려나지 않는다.
 const emptyColumns: DataTableColumn[] = [
   { key: 'authorName', header: '작성자', width: 240 },
-  { key: 'formName', header: '양식', width: 840 },
+  { key: 'formName', header: '양식', render: renderFormNameCell },
   { key: 'date', header: '날짜', width: 240, render: renderDateCell },
 ]
 
@@ -45,7 +48,7 @@ export function WorkLogTable({
       ? emptyColumns
       : [
           { key: 'authorName', header: '작성자', width: 240 },
-          { key: 'formName', header: '양식', width: 760 },
+          { key: 'formName', header: '양식', render: renderFormNameCell },
           { key: 'date', header: '날짜', width: 240, render: renderDateCell },
           {
             key: 'kebab',
@@ -87,6 +90,10 @@ export function WorkLogTable({
       loading={loading}
     />
   )
+}
+
+function renderFormNameCell(row: DataTableRow) {
+  return <TruncatedText value={String(row.formName)} />
 }
 
 function renderDateCell(row: DataTableRow) {

@@ -28,8 +28,6 @@ interface SelectMenuProps {
   // 트리거 높이. Figma 기준 surface 70 / 질문 유형 64 / 구역 접두 66.
   height?: number
   optionAlign?: 'start' | 'center'
-  // 트리거 라벨 뒤에 빨간 `*` 를 붙인다(Figma `객관식 질문 *`).
-  requiredMark?: boolean
   // 열렸을 때 트리거에 테두리를 준다(Figma 1:5448).
   openBorder?: boolean
   // `value` 와 맞는 항목이 없을 때 트리거에 보일 문구(Figma 질문 유형의 `선택`).
@@ -48,7 +46,6 @@ export function SelectMenu({
   variant = 'surface',
   height = 70,
   optionAlign = 'start',
-  requiredMark = false,
   openBorder = false,
   placeholder,
 }: SelectMenuProps) {
@@ -111,9 +108,6 @@ export function SelectMenu({
           )}
           <TriggerLabel $variant={variant}>
             {selected?.label ?? placeholder ?? value}
-            {requiredMark && selected && (
-              <Required aria-hidden="true"> *</Required>
-            )}
           </TriggerLabel>
         </TriggerContent>
         <Chevron src={chevronDown} alt="" aria-hidden="true" $open={open} />
@@ -211,10 +205,6 @@ const TriggerLabel = styled.span<{ $variant: SelectMenuVariant }>`
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
-`
-
-const Required = styled.span`
-  color: ${({ theme }) => theme.colors.danger};
 `
 
 const Chevron = styled.img<{ $open: boolean }>`

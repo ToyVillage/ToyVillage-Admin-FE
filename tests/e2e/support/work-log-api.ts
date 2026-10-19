@@ -2,7 +2,7 @@ import type { Page, Route } from '@playwright/test'
 
 // 업무일지관리 화면이 쓰는 API mock.
 // 대상: GET /work-log, GET·DELETE /work-log/{workLogId},
-//       GET·POST /work-log/template, GET·DELETE /work-log/template/{workLogTemplateId}.
+//       GET·POST /work-log/template, GET·PATCH·DELETE /work-log/template/{workLogTemplateId}.
 // 실제 서버는 호출하지 않으며, 각 spec 은 필요한 응답만 page.route 로 덮어쓴다
 // (Playwright 는 나중에 등록한 route 를 먼저 매칭한다).
 
@@ -27,12 +27,14 @@ export interface MockTemplateQuestion {
   questionId: number
   question: string
   questionType: MockServerQuestionType
+  required: boolean
   options: MockTemplateOption[]
 }
 
 export interface MockTemplate {
   templateId: number
   templateTitle: string
+  writer: string
   /** YYYY-MM-DD */
   createdAt: string
   sections: { sectionId: number; sectionName: string }[]
@@ -70,17 +72,20 @@ export const mockTemplates: MockTemplate[] = [
   {
     templateId: 1,
     templateTitle: '사육장점검일지',
+    writer: '관리자',
     createdAt: todayIsoDate(),
     sections: section(['A1', 'A2', 'A3']),
+    // Figma 547:14084 — 습도·청소 방법만 필수다.
     questions: [
-      question(12, '습도', 'MULTIPLE_CHOICE', ['30%', '1212%', '1%']),
+      question(12, '습도', 'MULTIPLE_CHOICE', ['30%', '1212%', '1%'], true),
       question(13, '청소여부', 'CHECK_BOX', ['모르겟음', '함', '안함']),
-      question(11, '청소 방법이 뭔가요?', 'TEXT'),
+      question(11, '청소 방법이 뭔가요?', 'TEXT', [], true),
     ],
   },
   ...Array.from({ length: 8 }, (_, index) => ({
     templateId: index + 2,
     templateTitle: `양식${index + 2}`,
+    writer: '관리자',
     createdAt: todayIsoDate(),
     sections: section(['A1']),
     questions: [question(100 + index, '메모', 'TEXT')],
@@ -133,12 +138,13 @@ export const mockWorkLogs: MockWorkLog[] = [
 export const sheetTemplate: MockTemplate = {
   templateId: 101,
   templateTitle: '사육장점검일지',
+  writer: '관리자',
   createdAt: todayIsoDate(),
   sections: section(['A1', 'A2', 'A3']),
   questions: [
     question(210, '온도', 'MULTIPLE_CHOICE', ['20도', '25도', '기타']),
-    question(211, '청소방법이 뭔가요?', 'TEXT'),
-    question(212, '습도', 'MULTIPLE_CHOICE', ['40%', '60%']),
+    question(211, '청소방법이 뭔가요?', 'TEXT', [], true),
+    question(212, '습도', 'MULTIPLE_CHOICE', ['40%', '60%'], true),
     question(213, '청소여부', 'CHECK_BOX', ['바닥', '벽면', '기타']),
     question(214, '급여량', 'TEXT'),
     question(215, '사진', 'FILE_UPLOAD'),
@@ -174,6 +180,7 @@ export const partialWorkLog: MockWorkLog = {
 export const partialTemplate: MockTemplate = {
   templateId: 100,
   templateTitle: '일부만 채운 일지 양식',
+  writer: '관리자',
   createdAt: todayIsoDate(),
   sections: section(['A1', 'A2', 'A3', 'A4', 'A5', 'A6']),
   questions: sheetTemplate.questions,
@@ -191,11 +198,13 @@ function question(
   text: string,
   questionType: MockServerQuestionType,
   options: string[] = [],
+  required = false,
 ): MockTemplateQuestion {
   return {
     questionId,
     question: text,
     questionType,
+    required,
     options: options.map((content, index) => ({
       optionId: questionId * 2 + index + 1,
       number: index,
@@ -212,6 +221,7 @@ export interface WorkLogApiRequests {
   templateList: number
   templateDetail: number
   templateCreate: number
+  templateUpdate: number
   templateDelete: number
 }
 
@@ -222,6 +232,7 @@ export interface WorkLogApiHandle {
   listQueries: URLSearchParams[]
   templateListQueries: URLSearchParams[]
   createdBodies: unknown[]
+  updatedBodies: unknown[]
 }
 
 export interface WorkLogApiOptions {
@@ -250,11 +261,13 @@ export async function mockWorkLogApi(
       templateList: 0,
       templateDetail: 0,
       templateCreate: 0,
+      templateUpdate: 0,
       templateDelete: 0,
     },
     listQueries: [],
     templateListQueries: [],
     createdBodies: [],
+    updatedBodies: [],
   }
 
   await page.route(workLogListPattern, async (route) => {
@@ -312,6 +325,7 @@ export async function mockWorkLogApi(
         matched.map((item) => ({
           templateId: item.templateId,
           templateTitle: item.templateTitle,
+          writer: item.writer,
           createdAt: item.createdAt,
         })),
         query,
@@ -335,6 +349,22 @@ export async function mockWorkLogApi(
 
       handle.templates.splice(index, 1)
       await json(route, 200, { message: '업무일지 양식 삭제 성공' })
+      return
+    }
+
+    if (route.request().method() === 'PATCH') {
+      handle.requests.templateUpdate += 1
+
+      if (index === -1) {
+        await json(route, 404, errorBody(404, '존재하지 않는 업무일지 입니다.'))
+        return
+      }
+
+      const body = route.request().postDataJSON() as TemplateRequestBody
+      handle.updatedBodies.push(body)
+      // 수정은 양식 전체를 갈아 끼운다. 다시 들어왔을 때 바뀐 값이 보이게 반영한다.
+      handle.templates[index] = applyTemplateBody(handle.templates[index], body)
+      await json(route, 200, { templateId })
       return
     }
 
@@ -386,6 +416,43 @@ export async function mockWorkLogApi(
   return handle
 }
 
+interface TemplateRequestBody {
+  templateTitle: string
+  sections: string[]
+  questions: {
+    question: string
+    questionType: MockServerQuestionType
+    required?: boolean
+    options: { content: string; etcOption: boolean }[]
+  }[]
+}
+
+function applyTemplateBody(
+  template: MockTemplate,
+  body: TemplateRequestBody,
+): MockTemplate {
+  return {
+    ...template,
+    templateTitle: body.templateTitle,
+    sections: section(body.sections),
+    questions: body.questions.map((item, index) => {
+      const questionId = template.templateId * 1000 + index + 1
+      return {
+        questionId,
+        question: item.question,
+        questionType: item.questionType,
+        required: item.required === true,
+        options: item.options.map((option, optionIndex) => ({
+          optionId: questionId * 10 + optionIndex + 1,
+          number: optionIndex,
+          content: option.content,
+          etcOption: option.etcOption,
+        })),
+      }
+    }),
+  }
+}
+
 function toDetailBody(handle: WorkLogApiHandle, log: MockWorkLog) {
   const template = handle.templates.find(
     (item) => item.templateId === log.templateId,
@@ -429,6 +496,7 @@ function toAnswerBody(questions: MockTemplateQuestion[], answer: MockAnswer) {
     questionId: answer.questionId,
     question: question?.question ?? '',
     questionType: question?.questionType ?? 'TEXT',
+    required: question?.required ?? false,
     answerText: answer.answerText ?? null,
     options,
     file: answer.file ?? null,
