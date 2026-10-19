@@ -378,8 +378,10 @@ const Subtitle = styled.p`
 `
 
 // Figma `조회날짜`(Frame 459)와 `양식 필터`(2432:24334)는 한 줄에 24px 간격으로 놓인다.
+// 화면이 좁으면 양식 필터를 다음 줄로 내려 가로 스크롤이 생기지 않게 한다.
 const Filters = styled.div`
   display: flex;
+  flex-wrap: wrap;
   margin-top: 32px;
   align-items: center;
   gap: 24px;
