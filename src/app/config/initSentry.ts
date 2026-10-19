@@ -90,11 +90,13 @@ export function initSentry(): void {
 }
 
 function loadReplay(): void {
-  void import('@/app/config/sentryReplay').then(
-    ({ createReplayIntegration }) => {
+  void import('@/app/config/sentryReplay')
+    .then(({ createReplayIntegration }) => {
       Sentry.addIntegration(createReplayIntegration())
-    },
-  )
+    })
+    .catch(() => {
+      // 배포 직후 이전 청크가 없어지는 등 녹화 청크를 못 받으면 녹화 없이 에러만 보낸다.
+    })
 }
 
 // Sentry 처럼 누른 요소에서 위로 5단계까지 `부모 > 자식` 으로 잇는다.
