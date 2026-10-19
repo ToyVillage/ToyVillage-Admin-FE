@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentType } from 'react'
+import { lazy, Suspense, type ComponentType, type ReactNode } from 'react'
 import {
   createBrowserRouter,
   Navigate,
@@ -7,6 +7,8 @@ import {
   type RouteObject,
 } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
+// 배럴(`@/pages/login`)로 가져오면 로그인 화면 코드까지 첫 번들에 들어간다.
+import { LoginPageSkeleton } from '@/pages/login/LoginPageSkeleton'
 import { Sidebar, SidebarToggleButton } from '@/features/sidebar'
 import { RequireAuth } from '@/app/RequireAuth'
 import { RouteErrorPage } from '@/app/RouteErrorPage'
@@ -36,19 +38,20 @@ function AppLayout() {
 // 화면마다 청크를 나눠 그 경로에 처음 들어갈 때 받는다.
 // 배럴(`@/pages/tasks`)이 아니라 페이지 파일을 가리켜야 화면 단위로 나뉜다.
 // 라우트 `lazy` 는 청크가 올 때까지 주소를 바꾸지 않아 이전 화면이 남는다.
-// React.lazy 는 주소를 바로 바꾸고, 청크를 받는 잠깐은 본문을 비워 둔다
-// (조회 대기는 화면별 스켈레톤이 보여 준다).
+// React.lazy 는 주소를 바로 바꾸고, 청크를 받는 잠깐은 fallback 을 보인다.
+// fallback 이 없는 화면은 본문을 비워 둔다(조회 대기는 화면별 스켈레톤이 보여 준다).
 // key 가 없으면 화면이 바뀌어도 같은 Suspense 로 보고 이동 중 이전 화면을 계속 그린다.
 function lazyPage<Name extends string>(
   load: () => Promise<Record<NoInfer<Name>, ComponentType>>,
   name: Name,
+  fallback?: ReactNode,
 ) {
   const Page = lazy<ComponentType>(async () => ({
     default: (await load())[name],
   }))
 
   return (
-    <Suspense key={name}>
+    <Suspense key={name} fallback={fallback}>
       <Page />
     </Suspense>
   )
@@ -57,7 +60,11 @@ function lazyPage<Name extends string>(
 const routes: RouteObject[] = [
   {
     path: '/login',
-    element: lazyPage(() => import('@/pages/login/LoginPage'), 'LoginPage'),
+    element: lazyPage(
+      () => import('@/pages/login/LoginPage'),
+      'LoginPage',
+      <LoginPageSkeleton />,
+    ),
     errorElement: <RouteErrorPage />,
   },
   {
