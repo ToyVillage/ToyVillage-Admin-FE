@@ -45,8 +45,10 @@ test('업무 상세에서 미리 받은 팀 구조로 업무 수정을 연다', 
 test('직원 계정을 만들면 업무 만들기에서 팀 구조를 다시 받는다', async ({
   page,
 }) => {
-  const taskApi = await mockTaskApi(page)
+  // 직원 mock 은 나머지 https 요청을 모두 끊는 route 를 건다. 나중에 건 route 가
+  // 먼저 잡으므로 업무 mock(팀 구조 포함)을 뒤에 걸어야 가려지지 않는다.
   await mockEmployeeApi(page)
+  const taskApi = await mockTaskApi(page)
 
   await page.goto('/tasks')
   await expect.poll(() => taskApi.requests.tree).toBe(1)
