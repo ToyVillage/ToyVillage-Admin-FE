@@ -8,7 +8,7 @@ import {
   type Task,
   type TaskPriority,
 } from '@/entities/task'
-import { getTeamTree } from '@/entities/team'
+import { teamTreeQueryOptions } from '@/entities/team'
 import {
   AttachmentField,
   DateField,
@@ -115,10 +115,8 @@ export function TaskForm({
   const isEditing = mode === 'edit'
 
   // 담당자 트리의 유일한 데이터 출처. 업무지시 캐시(`['tasks']`)와 분리한다.
-  const { data: teamTree, isError: isTeamTreeError } = useQuery({
-    queryKey: ['teams', 'tree'],
-    queryFn: getTeamTree,
-  })
+  const { data: teamTree, isError: isTeamTreeError } =
+    useQuery(teamTreeQueryOptions)
 
   const mutation = useMutation({
     mutationFn: async (values: TaskSubmitValues) => {

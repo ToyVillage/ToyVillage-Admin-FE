@@ -10,6 +10,7 @@ import {
   staffAccountQueryKeys,
   type StaffAccount,
 } from '@/entities/employee'
+import { teamQueryKeys } from '@/entities/team'
 import {
   CreateAccountDialog,
   createEmployee,
@@ -111,10 +112,12 @@ export function StaffAccountsPage() {
   }
 
   // 직원 목록(이 화면)과 팀 관리의 직원 목록이 같은 GET 을 쓴다. 바뀐 뒤 둘 다 갱신한다.
+  // 업무지시 담당자 트리도 직원을 `미배정` 에 담으므로 함께 무효화한다.
   function invalidateEmployeeLists() {
     return Promise.all([
       queryClient.invalidateQueries({ queryKey: staffAccountQueryKeys.list }),
       queryClient.invalidateQueries({ queryKey: employeeQueryKeys.list }),
+      queryClient.invalidateQueries({ queryKey: teamQueryKeys.tree }),
     ])
   }
 

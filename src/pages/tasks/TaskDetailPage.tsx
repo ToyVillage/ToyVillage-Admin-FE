@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -8,6 +8,7 @@ import {
   isTaskHasReportError,
   TaskInfoRow,
 } from '@/entities/task'
+import { teamTreeQueryOptions } from '@/entities/team'
 import {
   TaskProgressCard,
   TaskReportSummaryCard,
@@ -79,6 +80,11 @@ export function TaskDetailPage() {
   const deleteMutation = useMutation({
     mutationFn: () => deleteTask({ id: Number(id) }),
   })
+
+  // 수정 화면의 담당자 트리는 응답이 느리다. 상세에 있는 동안 미리 받아 둔다.
+  useEffect(() => {
+    void queryClient.prefetchQuery(teamTreeQueryOptions)
+  }, [queryClient])
 
   // 담당자별 보고 현황과 집계는 상세 조회 응답에 함께 온다. 따로 조회하지 않는다.
   // 서버 `MISSING`(미제출)은 `미제출` 배지로 따로 보여준다(yot 133:9725).
