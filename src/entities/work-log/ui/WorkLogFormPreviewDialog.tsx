@@ -16,6 +16,7 @@ import type {
   WorkLogSheetColumn,
   WorkLogSheetRow,
 } from '../model/types'
+import { WorkLogRequiredLegend } from './WorkLogRequiredLegend'
 import { WorkLogSheet } from './WorkLogSheet'
 
 interface WorkLogFormPreviewDialogProps {
@@ -117,7 +118,10 @@ export function WorkLogFormPreviewDialog({
             <img src={closeIcon} alt="" aria-hidden="true" />
           </CloseButton>
         </Header>
-        <WorkLogSheet columns={columns} rows={rows} />
+        <TableArea>
+          <Legend />
+          <WorkLogSheet columns={columns} rows={rows} />
+        </TableArea>
       </Dialog>
     </Overlay>,
     document.body,
@@ -163,6 +167,17 @@ const Title = styled.h2`
   font-size: 32px;
   font-weight: 500;
   line-height: normal;
+`
+
+// Figma `표 영역`(2783:25018) — 범례를 시트 오른쪽 위에 12px 띄워 둔다.
+const TableArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
+const Legend = styled(WorkLogRequiredLegend)`
+  align-self: flex-end;
 `
 
 const CloseButton = styled.button`
