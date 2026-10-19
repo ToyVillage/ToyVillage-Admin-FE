@@ -27,8 +27,9 @@ export function DashboardListRows({
   loading = false,
 }: DashboardListRowsProps) {
   if (loading) {
+    // 빈 목록 항목으로 읽히지 않게 숨긴다. "불러오는 중" 은 바깥 SkeletonStatus 가 알린다.
     return (
-      <List>
+      <List aria-hidden="true">
         {LOADING_ROW_WIDTHS.map((width, index) => (
           <Row key={index}>
             <LoadingRow>
