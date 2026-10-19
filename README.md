@@ -44,7 +44,8 @@ API ID로 Notion 명세를 조회해 Contract를 만든 뒤 개발자 승인 후
 
 ```bash
 yarn harness:api:validate <feature>
-yarn harness:api:approve <feature> --by <developer>
+yarn harness:api:approve <feature>
+yarn harness:api:changes <feature>
 yarn harness:api:gate <feature>
 yarn harness:api:policy <feature> <changed-file...>
 yarn verify:api <feature>
@@ -52,6 +53,10 @@ yarn harness:api:approve <feature> --freeze-real
 yarn verify:api:real <feature> --confirm-staging
 yarn test:harness
 ```
+
+승인자는 `git config user.name`으로 기록하고 `harness/api/approvers.json`에
+있는 사람만 승인할 수 있다. AI 세션에서는 승인되지 않는다. 승인 이후 바뀐
+부분은 `yarn harness:api:changes <feature>`로 확인한다.
 
 API 승인본을 만든 뒤 Mock 테스트를 동결할 때는
 `yarn harness:api:approve <feature> --freeze`를 실행한다. 실제 서버 테스트는
