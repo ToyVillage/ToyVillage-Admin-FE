@@ -4,6 +4,12 @@ import { LoginForm, submitLogin } from '@/features/login'
 import { queryClient } from '@/shared/config/queryClient'
 import toVillageLogo from '@/shared/assets/toyvillage-logo.png'
 import { LoginBrandPanel } from './ui/LoginBrandPanel'
+import {
+  LoginBrand,
+  LoginCard,
+  LoginCardArea,
+  LoginPageLayout,
+} from './ui/LoginLayout'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -15,11 +21,11 @@ export function LoginPage() {
   }
 
   return (
-    <Page>
+    <LoginPageLayout>
       <LoginBrandPanel />
-      <CardArea>
-        <Card>
-          <Brand>
+      <LoginCardArea>
+        <LoginCard>
+          <LoginBrand>
             <Logo src={toVillageLogo} alt="토이빌리지" />
             <HeadingGroup>
               <Title>로그인</Title>
@@ -29,70 +35,13 @@ export function LoginPage() {
                 토이빌리지의 업무들을 관리하세요
               </Description>
             </HeadingGroup>
-          </Brand>
+          </LoginBrand>
           <LoginForm onSubmit={submitLogin} onSuccess={handleLoginSuccess} />
-        </Card>
-      </CardArea>
-    </Page>
+        </LoginCard>
+      </LoginCardArea>
+    </LoginPageLayout>
   )
 }
-
-const Page = styled.main`
-  display: grid;
-  grid-template-columns: 760px minmax(0, 1fr);
-  min-height: 100vh;
-  background: ${({ theme }) => theme.colors.background};
-  font-family: ${({ theme }) => theme.font.body};
-
-  @media (max-width: 1279px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-`
-
-const CardArea = styled.div`
-  display: grid;
-  min-width: 0;
-  place-items: center;
-  padding: 32px;
-
-  @media (max-width: 767px) {
-    align-items: start;
-    padding: 20px;
-  }
-`
-
-const Card = styled.section`
-  position: relative;
-  width: min(720px, 100%);
-  min-height: 843px;
-  overflow: hidden;
-  border-radius: 24px;
-  background: ${({ theme }) => theme.colors.surface};
-  box-shadow: 0 12px 40px 0 rgba(20, 26, 23, 0.1);
-
-  @media (max-width: 767px) {
-    min-height: 0;
-    padding: 40px 24px;
-  }
-`
-
-const Brand = styled.div`
-  position: absolute;
-  top: 52px;
-  left: 50%;
-  display: flex;
-  width: 324px;
-  transform: translateX(-50%);
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-
-  @media (max-width: 767px) {
-    position: static;
-    width: 100%;
-    transform: none;
-  }
-`
 
 const Logo = styled.img`
   width: 136px;
