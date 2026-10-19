@@ -81,8 +81,12 @@
 - 입력: task spec, Contract, 계획, 테스트 시나리오
 - Prompt: 없음
 - 산출물: `harness/api/approvals/<feature>.*`, `<feature>.approved.json`
-- 검증: `yarn harness:api:approve <feature> --by <developer>`가 Contract를 스테이징 Swagger와 다시 비교한 뒤 모든 해시를 생성 (`--freeze`는 비교하지 않음)
-- STOP: 승인 거절, 필수 파일 누락, Contract 검증 실패, `swagger-known-diffs.json`에 없는 Swagger 차이, Swagger 접속 불가
+- 검증: 개발자가 자기 터미널에서 `yarn harness:api:approve <feature>`를 실행하면 Contract를 스테이징 Swagger와 다시 비교한 뒤 모든 해시와 승인 시점 커밋을 기록 (`--freeze`는 비교하지 않음)
+  - 승인자는 `git config user.name`으로 기록하고 `harness/api/approvers.json`에 있는 사람만 승인할 수 있다. `--freeze`·`--freeze-real`도 같다.
+  - AI 세션(`CLAUDECODE` 환경 변수)에서 실행하면 거부한다. AI는 승인 명령을 실행하지 않고 개발자에게 요청한다.
+  - 승인 기록이 이미 있으면 승인 이후 바뀐 파일과 diff만 보여 주고 `y`를 입력해야 승인한다. `yarn harness:api:changes <feature>`로 미리 볼 수 있다.
+  - 재승인해도 기존 테스트 동결 해시는 유지한다. 테스트가 바뀌었으면 게이트가 막고 `--freeze`를 다시 요구한다.
+- STOP: 승인 거절, 필수 파일 누락, Contract 검증 실패, `swagger-known-diffs.json`에 없는 Swagger 차이, Swagger 접속 불가, 승인자 목록에 없는 git 사용자, AI 세션에서 실행
 - 다음 단계: `yarn harness:api:gate <feature>` 통과
 - 승인: 필수
 

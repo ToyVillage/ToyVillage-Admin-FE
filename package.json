@@ -22,6 +22,7 @@
     "harness:approve": "node scripts/approve.mjs",
     "harness:api:validate": "node scripts/validate-api-contract.mjs",
     "harness:api:approve": "node scripts/approve-api.mjs",
+    "harness:api:changes": "node scripts/api-approval-changes.mjs",
     "harness:api:gate": "node scripts/api-gate-check.mjs",
     "harness:api:policy": "node scripts/check-api-policy.mjs",
     "harness:api:swagger": "node scripts/check-api-swagger.mjs",

@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   copyFileSync,
@@ -18,8 +19,12 @@ export function hasOwn(value, key) {
   return Object.prototype.hasOwnProperty.call(value, key)
 }
 
+export function sha256(contents) {
+  return createHash('sha256').update(contents).digest('hex')
+}
+
 export function sha256File(path) {
-  return createHash('sha256').update(readFileSync(path)).digest('hex')
+  return sha256(readFileSync(path))
 }
 
 export function readJson(path) {
@@ -50,6 +55,35 @@ export function usesPageRouteMock(testPath) {
       readFileSync(modulePath, 'utf8').includes('page.route(')
     )
   })
+}
+
+// root 에서 git 을 실행한다. git 저장소가 아니거나 실패하면 null.
+// `git diff --no-index` 는 차이가 있으면 exit 1 이라 okStatuses 로 허용한다.
+export function runGit(
+  root,
+  args,
+  { encoding = 'utf8', okStatuses = [0] } = {},
+) {
+  const result = spawnSync('git', ['-C', root, ...args], { encoding })
+  return okStatuses.includes(result.status) ? result.stdout : null
+}
+
+export function readGitUserName(root) {
+  return runGit(root, ['config', 'user.name'])?.trim() ?? ''
+}
+
+export function readHeadCommit(root) {
+  return runGit(root, ['rev-parse', 'HEAD'])?.trim() ?? null
+}
+
+export function approversPath(root) {
+  return join(root, 'harness', 'api', 'approvers.json')
+}
+
+export function readApprovers(root) {
+  const path = approversPath(root)
+  if (!existsSync(path)) throw new Error(`승인자 목록 없음: ${path}`)
+  return readJson(path)
 }
 
 export function parseOption(args, name) {
