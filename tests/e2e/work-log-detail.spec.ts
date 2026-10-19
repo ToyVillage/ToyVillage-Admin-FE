@@ -57,12 +57,22 @@ test('S4: 시트 열이 양식의 질문 순서대로 놓인다', async ({ page 
   ).toHaveText([
     '설정된 구역',
     '온도',
-    '청소방법이 뭔가요?',
-    '습도',
+    '청소방법이 뭔가요?*',
+    '습도*',
     '청소여부',
     '급여량',
     '사진',
   ])
+})
+
+test('S4-1: 필수 질문 열 표시와 범례', async ({ page }) => {
+  await page.goto('/work-logs/1')
+
+  const header = page.getByTestId('work-log-sheet-header')
+  await expect(header.locator('> *')).toHaveCount(7)
+  // 필수 질문(청소방법·습도) 열 헤더에만 `*` 가 붙는다.
+  await expect(header.getByText('*', { exact: true })).toHaveCount(2)
+  await expect(page.getByText('필수 입력 항목')).toBeVisible()
 })
 
 // S4 회귀: 헤더 셀 하한(min-width)이 본문 셀에서 덮어써져 열이 어긋난 적이 있다.
