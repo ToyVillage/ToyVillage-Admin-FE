@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import { lazy, Suspense, type ComponentType } from 'react'
 import {
   createBrowserRouter,
   Navigate,
@@ -35,17 +35,29 @@ function AppLayout() {
 
 // 화면마다 청크를 나눠 그 경로에 처음 들어갈 때 받는다.
 // 배럴(`@/pages/tasks`)이 아니라 페이지 파일을 가리켜야 화면 단위로 나뉜다.
+// 라우트 `lazy` 는 청크가 올 때까지 주소를 바꾸지 않아 이전 화면이 남는다.
+// React.lazy 는 주소를 바로 바꾸고, 청크를 받는 잠깐은 본문을 비워 둔다
+// (조회 대기는 화면별 스켈레톤이 보여 준다).
+// key 가 없으면 화면이 바뀌어도 같은 Suspense 로 보고 이동 중 이전 화면을 계속 그린다.
 function lazyPage<Name extends string>(
   load: () => Promise<Record<NoInfer<Name>, ComponentType>>,
   name: Name,
-): RouteObject['lazy'] {
-  return async () => ({ Component: (await load())[name] })
+) {
+  const Page = lazy<ComponentType>(async () => ({
+    default: (await load())[name],
+  }))
+
+  return (
+    <Suspense key={name}>
+      <Page />
+    </Suspense>
+  )
 }
 
 const routes: RouteObject[] = [
   {
     path: '/login',
-    lazy: lazyPage(() => import('@/pages/login/LoginPage'), 'LoginPage'),
+    element: lazyPage(() => import('@/pages/login/LoginPage'), 'LoginPage'),
     errorElement: <RouteErrorPage />,
   },
   {
@@ -58,7 +70,7 @@ const routes: RouteObject[] = [
         children: [
           {
             path: '/',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/dashboard/DashboardPage'),
               'DashboardPage',
             ),
@@ -70,98 +82,98 @@ const routes: RouteObject[] = [
           },
           {
             path: '/notices/list',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/notice/NoticeListPage'),
               'NoticeListPage',
             ),
           },
           {
             path: '/notices/list/create',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/notice/CreateNoticePage'),
               'CreateNoticePage',
             ),
           },
           {
             path: '/notices/list/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/notice/NoticeDetailPage'),
               'NoticeDetailPage',
             ),
           },
           {
             path: '/notices/list/:id/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/notice/EditNoticePage'),
               'EditNoticePage',
             ),
           },
           {
             path: '/notices/guide',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/guide/NoticeGuidePage'),
               'NoticeGuidePage',
             ),
           },
           {
             path: '/notices/guide/create',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/guide/CreateCloseSchedulePage'),
               'CreateCloseSchedulePage',
             ),
           },
           {
             path: '/notices/guide/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/guide/CloseScheduleDetailPage'),
               'CloseScheduleDetailPage',
             ),
           },
           {
             path: '/notices/guide/:id/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/guide/EditCloseSchedulePage'),
               'EditCloseSchedulePage',
             ),
           },
           {
             path: '/notices/guide/hours/:date',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/guide/OperatingHoursPage'),
               'OperatingHoursPage',
             ),
           },
           {
             path: '/notices/resources',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/resources/ResourceListPage'),
               'ResourceListPage',
             ),
           },
           {
             path: '/notices/resources/create',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/resources/CreateResourcePage'),
               'CreateResourcePage',
             ),
           },
           {
             path: '/notices/resources/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/resources/ResourceViewPage'),
               'ResourceViewPage',
             ),
           },
           {
             path: '/notices/resources/:id/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/resources/ResourceDetailPage'),
               'ResourceDetailPage',
             ),
           },
           {
             path: '/notices/reservations',
-            lazy: lazyPage(
+            element: lazyPage(
               () =>
                 import('@/pages/notices/reservations/NoticeReservationsPage'),
               'NoticeReservationsPage',
@@ -169,7 +181,7 @@ const routes: RouteObject[] = [
           },
           {
             path: '/notices/reservations/create',
-            lazy: lazyPage(
+            element: lazyPage(
               () =>
                 import('@/pages/notices/reservations/CreateReservationPage'),
               'CreateReservationPage',
@@ -177,84 +189,84 @@ const routes: RouteObject[] = [
           },
           {
             path: '/notices/reservations/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/reservations/ReservationViewPage'),
               'ReservationViewPage',
             ),
           },
           {
             path: '/notices/reservations/:id/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/notices/reservations/ReservationEditPage'),
               'ReservationEditPage',
             ),
           },
           {
             path: '/tasks',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/tasks/TaskListPage'),
               'TaskListPage',
             ),
           },
           {
             path: '/tasks/create',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/tasks/CreateTaskPage'),
               'CreateTaskPage',
             ),
           },
           {
             path: '/tasks/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/tasks/TaskDetailPage'),
               'TaskDetailPage',
             ),
           },
           {
             path: '/tasks/:id/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/tasks/EditTaskPage'),
               'EditTaskPage',
             ),
           },
           {
             path: '/task-reports',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/task-reports/TaskReportListPage'),
               'TaskReportListPage',
             ),
           },
           {
             path: '/task-reports/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/task-reports/TaskReportDetailPage'),
               'TaskReportDetailPage',
             ),
           },
           {
             path: '/feeds',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/feeds/FeedListPage'),
               'FeedListPage',
             ),
           },
           {
             path: '/feeds/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/feeds/FeedDetailPage'),
               'FeedDetailPage',
             ),
           },
           {
             path: '/feeds/:id/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/feeds/EditFeedPage'),
               'EditFeedPage',
             ),
           },
           {
             path: '/work-logs',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/work-logs/WorkLogListPage'),
               'WorkLogListPage',
             ),
@@ -263,28 +275,28 @@ const routes: RouteObject[] = [
           // splat 으로 두어 1단계와 2단계(`/zones`)가 같은 화면을 다시 마운트하지 않게 한다.
           {
             path: '/work-logs/forms/create/*',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/work-logs/CreateWorkLogFormPage'),
               'CreateWorkLogFormPage',
             ),
           },
           {
             path: '/work-logs/forms/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/work-logs/WorkLogFormDetailPage'),
               'WorkLogFormDetailPage',
             ),
           },
           {
             path: '/work-logs/:id',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/work-logs/WorkLogDetailPage'),
               'WorkLogDetailPage',
             ),
           },
           {
             path: '/species',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/SpeciesListPage'),
               'SpeciesListPage',
             ),
@@ -292,56 +304,56 @@ const routes: RouteObject[] = [
           // 정적 경로 `create` 가 `:speciesId` 보다 우선한다(React Router 경로 순위).
           {
             path: '/species/create',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/CreateSpeciesPage'),
               'CreateSpeciesPage',
             ),
           },
           {
             path: '/species/:speciesId',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/SpeciesDetailPage'),
               'SpeciesDetailPage',
             ),
           },
           {
             path: '/species/:speciesId/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/EditSpeciesPage'),
               'EditSpeciesPage',
             ),
           },
           {
             path: '/species/:speciesId/individuals/create',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/CreateIndividualPage'),
               'CreateIndividualPage',
             ),
           },
           {
             path: '/species/:speciesId/individuals/:individualId/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/EditIndividualPage'),
               'EditIndividualPage',
             ),
           },
           {
             path: '/species/:speciesId/individuals/:individualId',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/IndividualDetailPage'),
               'IndividualDetailPage',
             ),
           },
           {
             path: '/species/:speciesId/individuals/:individualId/observations/:observationId',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/ObservationDetailPage'),
               'ObservationDetailPage',
             ),
           },
           {
             path: '/species/:speciesId/individuals/:individualId/observations/:observationId/edit',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/EditObservationPage'),
               'EditObservationPage',
             ),
@@ -349,7 +361,7 @@ const routes: RouteObject[] = [
           // 종 ID 를 모르는 곳(대시보드)에서 여는 관찰 경로. 개체 조회 후 위 상세 경로로 옮긴다.
           {
             path: '/individuals/:individualId/observations/:observationId',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/species/ObservationRedirectPage'),
               'ObservationRedirectPage',
             ),
@@ -357,14 +369,14 @@ const routes: RouteObject[] = [
           },
           {
             path: '/settings/teams',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/settings/teams/TeamSettingsPage'),
               'TeamSettingsPage',
             ),
           },
           {
             path: '/settings/accounts',
-            lazy: lazyPage(
+            element: lazyPage(
               () => import('@/pages/settings/accounts/StaffAccountsPage'),
               'StaffAccountsPage',
             ),
@@ -386,15 +398,8 @@ const routes: RouteObject[] = [
 const sentryCreateBrowserRouter =
   Sentry.wrapCreateBrowserRouterV7(createBrowserRouter)
 
-// 청크는 수십 ms 안에 오고 조회 대기는 화면별 스켈레톤이 보여 주므로 따로 로딩 UI를 두지 않는다.
-// 다른 화면으로 갈 때는 청크가 올 때까지 이전 화면이 남고, 첫 진입에서는 빈 화면이다.
-// 빈 fallback 을 명시해 두지 않으면 React Router 가 HydrateFallback 이 없다고 경고한다.
 const router = sentryCreateBrowserRouter([
-  {
-    element: <RootLayout />,
-    hydrateFallbackElement: <></>,
-    children: routes,
-  },
+  { element: <RootLayout />, children: routes },
 ])
 
 // Data router를 사용해 생성 화면의 이탈 시도를 일관되게 차단한다.
