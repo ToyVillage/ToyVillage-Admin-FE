@@ -2,6 +2,7 @@ import styled from '@emotion/styled'
 import {
   DataTable,
   KebabMenu,
+  TruncatedText,
   type DataTableColumn,
   type DataTablePagination,
   type DataTableRow,
@@ -24,9 +25,17 @@ interface WorkLogFormTableProps {
 
 // Figma `479:14491` 의 열 구성. `항목`(600~760) 열은 헤더도 셀도 비어 있는
 // 미사용 열이라 `양식` 열 760 에 합쳐 구현한다(spec 비고).
+// `양식` 열은 폭을 고정하지 않고 남는 폭을 채운다. 1320 에서는 Figma 대로 760 이 되고,
+// 화면이 좁아지면 이 열만 줄어 케밥이 표 밖으로 밀려나지 않는다.
 const emptyColumns: DataTableColumn[] = [
-  { key: 'name', header: '양식', width: 760 },
-  { key: 'authorName', header: '작성자', width: 200, paddingX: 24 },
+  { key: 'name', header: '양식', render: renderNameCell },
+  {
+    key: 'authorName',
+    header: '작성자',
+    width: 200,
+    paddingX: 24,
+    render: renderAuthorCell,
+  },
   {
     key: 'date',
     header: '날짜',
@@ -51,8 +60,14 @@ export function WorkLogFormTable({
     forms.length === 0
       ? emptyColumns
       : [
-          { key: 'name', header: '양식', width: 760 },
-          { key: 'authorName', header: '작성자', width: 200, paddingX: 24 },
+          { key: 'name', header: '양식', render: renderNameCell },
+          {
+            key: 'authorName',
+            header: '작성자',
+            width: 200,
+            paddingX: 24,
+            render: renderAuthorCell,
+          },
           {
             key: 'date',
             header: '날짜',
@@ -101,6 +116,16 @@ export function WorkLogFormTable({
       loading={loading}
     />
   )
+}
+
+function renderNameCell(row: DataTableRow) {
+  return <TruncatedText value={String(row.name)} />
+}
+
+// 작성자는 로그인 아이디(`scenario.manager` 등)라 열 폭을 넘을 수 있다.
+// 날짜 열을 침범하지 않게 말줄임하고, hover 로 전체 값을 보여준다.
+function renderAuthorCell(row: DataTableRow) {
+  return <TruncatedText value={String(row.authorName)} />
 }
 
 function renderDateCell(row: DataTableRow) {
