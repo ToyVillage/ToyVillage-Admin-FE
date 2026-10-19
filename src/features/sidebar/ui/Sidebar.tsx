@@ -12,7 +12,7 @@ import {
   useExitAnimation,
 } from '@/shared/ui'
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
-import adminProfileImage from '@/shared/ui/assets/profile-admin.png'
+import adminProfileImage from '@/shared/ui/assets/profile-admin.webp'
 import { useLogout } from '../model/useLogout'
 import { mockSidebarDashboardItem, mockSidebarGroups } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
