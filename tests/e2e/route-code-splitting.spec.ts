@@ -23,3 +23,26 @@ test('로그인 화면은 다른 화면 코드를 받지 않는다', async ({ pa
     pageModules.filter((path) => !path.startsWith('/src/pages/login/')),
   ).toEqual([])
 })
+
+test('로그인 화면 코드를 받는 동안 로그인 스켈레톤을 보인다', async ({
+  page,
+}) => {
+  let release!: () => void
+  const released = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route(/\/src\/pages\/login\/LoginPage\.tsx/, async (route) => {
+    await released
+    await route.fallback()
+  })
+
+  await page.goto('/login')
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
+  await expect(page.getByRole('button', { name: '로그인' })).toHaveCount(0)
+
+  release()
+  await expect(page.getByRole('button', { name: '로그인' })).toBeVisible()
+  await expect(skeleton).toHaveCount(0)
+})
