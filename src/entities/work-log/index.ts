@@ -38,9 +38,11 @@ export {
   getWorkLogDetail,
   getWorkLogForms,
   getWorkLogFormDetail,
+  getWorkLogFormDraft,
   getWorkLogs,
   isDuplicateFormNameError,
   isWorkLogNotFoundError,
+  updateWorkLogForm,
   type WorkLogFormListPage,
   type WorkLogListPage,
 } from './api/workLogApi'

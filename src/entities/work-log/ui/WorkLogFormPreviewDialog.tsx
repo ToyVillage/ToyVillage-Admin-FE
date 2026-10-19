@@ -49,6 +49,7 @@ export function WorkLogFormPreviewDialog({
         id: question.id,
         label: question.label,
         type: sheetTypeByFormType[question.type],
+        required: question.required,
       })),
     [form.questions],
   )

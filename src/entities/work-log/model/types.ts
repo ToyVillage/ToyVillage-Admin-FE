@@ -36,6 +36,8 @@ export interface WorkLogSheetColumn {
   id: string
   label: string
   type: WorkLogQuestionType
+  /** 필수 질문이면 헤더의 질문명 뒤에 `*` 를 붙인다(Figma 516:13990). */
+  required: boolean
 }
 
 /** 파일 업로드 질문의 답변. 시트에서 첨부 칩으로 그린다. */
@@ -68,7 +70,7 @@ export interface WorkLogFormQuestion {
   label: string
   /** 양식 상세·편집기가 같은 유형 체계를 쓴다(`workLogFormEditorTypes`). */
   type: WorkLogFormEditorType
-  /** 필수 질문 여부. 업무일지 질문은 모두 필수라 항상 true 다. */
+  /** 필수 질문 여부. 양식을 만들 때 질문마다 정한다. */
   required: boolean
   /** CHOICE·CHECKBOX 의 선택지. TEXT 에는 없다. */
   options?: string[]
@@ -107,6 +109,8 @@ export interface WorkLogFormDraftQuestion {
   id: string
   label: string
   type: WorkLogFormEditorType | null
+  /** 카드 하단 `필수` 토글(Figma 2775:24914). 새 질문은 꺼진 채로 시작한다. */
+  required: boolean
   options: WorkLogFormDraftOption[]
 }
 
