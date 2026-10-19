@@ -34,6 +34,7 @@ interface OpenValue {
 
 // Figma 516:13990(worklog sheet) / 541:14171(유형별). 첫 열은 `설정된 구역`,
 // 그 뒤로 양식의 질문이 한 열씩 놓이고 셀 표기는 질문 유형에 따라 달라진다.
+// 필수 질문은 헤더의 질문명 뒤에 `*` 를 붙인다. 범례는 시트를 쓰는 화면이 둔다.
 export function WorkLogSheet({
   columns,
   rows,
@@ -67,7 +68,11 @@ export function WorkLogSheet({
           <ZoneHeadCell>설정된 구역</ZoneHeadCell>
           {columns.map((column, index) => (
             <HeadCell key={column.id} style={columnStyle(index)}>
-              <HeadLabel ref={labelRef(index)}>{column.label}</HeadLabel>
+              {/* `*` 까지 함께 재야 필수 열의 헤더가 잘리지 않는다. */}
+              <HeadLabel ref={labelRef(index)}>
+                {column.label}
+                {column.required && <Required aria-hidden="true">*</Required>}
+              </HeadLabel>
             </HeadCell>
           ))}
         </HeaderRow>
@@ -420,15 +425,21 @@ const cellFrame = `
   padding: 0 24px;
 `
 
-const ZoneHeadCell = styled.div`
-  ${cellFrame}
-  ${cellClip}
+// `설정된 구역` 열은 행을 구분하는 고정 열이다. 질문 열과 달리 회색 바탕에
+// 오른쪽 2px 진한 선으로 나눈다(Figma 2433:24729 — 안쪽 그림자 -2px).
+const zoneColumnFrame = `
   flex: 0 0 ${ZONE_COLUMN_WIDTH}px;
   position: sticky;
   left: 0;
   z-index: 1;
+`
+
+const ZoneHeadCell = styled.div`
+  ${cellFrame}
+  ${cellClip}
+  ${zoneColumnFrame}
   background: ${({ theme }) => theme.colors.background};
-  border-right: 1px solid ${({ theme }) => theme.colors.tableHeaderStrong};
+  border-right: 2px solid ${({ theme }) => theme.colors.dialogBorder};
   color: ${({ theme }) => theme.colors.textGuide};
   font-size: 20px;
   font-weight: 600;
@@ -448,20 +459,24 @@ const HeadCell = styled.div`
   }
 `
 
+// Figma 2779:25022 — 질문명 뒤 4px 에 같은 크기의 빨간 `*`.
 const HeadLabel = styled.span`
+  display: inline-flex;
+  gap: 4px;
   white-space: nowrap;
+`
+
+const Required = styled.span`
+  color: ${({ theme }) => theme.colors.danger};
 `
 
 const ZoneCell = styled.div`
   ${cellFrame}
   ${cellClip}
-  flex: 0 0 ${ZONE_COLUMN_WIDTH}px;
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  background: ${({ theme }) => theme.colors.surface};
-  border-right: 1px solid ${({ theme }) => theme.colors.tableHeaderStrong};
-  color: ${({ theme }) => theme.colors.textGuide};
+  ${zoneColumnFrame}
+  background: ${({ theme }) => theme.colors.background};
+  border-right: 2px solid ${({ theme }) => theme.colors.dialogBorder};
+  color: ${({ theme }) => theme.colors.textStrong};
   font-size: 22px;
   font-weight: 500;
 `
