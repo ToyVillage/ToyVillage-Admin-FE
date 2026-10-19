@@ -302,6 +302,35 @@ test('S14-1: 중복 양식명(409)은 따로 알린다', async ({ page }) => {
   await expect(page).toHaveURL(new RegExp(`${editPath}$`))
 })
 
+test('S15-1: 편집 중 네트워크가 다시 연결돼도 입력값이 유지된다', async ({
+  page,
+  context,
+  workLogApi,
+}) => {
+  await page.goto(editPath)
+  await page.getByLabel('양식명').fill('조사')
+  const detailRequests = workLogApi.requests.templateDetail
+
+  // 다시 불러오면 실패하도록 막아 둔다. 재조회가 일어나면 오류 화면으로 바뀐다.
+  await page.route(
+    /^https:\/\/[^/]+\/work-log\/template\/1$/,
+    async (route) => {
+      if (route.request().method() !== 'GET') {
+        await route.fallback()
+        return
+      }
+      await route.fulfill({ status: 500, body: '' })
+    },
+  )
+  await context.setOffline(true)
+  await context.setOffline(false)
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+
+  await expect(page.getByLabel('양식명')).toHaveValue('조사')
+  await expect(page.getByText('양식을 불러오지 못했습니다')).toHaveCount(0)
+  expect(workLogApi.requests.templateDetail).toBe(detailRequests)
+})
+
 test('S15: 삭제된 양식으로 진입하면 목록으로 되돌린다', async ({ page }) => {
   await page.goto('/work-logs/forms/999/edit')
 
