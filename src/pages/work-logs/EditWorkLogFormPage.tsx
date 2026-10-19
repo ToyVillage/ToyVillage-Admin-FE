@@ -50,6 +50,10 @@ export function EditWorkLogFormPage() {
     retry: false,
     // 다시 들어올 때마다 서버의 최신 양식으로 편집을 시작한다.
     staleTime: 0,
+    // 편집 중에는 다시 불러오지 않는다. 바뀐 응답이 변경 감지 기준을 흔들거나,
+    // 재조회 실패가 편집 중인 화면을 오류 화면으로 바꾸지 않게 한다.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   })
 
   const save = useMutation({
@@ -72,12 +76,13 @@ export function EditWorkLogFormPage() {
   })
 
   // 삭제된 양식(404)이나 잘못된 id 로 진입하면 양식 관리 탭으로 되돌린다(spec).
-  if (!validId || (error && isWorkLogNotFoundError(error))) {
+  // 이미 받은 초안이 있으면 재조회가 실패해도 편집 중인 화면을 그대로 둔다.
+  if (!validId || (!draft && error && isWorkLogNotFoundError(error))) {
     return <Navigate to={backPath} replace />
   }
 
   // 404 가 아닌 조회 실패는 '삭제됨'으로 오인하지 않게 화면에 남겨 알린다.
-  if (error) {
+  if (!draft && error) {
     return (
       <StatePage>
         <StateCard role="alert">
