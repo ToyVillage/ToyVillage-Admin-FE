@@ -177,6 +177,11 @@ export function approveApi({
     if (!existsSync(path)) throw new Error(`필수 파일 없음: ${path}`)
   }
   const previous = existsSync(paths.approval) ? readJson(paths.approval) : {}
+  // 실제 서버를 끄고 재승인하면 실제 서버 동결 기록은 지운다. 남기면 게이트가 꺼진 실제 서버 테스트를 요구해 막힌다.
+  const keepReal = spec.realServer.enabled
+  const keptKeys = keepReal
+    ? frozenKeys
+    : frozenKeys.filter((key) => !key.startsWith('realTest'))
   copyRequired(paths.contractMarkdown, paths.approvedContractMarkdown)
   copyRequired(paths.contractJson, paths.approvedContractJson)
   copyRequired(paths.plan, paths.approvedPlan)
@@ -194,10 +199,10 @@ export function approveApi({
     planHash: sha256File(paths.approvedPlan),
     scenarioHash: sha256File(paths.approvedScenarios),
     testHash: previous.testHash ?? null,
-    realTestHash: previous.realTestHash ?? null,
-    realFixtureHash: previous.realFixtureHash ?? null,
+    realTestHash: keepReal ? (previous.realTestHash ?? null) : null,
+    realFixtureHash: keepReal ? (previous.realFixtureHash ?? null) : null,
     ...Object.fromEntries(
-      frozenKeys
+      keptKeys
         .filter((key) => previous[key] != null)
         .map((key) => [key, previous[key]]),
     ),
