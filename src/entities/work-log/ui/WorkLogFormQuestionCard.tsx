@@ -21,13 +21,17 @@ export function WorkLogFormQuestionCard({
     <Card>
       <Inner>
         <HeaderRow>
-          <QuestionName>{question.label}</QuestionName>
+          <QuestionName>
+            <QuestionText>{question.label}</QuestionText>
+            {question.required && <Required aria-hidden="true">*</Required>}
+          </QuestionName>
           <TypeBadge>
-            <TypeIcon src={typeIcons[question.type]} alt="" aria-hidden="true" />
-            <TypeLabel>
-              {typeLabels[question.type]}
-              {question.required && <Required aria-hidden="true"> *</Required>}
-            </TypeLabel>
+            <TypeIcon
+              src={typeIcons[question.type]}
+              alt=""
+              aria-hidden="true"
+            />
+            <TypeLabel>{typeLabels[question.type]}</TypeLabel>
           </TypeBadge>
           <HeaderSpacer aria-hidden="true" />
         </HeaderRow>
@@ -69,12 +73,14 @@ const HeaderRow = styled.div`
   gap: 36px;
 `
 
+// 필수 질문은 질문명 바로 뒤에 `*` 를 붙인다(Figma 2779:25012, 간격 6px).
 const QuestionName = styled.h2`
   display: flex;
   min-width: 0;
   height: 64px;
   flex: 1;
   align-items: center;
+  gap: 6px;
   margin: 0;
   padding: 20px 24px;
   border-radius: 8px;
@@ -110,7 +116,15 @@ const TypeLabel = styled.span`
   white-space: nowrap;
 `
 
+const QuestionText = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
 const Required = styled.span`
+  flex: 0 0 auto;
   color: ${({ theme }) => theme.colors.danger};
 `
 
