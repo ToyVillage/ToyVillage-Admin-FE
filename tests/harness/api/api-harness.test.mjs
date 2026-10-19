@@ -353,7 +353,17 @@ function readApproval(root, feature) {
 function git(root, ...args) {
   execFileSync(
     'git',
-    ['-C', root, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args],
+    [
+      '-C',
+      root,
+      '-c',
+      'user.name=t',
+      '-c',
+      'user.email=t@t',
+      '-c',
+      'commit.gpgsign=false',
+      ...args,
+    ],
     { stdio: 'ignore' },
   )
 }
@@ -494,6 +504,37 @@ test('staging real API test is frozen and verified separately', () => {
     checkApiGate({ root, feature, requireRealTest: true }).join('\n'),
     /real API e2e fixture 승인 해시 불일치/,
   )
+})
+
+test('re-approval after disabling the real server drops the real test freeze', () => {
+  const { root, feature } = fixtureRoot({ realServer: true })
+  approve({ root, feature })
+  write(
+    join(root, 'tests', 'e2e', 'api-real', `${feature}.real.spec.ts`),
+    "import { test } from './real-api-fixture'\ntest('real', async () => {})\n",
+  )
+  write(
+    join(root, 'tests', 'e2e', 'api-real', 'real-api-fixture.ts'),
+    guardedRealFixtureSource,
+  )
+  approve({ root, feature, freezeReal: true })
+
+  const spec = join(root, 'harness', 'api', 'specs', `${feature}.spec.md`)
+  writeFileSync(
+    spec,
+    readFileSync(spec, 'utf8')
+      .replace('enabled: true', 'enabled: false')
+      .replace('environment: staging', 'environment: none')
+      .replace('base_url: https://staging-api.example.com', 'base_url: ')
+      .replace('allowed_methods: [POST]', 'allowed_methods: []'),
+  )
+  approve({ root, feature })
+
+  const approval = readApproval(root, feature)
+  assert.equal(approval.realTestHash, null)
+  assert.equal(approval.realFixtureHash, null)
+  assert.equal(approval.realTestApprovedBy, undefined)
+  assert.deepEqual(checkApiGate({ root, feature }), [])
 })
 
 test('--freeze-real rejects executable fixture without a network guard', () => {
