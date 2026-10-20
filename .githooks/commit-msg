@@ -1,0 +1,3 @@
+#!/bin/sh
+# 커밋 메시지가 harness/shared/team-rules.md 3절 형식인지 본다. CI(pr-format.yml)와 같은 검사다.
+exec node "$(dirname "$0")/../scripts/check-pr-format.mjs" --commit-msg "$1"
