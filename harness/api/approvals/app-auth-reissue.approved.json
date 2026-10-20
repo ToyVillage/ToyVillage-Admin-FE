@@ -8,8 +8,10 @@
   "contractMarkdownHash": "0dcc89938aadc044694b9ef7f322ff3d5004881f5528ee12d17e322e81a5077c",
   "planHash": "14679c0568b002fe560816824d55756de726bc6a88422b361abd4efb8306757a",
   "scenarioHash": "49e22df3b485e5798b53413548845b8fa540939094fdb40d83aae5ade98d8b54",
-  "testHash": "1477a12cd5c3e83eccd533dd30550bbe98dd131bfc0430cb1ee71bf982cf0c02",
+  "testHash": "4bd499f0654551188b17742227ad08f802f006c205612a0b2b24cbbbe9644ce7",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-10-14T03:30:24.552Z"
+  "testApprovedAt": "2026-10-20T06:20:20.823Z",
+  "testApprovedBy": "yunho09",
+  "testApprovedCommit": "991250df1cabca924b8e0b6cd8e59c572d7627f8"
 }

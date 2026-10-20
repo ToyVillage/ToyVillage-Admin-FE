@@ -218,6 +218,10 @@ test('S9: 로그인 API 의 401 은 재발급·로그아웃을 유발하지 않�
   await page.getByRole('textbox', { name: '비밀번호', exact: true }).fill('pw')
   await page.getByRole('button', { name: '로그인' }).click()
 
+  // 아이디 값·URL 은 클릭 전부터 같아 기준이 못 된다. 실패 안내가 뜬 뒤(세션 정리 후)에 본다.
+  await expect(
+    page.getByText('아이디 또는 비밀번호를 확인해주세요'),
+  ).toBeVisible()
   await expect(page.getByLabel('아이디')).toHaveValue('admin')
   await expect(page).toHaveURL(/\/login$/)
   expect(reissue.count()).toBe(0)
