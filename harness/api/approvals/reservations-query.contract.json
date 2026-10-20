@@ -7,7 +7,9 @@
   "authentication": {
     "required": true,
     "type": "Bearer",
-    "roles": ["ADMIN"]
+    "roles": [
+      "ADMIN"
+    ]
   },
   "contentType": "application/json",
   "headers": [
@@ -20,7 +22,9 @@
       "default": null,
       "example": "Bearer <access-token>",
       "description": "관리자(ADMIN) 액세스 토큰",
-      "constraints": ["Bearer 스킴"]
+      "constraints": [
+        "Bearer 스킴"
+      ]
     }
   ],
   "pathParameters": [
@@ -33,7 +37,9 @@
       "default": null,
       "example": 1,
       "description": "조회할 단체예약 ID",
-      "constraints": ["양의 정수(LONG)"]
+      "constraints": [
+        "양의 정수(LONG)"
+      ]
     }
   ],
   "queryParameters": [],
@@ -50,6 +56,19 @@
           "description": "단체예약 상세",
           "fields": [
             {
+              "name": "id",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "단체예약 id",
+              "constraints": [
+                "format: int64"
+              ]
+            },
+            {
               "name": "counselDate",
               "location": "body",
               "type": "string",
@@ -58,7 +77,9 @@
               "default": null,
               "example": "2026-07-02",
               "description": "상담일",
-              "constraints": ["형식 yyyy-MM-dd"]
+              "constraints": [
+                "형식 yyyy-MM-dd"
+              ]
             },
             {
               "name": "visitDate",
@@ -69,7 +90,9 @@
               "default": null,
               "example": "2026-07-13",
               "description": "예약일(방문일)",
-              "constraints": ["형식 yyyy-MM-dd"]
+              "constraints": [
+                "형식 yyyy-MM-dd"
+              ]
             },
             {
               "name": "visitTime",
@@ -80,7 +103,9 @@
               "default": null,
               "example": "13:01:00",
               "description": "예약 시작 시간",
-              "constraints": ["형식 HH:mm:ss"]
+              "constraints": [
+                "형식 HH:mm:ss"
+              ]
             },
             {
               "name": "exitTime",
@@ -91,7 +116,9 @@
               "default": null,
               "example": "15:00:00",
               "description": "예약 종료 시간",
-              "constraints": ["형식 HH:mm:ss"]
+              "constraints": [
+                "형식 HH:mm:ss"
+              ]
             },
             {
               "name": "reservationName",
@@ -179,6 +206,54 @@
               "default": null,
               "example": "010-7753-9698",
               "description": "인솔자 연락처",
+              "constraints": []
+            },
+            {
+              "name": "visitSiteCount",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": true,
+              "default": null,
+              "example": null,
+              "description": "현장 방문 인원 (2026-10-12 실서버 확인, 값이 없을 때 null 여부 미확인)",
+              "constraints": [
+                "format: int32"
+              ]
+            },
+            {
+              "name": "visitSiteDate",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": true,
+              "default": null,
+              "example": null,
+              "description": "현장 방문일",
+              "constraints": [
+                "형식 yyyy-MM-dd"
+              ]
+            },
+            {
+              "name": "visitSiteTime",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": true,
+              "default": null,
+              "example": null,
+              "description": "현장 방문 시각",
+              "constraints": []
+            },
+            {
+              "name": "visitSiteExitTime",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": true,
+              "default": null,
+              "example": null,
+              "description": "현장 퇴장 시각",
               "constraints": []
             }
           ]
@@ -426,7 +501,9 @@
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": ["ADMIN"]
+        "roles": [
+          "ADMIN"
+        ]
       }
     },
     "detailValues": {
@@ -436,7 +513,9 @@
       "authentication": {
         "required": true,
         "type": "Bearer",
-        "roles": ["ADMIN"]
+        "roles": [
+          "ADMIN"
+        ]
       }
     }
   }

@@ -4,7 +4,7 @@ Playwright `page.route()` 기반 mock. 대상: `GET /documents/{id}`. 응답은 
 
 ## 조회 성공
 
-- S1. 200/201 상세 응답 → 편집 폼에 제목·첨부(fileName)·분류가 채워짐(title 매핑, files→첨부 이름).
+- S1. 200 상세 응답(2026-10-12 실서버 확인, #242) → 편집 폼에 제목·첨부(fileName)·분류가 채워짐(title 매핑, files→첨부 이름).
 
 ## 오류
 

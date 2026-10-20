@@ -141,10 +141,10 @@ test('S6: 연속 확인에도 삭제 요청은 한 번만 전송한다', async (
   expect(deleteRequestCount).toBe(1)
 })
 
-test('S7: HTTP 201 body가 Contract와 달라도 삭제 성공으로 처리한다', async ({
+test('S7: HTTP 200 body가 Contract와 달라도 삭제 성공으로 처리한다', async ({
   page,
 }) => {
-  await mockDeleteResponse(page, 201, { result: 'ok' })
+  await mockDeleteResponse(page, 200, { result: 'ok' })
 
   await page.goto('/notices/guide')
   await confirmDelete(page)
@@ -152,8 +152,8 @@ test('S7: HTTP 201 body가 Contract와 달라도 삭제 성공으로 처리한�
   await expectDeleteSuccess(page)
 })
 
-test('S8: HTTP 200도 삭제 성공으로 처리한다', async ({ page }) => {
-  await mockDeleteResponse(page, 200, {
+test('S8: HTTP 201도 삭제 성공으로 처리한다', async ({ page }) => {
+  await mockDeleteResponse(page, 201, {
     message: '휴무일이 삭제되었습니다.',
   })
 
@@ -300,8 +300,9 @@ async function fulfillCloseScheduleList(
 }
 
 async function fulfillDeleteSuccess(route: Route) {
+  // 실서버 삭제 성공은 200 이다(2026-10-12 확인).
   await route.fulfill({
-    status: 201,
+    status: 200,
     contentType: 'application/json',
     body: JSON.stringify({ message: '휴무일이 삭제되었습니다.' }),
   })

@@ -141,6 +141,8 @@ test('S10: 공백 아이디를 빈 값으로 검증한다', async ({ page }) => 
 test('S11: 키보드만으로 입력, 표시 전환과 제출을 조작한다', async ({
   page,
 }) => {
+  // 화면이 그려지기 전에 Tab 을 누르면 초점이 입력칸으로 가지 않는다(부하가 큰 병렬 실행).
+  await expect(page.getByLabel('아이디')).toBeVisible()
   await page.keyboard.press('Tab')
   await expect(page.getByLabel('아이디')).toBeFocused()
   await page.keyboard.type('admin')

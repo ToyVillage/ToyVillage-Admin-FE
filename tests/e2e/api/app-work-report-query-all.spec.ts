@@ -85,7 +85,8 @@ test('S1: 진입 시 page=1&size=10&status=PENDING 으로 한 번 조회하고 �
   await expect(rows(page).nth(0)).toContainText('2026-07-03')
   await expect(rows(page).nth(1)).toContainText('김수인')
   await expect(rows(page).nth(2)).toContainText('이지아')
-  await expect(page.getByText('9월 정기 안전점검')).toHaveCount(0)
+  // 2026-09-25 제목 컬럼 추가(a1fad89): 행마다 title 을 보인다.
+  await expect(page.getByText('9월 정기 안전점검')).toHaveCount(3)
 })
 
 test('S2: 탭 건수는 응답의 상태별 건수를 그대로 쓴다', async ({ page }) => {
@@ -353,7 +354,9 @@ test('S12: 응답 전에는 로딩 상태를 표시한다', async ({ page }) => 
 
   await page.goto('/task-reports')
 
-  await expect(page.getByText('업무보고를 불러오는 중입니다.')).toBeVisible()
+  const skeleton = page.getByRole('status', { name: '불러오는 중' })
+  await expect(skeleton).toBeVisible()
+  await expect(skeleton).toHaveAttribute('aria-busy', 'true')
   release?.()
   await expect(rows(page)).toHaveCount(3)
 })

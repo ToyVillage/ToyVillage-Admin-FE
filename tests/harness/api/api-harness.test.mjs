@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
 import ts from 'typescript'
+import { describeApprovalChanges } from '../../../scripts/api-approval-changes.mjs'
 import { approveApi } from '../../../scripts/approve-api.mjs'
-import { checkApiGate } from '../../../scripts/api-gate-check.mjs'
+import {
+  checkAllApiGates,
+  checkApiGate,
+} from '../../../scripts/api-gate-check.mjs'
 import {
   parseTaskSpec,
   sha256File,
@@ -194,7 +199,10 @@ test('API ID missing or duplicate match fails', () => {
 
   const duplicate = validContract()
   duplicate.source.apiIdMatchCount = 2
-  assert.match(validateApiContract(duplicate).join('\n'), /정확히 1/)
+  assert.match(
+    validateApiContract(duplicate).join('\n'),
+    /0\(Swagger만\) 또는 1/,
+  )
 })
 
 test('full path, authentication, nullable, enum, and success response are enforced', () => {
@@ -279,12 +287,21 @@ real_server:
   )
   write(join(artifacts, `${feature}.implementation-plan.md`), '# Plan\n')
   write(join(artifacts, `${feature}.test-scenarios.md`), '# Scenarios\n')
+  write(
+    join(root, 'harness', 'api', 'approvers.json'),
+    `${JSON.stringify(['developer'])}\n`,
+  )
   return { root, feature }
+}
+
+// 테스트는 AI 세션 안에서도 돌기 때문에 환경 변수와 git 사용자를 직접 넘긴다.
+function approve(options) {
+  return approveApi({ env: {}, gitUserName: 'developer', ...options })
 }
 
 test('approval hashes pass and changed approval source fails the gate', () => {
   const { root, feature } = fixtureRoot()
-  approveApi({ root, feature, approvedBy: 'developer' })
+  approve({ root, feature })
   assert.deepEqual(checkApiGate({ root, feature }), [])
 
   const plan = join(
@@ -301,9 +318,165 @@ test('approval hashes pass and changed approval source fails the gate', () => {
   )
 })
 
+test('--all reports only features whose committed approval no longer matches', () => {
+  const { root, feature } = fixtureRoot()
+  approve({ root, feature })
+  const test = join(root, 'tests', 'e2e', 'api', `${feature}.spec.ts`)
+  write(test, "await page.route('**/api/notice', () => {})\n")
+  approve({ root, feature, freeze: true })
+  assert.deepEqual(checkAllApiGates({ root }), [])
+
+  writeFileSync(test, `${readFileSync(test, 'utf8')}// changed\n`)
+  assert.deepEqual(checkAllApiGates({ root }), [
+    { feature, errors: ['API e2e test 승인 해시 불일치'] },
+  ])
+})
+
+test('--all passes --require-test through to each feature', () => {
+  const { root, feature } = fixtureRoot()
+  approve({ root, feature })
+  assert.deepEqual(checkAllApiGates({ root }), [])
+  assert.deepEqual(checkAllApiGates({ root, requireTest: true }), [
+    { feature, errors: ['testHash 누락: approve-api --freeze 필요'] },
+  ])
+})
+
+function readApproval(root, feature) {
+  return JSON.parse(
+    readFileSync(
+      join(root, 'harness', 'api', 'approvals', `${feature}.approved.json`),
+      'utf8',
+    ),
+  )
+}
+
+function git(root, ...args) {
+  execFileSync(
+    'git',
+    [
+      '-C',
+      root,
+      '-c',
+      'user.name=t',
+      '-c',
+      'user.email=t@t',
+      '-c',
+      'commit.gpgsign=false',
+      ...args,
+    ],
+    { stdio: 'ignore' },
+  )
+}
+
+test('approval is refused inside an AI session', () => {
+  const { root, feature } = fixtureRoot()
+  assert.throws(
+    () => approve({ root, feature, env: { CLAUDECODE: '1' } }),
+    /AI 세션\(CLAUDECODE\)/,
+  )
+})
+
+test('approver comes from git user.name and must be listed', () => {
+  const { root, feature } = fixtureRoot()
+  assert.throws(
+    () => approve({ root, feature, gitUserName: '' }),
+    /git user.name 없음/,
+  )
+  assert.throws(
+    () => approve({ root, feature, gitUserName: 'stranger' }),
+    /승인자 목록.*stranger/,
+  )
+
+  approve({ root, feature })
+  assert.equal(readApproval(root, feature).approvedBy, 'developer')
+  write(
+    join(root, 'tests', 'e2e', 'api', `${feature}.spec.ts`),
+    "await page.route('**/api/notice', () => {})\n",
+  )
+  assert.throws(
+    () => approve({ root, feature, freeze: true, gitUserName: 'stranger' }),
+    /승인자 목록.*stranger/,
+  )
+  approve({ root, feature, freeze: true })
+  assert.equal(readApproval(root, feature).testApprovedBy, 'developer')
+})
+
+test('gate rejects an approver missing from the approver list', () => {
+  const { root, feature } = fixtureRoot()
+  approve({ root, feature })
+  write(
+    join(root, 'harness', 'api', 'approvers.json'),
+    `${JSON.stringify(['other'])}\n`,
+  )
+  assert.deepEqual(checkApiGate({ root, feature }), [
+    '승인자 목록에 없는 approvedBy: developer',
+  ])
+})
+
+test('re-approval keeps the frozen test hash', () => {
+  const { root, feature } = fixtureRoot()
+  approve({ root, feature })
+  const testPath = join(root, 'tests', 'e2e', 'api', `${feature}.spec.ts`)
+  write(testPath, "await page.route('**/api/notice', () => {})\n")
+  approve({ root, feature, freeze: true })
+  const frozen = readApproval(root, feature)
+
+  approve({ root, feature })
+  const approval = readApproval(root, feature)
+  assert.equal(approval.testHash, frozen.testHash)
+  assert.equal(approval.testApprovedAt, frozen.testApprovedAt)
+  assert.deepEqual(checkApiGate({ root, feature, requireTest: true }), [])
+
+  writeFileSync(testPath, `${readFileSync(testPath, 'utf8')}// changed\n`)
+  assert.deepEqual(checkApiGate({ root, feature }), [
+    'API e2e test 승인 해시 불일치',
+  ])
+})
+
+test('approval changes show the diff since the approved commit', () => {
+  const { root, feature } = fixtureRoot()
+  approve({ root, feature })
+  assert.deepEqual(describeApprovalChanges({ root, feature }), [])
+
+  const spec = join(root, 'harness', 'api', 'specs', `${feature}.spec.md`)
+  const approvedSpec = readFileSync(spec, 'utf8')
+  writeFileSync(spec, `${approvedSpec}changed spec\n`)
+  // git 기록이 없으면 승인 당시 내용을 찾지 못한다고 알린다.
+  assert.deepEqual(describeApprovalChanges({ root, feature }), [
+    {
+      label: 'task spec',
+      path: `harness/api/specs/${feature}.spec.md`,
+      base: null,
+      diff: null,
+    },
+  ])
+
+  writeFileSync(spec, approvedSpec)
+  git(root, 'init', '-q')
+  git(root, 'add', '-A')
+  git(root, 'commit', '-q', '-m', 'approved')
+  writeFileSync(spec, `${approvedSpec}changed spec\n`)
+  const plan = join(
+    root,
+    'harness',
+    'artifacts',
+    'api',
+    `${feature}.implementation-plan.md`,
+  )
+  writeFileSync(plan, '# Plan\nchanged plan\n')
+
+  const changes = describeApprovalChanges({ root, feature })
+  assert.deepEqual(
+    changes.map(({ label }) => label),
+    ['task spec', 'runtime implementation plan'],
+  )
+  assert.match(changes[0].diff, /^\+changed spec$/m)
+  assert.match(changes[1].diff, /^\+changed plan$/m)
+})
+
 test('staging real API test is frozen and verified separately', () => {
   const { root, feature } = fixtureRoot({ realServer: true })
-  approveApi({ root, feature, approvedBy: 'developer' })
+  approve({ root, feature })
   const realTest = join(
     root,
     'tests',
@@ -323,7 +496,7 @@ test('staging real API test is frozen and verified separately', () => {
     'real-api-fixture.ts',
   )
   write(realFixture, guardedRealFixtureSource)
-  approveApi({ root, feature, freezeReal: true })
+  approve({ root, feature, freezeReal: true })
 
   assert.deepEqual(checkApiGate({ root, feature, requireRealTest: true }), [])
   writeFileSync(realFixture, 'export const test = { changed: true }\n')
@@ -333,9 +506,40 @@ test('staging real API test is frozen and verified separately', () => {
   )
 })
 
+test('re-approval after disabling the real server drops the real test freeze', () => {
+  const { root, feature } = fixtureRoot({ realServer: true })
+  approve({ root, feature })
+  write(
+    join(root, 'tests', 'e2e', 'api-real', `${feature}.real.spec.ts`),
+    "import { test } from './real-api-fixture'\ntest('real', async () => {})\n",
+  )
+  write(
+    join(root, 'tests', 'e2e', 'api-real', 'real-api-fixture.ts'),
+    guardedRealFixtureSource,
+  )
+  approve({ root, feature, freezeReal: true })
+
+  const spec = join(root, 'harness', 'api', 'specs', `${feature}.spec.md`)
+  writeFileSync(
+    spec,
+    readFileSync(spec, 'utf8')
+      .replace('enabled: true', 'enabled: false')
+      .replace('environment: staging', 'environment: none')
+      .replace('base_url: https://staging-api.example.com', 'base_url: ')
+      .replace('allowed_methods: [POST]', 'allowed_methods: []'),
+  )
+  approve({ root, feature })
+
+  const approval = readApproval(root, feature)
+  assert.equal(approval.realTestHash, null)
+  assert.equal(approval.realFixtureHash, null)
+  assert.equal(approval.realTestApprovedBy, undefined)
+  assert.deepEqual(checkApiGate({ root, feature }), [])
+})
+
 test('--freeze-real rejects executable fixture without a network guard', () => {
   const { root, feature } = fixtureRoot({ realServer: true })
-  approveApi({ root, feature, approvedBy: 'developer' })
+  approve({ root, feature })
   const realTest = join(
     root,
     'tests',
@@ -360,7 +564,7 @@ test('--freeze-real rejects executable fixture without a network guard', () => {
   )
 
   assert.throws(
-    () => approveApi({ root, feature, freezeReal: true }),
+    () => approve({ root, feature, freezeReal: true }),
     /fixture guard invalid.*auto network guard fixture/s,
   )
 
@@ -502,7 +706,7 @@ test('real API approval and execution enforce the same mock-free source rules', 
 
   for (const [invalidSource, expected] of cases) {
     const { root, feature } = fixtureRoot({ realServer: true })
-    approveApi({ root, feature, approvedBy: 'developer' })
+    approve({ root, feature })
     const realTest = join(
       root,
       'tests',
@@ -520,13 +724,10 @@ test('real API approval and execution enforce the same mock-free source rules', 
     write(realTest, invalidSource)
     write(realFixture, guardedRealFixtureSource)
 
-    assert.throws(
-      () => approveApi({ root, feature, freezeReal: true }),
-      expected,
-    )
+    assert.throws(() => approve({ root, feature, freezeReal: true }), expected)
 
     write(realTest, validSource)
-    approveApi({ root, feature, freezeReal: true })
+    approve({ root, feature, freezeReal: true })
     write(realTest, invalidSource)
     assert.match(
       validateRealRun({ root, feature, confirmed: true }).join('\n'),

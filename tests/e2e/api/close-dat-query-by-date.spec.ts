@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const apiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
+const apiPath = /^https:\/\/[^/]+\/close-day\/date(?:\?.*)?$/
 const openTimeApiPath = /^https:\/\/[^/]+\/open-time\/date(?:\?.*)?$/
 
 async function mockOperatingHours(page: Page, date: string) {
@@ -49,7 +49,7 @@ test('S1: 날짜별 정상 조회 결과를 상세 화면에 표시한다', asyn
   expect(requests).toHaveLength(1)
 
   const request = new URL(requests[0])
-  expect(request.pathname).toBe('/close-day')
+  expect(request.pathname).toBe('/close-day/date')
   expect(request.searchParams.get('date')).toBe('2026-07-13')
   expect([...request.searchParams.keys()]).toEqual(['date'])
 })

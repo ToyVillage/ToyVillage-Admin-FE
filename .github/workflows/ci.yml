@@ -1,0 +1,78 @@
+name: CI
+
+# PR 마다 정적 검사와 e2e 전체를 돌린다. 빌드는 Cloudflare Workers Builds 가 맡는다.
+# Prettier 검사는 넣지 않는다(하네스 문서·e2e 를 포맷하면 승인 해시가 바뀐다).
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: lint·typecheck·style-policy·harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # 이 job 들은 push 하지 않는다. 토큰을 .git/config 에 남기지 않는다.
+          persist-credentials: false
+      - run: corepack enable
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: yarn
+      - run: yarn install --immutable
+      - run: yarn lint
+      - run: yarn typecheck
+      - run: yarn style-policy
+      - run: yarn test:harness
+      # 승인 기록(harness/api/approvals)이 지금 명세·계약·테스트와 맞는지 본다. 고치고 재승인·재freeze 를 빠뜨리면 여기서 막힌다.
+      - run: yarn harness:api:gate --all
+
+  e2e:
+    name: e2e (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # 이 job 들은 push 하지 않는다. 토큰을 .git/config 에 남기지 않는다.
+          persist-credentials: false
+      - run: corepack enable
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: yarn
+      - run: yarn install --immutable
+      - run: yarn playwright install --with-deps chromium
+      # CI 에서는 dev 서버를 재사용하지 않고 mock 전용 서버를 새로 띄운다(playwright.config.ts).
+      - run: yarn playwright test --shard=${{ matrix.shard }}/4
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7
+
+  # 필수 상태 검사에 이 job 하나만 지정한다. shard 수를 바꿔도 설정을 고치지 않아도 된다.
+  e2e-result:
+    name: e2e
+    if: always()
+    needs: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.e2e.result }}" = success

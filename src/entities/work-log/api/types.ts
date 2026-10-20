@@ -1,4 +1,5 @@
-// Notion API 명세서(카테고리 `업무일지`) 중 ADMIN 권한이 있는 7개 API 의 요청·응답 스키마.
+// Notion API 명세서(카테고리 `업무일지`) 중 ADMIN 권한이 있는 API 의 요청·응답 스키마.
+// 질문 필수 여부(`required`)·양식 수정·양식 작성자는 Swagger(`/v3/api-docs/app`) 기준이다.
 // 런타임 값은 신뢰하지 않고 `unknown` 으로 받은 뒤 workLogApi 에서 검증한다.
 
 /** 서버 공통 페이지 응답(Spring Page). 화면이 쓰는 필드만 선언한다. */
@@ -46,6 +47,8 @@ export interface WorkLogAnswerResponse {
   questionId: number
   question: string
   questionType: string
+  /** 필수 질문 여부. 필드가 생기기 전에 만든 양식은 빠질 수 있어 false 로 본다. */
+  required?: boolean
   answerText: string | null
   options: WorkLogAnswerOptionResponse[]
   file: WorkLogAnswerFileResponse | null
@@ -72,6 +75,8 @@ export interface WorkLogDetailResponse {
 export interface WorkLogTemplateListItemResponse {
   templateId: number
   templateTitle: string
+  /** 양식을 만든 관리자 이름 */
+  writer?: string
   /** YYYY-MM-DD */
   createdAt: string
 }
@@ -92,6 +97,7 @@ export interface WorkLogTemplateQuestionResponse {
   questionId: number
   question: string
   questionType: string
+  required?: boolean
   options: WorkLogTemplateOptionResponse[]
 }
 
@@ -104,7 +110,7 @@ export interface WorkLogTemplateDetailResponse {
   questions: WorkLogTemplateQuestionResponse[]
 }
 
-/** WORK_LOG_TEMPLATE_CREATE — `POST /work-log/template` 요청 바디 */
+/** WORK_LOG_TEMPLATE_CREATE·UPDATE — `POST /work-log/template`, `PATCH /work-log/template/{id}` 요청 바디 */
 export interface WorkLogTemplateCreateRequest {
   templateTitle: string
   /** 배열 순서가 구역 정렬 순서(sectionOrder)가 된다. */
@@ -115,6 +121,7 @@ export interface WorkLogTemplateCreateRequest {
 export interface WorkLogTemplateCreateQuestion {
   question: string
   questionType: WorkLogServerQuestionType
+  required: boolean
   options: WorkLogTemplateCreateOption[]
 }
 
@@ -123,7 +130,7 @@ export interface WorkLogTemplateCreateOption {
   etcOption: boolean
 }
 
-/** WORK_LOG_TEMPLATE_CREATE 성공(201) 응답. 다른 API 와 달리 message 가 아니라 새 양식 id 를 준다. */
+/** WORK_LOG_TEMPLATE_CREATE(201)·UPDATE(200) 성공 응답. 다른 API 와 달리 message 가 아니라 양식 id 를 준다. */
 export interface WorkLogTemplateCreateResponse {
   templateId: number
 }

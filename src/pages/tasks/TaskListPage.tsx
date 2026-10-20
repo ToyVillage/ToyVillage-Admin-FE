@@ -9,6 +9,7 @@ import {
   TaskTable,
   type TaskStatus,
 } from '@/entities/task'
+import { teamTreeQueryOptions } from '@/entities/team'
 import { CreateTaskButton } from '@/features/create-task'
 import { RowActionMenu } from '@/features/row-actions'
 import {
@@ -90,6 +91,11 @@ export function TaskListPage() {
     // 삭제된 행의 버튼은 이미 사라졌을 수 있어 남아 있을 때만 되돌린다.
     requestAnimationFrame(() => menuTriggersRef.current.get(taskId)?.focus())
   }, [])
+
+  // 업무 만들기의 담당자 트리는 응답이 느리다. 목록에 있는 동안 미리 받아 둔다.
+  useEffect(() => {
+    void queryClient.prefetchQuery(teamTreeQueryOptions)
+  }, [queryClient])
 
   const status = tabStatuses[active]
   const { data, isPending, isError } = useQuery({

@@ -3,6 +3,8 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 const apiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
+  // 목록 달력은 오늘이 속한 달을 연다. 일정 데이터(2026-07)가 보이도록 날짜를 고정한다.
+  await page.clock.setFixedTime(new Date('2026-07-28T12:00:00'))
   await page.addInitScript(() => {
     window.localStorage.setItem('accessToken', 'close-date-create-test-token')
   })
@@ -171,6 +173,8 @@ test('S6: 잘못된 입력은 API 호출 전에 차단한다', async ({ page }) 
     '휴무일을 입력해 주세요',
   )
   await page.getByRole('button', { name: '확인' }).click()
+  // 확인 뒤 다음 프레임에 포커스를 옮긴다. 옮겨진 뒤에 입력해야 다른 칸에 들어가지 않는다.
+  await expect(page.getByLabel('시작일')).toBeFocused()
 
   await fillCloseSchedule(page, '2026-07-11', '2026-07-10', '날짜 순서 오류')
   await page.getByRole('button', { name: '생성하기' }).click()
@@ -178,6 +182,7 @@ test('S6: 잘못된 입력은 API 호출 전에 차단한다', async ({ page }) 
     '종료일은 시작일과 같거나 이후여야 합니다',
   )
   await page.getByRole('button', { name: '확인' }).click()
+  await expect(page.getByLabel('종료일')).toBeFocused()
 
   await page.getByLabel('종료일').fill('2026-07-11')
   await page.getByLabel(/제목/).fill('   ')
@@ -216,8 +221,11 @@ async function expectCreateFailure(
 }
 
 async function fulfillCreateSuccess(route: Route) {
+  // 실서버 생성 성공은 201 과 message 다(2026-10-12 확인).
   await route.fulfill({
-    status: 200,
+    status: 201,
+    contentType: 'application/json',
+    body: JSON.stringify({ message: '휴무일이 생성되었습니다.' }),
   })
 }
 

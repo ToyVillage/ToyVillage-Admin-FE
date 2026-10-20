@@ -1,5 +1,9 @@
 import { expect, test as base, type Page } from '@playwright/test'
-import { mockFeedApi, type FeedApiHandle } from './support/feed-api'
+import {
+  feedAdminDetailPattern,
+  mockFeedApi,
+  type FeedApiHandle,
+} from './support/feed-api'
 
 // `관찰 및 특이사항 보러가기` 링크가 종 id 를 얻으려고 개체 상세를 함께 조회한다.
 // 공용 `mockFeedApi` 에 넣으면 개체관리 스펙의 가짜 서버를 덮어쓰므로 여기서만 건다.
@@ -211,6 +215,46 @@ test('S8: 진입 시 스크롤은 맨 위다', async ({ page }) => {
   await expect
     .poll(() => page.evaluate(() => window.scrollY))
     .toBeLessThanOrEqual(1)
+})
+
+// 조회 중에도 실제 카드·섹션을 그리고 값 자리만 막대로 채운다. 불러온 뒤 박스가 튀지 않는다.
+test('S9: 조회 중과 불러온 뒤의 카드·필드 위치가 같다', async ({ page }) => {
+  let release!: () => void
+  const released = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route(feedAdminDetailPattern, async (route) => {
+    if (route.request().method() === 'GET') await released
+    await route.fallback()
+  })
+
+  const card = page.locator('main section').first()
+  const targets = [
+    card,
+    ...[
+      '급여날짜',
+      '급여시간',
+      '급여자',
+      '먹이 종류',
+      '급여량',
+      '잔량',
+      '특이사항',
+    ].map((label) => card.getByText(label, { exact: true })),
+    page.getByRole('heading', { name: '급여 이력' }),
+    page.getByText('관찰 및 특이사항 보러가기'),
+  ]
+  const boxes = () => Promise.all(targets.map((target) => target.boundingBox()))
+
+  await page.goto('/feeds/1')
+  const loading = page.getByRole('status', { name: '불러오는 중' })
+  await expect(loading).toBeVisible()
+  await expect(page.getByRole('heading', { name: '레오' })).toHaveCount(0)
+  const before = await boxes()
+
+  release()
+  await expect(page.getByRole('heading', { name: '레오' })).toBeVisible()
+  await expect(loading).toHaveCount(0)
+  expect(await boxes()).toEqual(before)
 })
 
 test('S17: 개체 사진을 fileKey 로 만든 URL 로 띄운다', async ({ page }) => {

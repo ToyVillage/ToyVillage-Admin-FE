@@ -1,12 +1,7 @@
 import { useEffect } from 'react'
 import styled from '@emotion/styled'
 import { useQuery } from '@tanstack/react-query'
-import {
-  Navigate,
-  useLocation,
-  useNavigate,
-  useParams,
-} from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   feedQueryKeys,
   FeedHistoryTable,
@@ -20,8 +15,7 @@ import {
   getIndividualSpeciesId,
   individualQueryKeys,
 } from '@/entities/individual'
-import { BackLink, SectionHeader } from '@/shared/ui'
-import { FeedDetailSkeleton } from './ui/FeedDetailSkeleton'
+import { BackLink, SectionHeader, SkeletonStatus } from '@/shared/ui'
 
 const listPath = '/feeds'
 
@@ -79,17 +73,6 @@ export function FeedDetailPage() {
     return <Navigate to={listPath} replace />
   }
 
-  if (isPending) {
-    return (
-      <Page>
-        <Content>
-          <BackLink to={backPath} />
-          <FeedDetailSkeleton />
-        </Content>
-      </Page>
-    )
-  }
-
   // 404(없는 기록)만 목록으로 되돌린다. 500·네트워크 실패까지 되돌리면
   // 조회 실패가 '없는 기록'으로 오인된다.
   if (!isPending && !feed) {
@@ -108,34 +91,40 @@ export function FeedDetailPage() {
 
   const history = feed?.history ?? []
 
+  // 조회 중에도 같은 카드·표를 그리고 서버 값 자리만 막대로 채운다(불러온 뒤 화면이 튀지 않게).
   return (
     <Page>
       <Content>
         <BackLink to={backPath} />
 
-        {feed && (
+        <SkeletonStatus busy={isPending}>
           <FeedRecordCard
-            feed={{ ...feed, species }}
+            feed={feed}
+            species={species}
             observationHref={observationHref}
           />
-        )}
 
-        <HistorySection>
-          <SectionHeader title="급여 이력" count={history.length} />
-          <HistoryTableArea>
-            <FeedHistoryTable
-              records={history}
-              emptyLabel="급여 이력이 없습니다."
-              onSelect={(feedLogId) => {
-                // 같은 개체의 다른 급여 기록으로 옮겨간다. 뒤로가기 목적지는 그대로 물려준다.
-                if (feedLogId === id) return
-                navigate(`/feeds/${feedLogId}`, {
-                  state: { backPath, species },
-                })
-              }}
+          <HistorySection>
+            <SectionHeader
+              title="급여 이력"
+              count={isPending ? undefined : history.length}
             />
-          </HistoryTableArea>
-        </HistorySection>
+            <HistoryTableArea>
+              <FeedHistoryTable
+                records={history}
+                emptyLabel="급여 이력이 없습니다."
+                onSelect={(feedLogId) => {
+                  // 같은 개체의 다른 급여 기록으로 옮겨간다. 뒤로가기 목적지는 그대로 물려준다.
+                  if (feedLogId === id) return
+                  navigate(`/feeds/${feedLogId}`, {
+                    state: { backPath, species },
+                  })
+                }}
+                loading={isPending}
+              />
+            </HistoryTableArea>
+          </HistorySection>
+        </SkeletonStatus>
       </Content>
     </Page>
   )

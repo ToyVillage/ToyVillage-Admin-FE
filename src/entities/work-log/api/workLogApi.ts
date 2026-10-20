@@ -6,6 +6,7 @@ import type {
   WorkLogForm,
   WorkLogFormDetail,
   WorkLogFormDraft,
+  WorkLogFormDraftQuestion,
   WorkLogFormEditorType,
   WorkLogQuestionType,
   WorkLogSheetColumn,
@@ -168,8 +169,7 @@ export async function getWorkLogForms({
     items: data.content.map((item) => ({
       id: String(item.templateId),
       name: item.templateTitle,
-      // 명세의 양식 목록 응답에 작성자가 없다.
-      authorName: '',
+      authorName: item.writer ?? '',
       date: item.createdAt,
     })),
     totalPages: data.totalPages,
@@ -181,6 +181,45 @@ export async function getWorkLogForms({
 export async function getWorkLogFormDetail({
   workLogTemplateId,
 }: WorkLogTemplateQueryRequest): Promise<WorkLogFormDetail> {
+  const data = await fetchTemplateDetail(workLogTemplateId)
+
+  return {
+    id: String(data.templateId),
+    name: data.templateTitle,
+    questions: data.questions.map((question) => ({
+      id: String(question.questionId),
+      label: question.question,
+      type: formTypeByServerType[question.questionType] ?? 'TEXT',
+      required: question.required === true,
+      options: question.options.map((option) => option.content),
+    })),
+    // 구역은 표로 미리보기에만 쓴다. 응답에 없어도 상세 화면은 그대로 보인다.
+    zones: (data.sections ?? []).map((section) => section.sectionName),
+  }
+}
+
+// WORK_LOG_TEMPLATE_QUERY — 수정 화면이 편집할 초안. 상세와 같은 응답을 쓰지만
+// 기타 보기 여부와 구역 저장 여부(삭제 확인 기준)까지 살려 둔다.
+export async function getWorkLogFormDraft({
+  workLogTemplateId,
+}: WorkLogTemplateQueryRequest): Promise<WorkLogFormDraft> {
+  const data = await fetchTemplateDetail(workLogTemplateId)
+
+  return {
+    name: data.templateTitle,
+    questions: data.questions.map(toDraftQuestion),
+    // sectionId 는 응답 검증 대상이 아니라 화면용 id 를 따로 만든다.
+    zones: (data.sections ?? []).map((section) => ({
+      id: crypto.randomUUID(),
+      label: section.sectionName,
+      persisted: true,
+    })),
+  }
+}
+
+async function fetchTemplateDetail(
+  workLogTemplateId: number,
+): Promise<WorkLogTemplateDetailResponse> {
   assertId(workLogTemplateId, '업무일지 양식')
 
   const { data } = await api.get<unknown>(
@@ -191,19 +230,23 @@ export async function getWorkLogFormDetail({
     throw new Error('업무일지 양식 상세 조회 응답 형식이 올바르지 않습니다.')
   }
 
+  return data
+}
+
+function toDraftQuestion(
+  question: WorkLogTemplateDetailResponse['questions'][number],
+): WorkLogFormDraftQuestion {
   return {
-    id: String(data.templateId),
-    name: data.templateTitle,
-    questions: data.questions.map((question) => ({
-      id: String(question.questionId),
-      label: question.question,
-      type: formTypeByServerType[question.questionType] ?? 'TEXT',
-      // 업무일지 질문은 모두 필수다(명세에 필드가 없어 고정값으로 둔다).
-      required: true,
-      options: question.options.map((option) => option.content),
+    id: String(question.questionId),
+    label: question.question,
+    type: formTypeByServerType[question.questionType] ?? 'TEXT',
+    required: question.required === true,
+    // 기타 보기의 보기명(`기타`)은 고정값이라 편집기에서는 비워 둔다.
+    options: question.options.map((option) => ({
+      id: String(option.optionId),
+      value: option.etcOption ? '' : option.content,
+      isEtc: option.etcOption,
     })),
-    // 구역은 표로 미리보기에만 쓴다. 응답에 없어도 상세 화면은 그대로 보인다.
-    zones: (data.sections ?? []).map((section) => section.sectionName),
   }
 }
 
@@ -217,6 +260,26 @@ export async function createWorkLogForm(
 
   if (!isTemplateCreateResponse(data)) {
     throw new Error('업무일지 양식 생성 응답 형식이 올바르지 않습니다.')
+  }
+
+  return data
+}
+
+// WORK_LOG_TEMPLATE_UPDATE — 양식 전체를 다시 보낸다(생성과 같은 바디). 성공은 200 이다.
+export async function updateWorkLogForm(
+  { workLogTemplateId }: WorkLogTemplateQueryRequest,
+  draft: WorkLogFormDraft,
+): Promise<WorkLogTemplateCreateResponse> {
+  assertId(workLogTemplateId, '업무일지 양식')
+  const body = toTemplateCreateRequest(draft)
+
+  const { data } = await api.patch<unknown>(
+    `/work-log/template/${workLogTemplateId}`,
+    body,
+  )
+
+  if (!isTemplateCreateResponse(data)) {
+    throw new Error('업무일지 양식 수정 응답 형식이 올바르지 않습니다.')
   }
 
   return data
@@ -294,7 +357,12 @@ function toCreateQuestion(
     throw new Error('객관식·체크박스 질문은 보기를 하나 이상 등록해야 합니다.')
   }
 
-  return { question: question.label.trim(), questionType, options }
+  return {
+    question: question.label.trim(),
+    questionType,
+    required: question.required,
+    options,
+  }
 }
 
 // 시트 열은 질문이다. 답변이 없는 구역이 있어 모든 구역을 훑어 처음 나온 순서로 모은다.
@@ -312,6 +380,7 @@ function toSheetColumns(
         id,
         label: answer.question,
         type: sheetTypeByServerType[answer.questionType] ?? 'LONG_TEXT',
+        required: answer.required === true,
       })
     }
   }
@@ -405,6 +474,7 @@ function isWorkLogTemplateListItem(
   return (
     Number.isInteger(item.templateId) &&
     typeof item.templateTitle === 'string' &&
+    (item.writer === undefined || typeof item.writer === 'string') &&
     typeof item.createdAt === 'string'
   )
 }
@@ -447,6 +517,7 @@ function isAnswerResponse(value: unknown): value is WorkLogAnswerResponse {
     Number.isInteger(answer.questionId) &&
     typeof answer.question === 'string' &&
     typeof answer.questionType === 'string' &&
+    isOptionalBoolean(answer.required) &&
     Array.isArray(answer.options) &&
     answer.options.every(isAnswerOption)
   )
@@ -500,9 +571,15 @@ function isTemplateQuestion(value: unknown): boolean {
     Number.isInteger(question.questionId) &&
     typeof question.question === 'string' &&
     typeof question.questionType === 'string' &&
+    isOptionalBoolean(question.required) &&
     Array.isArray(question.options) &&
     question.options.every(isTemplateOption)
   )
+}
+
+// `required` 가 생기기 전에 만든 양식은 필드가 빠져 올 수 있다(빠지면 필수가 아니다).
+function isOptionalBoolean(value: unknown): boolean {
+  return value === undefined || typeof value === 'boolean'
 }
 
 function isTemplateOption(value: unknown): boolean {

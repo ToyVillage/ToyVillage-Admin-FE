@@ -7,6 +7,6 @@
 | Figma 퍼블리싱 | `publishing/RUNBOOK.md` | `publishing/specs`, `publishing/approvals` | `artifacts/publishing` |
 | API 연동       | `api/RUNBOOK.md`        | `api/specs`, `api/approvals`               | `artifacts/api`        |
 
-공통 프론트엔드 규칙은 `shared/code-rules.md`, 공통 반복 중단 규칙은 `no-progress.md`를 사용한다.
+공통 프론트엔드 규칙은 `shared/code-rules.md`, 커밋·PR·브랜치 같은 팀 작업 규칙은 `shared/team-rules.md`, 공통 반복 중단 규칙은 `no-progress.md`를 사용한다.
 
 `artifacts/`는 실행 중 스크립트가 필요한 하위 디렉터리를 자동 생성하는 Git 비추적 영역이다. 승인 기록은 각 작업 유형의 `approvals/`에 저장하며 Git으로 추적한다.

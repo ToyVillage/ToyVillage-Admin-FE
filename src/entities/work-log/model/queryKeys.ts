@@ -14,4 +14,7 @@ export const workLogFormQueryKeys = {
   filterOptions: () => ['work-log-forms', 'list', 'filter-options'] as const,
   detail: (templateId: string) =>
     ['work-log-forms', 'detail', templateId] as const,
+  // 수정 화면이 편집하는 초안. 상세와 응답은 같지만 모양이 달라 키를 나눈다.
+  draft: (templateId: string) =>
+    ['work-log-forms', 'draft', templateId] as const,
 }

@@ -1,11 +1,14 @@
 import styled from '@emotion/styled'
-import { ProfilePhoto, ShortcutButton } from '@/shared/ui'
+import { ProfilePhoto, ShortcutButton, Skeleton } from '@/shared/ui'
 import { formatFedDate } from '../model/format'
-import type { FeedRecordDetail } from '../model/types'
+import type { AnimalSpecies, FeedRecordDetail } from '../model/types'
 import { AnimalSpeciesBadge } from './AnimalSpeciesBadge'
 
 interface FeedRecordCardProps {
-  feed: FeedRecordDetail
+  /** 비어 있으면 조회 중이다. 라벨·버튼은 그대로 두고 서버 값 자리만 막대로 채운다. */
+  feed?: FeedRecordDetail
+  /** 개체 분류. 급여 API 에는 없고 목록에서 고른 분류 탭에서 온다. 없으면 배지를 그리지 않는다. */
+  species?: AnimalSpecies
   /**
    * 개체 상세(관찰 및 특이사항 표) 경로. 종 id 를 아직 모르면 null 이고,
    * 그때는 링크 대신 비활성 배지를 그린다.
@@ -14,34 +17,59 @@ interface FeedRecordCardProps {
 }
 
 // Figma `749:14672` (basic info). 개체 사진 + 개체명·분류 + 급여 기록 필드 7종.
-export function FeedRecordCard({ feed, observationHref }: FeedRecordCardProps) {
+// 조회 중에도 같은 카드를 그려 불러온 뒤 박스 크기·위치가 바뀌지 않게 한다.
+export function FeedRecordCard({
+  feed,
+  species,
+  observationHref,
+}: FeedRecordCardProps) {
   return (
     <Card>
-      {/* 개체 상세 카드와 같은 사진 컴포넌트를 쓴다. 못 불러오면 `사진 없음` 이 대신 온다. */}
-      <Photo src={feed.animalPhotoUrl ?? ''} alt={`${feed.animalName} 사진`} />
+      {feed ? (
+        // 개체 상세 카드와 같은 사진 컴포넌트를 쓴다. 못 불러오면 `사진 없음` 이 대신 온다.
+        <Photo
+          src={feed.animalPhotoUrl ?? ''}
+          alt={`${feed.animalName} 사진`}
+        />
+      ) : (
+        <PhotoSlot>
+          <Skeleton width={180} height={180} radius={20} />
+        </PhotoSlot>
+      )}
       <Info>
         <Titles>
-          <AnimalName>{feed.animalName}</AnimalName>
-          {/* 급여 API 가 분류를 주지 않으면 배지를 그리지 않는다. */}
-          {feed.species && <AnimalSpeciesBadge species={feed.species} />}
+          {feed ? (
+            <AnimalName>{feed.animalName}</AnimalName>
+          ) : (
+            <Skeleton width={90} height={28} />
+          )}
+          {species && <AnimalSpeciesBadge species={species} />}
         </Titles>
         {/* 특이사항은 길어질 수 있어 마지막 줄을 혼자 쓴다 — 두 열에 걸쳐
             남은 폭을 그대로 쓴다. */}
         <Fields>
           <Row>
-            <Field label="급여날짜" value={formatFedDate(feed.fedDate)} />
-            <Field label="먹이 종류" value={feed.feedType} />
+            <Field
+              label="급여날짜"
+              value={feed && formatFedDate(feed.fedDate)}
+              loadingWidth={120}
+            />
+            <Field label="먹이 종류" value={feed?.feedType} loadingWidth={40} />
           </Row>
           <Row>
-            <Field label="급여시간" value={feed.fedTime} />
-            <Field label="급여량" value={feed.feedAmount} />
+            <Field label="급여시간" value={feed?.fedTime} loadingWidth={60} />
+            <Field label="급여량" value={feed?.feedAmount} loadingWidth={40} />
           </Row>
           <Row>
-            <Field label="급여자" value={feed.feederName} />
-            <Field label="잔량" value={feed.remainingAmount} />
+            <Field label="급여자" value={feed?.feederName} loadingWidth={60} />
+            <Field
+              label="잔량"
+              value={feed?.remainingAmount}
+              loadingWidth={40}
+            />
           </Row>
           <Row>
-            <WideField label="특이사항" value={feed.note} />
+            <WideField label="특이사항" value={feed?.note} loadingWidth={320} />
           </Row>
         </Fields>
       </Info>
@@ -61,15 +89,28 @@ export function FeedRecordCard({ feed, observationHref }: FeedRecordCardProps) {
 
 interface FieldProps {
   label: string
-  value: string
+  /** 비어 있으면 조회 중이라 값 자리에 막대를 그린다. */
+  value: string | undefined
+  /** 조회 중 막대 폭 */
+  loadingWidth: number
   className?: string
 }
 
-function Field({ label, value, className }: FieldProps) {
+function Field({ label, value, loadingWidth, className }: FieldProps) {
   return (
     <FieldBox className={className}>
       <FieldLabel>{label}</FieldLabel>
-      <FieldValue>{value}</FieldValue>
+      {value === undefined ? (
+        // 보이지 않는 한 글자로 값 한 줄의 높이·baseline 을 그대로 두고 막대를 겹친다.
+        <LoadingValue aria-hidden="true" style={{ width: loadingWidth }}>
+          {'\u00a0'}
+          <LoadingBar>
+            <Skeleton width={loadingWidth} height={20} />
+          </LoadingBar>
+        </LoadingValue>
+      ) : (
+        <FieldValue>{value}</FieldValue>
+      )}
     </FieldBox>
   )
 }
@@ -125,6 +166,12 @@ const Photo = styled(ProfilePhoto)`
   flex: 0 0 180px;
   border-radius: 20px;
   object-fit: cover;
+`
+
+// 조회 중 사진 자리. 실제 사진(Photo)과 같은 위치·크기다.
+const PhotoSlot = styled.div`
+  grid-area: photo;
+  margin-top: 17px;
 `
 
 const Info = styled.div`
@@ -205,4 +252,19 @@ const FieldValue = styled.span`
   font-size: 22px;
   font-weight: 500;
   line-height: 1.2;
+`
+
+const LoadingValue = styled(FieldValue)`
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+`
+
+const LoadingBar = styled.span`
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: block;
+  width: 100%;
+  transform: translateY(-50%);
 `

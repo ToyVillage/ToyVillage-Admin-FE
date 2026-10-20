@@ -75,7 +75,7 @@ export async function getCloseSchedulesByDate({
     throw new Error('휴무일 날짜별 조회 요청 날짜가 올바르지 않습니다.')
   }
 
-  const { data, status } = await api.get<unknown>('/close-day', {
+  const { data, status } = await api.get<unknown>('/close-day/date', {
     params: { date },
   })
 

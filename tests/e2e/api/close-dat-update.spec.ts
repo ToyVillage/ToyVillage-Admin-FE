@@ -4,6 +4,8 @@ const closeScheduleApiPath = /^https:\/\/[^/]+\/close-day(?:\?.*)?$/
 const closeScheduleDetailApiPath = /^https:\/\/[^/]+\/close-day\/[^/?]+(?:\?.*)?$/
 
 test.beforeEach(async ({ page }) => {
+  // 목록 달력은 오늘이 속한 달을 연다. 일정 데이터(2026-07)가 보이도록 날짜를 고정한다.
+  await page.clock.setFixedTime(new Date('2026-07-28T12:00:00'))
   await page.addInitScript(() => {
     window.localStorage.setItem('accessToken', 'close-date-update-test-token')
   })
@@ -80,20 +82,15 @@ test('S2: HTTP 400이면 입력을 유지하고 다시 제출할 수 있다', as
   await expect.poll(() => updateRequestCount).toBe(2)
 })
 
-test('S3: HTTP 401이면 입력과 수정 화면을 유지한다', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S3: HTTP 401이면 로그인으로 간다', async ({ page }) => {
   await mockUpdateError(page, 401, '만료된 토큰입니다.')
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '인증 오류 휴무일')
   await page.getByRole('button', { name: '저장하기' }).click()
 
-  await expectUpdateFailure(
-    page,
-    7,
-    '2026-07-12',
-    '2026-07-13',
-    '인증 오류 휴무일',
-  )
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S4: HTTP 404이면 수정 성공으로 처리하지 않는다', async ({ page }) => {
@@ -174,10 +171,10 @@ test('S6: pending 중 중복 제출을 막고 수정 상태를 표시한다', as
   expect(updateRequestCount).toBe(1)
 })
 
-test('S7: HTTP 201 body가 Contract와 다르면 성공 처리하지 않는다', async ({
+test('S7: HTTP 200 body가 Contract와 다르면 성공 처리하지 않는다', async ({
   page,
 }) => {
-  await mockUpdateResponse(page, 201, { result: 'ok' })
+  await mockUpdateResponse(page, 200, { result: 'ok' })
 
   await openUpdateTarget(page)
   await fillCloseSchedule(page, '2026-07-12', '2026-07-13', '응답 오류 휴무일')
@@ -230,6 +227,8 @@ test('S9: 잘못된 입력은 API 호출 전에 차단한다', async ({ page }) 
     '휴무일을 입력해 주세요',
   )
   await page.getByRole('button', { name: '확인' }).click()
+  // 확인 뒤 다음 프레임에 포커스를 옮긴다. 옮겨진 뒤에 입력해야 다른 칸에 들어가지 않는다.
+  await expect(page.getByLabel('시작일')).toBeFocused()
 
   await fillCloseSchedule(page, '2026-07-13', '2026-07-12', '날짜 순서 오류')
   await page.getByRole('button', { name: '저장하기' }).click()
@@ -237,6 +236,7 @@ test('S9: 잘못된 입력은 API 호출 전에 차단한다', async ({ page }) 
     '종료일은 시작일과 같거나 이후여야 합니다',
   )
   await page.getByRole('button', { name: '확인' }).click()
+  await expect(page.getByLabel('종료일')).toBeFocused()
 
   await page.getByLabel('종료일').fill('2026-07-13')
   await page.getByLabel(/제목/).fill('   ')
@@ -405,8 +405,9 @@ async function fulfillCloseScheduleList(
 }
 
 async function fulfillUpdateSuccess(route: Route) {
+  // 실서버 수정 성공은 200 이다(2026-10-12 확인).
   await route.fulfill({
-    status: 201,
+    status: 200,
     contentType: 'application/json',
     body: JSON.stringify({ message: '휴무일이 수정되었습니다.' }),
   })

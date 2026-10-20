@@ -5,7 +5,7 @@
 - 목적: 유효한 입력을 Contract body로 전송하고 성공 이동한다.
 - Mock request: `POST /api/close-day`, JSON body에 `title`,
   `startCloseTime`, `endCloseTime`만 포함
-- Mock response: HTTP 200, response body 없음
+- Mock response: HTTP 201, `{"message":"휴무일이 생성되었습니다."}` (2026-10-12 실서버 확인, #242)
 - 사용자 동작: 생성 폼에 유효한 값 입력 후 `생성하기` 클릭
 - 기대 결과: POST 1회, `/notices/guide` 이동, 전체 조회 query 재실행
 
@@ -27,8 +27,8 @@
 
 ## Mock S4 — 실제 성공 응답 body 호환
 
-- 목적: 실제 생성이 완료된 HTTP 200을 response body 검증 때문에 실패로
-  오판하지 않는다.
+- 목적: 실서버 성공은 201이지만, HTTP 200과 프론트가 쓰지 않는 body도
+  생성 성공으로 처리한다(코드가 2xx를 허용).
 - Mock request: `POST /api/close-day`
 - Mock response: HTTP 200, 프론트가 사용하지 않는 body
 - 사용자 동작: 유효한 입력 후 `생성하기` 클릭
@@ -38,7 +38,7 @@
 
 - 목적: pending 중 동일 생성 요청이 중복 전송되지 않는다.
 - Mock request: 지연된 `POST /api/close-day`
-- Mock response: HTTP 200
+- Mock response: HTTP 201
 - 사용자 동작: `생성하기`를 빠르게 반복 실행
 - 기대 결과: POST 1회, pending 중 버튼 disabled와 `생성 중`, 성공 후 이동
 

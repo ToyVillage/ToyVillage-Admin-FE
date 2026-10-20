@@ -2,7 +2,7 @@
 
 ## 승인 기준
 
-- `PUT /open-time/{open-time-id}`, body `{ openDate, startOpenTime, endOpenTime }`, 시간 `HH:mm`, 성공 HTTP 201 + `message` string.
+- `PUT /open-time/{open-time-id}`, body `{ openDate, startOpenTime, endOpenTime }`, 시간 `HH:mm`, 성공 HTTP 200 + `message` string (2026-10-12 실서버 확인, #242).
 - 조회 응답 `id`가 있는 날짜에서만 호출하고 path에 그 id를 쓴다.
 - 실제 서버 테스트는 disabled이다.
 

@@ -40,6 +40,29 @@ Query Parameter 상세는 페이지의 구조화 표에서 관리한다. 필요�
 
 API ID 검색은 exact match 결과 수를 Contract의 `source.apiIdMatchCount`에 기록하며 반드시 1이어야 한다. Path는 `/`로 시작하고 `?`와 `#`가 없어야 한다. 기존 데이터는 API ID와 전체 Path가 채워지고 중복·누락 검사가 끝난 행부터 순차적으로 사용한다.
 
+## Swagger 대조
+
+Notion 명세와 함께 같은 Method·Path의 스테이징 Swagger operation을 본다(`yarn harness:api:swagger-source`, RUNBOOK ②). 결과는 `<feature>.swagger-source.json`에 계약과 같은 필드 모양으로 저장된다.
+
+- Notion에 없는 API는 개발자가 준 Method·Path로 Swagger만 보고 계약을 만든다. `source`는 `apiIdMatchCount: 0`과 `swagger`(method·path 필수)만 둔다. Swagger에 없는 접근 역할·응답 필드 필수 여부는 개발자에게 묻는다.
+- Notion과 Swagger의 경로가 달라 개발자가 Swagger를 택했으면 계약 경로는 `source.swagger.path`와 같아야 하고, `databaseValues.path`에는 Notion 원래 경로를 그대로 둔다.
+
+- 둘이 같으면 그대로 쓴다.
+- Notion에 빠진 값은 Swagger로 채우고 contract.md에 출처를 표시한다.
+- 둘이 다르면 STOP하고 개발자가 기준을 정한다. 실서버가 Swagger 표기와 다른 경우가 있다(생성 API 201을 Swagger가 200으로 적음).
+- Swagger(springdoc)에는 접근 역할·응답 필드 필수 여부·설명·예시가 없다. 이 값은 Notion을 따른다.
+- Contract의 `source.swagger`에 Swagger 출처를 남긴다. 2026-10 이전 Contract에는 없으므로 선택 속성이다.
+
+```json
+"swagger": {
+  "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs",
+  "operationId": "getDetail",
+  "method": "GET",
+  "path": "/tasks/{id}",
+  "checkedAt": "2026-10-12T00:00:00.000Z"
+}
+```
+
 ## 공통 필드
 
 Header, Path, Query, Body, Response 필드는 다음 속성을 사용한다.
@@ -139,11 +162,14 @@ databaseValues
 detailValues
 ```
 
-`databaseValues`와 `detailValues`는 최소한 API ID, Method, Path, 인증 정보를 각각 보존한다. validator가 두 값과 Contract를 비교한다.
+`databaseValues`와 `detailValues`는 최소한 API ID, Method, Path, 인증 정보를 각각 보존한다. validator가 두 값과 Contract를 비교한다. 경로는 Notion 경로나 `source.swagger.path` 중 하나와 같으면 통과한다.
+
+Notion에 없는 API는 위 Notion 출처 값 대신 `apiIdMatchCount: 0`과 `source.swagger`를 기록한다.
 
 ## STOP 조건
 
-- API ID 없음, 중복, 검색 결과 없음
+- API ID 없음, 중복
+- Notion 검색 결과가 없는데 Swagger에서도 같은 Method·Path를 찾지 못함
 - Method 또는 Full Path 없음
 - Path에 Query String 포함
 - 데이터베이스와 상세 페이지의 API ID, Method, Path, 인증 정보 불일치

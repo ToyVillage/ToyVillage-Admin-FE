@@ -1,15 +1,15 @@
 {
   "feature": "open-time-update",
   "apiId": "OPEN_TIME_UPDATE",
-  "approvedAt": "2026-09-17T08:02:45.229Z",
+  "approvedAt": "2026-10-12T07:07:03.154Z",
   "approvedBy": "yunho09",
   "taskSpecHash": "46496bda4c71cc0271fd15946b8f84d98b700f0f8433b42d164a5a0c061dd6f0",
-  "contractHash": "7b676c0fd0e519cc4aeaef1cbfd90223f4f1bc2462b23ba071abcd47ecc624dc",
-  "contractMarkdownHash": "d9bc0bff6c0e00418fb35d4041bed317adf6b1efbe03725f5e579ba7be3c3f2b",
-  "planHash": "a40946ca6eae7c66211a1ad064b3a19b5812ebe9170f77cd2e0ad2ba53e73ab6",
-  "scenarioHash": "6b3cb1c7ff46869f81ba146bf1174f5695f0ca66831b801bd5a5532760774e0f",
-  "testHash": "14e3aaec3fe0d9abf3ee085f66f7d6ef9c3d58d25aaeac3643d7d7a5ca84ceb2",
+  "contractHash": "9e392d5ffed58edd92a7e8e03404669ebd20ecfd4a1b51e4bfb365b28250cb0f",
+  "contractMarkdownHash": "c1bbe4385c4fa4c028c570781efa7ade4c4050ae263292598f36c17a9b8472d8",
+  "planHash": "82375b09c33bbaea1b29980c066b715090635b131d5ba06a932f452927a0d9e9",
+  "scenarioHash": "0f5f462758809669dedb9a3aa1101853caae8f691f713c7faffce42a0d1e9049",
+  "testHash": "626874bb5d362bedd2de6d077c6f916b7d1611755f2798def2d1738fcfb610ec",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T08:08:32.782Z"
+  "testApprovedAt": "2026-10-14T03:30:23.774Z"
 }

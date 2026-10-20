@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -8,6 +8,7 @@ import {
   isTaskHasReportError,
   TaskInfoRow,
 } from '@/entities/task'
+import { teamTreeQueryOptions } from '@/entities/team'
 import {
   TaskProgressCard,
   TaskReportSummaryCard,
@@ -49,6 +50,8 @@ export function TaskDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   // 삭제 실패 토스트 문구. null 이면 숨긴다.
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  // 삭제에 성공하면 화면을 떠나는 동안 상세를 다시 조회하지 않게 끈다.
+  const [deleted, setDeleted] = useState(false)
   // 다운로드 실패가 연달아 나도 토스트를 새로 띄우도록 매번 값을 바꾼다. 0 이면 숨긴다.
   const [downloadErrorId, setDownloadErrorId] = useState(0)
   const dismissDownloadError = useCallback(() => setDownloadErrorId(0), [])
@@ -71,12 +74,17 @@ export function TaskDetailPage() {
   } = useQuery({
     queryKey: ['tasks', id],
     queryFn: () => getTask({ id: Number(id) }),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && !deleted,
   })
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteTask({ id: Number(id) }),
   })
+
+  // 수정 화면의 담당자 트리는 응답이 느리다. 상세에 있는 동안 미리 받아 둔다.
+  useEffect(() => {
+    void queryClient.prefetchQuery(teamTreeQueryOptions)
+  }, [queryClient])
 
   // 담당자별 보고 현황과 집계는 상세 조회 응답에 함께 온다. 따로 조회하지 않는다.
   // 서버 `MISSING`(미제출)은 `미제출` 배지로 따로 보여준다(yot 133:9725).
@@ -115,6 +123,7 @@ export function TaskDetailPage() {
     deleteMutation.mutate(undefined, {
       onSuccess: async () => {
         deletingRef.current = false
+        setDeleted(true)
         queryClient.removeQueries({ queryKey: ['tasks', id] })
         await queryClient.invalidateQueries({ queryKey: ['tasks'] })
         navigate('/tasks', { state: { toast: 'delete-success' } })

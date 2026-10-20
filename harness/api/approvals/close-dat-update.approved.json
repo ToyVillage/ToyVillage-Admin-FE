@@ -1,15 +1,17 @@
 {
   "feature": "close-dat-update",
   "apiId": "CLOSE_DAT_UPDATE",
-  "approvedAt": "2026-09-17T11:18:08.796Z",
+  "approvedAt": "2026-10-12T07:12:28.896Z",
   "approvedBy": "yunho09",
   "taskSpecHash": "ae3305b9a19f29cc5df1872b16878c40d7831340d20362a06b381c0e0db3a7be",
-  "contractHash": "2db6a6a3ac9772ac3b3d80bc7c63a82e5f4cc59783e9d10282d755b1f62ed9f7",
-  "contractMarkdownHash": "5ed096ad0d6707e8671102d081d64eea01ac055e85eccbb8563b062bd53f970d",
+  "contractHash": "a880a1a0a80c3fd75902bf372e06ead94476923e7a2bd31038d67d5304bb8c79",
+  "contractMarkdownHash": "ea12c39136f498b9a9366f0749e02c3fd1e2345e56098196d0b1f08329871ca4",
   "planHash": "e03b4282073500d20a7c015c9627808168680427e8025ad9bb222d3d28366004",
-  "scenarioHash": "804e0af7f9233ac97b10262353950d8141d63f5ec77e89102e9d2ea4bcc062cd",
-  "testHash": "047433c5a603679e5cb95d5a567374bb5d8a1c809fd7506e5bb458ef71e6d7f9",
+  "scenarioHash": "bc3e04d492ba99f1acda6eac89c25a13b0ccb9f58c97dedf17c4fbc010b0d47b",
+  "testHash": "5e7aa487ed9edc3e58739ae8df2cefc352d9b037efbdc0923ad5ebcdcddfa1a9",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-09-17T11:21:41.076Z"
+  "testApprovedAt": "2026-10-20T06:20:28.922Z",
+  "testApprovedBy": "yunho09",
+  "testApprovedCommit": "991250df1cabca924b8e0b6cd8e59c572d7627f8"
 }

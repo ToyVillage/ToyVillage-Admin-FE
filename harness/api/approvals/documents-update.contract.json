@@ -107,8 +107,8 @@
   "responses": {
     "success": [
       {
-        "status": 201,
-        "description": "자료 수정 성공",
+        "status": 200,
+        "description": "자료 수정 성공 (실서버 200, 2026-10-13 스테이징 확인 #246)",
         "noContent": false,
         "body": {
           "type": "object",

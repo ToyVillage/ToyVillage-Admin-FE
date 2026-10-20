@@ -75,11 +75,11 @@ test('S8: 행 케밥에 수정·삭제가 있고 수정으로 이동한다', asy
   await expect(page).toHaveURL(/\/notices\/resources\/1\/edit$/)
 })
 
-test('S9: 오래된순 정렬 → ASC 로 다시 조회한다', async ({ page }) => {
+test('S9: 오래된순 정렬 → sort=createdAt,asc 로 다시 조회한다', async ({ page }) => {
   const orders: (string | null)[] = []
   await page.route(/\/documents(\?.*)?$/, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
-    orders.push(new URL(route.request().url()).searchParams.get('orderDirection'))
+    orders.push(new URL(route.request().url()).searchParams.get('sort'))
     await route.fallback()
   })
 
@@ -89,6 +89,6 @@ test('S9: 오래된순 정렬 → ASC 로 다시 조회한다', async ({ page })
   await page.getByRole('button', { name: '자료 날짜 정렬' }).click()
   await page.getByRole('menuitemradio', { name: '오래된순' }).click()
 
-  await expect.poll(() => orders.at(-1)).toBe('ASC')
+  await expect.poll(() => orders.at(-1)).toBe('createdAt,asc')
   await expect(page).toHaveURL(/sort=oldest/)
 })

@@ -352,6 +352,53 @@ test('S19: 생성 성공', async ({ page }) => {
   await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
 })
 
+// #255 — 질문마다 필수 여부를 정한다. 새 질문은 필수가 아니다.
+test('S37: 필수 토글은 꺼진 채로 시작하고 켜면 질문명 뒤에 * 가 붙는다', async ({
+  page,
+}) => {
+  await page.goto(createPath)
+  const toggle = page.getByRole('switch', { name: '1번 항목 필수' })
+
+  await expect(toggle).toHaveAttribute('aria-checked', 'false')
+  await expect(
+    questionCard(page, 1).getByTestId('question-required-mark'),
+  ).toHaveCount(0)
+
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  await expect(
+    questionCard(page, 1).getByTestId('question-required-mark'),
+  ).toBeVisible()
+
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-checked', 'false')
+})
+
+test('S38: 유형 드롭다운에는 필수 표시가 없다', async ({ page }) => {
+  await page.goto(createPath)
+  await page.getByRole('switch', { name: '1번 항목 필수' }).click()
+  await selectType(page, 1, '객관식 질문')
+
+  await expect(page.getByRole('button', { name: '1번 항목 유형' })).toHaveText(
+    '객관식 질문',
+  )
+})
+
+test('S39: 필수 여부를 질문마다 보낸다', async ({ page, workLogApi }) => {
+  await page.goto(createPath)
+  await fillStepOne(page)
+  await page.getByRole('switch', { name: '2번 항목 필수' }).click()
+  await page.getByRole('button', { name: '다음' }).click()
+  await autoCreateZones(page, 'A', '1', '2')
+  await page.getByRole('button', { name: '생성하기' }).click()
+
+  await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
+  const body = workLogApi.createdBodies[0] as {
+    questions: { required: boolean }[]
+  }
+  expect(body.questions.map((item) => item.required)).toEqual([false, true])
+})
+
 test('S20: 입력이 없으면 뒤로가기는 바로 이동한다', async ({ page }) => {
   await page.goto(createPath)
   await page.getByRole('link', { name: '뒤로가기' }).click()

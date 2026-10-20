@@ -9,8 +9,8 @@
 - Mock request: `DELETE /api/close-day/7`
 - Request headers: `Authorization: Bearer ...`
 - Request query/body: 없음
-- Mock response: HTTP 201,
-  `{"message":"휴관일이 삭제되었습니다."}`
+- Mock response: HTTP 200,
+  `{"message":"휴관일이 삭제되었습니다."}` (2026-10-12 실서버 확인, #242)
 - 후속 Mock request: `GET /api/close-day`
 - 후속 Mock response: 삭제된 휴관일이 없는 HTTP 200 빈 목록
 - 사용자 동작: `/notices/guide`에서 휴관일 카드 케밥 → `삭제` → 확인
@@ -54,7 +54,7 @@
 
 - 목적: 확인 동작이 연속 발생해도 삭제 요청을 한 번만 보낸다.
 - Mock request: `DELETE /api/close-day/7`
-- Mock response: 지연된 HTTP 201,
+- Mock response: 지연된 HTTP 200,
   `{"message":"휴관일이 삭제되었습니다."}`
 - 사용자 동작: 삭제 확인 동작을 연속 발생
 - 기대 결과: DELETE 요청 횟수 1회, 완료 후 카드가 사라짐
@@ -63,15 +63,15 @@
 
 - 목적: 2xx 응답이면 body 형식이 Contract 와 달라도 삭제 성공으로 처리한다.
 - Mock request: `DELETE /api/close-day/7`
-- Mock response: HTTP 201, `{"result":"ok"}`
+- Mock response: HTTP 200, `{"result":"ok"}`
 - 사용자 동작: 카드 케밥에서 삭제 확인
 - 기대 결과: 재조회 결과에서 카드가 사라지고 `데이터 삭제에 성공했습니다` 토스트를 표시한다
 
-## Mock S8 — HTTP 200 성공 허용
+## Mock S8 — HTTP 201 성공 허용
 
-- 목적: 서버가 Contract 의 201 대신 200 을 주어도 삭제 성공으로 처리한다.
+- 목적: 서버가 Contract 의 200 대신 201 을 주어도 삭제 성공으로 처리한다(2026-10-12 실서버 성공 코드가 200으로 확인돼 허용 대상을 201로 바꿈, #242).
 - Mock request: `DELETE /api/close-day/7`
-- Mock response: HTTP 200,
+- Mock response: HTTP 201,
   `{"message":"휴관일이 삭제되었습니다."}`
 - 사용자 동작: 카드 케밥에서 삭제 확인
 - 기대 결과: 재조회 결과에서 카드가 사라지고 `데이터 삭제에 성공했습니다` 토스트를 표시한다

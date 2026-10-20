@@ -180,7 +180,8 @@ test('S6: HTTP 400 이면 입력을 보존하고 다시 제출할 수 있다', a
   await expect.poll(() => created.count).toBe(2)
 })
 
-test('S7: HTTP 401 이면 실패를 드러낸다', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S7: HTTP 401 이면 로그인으로 간다', async ({ page }) => {
   trackCreate(page, 401, errorBody(401, '만료된 토큰입니다.'))
 
   await page.goto('/tasks/create')
@@ -188,10 +189,10 @@ test('S7: HTTP 401 이면 실패를 드러낸다', async ({ page }) => {
   await checkMember(page, '이승현 사원')
   await page.getByRole('button', { name: '생성하기' }).click()
 
-  await expectCreateFailure(page)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
-test('S8: HTTP 403 이면 실패를 드러낸다', async ({ page }) => {
+test('S8: HTTP 403 이면 로그인으로 간다', async ({ page }) => {
   trackCreate(page, 403, { ...errorBody(403, ''), message: '' })
 
   await page.goto('/tasks/create')
@@ -199,7 +200,7 @@ test('S8: HTTP 403 이면 실패를 드러낸다', async ({ page }) => {
   await checkMember(page, '이승현 사원')
   await page.getByRole('button', { name: '생성하기' }).click()
 
-  await expectCreateFailure(page)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S9: HTTP 500 이면 실패를 드러낸다', async ({ page }) => {

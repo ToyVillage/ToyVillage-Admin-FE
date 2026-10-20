@@ -42,8 +42,7 @@ test('S3: 케밥 클릭은 행 이동을 일으키지 않는다', async ({ page 
 
   await expect(page).toHaveURL(/\/work-logs\?tab=forms$/)
   const menu = page.getByRole('menu')
-  // 양식은 수정 기능이 없어 케밥에 삭제 하나만 있다.
-  await expect(menu.getByRole('menuitem')).toHaveCount(1)
+  await expect(menu.getByRole('menuitem')).toHaveCount(2)
 })
 
 test('S4: 뒤로가기 → 양식 관리 탭으로 복귀', async ({ page }) => {
@@ -104,13 +103,17 @@ test('S8: 읽기 전용 — 조작되지 않는다', async ({ page }) => {
 test('S9: 필수 표시', async ({ page }) => {
   await page.goto('/work-logs/forms/1')
 
-  // 양식명 1개 + 질문 3개 = 4개의 필수 표시(업무일지 질문은 모두 필수다).
+  // 양식명 1개 + 필수 질문 2개(습도·청소 방법) = 3개의 필수 표시.
   await expect(
     page.getByRole('main').getByText('*', { exact: true }),
-  ).toHaveCount(4)
-  await expect(page.getByText(/객관식 질문\s*\*/)).toBeVisible()
-  await expect(page.getByText(/체크박스\s*\*/)).toBeVisible()
-  await expect(page.getByText(/주관식\s*\*/)).toBeVisible()
+  ).toHaveCount(3)
+  await expect(questionCard(page, '습도').getByText('*')).toBeVisible()
+  await expect(
+    questionCard(page, '청소 방법이 뭔가요?').getByText('*'),
+  ).toBeVisible()
+  await expect(questionCard(page, '청소여부').getByText('*')).toHaveCount(0)
+  // 유형 배지에는 필수 표시를 하지 않는다.
+  await expect(page.getByText(/객관식 질문\s*\*/)).toHaveCount(0)
 })
 
 test('S10: 없는 양식으로 진입', async ({ page }) => {
@@ -161,12 +164,14 @@ test('S12: 양식 미리보기 모달', async ({ page }) => {
   const headerCells = dialog
     .getByTestId('work-log-sheet-header')
     .locator(':scope > *')
+  // 필수 질문은 헤더 질문명 뒤에 `*` 가 붙는다.
   await expect(headerCells).toHaveText([
     '설정된 구역',
-    '습도',
+    '습도*',
     '청소여부',
-    '청소 방법이 뭔가요?',
+    '청소 방법이 뭔가요?*',
   ])
+  await expect(dialog.getByText('필수 입력 항목')).toBeVisible()
 
   const rows = dialog.getByTestId('work-log-sheet-row')
   await expect(rows).toHaveCount(3)

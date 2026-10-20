@@ -169,6 +169,8 @@ test('S6: 클라이언트 검증이 요청보다 먼저다', async ({ page }) =>
   const dialog = page.getByRole('alertdialog')
   await expect(dialog).toContainText('제목을 입력해주세요')
   await dialog.getByRole('button', { name: '확인' }).click()
+  // 확인 뒤 다음 프레임에 포커스를 옮긴다. 옮겨진 뒤에 입력해야 다른 칸에 들어가지 않는다.
+  await expect(page.getByLabel(/제목/)).toBeFocused()
 
   await page.getByLabel(/제목/).fill(editedTitle)
   await page.getByLabel(/상세 업무 내용/).fill('')
@@ -194,24 +196,25 @@ test('S7: HTTP 400 이면 입력을 보존하고 다시 제출할 수 있다', a
   await expect.poll(() => updated.count).toBe(2)
 })
 
-test('S8: HTTP 401 이면 실패를 드러낸다', async ({ page }) => {
+// 401(재발급 불가)·403 은 공통 인증 interceptor 가 세션을 끝내고 로그인으로 보낸다.
+test('S8: HTTP 401 이면 로그인으로 간다', async ({ page }) => {
   trackUpdate(page, 401, errorBody(401, '만료된 토큰입니다.'))
 
   await page.goto('/tasks/12/edit')
   await page.getByLabel(/제목/).fill(editedTitle)
   await page.getByRole('button', { name: '저장하기' }).click()
 
-  await expectUpdateFailure(page)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
-test('S9: HTTP 403 이면 실패를 드러낸다', async ({ page }) => {
+test('S9: HTTP 403 이면 로그인으로 간다', async ({ page }) => {
   trackUpdate(page, 403, { ...errorBody(403, ''), message: '' })
 
   await page.goto('/tasks/12/edit')
   await page.getByLabel(/제목/).fill(editedTitle)
   await page.getByRole('button', { name: '저장하기' }).click()
 
-  await expectUpdateFailure(page)
+  await expect(page).toHaveURL(/\/login$/)
 })
 
 test('S10: HTTP 404 를 성공으로 처리하지 않는다', async ({ page }) => {

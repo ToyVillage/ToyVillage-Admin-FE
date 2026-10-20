@@ -12,19 +12,23 @@
 - 다음 단계: API ID가 하나로 확정됨
 - 승인: 불필요
 
-## ② API ID로 Notion API 검색
+## ② Notion과 Swagger 함께 조회
 
-- 입력: API ID, 선택적 Notion URL
+- 입력: API ID, 선택적 Notion URL, 선택적 Method·Path(Notion에 없는 API일 때 개발자가 준다)
 - Prompt: `prompts/create-contract.md`
-- 산출물: `harness/artifacts/api/<feature>.notion-source.md`
-- 검증: API ID 정확 일치 결과가 1개
-- STOP: 0개, 2개 이상, API ID 누락, 접근 권한 없음
-- 다음 단계: 단일 데이터베이스 행과 상세 페이지 식별
+- 산출물: `harness/artifacts/api/<feature>.notion-source.md`(Notion에 있을 때), `harness/artifacts/api/<feature>.swagger-source.json`
+- 검증:
+  - API ID로 Notion을 검색한다. 정확히 일치하는 결과가 1개면 그 Method·Path로, 0개면 개발자가 준 Method·Path로 `yarn harness:api:swagger-source <feature> <METHOD> <path>`를 실행한다.
+  - Notion 경로가 Swagger에 없으면 개발자에게 Swagger에서 같은 API의 Method·Path를 확인받아 다시 실행한다(Notion 경로가 틀린 경우). 계약 경로는 ④에서 개발자가 정한다.
+  - Notion 1개 + Swagger 있음 → ③으로. 둘의 Method·Path·파라미터·필드·성공 코드는 ④에서 비교한다.
+  - Notion 0개 + Swagger 있음 → Swagger만으로 진행. ③은 건너뛰고, 계약 `source.apiIdMatchCount`는 0이다.
+- STOP: Notion 결과 2개 이상, Notion 0개인데 Method·Path를 모름, 개발자가 확인한 Method·Path로도 Swagger operation이 없음, Swagger 인증 정보(`SWAGGER_USERNAME`·`SWAGGER_PASSWORD`) 없음, Notion 접근 권한 없음
+- 다음 단계: Notion 원문(있으면)과 Swagger operation이 짝지어짐
 - 승인: 불필요
 
 ## ③ API 상세 명세 조회
 
-- 입력: ②의 데이터베이스 행과 상세 페이지
+- 입력: ②의 데이터베이스 행과 상세 페이지 (Notion에 없는 API는 건너뜀)
 - Prompt: `prompts/create-contract.md`
 - 산출물: notion-source 보강
 - 검증: Basic, 인증, 요청, 성공 응답, 오류 응답 섹션 구분
@@ -34,11 +38,11 @@
 
 ## ④ API Contract 생성
 
-- 입력: 검증된 Notion 원문
+- 입력: 검증된 Notion 원문(있으면)과 `<feature>.swagger-source.json`
 - Prompt: `prompts/create-contract.md`
-- 산출물: `<feature>.contract.md`, `<feature>.contract.json`
+- 산출물: `<feature>.contract.md`, `<feature>.contract.json` (`source.swagger`에 Swagger 출처 기록)
 - 검증: `api-input-contract.md`의 구조와 출처 필드 충족
-- STOP: 명세 값을 추측해야 함
+- STOP: 명세 값을 추측해야 함, Notion과 Swagger가 다른데 개발자가 기준을 정하지 않음, Swagger만으로 진행하는데 Swagger에 없는 값(접근 역할·응답 필드 필수 여부)을 개발자가 정하지 않음
 - 다음 단계: JSON Contract 생성 완료
 - 승인: 불필요
 
@@ -47,9 +51,9 @@
 - 입력: contract.json
 - Prompt: 없음
 - 산출물: validator 결과
-- 검증: `yarn harness:api:validate <feature>` 통과
-- STOP: `api-input-contract.md`의 STOP 조건 하나라도 충족
-- 다음 단계: exit 0
+- 검증: `yarn harness:api:validate <feature>` 통과, `yarn harness:api:swagger --contract harness/artifacts/api/<feature>.contract.json`으로 스테이징 Swagger와 대조
+- STOP: `api-input-contract.md`의 STOP 조건 하나라도 충족, Swagger와 다른 항목이 있는데 어느 쪽이 맞는지 개발자 확인이 없음
+- 다음 단계: exit 0, Swagger 차이는 개발자가 정한 쪽으로 계약을 고치거나 `swagger-known-diffs.json`에 사유와 함께 기록
 - 승인: 불필요
 
 ## ⑥ 기존 프로젝트 API 구조 분석
@@ -77,8 +81,12 @@
 - 입력: task spec, Contract, 계획, 테스트 시나리오
 - Prompt: 없음
 - 산출물: `harness/api/approvals/<feature>.*`, `<feature>.approved.json`
-- 검증: `yarn harness:api:approve <feature> --by <developer>`가 모든 해시를 생성
-- STOP: 승인 거절, 필수 파일 누락, Contract 검증 실패
+- 검증: 개발자가 자기 터미널에서 `yarn harness:api:approve <feature>`를 실행하면 Contract를 스테이징 Swagger와 다시 비교한 뒤 모든 해시와 승인 시점 커밋을 기록 (`--freeze`는 비교하지 않음)
+  - 승인자는 `git config user.name`으로 기록하고 `harness/api/approvers.json`에 있는 사람만 승인할 수 있다. `--freeze`·`--freeze-real`도 같다.
+  - AI 세션(`CLAUDECODE` 환경 변수)에서 실행하면 거부한다. AI는 승인 명령을 실행하지 않고 개발자에게 요청한다.
+  - 승인 기록이 이미 있으면 승인 이후 바뀐 파일과 diff만 보여 주고 `y`를 입력해야 승인한다. `yarn harness:api:changes <feature>`로 미리 볼 수 있다.
+  - 재승인해도 기존 테스트 동결 해시는 유지한다. 테스트가 바뀌었으면 게이트가 막고 `--freeze`를 다시 요구한다.
+- STOP: 승인 거절, 필수 파일 누락, Contract 검증 실패, `swagger-known-diffs.json`에 없는 Swagger 차이, Swagger 접속 불가, 승인자 목록에 없는 git 사용자, AI 세션에서 실행
 - 다음 단계: `yarn harness:api:gate <feature>` 통과
 - 승인: 필수
 

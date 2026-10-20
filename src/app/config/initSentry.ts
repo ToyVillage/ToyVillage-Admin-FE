@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
 import { readSessionUser } from '@/shared/api/session'
+import { describeNode, hasLabel } from '@/app/config/sentryLabel'
 
 // DSN 이 없으면(로컬·e2e) 켜지 않는다. 스테이징·운영 빌드 환경에만 넣는다.
 export function initSentry(): void {
@@ -33,11 +34,6 @@ export function initSentry(): void {
         createRoutesFromChildren,
         matchRoutes,
       }),
-      Sentry.replayIntegration({
-        maskAllText: true,
-        maskAllInputs: true,
-        blockAllMedia: true,
-      }),
     ],
     // 직원 수가 적어 샘플링하면 데이터가 거의 안 쌓인다. 전부 기록한다.
     tracesSampleRate: 1,
@@ -45,7 +41,18 @@ export function initSentry(): void {
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1,
     ignoreErrors: ['ResizeObserver loop'],
-    beforeBreadcrumb(breadcrumb) {
+    beforeBreadcrumb(breadcrumb, hint) {
+      if (
+        breadcrumb.category?.startsWith('ui.') &&
+        breadcrumb.message &&
+        hasLabel(breadcrumb.message)
+      ) {
+        const domEvent: unknown = hint?.event
+        breadcrumb.message = describeElement(
+          domEvent instanceof Event ? domEvent.target : domEvent,
+        )
+      }
+
       // 이동·요청 기록의 주소에도 검색어가 남지 않게 한다.
       const data = breadcrumb.data
       if (data) {
@@ -75,6 +82,36 @@ export function initSentry(): void {
       return event
     },
   })
+
+  // 세션 녹화는 첫 화면을 다 받은 뒤(load) 불러와 붙인다.
+  // 그 전에 난 에러는 녹화 없이 에러만 간다.
+  if (document.readyState === 'complete') loadReplay()
+  else window.addEventListener('load', loadReplay, { once: true })
+}
+
+function loadReplay(): void {
+  void import('@/app/config/sentryReplay')
+    .then(({ createReplayIntegration }) => {
+      Sentry.addIntegration(createReplayIntegration())
+    })
+    .catch(() => {
+      // 배포 직후 이전 청크가 없어지는 등 녹화 청크를 못 받으면 녹화 없이 에러만 보낸다.
+    })
+}
+
+// Sentry 처럼 누른 요소에서 위로 5단계까지 `부모 > 자식` 으로 잇는다.
+function describeElement(target: unknown): string {
+  const parts: string[] = []
+  let element = target instanceof Element ? target : null
+  while (element && element.tagName !== 'HTML' && parts.length < 5) {
+    const current = element
+    parts.unshift(
+      describeNode(current.tagName, (name) => current.getAttribute(name)),
+    )
+    element = current.parentElement
+  }
+
+  return parts.join(' > ') || '<unknown>'
 }
 
 // 목록 화면의 검색어·필터에 직원 이름이 섞일 수 있어 쿼리스트링을 뗀다.

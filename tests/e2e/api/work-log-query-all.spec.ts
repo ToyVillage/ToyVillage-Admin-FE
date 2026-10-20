@@ -50,7 +50,8 @@ test('S2: 2페이지로 가면 page=2 로 다시 조회한다', async ({ page })
   await page.getByRole('button', { name: '2 페이지' }).click()
   await expect(logRows(page)).toHaveCount(4)
 
-  expect(pages).toEqual(['1', '2'])
+  // 두 페이지 모두 4행이라 행 수만으로는 재조회를 기다리지 못한다.
+  await expect.poll(() => pages).toEqual(['1', '2'])
 })
 
 test('S3: 양식 관리 탭은 조회날짜를 보내지 않는다', async ({ page }) => {

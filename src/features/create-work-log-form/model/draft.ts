@@ -18,7 +18,13 @@ export function hasOptions(type: WorkLogFormEditorType | null): boolean {
 }
 
 export function createDraftQuestion(): WorkLogFormDraftQuestion {
-  return { id: crypto.randomUUID(), label: '', type: null, options: [] }
+  return {
+    id: crypto.randomUUID(),
+    label: '',
+    type: null,
+    required: false,
+    options: [],
+  }
 }
 
 export function createDraftOption(isEtc: boolean): WorkLogFormDraftOption {
@@ -166,6 +172,7 @@ function createBlankDraftShape(draft: WorkLogFormDraft): WorkLogFormDraft {
       ...question,
       label: '',
       type: null,
+      required: false,
       options: [],
     })),
     zones: [],
@@ -178,6 +185,7 @@ function serializeDraft(draft: WorkLogFormDraft): string {
     questions: draft.questions.map((question) => ({
       label: question.label.trim(),
       type: question.type,
+      required: question.required,
       options: question.options.map((option) => ({
         value: option.value.trim(),
         isEtc: option.isEtc,

@@ -17,6 +17,7 @@ export {
   teamPath,
   updateTeam,
 } from './api/teamApi'
+export { teamQueryKeys, teamTreeQueryOptions } from './model/queryKeys'
 export type {
   TeamCreateRequest,
   TeamErrorResponse,

@@ -316,6 +316,8 @@ test('S10: 새 첨부 업로드가 실패하면 수정 요청을 보내지 않�
   })
 
   await page.goto('/notices/list/7/edit')
+  // 로딩 스켈레톤에도 파일 입력이 있어, 폼이 뜬 뒤에 고른다.
+  await expect(page.getByLabel('제목')).toHaveValue('첨부 공지')
   await page.getByLabel('첨부파일 선택').setInputFiles({
     name: '새 안내.pdf',
     mimeType: 'application/pdf',

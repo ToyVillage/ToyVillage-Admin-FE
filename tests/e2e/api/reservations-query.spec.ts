@@ -6,6 +6,7 @@ import { expect, test, type Page } from '@playwright/test'
 // 실제 서버는 호출하지 않는다.
 
 const detail = {
+  id: 7,
   counselDate: '2026-07-02',
   visitDate: '2026-07-13',
   visitTime: '13:01:00',
@@ -18,6 +19,11 @@ const detail = {
   status: '사전답사 완료',
   leaderCount: 3,
   leaderPhoneNumber: '010-7753-9698',
+  // 2026-10-12 실서버 응답에 있는 필드. 화면은 아직 쓰지 않는다.
+  visitSiteCount: 3,
+  visitSiteDate: '2026-07-06',
+  visitSiteTime: '10:00:00',
+  visitSiteExitTime: '11:00:00',
 }
 
 const errorBody = (status: number, message: string) => ({

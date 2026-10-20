@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   copyFileSync,
@@ -18,8 +19,12 @@ export function hasOwn(value, key) {
   return Object.prototype.hasOwnProperty.call(value, key)
 }
 
+export function sha256(contents) {
+  return createHash('sha256').update(contents).digest('hex')
+}
+
 export function sha256File(path) {
-  return createHash('sha256').update(readFileSync(path)).digest('hex')
+  return sha256(readFileSync(path))
 }
 
 export function readJson(path) {
@@ -50,6 +55,35 @@ export function usesPageRouteMock(testPath) {
       readFileSync(modulePath, 'utf8').includes('page.route(')
     )
   })
+}
+
+// root 에서 git 을 실행한다. git 저장소가 아니거나 실패하면 null.
+// `git diff --no-index` 는 차이가 있으면 exit 1 이라 okStatuses 로 허용한다.
+export function runGit(
+  root,
+  args,
+  { encoding = 'utf8', okStatuses = [0] } = {},
+) {
+  const result = spawnSync('git', ['-C', root, ...args], { encoding })
+  return okStatuses.includes(result.status) ? result.stdout : null
+}
+
+export function readGitUserName(root) {
+  return runGit(root, ['config', 'user.name'])?.trim() ?? ''
+}
+
+export function readHeadCommit(root) {
+  return runGit(root, ['rev-parse', 'HEAD'])?.trim() ?? null
+}
+
+export function approversPath(root) {
+  return join(root, 'harness', 'api', 'approvers.json')
+}
+
+export function readApprovers(root) {
+  const path = approversPath(root)
+  if (!existsSync(path)) throw new Error(`승인자 목록 없음: ${path}`)
+  return readJson(path)
 }
 
 export function parseOption(args, name) {
@@ -437,6 +471,15 @@ export function validateApiContract(contract) {
   const source = contract.source
   if (!source || typeof source !== 'object' || Array.isArray(source)) {
     errors.push('source: object 필요')
+  } else if (source.apiIdMatchCount === 0) {
+    // Notion 에 없는 API 는 Swagger 만 출처로 쓴다(RUNBOOK ②). Notion 출처 값은 없다.
+    if (!source.swagger || typeof source.swagger !== 'object') {
+      errors.push('source.swagger: Notion 검색 결과가 0건이면 필요')
+    } else {
+      requireString(source.swagger.method, 'source.swagger.method', errors)
+      requireString(source.swagger.path, 'source.swagger.path', errors)
+      validateSwaggerSource(contract, source.swagger, errors)
+    }
   } else {
     requireString(source.notionDatabase, 'source.notionDatabase', errors)
     if (!hasOwn(source, 'notionDataSource'))
@@ -451,7 +494,7 @@ export function validateApiContract(contract) {
     }
     requireString(source.checkedAt, 'source.checkedAt', errors)
     if (source.apiIdMatchCount !== 1)
-      errors.push('source.apiIdMatchCount: 정확히 1이어야 함')
+      errors.push('source.apiIdMatchCount: 0(Swagger만) 또는 1이어야 함')
 
     const databaseValues = source.databaseValues
     const detailValues = source.detailValues
@@ -497,7 +540,11 @@ export function validateApiContract(contract) {
       errors.push('source apiId와 contract apiId 불일치')
     if (databaseValues?.method !== contract.method)
       errors.push('source method와 contract method 불일치')
-    if (databaseValues?.path !== contract.path)
+    // Notion 과 Swagger 경로가 달라 개발자가 Swagger 를 택했으면 계약은 Swagger 경로를 따른다.
+    if (
+      databaseValues?.path !== contract.path &&
+      comparablePath(source.swagger?.path) !== comparablePath(contract.path)
+    )
       errors.push('source path와 contract path 불일치')
     if (
       databaseValues?.authentication &&
@@ -518,9 +565,41 @@ export function validateApiContract(contract) {
     ) {
       errors.push('source.checkedAt: ISO date 형식 필요')
     }
+    if (hasOwn(source, 'swagger') && source.swagger !== null) {
+      validateSwaggerSource(contract, source.swagger, errors)
+    }
   }
 
   return errors
+}
+
+// path 변수 이름은 Notion 과 Swagger 가 다를 수 있다(`{id}` vs `{taskId}`).
+function comparablePath(path) {
+  return typeof path === 'string' ? path.replace(/\{[^}]*\}/g, '{}') : path
+}
+
+// Notion 과 함께 조회한 스테이징 Swagger operation(RUNBOOK ②). 2026-10 이전 계약에는 없다.
+// 2026-09 공지 계약 4개는 `{ swaggerUrl, checkedAt, note }` 만 남겼으므로 method·path·operationId 는 있을 때만 본다.
+function validateSwaggerSource(contract, swagger, errors) {
+  if (!swagger || typeof swagger !== 'object' || Array.isArray(swagger)) {
+    errors.push('source.swagger: object 또는 null 필요')
+    return
+  }
+  requireString(swagger.swaggerUrl, 'source.swagger.swaggerUrl', errors)
+  requireString(swagger.checkedAt, 'source.swagger.checkedAt', errors)
+  if (
+    typeof swagger.checkedAt === 'string' &&
+    Number.isNaN(Date.parse(swagger.checkedAt))
+  ) {
+    errors.push('source.swagger.checkedAt: ISO date 형식 필요')
+  }
+  if (hasOwn(swagger, 'method') && swagger.method !== contract.method)
+    errors.push('source.swagger method와 contract method 불일치')
+  if (
+    hasOwn(swagger, 'path') &&
+    comparablePath(swagger.path) !== comparablePath(contract.path)
+  )
+    errors.push('source.swagger path와 contract path 불일치')
 }
 
 export function apiPaths(root, feature) {
