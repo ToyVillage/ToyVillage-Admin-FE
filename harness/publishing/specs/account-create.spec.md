@@ -110,7 +110,7 @@ type CreateAccountSubmit = (input: CreateAccountInput) => Promise<void>
 - `CreateAccountPage` (`pages/settings/accounts`) — 페이지 배경·카드·로고·제목과 토스트 조합
 - `CreateAccountForm` (`features/create-account`) — 입력 상태, 검증, 제출 상태
 - 오류 행은 `FormFieldCard` 의 `ErrorRow/ErrorMark` 와 같은 모양이지만 그 컴포넌트는 카드 레이아웃을 함께 가져서 그대로 쓰지 않는다. 폼 안 styled 로 둔다.
-- 로고는 로그인 화면과 같은 파일이므로 `src/shared/assets/toyvillage-logo.png` 로 옮겨 두 페이지가 함께 쓴다.
+- 로고는 로그인 화면과 같은 파일이므로 `src/shared/assets/toyvillage-logo.webp` 로 옮겨 두 페이지가 함께 쓴다.
 - 새 shared 컴포넌트는 만들지 않는다.
 
 ## 접근성

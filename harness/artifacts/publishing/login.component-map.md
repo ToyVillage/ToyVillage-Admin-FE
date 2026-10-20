@@ -11,7 +11,7 @@
 | `1830:17175`·`17176`·`17177`·`17179` | IMAGE-SVG | 브랜드 패널 도형 | page asset | Figma SVG export | — |
 | `1830:17174`·`17180` | RECTANGLE | 브랜드 패널 사각형 | page 내부 | CSS 배경 | — |
 | `1830:17184` | FRAME | 로그인 카드 레이아웃 | page 내부 | 별도 컴포넌트 분리 없음 | — |
-| `1830:17186` | IMAGE | 토이빌리지 로고 | shared asset | 기존 `shared/assets/toyvillage-logo.png` | `alt` |
+| `1830:17186` | IMAGE | 토이빌리지 로고 | shared asset | 기존 `shared/assets/toyvillage-logo.webp` | `alt` |
 | `1830:17190` | FRAME | 아이디 field | feature form 내부 | native `label` + `input` | `value`, `onChange`, `error` |
 | `1830:17202` | FRAME | 비밀번호 field | feature form 내부 | native `label` + `input` | `value`, `visible`, `onChange`, `onToggle`, `error` |
 | `1830:17206` | IMAGE-SVG | `PasswordVisibilityButton` 아이콘 | feature asset | 숨김: 기존 `features/login/assets/eye-off.svg`(Figma와 동일) · 표시: `eye.svg`(yot `1:2446` mdi:eye export) | 상태별 accessible name |
