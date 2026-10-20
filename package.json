@@ -28,6 +28,8 @@
     "harness:api:swagger": "node scripts/check-api-swagger.mjs",
     "harness:api:swagger-source": "node scripts/fetch-swagger-source.mjs",
     "test:harness": "node --test tests/harness/*.test.mjs tests/harness/api/*.test.mjs",
+    "hooks:install": "node scripts/install-hooks.mjs",
+    "postinstall": "node scripts/install-hooks.mjs",
     "e2e:setup": "yarn playwright install chromium",
     "preview": "vite preview"
   },
