@@ -29,6 +29,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+          # 검사 스크립트는 Node 기본 모듈만 쓴다. 켜 두면 packageManager(yarn 4)를 보고 corepack 없이 yarn 캐시를 찾다 실패한다.
+          package-manager-cache: false
       # 제목·브랜치 이름은 PR 작성자가 정하는 값이라 run 에 직접 넣지 않고 env 로 넘긴다.
       - run: node scripts/check-pr-format.mjs
         env:
