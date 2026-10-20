@@ -69,6 +69,8 @@ test('S4: 잘못된 입력 → 수정하지 않고 오류 dialog 표시', async 
     '휴무일을 입력해 주세요',
   )
   await page.getByRole('button', { name: '확인' }).click()
+  // 확인 뒤 다음 프레임에 포커스를 옮긴다. 옮겨진 뒤에 입력해야 다른 칸에 들어가지 않는다.
+  await expect(page.getByLabel('시작일')).toBeFocused()
 
   await page.getByLabel('시작일').fill(thisMonthDate(20))
   await page.getByLabel('종료일').fill(thisMonthDate(19))
@@ -77,6 +79,7 @@ test('S4: 잘못된 입력 → 수정하지 않고 오류 dialog 표시', async 
     '종료일은 시작일과 같거나 이후여야 합니다',
   )
   await page.getByRole('button', { name: '확인' }).click()
+  await expect(page.getByLabel('종료일')).toBeFocused()
 
   await page.getByLabel('종료일').fill(thisMonthDate(20))
   await page.getByLabel(/제목/).fill('   ')
