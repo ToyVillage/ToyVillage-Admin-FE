@@ -169,6 +169,8 @@ test('S6: 클라이언트 검증이 요청보다 먼저다', async ({ page }) =>
   const dialog = page.getByRole('alertdialog')
   await expect(dialog).toContainText('제목을 입력해주세요')
   await dialog.getByRole('button', { name: '확인' }).click()
+  // 확인 뒤 다음 프레임에 포커스를 옮긴다. 옮겨진 뒤에 입력해야 다른 칸에 들어가지 않는다.
+  await expect(page.getByLabel(/제목/)).toBeFocused()
 
   await page.getByLabel(/제목/).fill(editedTitle)
   await page.getByLabel(/상세 업무 내용/).fill('')
