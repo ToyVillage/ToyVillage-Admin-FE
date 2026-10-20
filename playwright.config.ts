@@ -41,6 +41,8 @@ export default defineConfig({
   // 재사용한 dev 서버에 GA 측정 ID 가 있으면 테스트 전에 멈춘다.
   globalSetup: './tests/e2e/global-setup.ts',
   fullyParallel: true,
+  // CI 에서는 한 번 더 돌린다. 재시도로 통과한 테스트는 list 출력에 flaky 로 남고, 재시도 실행의 trace 가 test-results/ 에 저장된다.
+  retries: process.env.CI ? 1 : 0,
   reporter: 'list',
   use: {
     baseURL,
