@@ -76,6 +76,7 @@
   | `e2e`                                 | `ci.yml`        | mock e2e 전체(4개로 나눠 실행)                                    |
   | `commit·PR format`                    | `pr-format.yml` | 2절 PR 제목, 3절 커밋 메시지 형식. 머지 커밋은 보지 않는다.       |
 
+- `e2e`는 실패한 테스트를 한 번 더 돌린다(`playwright.config.ts`의 `retries`, CI에서만). 재시도로 통과하면 검사는 통과하고 로그에 `flaky`로 남는다. 흔들린 테스트는 그냥 넘기지 말고 원인을 찾아 고친다.
 - 커밋 메시지 검사는 '~한다'·'~해요' 같은 종결어미만 막는다. 명사형으로 끝났는지는 사람이 본다.
 - PR 제목만 고쳐도 `commit·PR format`이 다시 돈다.
 - 같은 커밋 메시지 검사를 로컬 commit-msg 훅(`.githooks/commit-msg`)이 커밋할 때 먼저 한다. `yarn install`이 `core.hooksPath`를 `.githooks`로 설정하고, 안 되면 `yarn hooks:install`을 실행한다.
