@@ -395,6 +395,13 @@ const routes: RouteObject[] = [
               'StaffAccountsPage',
             ),
           },
+          {
+            path: '/settings/excel-download',
+            element: lazyPage(
+              () => import('@/pages/settings/excel-download/ExcelDownloadPage'),
+              'ExcelDownloadPage',
+            ),
+          },
           // 계정 생성은 목록 화면의 모달로 옮겼다. 옛 주소는 목록으로 보낸다.
           {
             path: '/settings/accounts/create',
