@@ -1,0 +1,25 @@
+{
+  "feature": "excel-download",
+  "approvedAt": "2026-10-26T16:23:35.869Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16"
+  ],
+  "scenarioHash": "8b6f4691f04c8de834b58a3eb8b46f9d2ead18b5a5c28c6c812b85007582c139",
+  "e2eHash": "9c87e7eb76934ef824520f2bba7c2e7f4168aec63822a76b0c304fd11c606553"
+}
