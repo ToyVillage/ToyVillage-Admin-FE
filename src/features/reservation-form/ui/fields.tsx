@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import styled from '@emotion/styled'
 import calendarIcon from '@/shared/ui/assets/calendar.svg'
-import { DateCalendar } from './DateCalendar'
+import { DateCalendar } from '@/shared/ui'
 import {
   formatDateInput,
   formatDigits,
