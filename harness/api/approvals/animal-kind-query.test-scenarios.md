@@ -16,6 +16,7 @@ mock이라 별도 route mock이 필요 없다. 실제 서버는 호출하지 않
   "scientificName": "Hydrochoerus hydrochaeris",
   "animalTaxonomic": "MAMMALS",
   "detailKind": "설치목 - 천축서과",
+  "floor": 4,
   "legalStatuses": [{ "animalLegalStatusId": 1, "kind": "지정관리 야생동물" }],
   "animalCount": 3,
   "kindImage": { "fileName": "capybara.png", "fileKey": "animal/capybara.png" }
@@ -36,7 +37,7 @@ mock이라 별도 route mock이 필요 없다. 실제 서버는 호출하지 않
 - 사용자 동작: `/species/1` 진입
 - 기대 결과: 상세 GET 1회(query parameter 없음), 카드에 국명 `카피바라`,
   영문명 `Capybara`, 학명 `Hydrochoerus hydrochaeris`, 분류군 라인
-  `포유류 · 설치목 · 천축서과`, 세부분류 `천축서과`, 법정지정분류 badge
+  `포유류 · 설치목 · 천축서과`, 세부분류 `천축서과`, 제목 옆 층 뱃지 `4층`, 법정지정분류 badge
   `지정관리 야생동물`, 사진 `img[src]`가 `VITE_FILE_BASE_URL` +
   인코딩된 `fileKey`
 
@@ -92,7 +93,7 @@ mock이라 별도 route mock이 필요 없다. 실제 서버는 호출하지 않
 - Mock response: HTTP 200, 기본 성공 body
 - 사용자 동작: `/species/1/edit` 진입
 - 기대 결과: 폼 초기값이 응답과 일치 — 국명·영문명·학명 입력값, 분류군
-  `포유류` 선택, 세부분류 입력값, 법정지정분류 `지정관리 야생동물` 선택.
+  `포유류` 선택, 층 `4층` 선택, 세부분류 입력값, 법정지정분류 `지정관리 야생동물` 선택.
   404 응답이면 not-found 상태(S4와 동일 구분)
 
 ## Mock S11 — 개체 등록 화면 종 이름
@@ -119,6 +120,16 @@ mock이라 별도 route mock이 필요 없다. 실제 서버는 호출하지 않
 - 사용자 동작: `/species/1`에서 개체 행 케밥 `삭제` → 확인
 - 기대 결과: 삭제 성공 후 상세 GET 재요청 1회(무효화 refetch), 재조회
   응답이 카드에 반영, `데이터 삭제에 성공했습니다` 토스트
+
+## Mock S14 — 허용값 밖의 floor (2026-10-27, 이슈 #276)
+
+- Mock response: HTTP 200, `floor: 3`
+- 기대 결과: 성공 처리하지 않고 오류 상태(S8·S9 와 같다)
+
+## Mock S15 — 층이 없는 종(floor null) (2026-10-28, 이슈 #276)
+
+- Mock response: HTTP 200, `floor: null`(staging 기존 종 13개가 모두 이 값)
+- 기대 결과: 상세는 오류 없이 표시되고 제목 옆 층 뱃지가 없다. 수정 화면은 층 `4층` 이 선택돼 있다
 
 ## Staging R1
 

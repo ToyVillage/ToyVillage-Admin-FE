@@ -24,6 +24,7 @@ import {
 import { resolveLegalStatusIds } from '../model/legalStatusIds'
 import type { SpeciesFormErrors, SpeciesFormValues } from '../model/types'
 import { validateSpeciesForm } from '../model/validation'
+import { FloorField } from './FloorField'
 import { LegalDesignationField } from './LegalDesignationField'
 import { TaxonGroupField } from './TaxonGroupField'
 
@@ -75,6 +76,7 @@ export function SpeciesForm({
         animalEngName: input.englishName,
         animalScientificName: input.scientificName,
         animalTaxonomic: input.taxonGroup,
+        floor: input.floor,
         fileKey,
       }
 
@@ -230,6 +232,11 @@ export function SpeciesForm({
             />
           </SubClassification>
         </FormFieldCard>
+
+        <FloorField
+          value={values.floor}
+          onChange={(floor) => setField('floor', floor)}
+        />
 
         <LegalDesignationField
           statuses={legalStatusesQuery.data}

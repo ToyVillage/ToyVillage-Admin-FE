@@ -17,6 +17,7 @@ const successBody = {
   scientificName: 'Hydrochoerus hydrochaeris',
   animalTaxonomic: 'MAMMALS',
   detailKind: '설치목 - 천축서과',
+  floor: 4,
   legalStatuses: [{ animalLegalStatusId: 1, kind: '지정관리 야생동물' }],
   animalCount: 3,
   kindImage: { fileName: 'capybara.png', fileKey: 'animal/capybara.png' },
@@ -56,6 +57,11 @@ test('S1: 종 상세 진입 시 한 번 조회해 프로필 카드에 표시한�
     '포유류 · 설치목 · 천축서과',
   )
   await expect(detailValue(page, '세부분류')).toHaveText('천축서과')
+  await expect(
+    page
+      .getByRole('heading', { level: 1 })
+      .locator('xpath=following-sibling::*[1]'),
+  ).toHaveText('4층')
   await expect(detailValue(page, '법정지정분류')).toHaveText(
     '지정관리 야생동물',
   )
@@ -147,6 +153,31 @@ test('S9: 허용값 밖의 animalTaxonomic 은 조회 오류 상태다', async (
   await expectDetailError(page)
 })
 
+test('S14: 허용값 밖의 floor 는 조회 오류 상태다', async ({ page }) => {
+  await mockDetail(page, () => [200, { ...successBody, floor: 3 }])
+  await page.goto('/species/1')
+
+  await expectDetailError(page)
+})
+
+test('S15: 층이 없는 종은 뱃지 없이 보이고 수정 폼은 4층이다', async ({
+  page,
+}) => {
+  await mockDetail(page, () => [200, { ...successBody, floor: null }])
+  await page.goto('/species/1')
+
+  await expect(page.getByRole('heading', { name: '카피바라' })).toBeVisible()
+  await expect(
+    page
+      .getByRole('heading', { level: 1 })
+      .locator('xpath=following-sibling::*'),
+  ).toHaveCount(0)
+  await expect(page.getByRole('alert')).toHaveCount(0)
+
+  await page.goto('/species/1/edit')
+  await expect(page.getByRole('radio', { name: '4층' })).toBeChecked()
+})
+
 test('S10: 종 수정 화면 초기값이 응답과 같다', async ({ page }) => {
   await mockDetail(page, () => [200, successBody])
   await page.goto('/species/1/edit')
@@ -161,6 +192,7 @@ test('S10: 종 수정 화면 초기값이 응답과 같다', async ({ page }) =>
     'Hydrochoerus hydrochaeris',
   )
   await expect(page.getByRole('radio', { name: '포유류' })).toBeChecked()
+  await expect(page.getByRole('radio', { name: '4층' })).toBeChecked()
   await expect(page.getByRole('textbox', { name: '세부 분류' })).toHaveValue(
     '설치목 - 천축서과',
   )

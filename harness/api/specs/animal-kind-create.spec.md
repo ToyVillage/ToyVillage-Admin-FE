@@ -37,6 +37,8 @@ real_server:
   선택 `animalDetailKind`(세부분류), `animalLegalDesignation`(법정지정분류 id
   배열). 2026-09-16 새 명세에서 두 선택값이 필수에서 풀려 화면(퍼블리싱
   spec의 선택 입력)과 일치한다.
+- 2026-10-27(이슈 #276): 필수 `floor`(층, 4 또는 5)를 더 보낸다. 화면 기본값은 `4`(4층)다.
+  Notion 명세에는 없고 staging Swagger·백엔드에만 있어 Swagger 를 기준으로 한다(개발자 결정).
 - 201 성공 시 `/species`로 이동하고 `create-success` 토스트를 전달한다
   (기존 동작 유지).
 

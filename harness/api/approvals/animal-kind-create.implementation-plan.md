@@ -4,7 +4,7 @@
 
 - `POST /animal-manage/kind`, Bearer, role `ADMIN`
 - body 필수 `animalName`·`animalEngName`·`animalScientificName`·`animalTaxonomic`·`fileKey`,
-  선택 `animalDetailKind`·`animalLegalDesignation`(id 배열)
+  선택 `animalDetailKind`·`animalLegalDesignation`(id 배열), 필수 `floor`(2026-10-27 추가)
 - 성공 201 `{ message }`, 오류 400/401/403/404(fileKey 없음·법정지정분류 없음)/500
 - 실제 서버 테스트 disabled
 
@@ -66,3 +66,11 @@ export interface AnimalKindCreateRequest {
 - 서버 목록에 없는 법정지정분류 저장값: 선택된 채 두고 저장 시 다시 생성한다.
 - 관찰 필드명: api 계층에서 매핑한다(모델 필드명 유지).
 - 퍼블리싱 문서(species-list·species-detail·species-form) 수정·재승인은 구현 전에 한다.
+
+## 층 추가 (2026-10-27, 이슈 #276)
+
+- Contract 변경: 필수 `floor`(integer, 4 또는 5). Swagger 기준(개발자 결정).
+- `src/entities/species/api/types.ts` — `AnimalKindCreateRequest.floor: SpeciesFloor`
+- `src/features/species-form/ui/SpeciesForm.tsx` — 생성·수정 공통 body 에 `floor: input.floor`
+  (폼 값·모델은 퍼블리싱 `species-form` 이 추가한 `floor` 를 쓴다)
+- `tests/e2e/support/animal-manage-api.ts` — 종 `floor` 저장, `tests/e2e/api/animal-kind-create.spec.ts` — Mock S1 body·S10

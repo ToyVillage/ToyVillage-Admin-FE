@@ -8,6 +8,7 @@ import {
   isFileResponse,
   isMessageResponse,
   isRecord,
+  isSpeciesFloor,
   isTaxonGroup,
 } from './guards'
 import type {
@@ -81,6 +82,7 @@ export async function getSpecies({
     englishName: data.engName,
     scientificName: data.scientificName,
     taxonGroup: data.animalTaxonomic,
+    floor: data.floor,
     ...(data.detailKind ? { subClassification: data.detailKind } : {}),
     legalDesignations: data.legalStatuses.map(toLegalStatusName),
     photo: toPhoto(data.kindImage),
@@ -190,6 +192,7 @@ function isAnimalKindQueryResponse(
     typeof value.scientificName === 'string' &&
     isTaxonGroup(value.animalTaxonomic) &&
     (value.detailKind === null || typeof value.detailKind === 'string') &&
+    (value.floor === null || isSpeciesFloor(value.floor)) &&
     Array.isArray(value.legalStatuses) &&
     value.legalStatuses.every(isKindLegalStatus) &&
     Number.isInteger(value.animalCount) &&
