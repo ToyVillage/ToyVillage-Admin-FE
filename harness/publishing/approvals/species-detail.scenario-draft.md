@@ -3,19 +3,19 @@
 # Scenario Draft — species-detail
 
 출처: `harness/publishing/specs/species-detail.spec.md` (행동명세가 source of truth)
-기준 Figma: `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`) `58:8717` (related `157:11428` `158:11676` `71:8796`)
-상태: draft — 게이트 ② 결정 반영(2026-09-15), 시나리오 승인 대기
+기준 Figma: `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`) `58:8717` (related `157:11428` `158:11676` `71:8796`) · 층 뱃지 `3133:26263`
+상태: draft — 층 뱃지 추가(2026-10-27, 이슈 #276), 재승인 대기
 
 데이터 전제: e2e 가짜 서버(`tests/e2e/support/animal-manage-api.ts`, 옛 개체 mock 26건과 같음) — 종 1 카피바라 3마리(동식이·미미·두리), 종 2 플라밍고 12마리(수컷·암컷·미상 포함,
 법정지정분류·세부분류 없음), 종 3 반달가슴곰 2마리(법정지정분류 2개), 종 4~12 각 1마리, 종 13 피라냐 0마리(`species-list` 종 mock).
-종 1 세부 분류는 `설치목 - 천축서과` 다. 개체 표는 서버 순서(최신순 = id 큰 순)이다.
+종 1 세부 분류는 `설치목 - 천축서과` 다. 층은 종 1 `4층`, 종 2 `5층` 이다. 개체 표는 서버 순서(최신순 = id 큰 순)이다.
 
 ## 핵심 시나리오
 
 ### S1: 종 상세 진입 기본 상태
 - Given: 종 상세 라우트 `/species/1`
 - When: 화면에 진입한다
-- Then: `뒤로가기`, 제목 `카피바라`, 부제 `포유류 · Hydrochoerus hydrochaeris`, 정보 라벨 `국명` `분류군` `영문명` `학명` `법정지정분류` `세부분류`,
+- Then: `뒤로가기`, 제목 `카피바라` 와 그 옆 층 뱃지 `4층`, 부제 `포유류 · Hydrochoerus hydrochaeris`, 정보 라벨 `국명` `분류군` `영문명` `학명` `법정지정분류` `세부분류`,
   섹션 헤더 `개체 3마리`, 표 3행이 최신순 `두리` → `미미` → `동식이` 순서로 보인다
 
 ### S2: 개체 표 컬럼과 값
@@ -180,6 +180,11 @@
 - When: `/species/1` 프로필 카드를 확인한다
 - Then: `분류군` 값이 `포유류 · 설치목 · 천축서과`, `세부분류` 값이 `천축서과` 로 보인다
 
+### S34: 층 뱃지 값
+- Given: 층이 5층인 종 2(플라밍고)
+- When: `/species/2` 에 진입한다
+- Then: 제목 `플라밍고` 옆 층 뱃지가 `5층` 이다
+
 ---
 
 ## 승인 메모
@@ -192,6 +197,7 @@
 - S23 초점 복귀는 `KebabMenu` 보강, S12·S16 은 `DeleteConfirmationDialog.description`, S18·S27 은 `DataTable.emptyLabel: ReactNode` 를 전제로 한다(게이트 ② 채택).
 - S28·S29 는 다른 화면(`individual-form` / `individual-detail`)이 넘긴 navigate state 로 진입한 경우만 검증한다.
 - 삭제 처리 중 중복 전송 방지는 동작 절에만 두고 시나리오로 넣지 않았다(지연은 `/api` 단계 route mock `mutationDelayMs` 에서 검증).
+- **층 뱃지 반영(2026-10-27, 이슈 #276)**: 문구 변경 S1(층 뱃지 `4층`), 추가 S34(5층 종). 층이 없는 종은 없다고 본다(개발자 결정).
 - S18·S27 의 0마리 종·1마리 종은 `species-list` 종 mock(13종)과 이 spec 개체 mock 의 합의값이다(13 → 0, 4~12 → 1).
 
 <!-- 개발자: 승인할 시나리오 id를 figma-review.md와 <feature>.approved.json의 scenarioIds에 적는다.
