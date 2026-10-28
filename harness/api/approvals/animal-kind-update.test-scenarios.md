@@ -1,6 +1,6 @@
 # API Test Scenarios — animal-kind-update
 
-공통 사전 조건: `accessToken` 설정. 종 상세 GET mock(`animalKindId: 1`, `detailKind: "설치목 - 천축서과"`,
+공통 사전 조건: `accessToken` 설정. 종 상세 GET mock(`animalKindId: 1`, `detailKind: "설치목 - 천축서과"`, `floor: 4`,
 `legalStatuses: [{ animalLegalStatusId: 1, kind: "천연기념물" }]`, `kindImage.fileKey: "animal/capybara.png"`), 법정지정분류 목록 GET 기본
 body, `PATCH **/animal-manage/kind/1`(200 `{ "message": "종 수정 성공" }`), `POST **/file`을
 `page.route()`로 mock 하고 `/species/1/edit`에 진입한다. 오류 body는 Contract 형식 `{ message, status, timestamp, description }`을 쓴다.
@@ -8,7 +8,7 @@ body, `PATCH **/animal-manage/kind/1`(200 `{ "message": "종 수정 성공" }`),
 ## Mock S1 — 텍스트 수정 저장
 
 - 사용자 동작: 국명을 `카피바라2`로 변경 → 저장
-- Mock request: `PATCH /animal-manage/kind/1` body — 필수 5개, `animalDetailKind: "설치목 - 천축서과"`,
+- Mock request: `PATCH /animal-manage/kind/1` body — 필수 6개(`floor: 4` 포함), `animalDetailKind: "설치목 - 천축서과"`,
   `animalLegalDesignation: [1]`, `fileKey: "animal/capybara.png"`
 - 기대 결과: 업로드 없음, PATCH 1회, `/species/1` 이동, 상세 GET 재요청
 
@@ -45,6 +45,11 @@ body, `PATCH **/animal-manage/kind/1`(200 `{ "message": "종 수정 성공" }`),
 - 사전 조건: `국제보호종`을 고른 뒤 목록 GET 응답에서 그 이름이 빠진다(다른 곳에서 삭제)
 - 사용자 동작: `국제보호종` 선택 → 저장
 - 기대 결과: legal-status POST → 목록 GET → PATCH(새 id 포함) 순서
+
+## Mock S9 — 층 변경 저장 (2026-10-27, 이슈 #276)
+
+- 사용자 동작: 층 `5층` 선택 → 저장
+- 기대 결과: PATCH body `floor: 5`, `/species/1` 이동
 
 ## Staging R1
 

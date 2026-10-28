@@ -11,7 +11,7 @@
 - Path `animalKindId` integer(LONG) required로 동결.
   Query Parameter·Request Body 없음으로 동결
 - 성공 `200` body `{ animalKindId, kindName, engName, scientificName,
-  animalTaxonomic, detailKind, legalStatuses[], animalCount,
+  animalTaxonomic, detailKind, floor(2026-10-27 추가), legalStatuses[], animalCount,
   kindImage{fileName,fileKey} }` 전 필드 required·non-nullable로 동결
 - 오류 401 / 403 / 404(`ANIMAL_KIND_NOT_FOUND`) / 500 body
   `{ message, status, timestamp, description }`로 동결(400은 명세에 없다)
@@ -158,3 +158,19 @@ export interface AnimalKindQueryResponse {
 - 서버 목록에 없는 법정지정분류 저장값: 선택된 채 두고 저장 시 다시 생성한다.
 - 관찰 필드명: api 계층에서 매핑한다(모델 필드명 유지).
 - 퍼블리싱 문서(species-list·species-detail·species-form) 수정·재승인은 구현 전에 한다.
+
+## 층 추가 (2026-10-27, 이슈 #276)
+
+- Contract 변경: 응답 `floor`(integer, 4 또는 5) required. nullable 여부는 아래 "층 null 허용" 절을 따른다.
+- `src/entities/species/api/types.ts` — `AnimalKindQueryResponse.floor: SpeciesFloor`
+- `src/entities/species/api/speciesApi.ts` — 상세 타입가드에 `floor` 가 `speciesFloors` 값인지 검사 추가,
+  반환 `Species.floor` 에 그대로 담는다. 4·5 밖이면 기존 형식 오류(`종 상세 조회 응답 형식이 올바르지 않습니다.`)
+- 화면: 종 상세 제목 옆 `SpeciesFloorBadge`, 수정 폼 층 초기값(퍼블리싱 `species-detail`·`species-form`)
+- `tests/e2e/api/animal-kind-query.spec.ts` — 기본 body `floor: 4`, Mock S1·S10 기대값, S14
+
+## 층 null 허용 (2026-10-28, 이슈 #276)
+
+- staging 종 13개가 모두 `floor: null` 이라 응답 `floor` 를 nullable 로 바꾼다(개발자 결정).
+- 타입 `AnimalKindQueryResponse.floor`·`Species.floor` 는 `SpeciesFloor | null`. 타입가드는 `null` 또는 4·5 만 통과시킨다.
+- 화면: 상세는 `null` 이면 층 뱃지를 그리지 않는다. 수정 폼은 `null` 이면 기본값 `4` 로 채운다.
+- `tests/e2e/api/animal-kind-query.spec.ts` — S15 추가

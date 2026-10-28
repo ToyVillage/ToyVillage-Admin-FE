@@ -9,6 +9,7 @@
 - Requested page: https://app.notion.com/bf77a4d6147482b680128107c8e3dfd5 (같은 페이지)
 - Checked at: 2026-09-16T23:45:00+09:00
 - Exact match count: 1
+- `floor` 출처(2026-10-27): staging Swagger `getAnimalKindDetail`(`GET /animal-manage/kind/{animalKindId}`). Notion 사본 2개(`collection://9df7a4d6-…` 2026-10-02 · `collection://5637a4d6-…` 2026-09-18) 모두 `floor` 가 없고, 위 Resolved page 는 지금 열리지 않는다(404). Swagger 를 기준으로 한다(2026-10-27 개발자 결정, 이슈 #276).
 
 ## Basic Information
 
@@ -61,6 +62,7 @@
 | `scientificName` | string | true | false | `"Hydrochoerus hydrochaeris"` | 학명 |
 | `animalTaxonomic` | enum | true | false | `"MAMMALS"` | 분류군 — 허용값 `MAMMALS`, `REPTILES`, `FISH`, `BIRDS` |
 | `detailKind` | string | true | true | `"설치목 · 천축서과"` | 세부 분류. 미등록 시 `null` |
+| `floor` | integer (INT) | true | true | `4` | 층 — `4` 또는 `5`(2026-10-27 추가). 층 필드 추가 전에 등록한 종은 `null` |
 | `legalStatuses` | array\<object\> | true | false | `[{"animalLegalStatusId":1,"kind":"지정관리 야생동물"}]` | 법정지정분류 목록. 지정된 값이 없으면 빈 배열 |
 | `legalStatuses[].animalLegalStatusId` | integer | true | true | `1` | 공용 목록에서 이름으로 찾은 id. 공용 목록에서 삭제된 분류는 `null` |
 | `legalStatuses[].kind` | string | true | false | `"지정관리 야생동물"` | 법정지정분류 이름 |
@@ -88,6 +90,11 @@
 표기가 없어 200 예시 관측에 근거해 non-nullable로 두었다. `animalKindId`는
 명세의 LONG을 contract 기본 타입 표기 `integer`로 정규화하고 constraints에
 `LONG`을 남겼다.
+
+`floor`(2026-10-27 추가)는 Swagger 에 required·nullable 표기가 없고, 백엔드 DB 컬럼
+(`V18__add_animal_kind_floor.sql` `floor INT NULL`)은 NULL 을 허용하고 기존 행을 채우지 않았다.
+2026-10-28 staging 종 13개(10001~10015)가 모두 `floor: null` 을 돌려줘 required·**nullable** 로 동결한다
+(2026-10-28 개발자 결정, 이슈 #276). 4·5 밖의 값은 응답 형식 오류로 본다.
 
 ## Notes
 
