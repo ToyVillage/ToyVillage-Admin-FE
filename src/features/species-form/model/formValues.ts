@@ -7,7 +7,7 @@ import {
 import type { PhotoValue } from '@/shared/ui'
 import type { SpeciesFormValues } from './types'
 
-/** 등록은 빈 폼(분류군 `포유류`), 수정은 저장값으로 채운다. */
+/** 등록은 빈 폼(분류군 `포유류`·층 `4층`), 수정은 저장값으로 채운다. */
 export function toSpeciesFormValues(species?: Species): SpeciesFormValues {
   if (!species) {
     return {
@@ -15,6 +15,7 @@ export function toSpeciesFormValues(species?: Species): SpeciesFormValues {
       englishName: '',
       scientificName: '',
       taxonGroup: 'MAMMALS',
+      floor: 4,
       subClassification: '',
       legalDesignations: [],
       photo: null,
@@ -26,6 +27,8 @@ export function toSpeciesFormValues(species?: Species): SpeciesFormValues {
     englishName: species.englishName,
     scientificName: species.scientificName,
     taxonGroup: species.taxonGroup,
+    // 층이 없는(null) 종은 등록과 같은 기본값으로 채운다(2026-10-28 개발자 결정).
+    floor: species.floor ?? 4,
     subClassification: species.subClassification ?? '',
     legalDesignations: [...species.legalDesignations],
     photo: { fileName: species.photo.fileName, url: species.photo.url },
@@ -42,6 +45,7 @@ export function isSameSpeciesFormValues(
     left.englishName === right.englishName &&
     left.scientificName === right.scientificName &&
     left.taxonGroup === right.taxonGroup &&
+    left.floor === right.floor &&
     left.subClassification === right.subClassification &&
     left.legalDesignations.length === right.legalDesignations.length &&
     left.legalDesignations.every(
@@ -64,6 +68,7 @@ export function toSpeciesInput(
     englishName: values.englishName.trim(),
     scientificName: values.scientificName.trim(),
     taxonGroup: values.taxonGroup,
+    floor: values.floor,
     ...(subClassification ? { subClassification } : {}),
     legalDesignations: values.legalDesignations,
     photo: toPhotoInput(values.photo, savedPhoto),
