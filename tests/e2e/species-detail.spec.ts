@@ -4,11 +4,11 @@ import {
   type AnimalManageApiHandle,
 } from './support/animal-manage-api'
 
-// 승인된 시나리오(species-detail.approved.json, S1~S33)를 변환한 것.
+// 승인된 시나리오(species-detail.approved.json, S1~S34)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 // 종 1 카피바라 3마리(최신순 두리 → 미미 → 동식이), 종 2 플라밍고 12마리, 종 3 반달가슴곰 2마리,
-// 종 4~12 각 1마리, 종 13 피라냐 0마리.
+// 종 4~12 각 1마리, 종 13 피라냐 0마리. 층은 종 1 4층, 종 2 5층.
 
 let api: AnimalManageApiHandle
 
@@ -28,6 +28,7 @@ test('S1: 종 상세 진입 기본 상태', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 1, name: '카피바라' }),
   ).toBeVisible()
+  await expect(floorBadge(page)).toHaveText('4층')
   await expect(
     page.getByText('포유류 · Hydrochoerus hydrochaeris', { exact: true }),
   ).toBeVisible()
@@ -514,6 +515,22 @@ test('S33: 분류군·세부분류 표시', async ({ page }) => {
   )
   await expect(detailValue(page, '세부분류')).toHaveText('천축서과')
 })
+
+test('S34: 층 뱃지 값', async ({ page }) => {
+  await page.goto('/species/2')
+
+  await expect(
+    page.getByRole('heading', { level: 1, name: '플라밍고' }),
+  ).toBeVisible()
+  await expect(floorBadge(page)).toHaveText('5층')
+})
+
+// 제목(h1) 바로 옆에 붙은 층 뱃지.
+function floorBadge(page: Page) {
+  return page
+    .getByRole('heading', { level: 1 })
+    .locator('xpath=following-sibling::*[1]')
+}
 
 function rows(page: Page) {
   return page.getByTestId('individual-row')

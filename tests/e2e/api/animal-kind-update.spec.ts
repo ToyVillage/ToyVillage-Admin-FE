@@ -14,7 +14,7 @@ import {
 } from '../support/species-form-page'
 
 // 승인된 시나리오(animal-kind-update.test-scenarios.md)를 변환한 것.
-// 종 1 은 세부분류 `설치목 - 천축서과`, 법정지정분류 `천연기념물`(id 1), 사진 `animal/capybara.png` 이다.
+// 종 1 은 세부분류 `설치목 - 천축서과`, 층 4, 법정지정분류 `천연기념물`(id 1), 사진 `animal/capybara.png` 이다.
 
 const failureMessage = '저장하지 못했습니다. 다시 시도해 주세요.'
 
@@ -55,6 +55,7 @@ test('S1: 텍스트만 바꾸면 업로드 없이 전체를 PATCH 한다', async
     animalScientificName: 'Hydrochoerus hydrochaeris',
     animalTaxonomic: 'MAMMALS',
     animalDetailKind: '설치목 - 천축서과',
+    floor: 4,
     animalLegalDesignation: [1],
     fileKey: 'animal/capybara.png',
   })
@@ -156,6 +157,16 @@ test('S8: 고른 뒤 목록에서 사라진 항목은 만든 뒤 새 id 로 PATC
   expect(updateRequest().body).toMatchObject({
     animalLegalDesignation: [1, created?.id],
   })
+})
+
+test('S9: 층을 바꾸면 새 floor 로 PATCH 한다', async ({ page }) => {
+  await openEdit(page)
+  await page.getByRole('radio', { name: '5층' }).click()
+
+  await submitButton(page, '저장하기').click()
+
+  await expect(page).toHaveURL(/\/species\/1$/)
+  expect(updateRequest().body).toMatchObject({ floor: 5 })
 })
 
 async function openEdit(page: Page) {
