@@ -34,6 +34,7 @@ export const mockSidebarGroups: SidebarGroup[] = [
       { id: 'task-list', label: '업무지시', to: '/tasks' },
       { id: 'task-reports', label: '업무보고', to: '/task-reports' },
       { id: 'work-logs', label: '업무일지관리', to: '/work-logs' },
+      { id: 'activity', label: '전체 활동', to: '/activity' },
     ],
   },
   {

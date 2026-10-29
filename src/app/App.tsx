@@ -251,6 +251,13 @@ const routes: RouteObject[] = [
             ),
           },
           {
+            path: '/activity',
+            element: lazyPage(
+              () => import('@/pages/activity/ActivityPage'),
+              'ActivityPage',
+            ),
+          },
+          {
             path: '/feeds',
             element: lazyPage(
               () => import('@/pages/feeds/FeedListPage'),
