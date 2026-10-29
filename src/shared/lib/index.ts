@@ -4,6 +4,8 @@ export {
   clampCalendarDate,
   daysInMonth,
   formatIsoDate,
+  formatIsoDateWithWeekday,
+  shiftIsoDate,
   toIsoDate,
   todayCalendarDate,
 } from './calendarDate'
