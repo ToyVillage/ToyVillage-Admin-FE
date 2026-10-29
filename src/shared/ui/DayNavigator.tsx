@@ -24,6 +24,20 @@ export function DayNavigator({ value, onChange }: DayNavigatorProps) {
 
   const today = toIsoDate(todayCalendarDate())
   const isToday = value === today
+  // 부모가 다시 그리기 전에 이전·다음을 연달아 눌러도 하루씩 쌓이게, 마지막으로 보낸 날짜를 기준으로 삼는다.
+  const latestValueRef = useRef(value)
+  useEffect(() => {
+    latestValueRef.current = value
+  }, [value])
+
+  function change(isoDate: string) {
+    latestValueRef.current = isoDate
+    onChange(isoDate)
+  }
+
+  function shift(days: number) {
+    change(shiftIsoDate(latestValueRef.current, days))
+  }
 
   // 달력 바깥을 누르거나 Escape 를 누르면 날짜를 바꾸지 않고 닫는다.
   useEffect(() => {
@@ -48,7 +62,7 @@ export function DayNavigator({ value, onChange }: DayNavigatorProps) {
 
   function handleSelect(isoDate: string) {
     setOpen(false)
-    onChange(isoDate)
+    change(isoDate)
   }
 
   return (
@@ -56,7 +70,7 @@ export function DayNavigator({ value, onChange }: DayNavigatorProps) {
       <RoundButton
         type="button"
         aria-label="이전 날짜"
-        onClick={() => onChange(shiftIsoDate(value, -1))}
+        onClick={() => shift(-1)}
       >
         <img src={chevronIcon} alt="" aria-hidden="true" />
       </RoundButton>
@@ -85,7 +99,7 @@ export function DayNavigator({ value, onChange }: DayNavigatorProps) {
         type="button"
         aria-label="다음 날짜"
         data-direction="next"
-        onClick={() => onChange(shiftIsoDate(value, 1))}
+        onClick={() => shift(1)}
       >
         <img src={chevronIcon} alt="" aria-hidden="true" />
       </RoundButton>
@@ -94,7 +108,7 @@ export function DayNavigator({ value, onChange }: DayNavigatorProps) {
         type="button"
         aria-pressed={isToday}
         $active={isToday}
-        onClick={() => onChange(today)}
+        onClick={() => change(today)}
       >
         오늘
       </TodayButton>
