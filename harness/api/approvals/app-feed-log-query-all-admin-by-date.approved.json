@@ -1,0 +1,18 @@
+{
+  "feature": "app-feed-log-query-all-admin-by-date",
+  "apiId": "APP_FEED_LOG_QUERY_ALL_ADMIN_BY_DATE",
+  "approvedAt": "2026-10-29T01:38:15.786Z",
+  "approvedBy": "kimjihwan8",
+  "approvedCommit": "14721cbf11e0b6397f9fb698922775904fda9257",
+  "taskSpecHash": "98c90b0225484aa88570b4f46313b0018f36cd79881bdf44014ee0300132c090",
+  "contractHash": "b3721940d0c7bc40b50e61be9cd68528fc02c68bc1eee60f1d7dbb997c1fd8eb",
+  "contractMarkdownHash": "a18f0d5251b6a427e9e421d4df464907cd5eec9c46829215a78c16eef6819f06",
+  "planHash": "4164f7cd6e755ca61adfb6eda3b11d9b08ca6f9feec8d7793fe005a1d2e43ed0",
+  "scenarioHash": "056159e8835a6a37d7ee1f7e17536031e2e0aa34fdd02168b91a85a5ed82ffad",
+  "testHash": "574989ad2d5523a9a664ab6b338a7438ca3ce9baf568f51de5a65adc2eeab88f",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-10-29T01:52:06.329Z",
+  "testApprovedBy": "kimjihwan8",
+  "testApprovedCommit": "14721cbf11e0b6397f9fb698922775904fda9257"
+}

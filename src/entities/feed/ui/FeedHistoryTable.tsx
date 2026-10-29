@@ -1,91 +1,139 @@
-import styled from '@emotion/styled'
+import type { ReactNode } from 'react'
+import { DataTable, type DataTableColumn, type DataTableRow } from '@/shared/ui'
 import {
-  DataTable,
-  TruncatedText,
-  type DataTableColumn,
-  type DataTableRow,
-} from '@/shared/ui'
-import { formatFedDate, formatFeedLabel } from '../model/format'
-import type { FeedHistoryRecord } from '../model/types'
+  formatFedAt,
+  formatFedDate,
+  formatFeedQuantity,
+  formatNote,
+} from '../model/format'
+import type { FeedFloor, FeedHistoryRecord } from '../model/types'
+import { TruncatedCell } from './TruncatedCell'
 
 interface FeedHistoryTableProps {
+  floor: FeedFloor
   records: FeedHistoryRecord[]
   emptyLabel: string
-  /** 이력 행을 누르면 그 급여 기록 상세로 간다. 행 id 가 `feedLogId` 다. */
-  onSelect: (feedLogId: string) => void
-  // 첫 조회 중. 헤더·검색바는 그대로 두고 행 자리만 막대로 채운다.
+  // 첫 조회 중. 헤더는 그대로 두고 행 자리만 막대로 채운다.
   loading?: boolean
+  /** 행을 누르면 그 급여 기록 상세로 이동한다. */
+  onRowClick?: (id: string) => void
+  /** 행 오른쪽 케밥 메뉴. 메뉴 동작(수정·삭제)은 페이지가 소유한다. */
+  renderRowAction?: (record: FeedHistoryRecord) => ReactNode
 }
 
-// Figma `1400:15136` (feed history table). 페이지네이션 없이 이력 전체를 보여준다.
-const columns: DataTableColumn[] = [
-  // 날짜·시간은 잘리면 안 되는 값이라 좌우 여백을 줄이고 폭을 넉넉히 둔다.
+// Figma `individual detail`(749:14665) 급여 이력 표 — 앱 4층 입력 칸. 페이지네이션 없이 전체를 보여준다.
+const floorFourColumns: DataTableColumn[] = [
   {
-    key: 'fedDate',
-    header: '급여날짜',
-    width: 200,
-    paddingX: 24,
-    render: mutedCell('fedDate'),
-  },
-  {
-    key: 'fedTime',
-    header: '급여시간',
-    width: 140,
-    paddingX: 24,
-    render: mutedCell('fedTime'),
-  },
-  { key: 'feeder', header: '급여자', width: 170, render: mutedCell('feeder') },
-  {
-    key: 'feed',
-    header: '먹이 종류 · 급여량',
+    key: 'fedAt',
+    header: '급여일시',
+    // `2026.09.03 09:30`(24px, 약 200px)이 잘리지 않는 폭. 늘어난 만큼 특이사항이 줄어든다.
     width: 250,
-    render: (row) => <StrongCell value={String(row.feed ?? '')} />,
+    paddingX: 24,
+    render: cell('fedAt'),
   },
-  // 잔량은 잘리면 안 되는 숫자라 날짜·시간처럼 좌우 여백을 줄인다.
+  {
+    key: 'feedType',
+    header: '먹이 종류',
+    width: 220,
+    render: cell('feedType'),
+  },
+  {
+    key: 'feedAmount',
+    header: '급여량',
+    width: 140,
+    paddingX: 16,
+    render: cell('feedAmount'),
+  },
   {
     key: 'remainingAmount',
     header: '잔량',
     width: 140,
-    paddingX: 24,
-    render: (row) => <StrongCell value={String(row.remainingAmount ?? '')} />,
+    paddingX: 16,
+    render: cell('remainingAmount'),
   },
-  {
-    key: 'note',
-    header: '특이사항',
-    render: (row) => <NoteCell value={String(row.note ?? '')} />,
-  },
+  { key: 'note', header: '특이사항', render: cell('note') },
+  { key: 'feeder', header: '급여자', width: 150, render: mutedCell('feeder') },
 ]
 
-// 열 폭 합계(마지막 `특이사항` 은 최소 260 로 본다).
-export const feedHistoryTableMinWidth = 200 + 140 + 170 + 250 + 140 + 260
+// Figma `individual detail (5층)`(3316:25799) — 앱 5층 입력 칸.
+const floorFiveColumns: DataTableColumn[] = [
+  {
+    key: 'fedAt',
+    header: '급여일',
+    width: 200,
+    paddingX: 24,
+    render: cell('fedAt'),
+  },
+  { key: 'feedType', header: '먹이 종류', render: cell('feedType') },
+  {
+    key: 'feedAmount',
+    header: '급여량',
+    width: 220,
+    render: cell('feedAmount'),
+  },
+  { key: 'feeder', header: '급여자', width: 190, render: mutedCell('feeder') },
+]
+
+const actionColumnWidth = 80
+
+export const feedHistoryTableMinWidth =
+  250 + 220 + 140 + 140 + 260 + 150 + actionColumnWidth
 
 const appearance = {
   headerBackground: 'tableHeaderStrong',
   headerColor: 'textStrong',
-  headerFontWeight: 600,
-  dividerColor: 'tableDivider',
+  dividerColor: 'textGuide',
 } as const
 
 export function FeedHistoryTable({
+  floor,
   records,
   emptyLabel,
-  onSelect,
   loading,
+  onRowClick,
+  renderRowAction,
 }: FeedHistoryTableProps) {
+  const columns = floor === '4' ? floorFourColumns : floorFiveColumns
+  const recordById = new Map(records.map((record) => [record.id, record]))
+  const tableColumns: DataTableColumn[] = renderRowAction
+    ? [
+        ...columns,
+        {
+          key: 'actions',
+          header: '',
+          width: actionColumnWidth,
+          paddingX: 0,
+          align: 'center',
+          variant: 'action',
+          render: (row) => {
+            const record = recordById.get(row.id)
+            return record ? renderRowAction(record) : null
+          },
+        },
+      ]
+    : columns
+
   return (
     <DataTable
       rows={records.map((record): DataTableRow => ({
         id: record.id,
-        fedDate: formatFedDate(record.fedDate),
-        fedTime: record.fedTime,
+        fedAt:
+          floor === '4'
+            ? formatFedAt(record.fedDate, record.fedTime)
+            : formatFedDate(record.fedDate),
+        feedType: record.feedType,
+        feedAmount: formatFeedQuantity(record.feedAmount, record.unit),
+        remainingAmount: formatFeedQuantity(
+          record.remainingAmount,
+          record.unit,
+        ),
+        note: formatNote(record.note),
         feeder: record.feederName,
-        feed: formatFeedLabel(record.feedType, record.feedAmount),
-        remainingAmount: record.remainingAmount,
-        note: record.note,
       }))}
-      columns={columns}
+      columns={tableColumns}
+      onRowClick={onRowClick}
       rowTestId="feed-history-row"
-      onRowClick={onSelect}
+      headerTestId="feed-history-header"
       emptyLabel={emptyLabel}
       appearance={appearance}
       loading={loading}
@@ -93,32 +141,14 @@ export function FeedHistoryTable({
   )
 }
 
-// Figma 의 `급여날짜`·`급여시간`·`급여자` 는 gray/60(#848491) 20px 다.
-function mutedCell(key: string) {
+function cell(key: string) {
   return function render(row: DataTableRow) {
-    return <MutedCell value={String(row[key] ?? '')} />
+    return <TruncatedCell value={String(row[key] ?? '')} />
   }
 }
 
-// 값이 열 폭보다 길면 줄바꿈하지 않고 말줄임한다(행 높이가 늘면 표가 어긋난다).
-const MutedCell = styled(TruncatedText)`
-  color: ${({ theme }) => theme.colors.textGuide};
-  font-size: 20px;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-const StrongCell = styled(TruncatedText)`
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 22px;
-  font-weight: 500;
-`
-
-// 열 폭을 넘치면 한 줄로 자르고 말줄임표로 끝낸다(Figma `1402:15172`).
-const NoteCell = styled(TruncatedText)`
-  width: 100%;
-  color: ${({ theme }) => theme.colors.textGuide};
-  font-size: 22px;
-  font-weight: 500;
-`
+function mutedCell(key: string) {
+  return function render(row: DataTableRow) {
+    return <TruncatedCell value={String(row[key] ?? '')} muted />
+  }
+}
