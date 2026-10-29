@@ -101,7 +101,7 @@
 ### S17: 먹이 급여 기록 확인하기 이동
 - Given: 급여 이력이 있는 개체 `/species/1/individuals/1` 화면
 - When: `먹이 급여 기록 확인하기` 를 클릭하고, 이동한 화면에서 `뒤로가기` 를 클릭한다
-- Then: 가장 최근 급여 기록 상세 `/feeds/:feedLogId` 로 이동하고, `뒤로가기` 로 `/species/1/individuals/1` 에 돌아온다
+- Then: 이력이 있는 층의 개체별 급여 이력 `/feeds/animals/1`(5층 이력만 있으면 `/feeds/fifth-floor/animals/:id`)로 이동하고, `뒤로가기` 로 `/species/1/individuals/1` 에 돌아온다
 
 ## 엣지 케이스
 
@@ -171,7 +171,7 @@
 - Then: 모든 조작이 가능하고, 첨부 chip·`외 N개`·`⋮` 에서 누른 Enter 는 행 이동을 일으키지 않으며 포커스 표시가 outline 으로 보인다
 
 ### S31: 급여 이력이 없으면 토스트
-- Given: 급여 이력이 없는 개체 화면
+- Given: 4층·5층 모두 급여 이력이 없는 개체 화면
 - When: `먹이 급여 기록 확인하기` 를 클릭한다
 - Then: 경로가 바뀌지 않고 `급여 기록이 없습니다` 토스트가 뜬다
 

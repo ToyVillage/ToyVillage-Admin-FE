@@ -2,11 +2,13 @@
 feature: feed-edit
 figma:
   fileKey: P7Jhnu8qV5m9q2QJNzkwAN
-  nodeId: 749:14863
+  nodeId: 2429:24034
   relatedNodeIds:
-    - 2440:25662 # 먹이 급여 관리 · 목록 (케밥 2429:23891 / 케밥 열림 2429:24012)
-    - 2440:25664 # 먹이 급여 관리 · 수정 (feeding correction 2429:24034)
-    - 2440:25665 # 먹이 급여 관리 · 토스트 (2429:24115)
+    - 2440:25664 # 먹이 급여 관리 · 수정
+    - 3130:25801 # feeding correction (5층)
+    - 3133:25803 # feeding correction (4층) (invalid)
+    - 3133:25786 # feeding correction (load error)
+    - 2440:25665 # 먹이 급여 관리 · 토스트
 requires_functional_test: true
 paths: src/pages/feeds, src/features/feed-form, src/entities/feed, src/app
 ---
@@ -16,7 +18,9 @@ paths: src/pages/feeds, src/features/feed-form, src/entities/feed, src/app
 ## 상태와 근거
 
 - Status: Draft
-- Last refreshed: 2026-10-06
+- Last refreshed: 2026-10-28
+- **2026-10-28 4층·5층 수정안(이슈 #273, Linear TOY-67)이 아래 규칙보다 우선한다** — 이 절 맨 아래 `4층·5층 수정안` 참고.
+  목록 케밥·삭제는 `feed-list.spec.md`, 기록 상세 케밥·삭제는 `feed-record-detail.spec.md`, 이력 표 케밥은 `feed-detail.spec.md` 가 담당한다.
 - 이슈: #198 먹이 급여 관리 수정 기능, #228 `잔량` 추가(2026-10-06)
 - 기준 섹션: Figma `749:14863` ("먹이 급여 관리"). 수정 기능이 추가되며 다음이 생겼다.
   - 목록 행 오른쪽 케밥(⋮)과 `수정` / `삭제` 메뉴(`2429:24012`, 메뉴 main `39:8908` "수정·삭제")
@@ -32,6 +36,22 @@ paths: src/pages/feeds, src/features/feed-form, src/entities/feed, src/app
 - 수정 폼 선례: `observation-edit.spec.md`(인라인 검증·이탈 확인·저장 실패 문구·저장 중 라벨)
 - 단위 결정(2026-10-06, 개발자): 단위는 항상 kg 다. 수정 요청은 항상 `feedUnit: 'KGL'` 을 보내고 응답의 `feedUnit` 은 무시한다.
 - Figma 근거 없음(저장소 선례로 채움): 검증 오류, 저장 실패, 이탈 확인, 삭제 확인 모달·삭제 토스트, 로딩.
+
+### 4층·5층 수정안 (2026-10-28, 우선)
+
+- 라우트: 4층 `/feeds/:id/edit`, 5층 `/feeds/fifth-floor/:id/edit`.
+- 돌아가는 곳(`뒤로가기`·저장 성공)은 들어온 곳이다: state `from` 이 `list` 면 목록(`/feeds<listSearch>`), `record` 면 그 기록 상세,
+  `history` 면 그 개체의 급여 이력. state 가 없으면 기록 상세. 저장 성공 토스트 `데이터 수정에 성공했습니다` 는 돌아간 화면에서 뜬다.
+- 카드(4층, Figma `2429:24034`): `대상 개체`(읽기 전용) / `급여일시`(읽기 전용) / `급여자`(읽기 전용) / `먹이 종류` / `급여량` / `잔량` / `특이사항`.
+- 카드(5층, Figma `3130:25801`): `대상 개체`(읽기 전용) / `급여일`(읽기 전용, `YYYY.MM.DD`) / `급여자`(읽기 전용) / `먹이 종류` / `급여량`.
+  5층 필수는 먹이 종류·급여량이다.
+- 단위: 급여량·잔량 입력칸 뒤의 고정 단위는 그 기록의 단위다(`GML` → `g/ml`, `KGL` → `kg/l`). 예 `200 g/ml`.
+  저장 요청의 `feedUnit` 은 기록의 원래 단위를 그대로 보낸다(이전 `KGL` 고정 결정을 대체).
+- 조회 실패(404 제외) → 폼 대신 오류 카드 `정보를 불러오지 못했습니다` / `일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요` / `다시 시도`
+  (Figma `3133:25786`). `다시 시도` 는 다시 조회한다.
+- 검증 오류 줄은 Figma `3133:25803` 처럼 입력칸 아래 빨간 `!` 아이콘 + 문구다(문구는 아래 기존 규칙 그대로).
+- 5층 저장: 퍼블리싱 mock `updateFifthFloorFeed({ feedLogId, feedType, feedAmount, feedUnit })`(`/api` 가 교체). 4층은 기존 연동 `updateFeed`.
+- 저장 실패 → 기존처럼 화면에 머물고 `저장하지 못했습니다. 다시 시도해 주세요.`(Figma `3133:25966` 토스트 프레임은 옛 양식이라 따르지 않는다).
 
 ## 목적
 

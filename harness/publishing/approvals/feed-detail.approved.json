@@ -1,20 +1,20 @@
 {
   "feature": "feed-detail",
-  "approvedAt": "2026-10-06T04:38:58.648Z",
+  "approvedAt": "2026-10-28T13:25:36.390Z",
   "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
-    "S1-2",
     "S2",
     "S3",
     "S4",
-    "S4-1",
     "S5",
     "S6",
     "S7",
     "S8",
-    "S9"
+    "S9",
+    "S10",
+    "S11"
   ],
-  "scenarioHash": "c4b881f8737386bb0f69e3e9d05236696cd407e3e38aff574f3e465f41944cc4",
-  "e2eHash": "88aa0a353d1236733b58cedcc2bb8f6683e5842be7ba4ab09bb49df354cdb124"
+  "scenarioHash": "1a1318fea60c0d0cd3f046a888c9ffa0cdd6ec318b6218fcb269414fd5081436",
+  "e2eHash": "bd34c019261e16d64f9e3a26a33e30b8ff5d49b4bd65bd5ce44d82c47c943781"
 }

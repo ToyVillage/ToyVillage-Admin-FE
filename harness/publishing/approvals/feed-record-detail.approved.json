@@ -1,0 +1,21 @@
+{
+  "feature": "feed-record-detail",
+  "approvedAt": "2026-10-28T16:06:54.073Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
+  ],
+  "scenarioHash": "fe3192416d5546a113d405a0f3e00f9215fed968b9825bebfe385b1831731ec9",
+  "e2eHash": "499d066bc7139c478aad98f444b75fba9b00ee026655a5a9fa26dd3fd8a55d25"
+}
