@@ -3,10 +3,10 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
+  feedAnimalHistoryPath,
   feedFloors,
   feedQueryKeys,
   getFloorFeedHistory,
-  type FeedFloor,
 } from '@/entities/feed'
 import {
   deleteIndividual,
@@ -150,9 +150,9 @@ export function IndividualDetailPage() {
           queryFn: () => getFloorFeedHistory(floor, Number(individualId)),
         })
         if (history.length > 0) {
-          // 급여 이력의 뒤로가기가 이 개체 상세로 돌아오게 한다.
+          // 급여 이력의 뒤로가기가 이 개체 상세로, 들어올 때의 목록 조건(검색어·페이지)째 돌아오게 한다.
           navigate(feedAnimalHistoryPath(floor, individualId), {
-            state: { backPath: detailPath },
+            state: { backPath: detailPath, returnState: location.state },
           })
           return
         }
@@ -437,11 +437,3 @@ const ObservationSection = styled.section`
   align-self: stretch;
   margin-top: 60px;
 `
-
-// Figma `link / 먹이 급여 기록`(949:26307) 245×52.
-
-function feedAnimalHistoryPath(floor: FeedFloor, animalManageId: string) {
-  return floor === '4'
-    ? `/feeds/animals/${animalManageId}`
-    : `/feeds/fifth-floor/animals/${animalManageId}`
-}
