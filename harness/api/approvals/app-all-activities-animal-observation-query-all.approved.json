@@ -1,0 +1,18 @@
+{
+  "feature": "app-all-activities-animal-observation-query-all",
+  "apiId": "APP_ALL_ACTIVITIES_ANIMAL_OBSERVATION_QUERY_ALL",
+  "approvedAt": "2026-10-29T01:38:09.198Z",
+  "approvedBy": "kimjihwan8",
+  "approvedCommit": "14721cbf11e0b6397f9fb698922775904fda9257",
+  "taskSpecHash": "a5c361f9eec073e5979e8959d234b0e557e518c7ac183caf97113d4e27bc9460",
+  "contractHash": "9c823bf0682e1b64c8bcd1060771b4d43bb27ac6787d8bd4fc32bb580990833a",
+  "contractMarkdownHash": "94e149a2f3598ac11e3f4c8af50f984863abf38620c6f63e85b5580ac8430cea",
+  "planHash": "9b60cff954d02f2a28d79272325a197672b4ef0273f414ec631ab64e0b76582f",
+  "scenarioHash": "3c40eb975236a22594de7e17987cd7ef4210de33cec7d26ef8112f6ee1bfe701",
+  "testHash": "596594ae9c32bd555192b4c8f42985ccb019766dc90df8b9464dc1ce2a171cd8",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-10-29T01:52:03.802Z",
+  "testApprovedBy": "kimjihwan8",
+  "testApprovedCommit": "14721cbf11e0b6397f9fb698922775904fda9257"
+}
