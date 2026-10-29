@@ -129,6 +129,8 @@ function FeedAnimalHistory({ floor }: { floor: FeedFloor }) {
     const target = deleteTarget
     deleteMutation.mutate(target, {
       onSuccess: async () => {
+        // 재조회를 기다리는 동안 확인 모달이 열려 있으면 다시 삭제할 수 있어 먼저 닫는다.
+        setDeleteTarget(null)
         queryClient.removeQueries({
           queryKey: feedQueryKeys.detail(floor, target.id),
         })
@@ -136,7 +138,6 @@ function FeedAnimalHistory({ floor }: { floor: FeedFloor }) {
         await queryClient.invalidateQueries({
           queryKey: feedQueryKeys.history(floor, animalId),
         })
-        setDeleteTarget(null)
         setLocalToast('delete-success')
       },
       onError: () => {
