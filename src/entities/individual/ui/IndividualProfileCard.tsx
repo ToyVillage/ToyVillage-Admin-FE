@@ -10,6 +10,8 @@ interface IndividualProfileCardProps {
   birthYear: Individual['birthYear']
   note?: Individual['note']
   photo: Individual['photo']
+  /** 성별 뱃지 뒤에 붙는 뱃지(먹이 급여 이력의 층 뱃지 등). */
+  badges?: ReactNode
   /** 카드 오른쪽 위 액션(먹이 급여 버튼·케밥). 카드는 이동·삭제를 모른다. */
   actions?: ReactNode
 }
@@ -22,6 +24,7 @@ export function IndividualProfileCard({
   birthYear,
   note,
   photo,
+  badges,
   actions,
 }: IndividualProfileCardProps) {
   return (
@@ -31,6 +34,7 @@ export function IndividualProfileCard({
         <TitleRow>
           <Name>{name}</Name>
           <IndividualSexBadge sex={sex} />
+          {badges}
         </TitleRow>
         <Details>
           <DetailRow>
