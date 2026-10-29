@@ -99,6 +99,15 @@
         200
       ],
       "reason": "실서버는 201 (2026-09-16 백엔드 확인). Swagger 가 200 으로 잘못 표기"
+    },
+    {
+      "feature": "app-feed-log-query-all-admin-by-date",
+      "kind": "response",
+      "contract": [
+        "feedLogs.significant"
+      ],
+      "swagger": [],
+      "reason": "개발자 결정(2026-10-28): 목록 응답에 특이사항 추가를 백엔드에 요청 중. 그전까지 optional·nullable 로 받고 없으면 `-` 표시"
     }
   ]
 }

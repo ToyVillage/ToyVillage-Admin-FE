@@ -1,0 +1,18 @@
+{
+  "feature": "app-fifth-floor-feed-log-query-all-admin-by-date",
+  "apiId": "APP_FIFTH_FLOOR_FEED_LOG_QUERY_ALL_ADMIN_BY_DATE",
+  "approvedAt": "2026-10-29T01:38:19.688Z",
+  "approvedBy": "kimjihwan8",
+  "approvedCommit": "14721cbf11e0b6397f9fb698922775904fda9257",
+  "taskSpecHash": "04ed81af225af44e750e9cd9c93ff76628173db20018aea70774d96e0eead35a",
+  "contractHash": "7b626c59ab65e2697a6522d48119f302203112a54a08a9b08f6c523419e95937",
+  "contractMarkdownHash": "d76596cde626d315cd5cbb74f9300e84e85211fd3a38f9a61fd8763370c14f81",
+  "planHash": "b3f3abcfc4f7cca71d798127b6f296f1ce8bd7d7178a1c96e9dba67e211f1cb0",
+  "scenarioHash": "9b23aefb0dcc5b3ea292f66f1170f542980283d90526539d87ac211e181951ca",
+  "testHash": "732784b65ccdcab57ae3967d55a3c49ddc59130a48b2e243138f5f4389e64fb7",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-10-29T01:52:07.930Z",
+  "testApprovedBy": "kimjihwan8",
+  "testApprovedCommit": "14721cbf11e0b6397f9fb698922775904fda9257"
+}

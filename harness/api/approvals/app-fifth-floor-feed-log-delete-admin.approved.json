@@ -1,0 +1,18 @@
+{
+  "feature": "app-fifth-floor-feed-log-delete-admin",
+  "apiId": "APP_FIFTH_FLOOR_FEED_LOG_DELETE_ADMIN",
+  "approvedAt": "2026-10-29T00:49:55.334Z",
+  "approvedBy": "kimjihwan8",
+  "approvedCommit": "14721cbf11e0b6397f9fb698922775904fda9257",
+  "taskSpecHash": "f342f82685db765cb4dc10ac4df17389ee481d045f551e8872635330875809c8",
+  "contractHash": "4c2efa8cc20a074347f3f3ccc0ce7f6e7e2916911c73be03136042a366c7753d",
+  "contractMarkdownHash": "5221a8078fafa4ac4afe9de6155a54b11dcc0306982f3318cec25c6364fd5bad",
+  "planHash": "c75cbb61906be76bbd20501e44c71b7b24990571c9d3e26316355943a07ee02e",
+  "scenarioHash": "46041d762a17698896847fe82e186e73dd056e6625cf155c55121ef4e8b6847f",
+  "testHash": "757ea862a5f19878e792afc2c8d25788b4a271111c1e37d5608b014399033ecb",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-10-29T01:06:16.340Z",
+  "testApprovedBy": "kimjihwan8",
+  "testApprovedCommit": "14721cbf11e0b6397f9fb698922775904fda9257"
+}
