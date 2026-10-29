@@ -2,7 +2,12 @@ import { useCallback, useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { feedQueryKeys, getFeedHistory } from '@/entities/feed'
+import {
+  feedFloors,
+  feedQueryKeys,
+  getFloorFeedHistory,
+  type FeedFloor,
+} from '@/entities/feed'
 import {
   deleteIndividual,
   getIndividual,
@@ -133,23 +138,26 @@ export function IndividualDetailPage() {
     return target.kind === 'individual' ? profileMenuId : target.observationId
   }
 
-  // `먹이 급여 기록 확인하기` — 누를 때 이 개체의 급여 이력을 조회해 최신 급여 기록 상세로 간다.
-  // 이력이 없거나 조회에 실패하면 이동하지 않고 토스트로 알린다.
+  // `먹이 급여 기록 확인하기` — 누를 때 이 개체의 급여 이력을 4층 → 5층 순으로 조회해, 기록이 있는 층의 개체별 급여 이력으로 간다.
+  // 개체 정보에는 층이 없어서 이력으로 층을 찾는다. 둘 다 없거나 조회에 실패하면 이동하지 않고 토스트로 알린다.
   async function handleOpenFeedHistory() {
     if (openingFeedRef.current) return
     openingFeedRef.current = true
     try {
-      const history = await queryClient.fetchQuery({
-        queryKey: feedQueryKeys.history(individualId),
-        queryFn: () => getFeedHistory(Number(individualId)),
-      })
-      const latestFeedId = history[0]?.id
-      if (!latestFeedId) {
-        showToast('feed-history-empty')
-        return
+      for (const floor of feedFloors) {
+        const history = await queryClient.fetchQuery({
+          queryKey: feedQueryKeys.history(floor, individualId),
+          queryFn: () => getFloorFeedHistory(floor, Number(individualId)),
+        })
+        if (history.length > 0) {
+          // 급여 이력의 뒤로가기가 이 개체 상세로 돌아오게 한다.
+          navigate(feedAnimalHistoryPath(floor, individualId), {
+            state: { backPath: detailPath },
+          })
+          return
+        }
       }
-      // 급여 상세의 뒤로가기가 이 개체 상세로 돌아오게 한다.
-      navigate(`/feeds/${latestFeedId}`, { state: { backPath: detailPath } })
+      showToast('feed-history-empty')
     } catch {
       showToast('feed-history-error')
     } finally {
@@ -431,3 +439,9 @@ const ObservationSection = styled.section`
 `
 
 // Figma `link / 먹이 급여 기록`(949:26307) 245×52.
+
+function feedAnimalHistoryPath(floor: FeedFloor, animalManageId: string) {
+  return floor === '4'
+    ? `/feeds/animals/${animalManageId}`
+    : `/feeds/fifth-floor/animals/${animalManageId}`
+}

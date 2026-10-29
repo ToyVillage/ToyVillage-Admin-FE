@@ -260,8 +260,29 @@ const routes: RouteObject[] = [
           {
             path: '/feeds/:id',
             element: lazyPage(
-              () => import('@/pages/feeds/FeedDetailPage'),
-              'FeedDetailPage',
+              () => import('@/pages/feeds/FeedRecordDetailPage'),
+              'FeedRecordDetailPage',
+            ),
+          },
+          {
+            path: '/feeds/fifth-floor/:id',
+            element: lazyPage(
+              () => import('@/pages/feeds/FeedRecordDetailPage'),
+              'FifthFloorFeedRecordDetailPage',
+            ),
+          },
+          {
+            path: '/feeds/animals/:animalId',
+            element: lazyPage(
+              () => import('@/pages/feeds/FeedAnimalHistoryPage'),
+              'FeedAnimalHistoryPage',
+            ),
+          },
+          {
+            path: '/feeds/fifth-floor/animals/:animalId',
+            element: lazyPage(
+              () => import('@/pages/feeds/FeedAnimalHistoryPage'),
+              'FifthFloorFeedAnimalHistoryPage',
             ),
           },
           {
@@ -269,6 +290,13 @@ const routes: RouteObject[] = [
             element: lazyPage(
               () => import('@/pages/feeds/EditFeedPage'),
               'EditFeedPage',
+            ),
+          },
+          {
+            path: '/feeds/fifth-floor/:id/edit',
+            element: lazyPage(
+              () => import('@/pages/feeds/EditFeedPage'),
+              'FifthFloorEditFeedPage',
             ),
           },
           {

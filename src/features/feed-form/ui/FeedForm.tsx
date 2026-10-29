@@ -3,9 +3,12 @@ import styled from '@emotion/styled'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   feedQueryKeys,
+  feedUnitLabels,
+  formatAmountNumber,
   formatAnimalLabel,
   formatFedAt,
-  updateFeed,
+  formatFedDate,
+  updateFloorFeed,
   type FeedRecordDetail,
 } from '@/entities/feed'
 import { FormFieldCard, scrollToFirstFieldError } from '@/shared/ui'
@@ -23,28 +26,35 @@ const remainingAmountErrorId = 'remaining-amount-error'
 
 interface FeedFormProps {
   feed: FeedRecordDetail
-  /** 저장 성공 — 페이지가 이탈 보호를 해제하고 목록으로 이동한다. */
+  /** 저장 성공 — 페이지가 이탈 보호를 해제하고 들어온 화면으로 이동한다. */
   onCompleted: () => void
   onDirtyChange: (isDirty: boolean) => void
 }
 
-// Figma `feeding correction` 폼(2429:24038). 먹이 종류·급여량·잔량·특이사항만 고치고
-// 대상 개체·급여일시·급여자는 읽기 전용이다. 필수 오류는 카드 아래 인라인 줄로 보인다.
+// Figma `feeding correction`(4층 2429:24034 / 5층 3130:25801). 층의 앱 입력 칸만 고친다.
+// 4층: 먹이 종류·급여량·잔량·특이사항 / 5층: 먹이 종류·급여량.
+// 대상 개체·급여 시각·급여자는 읽기 전용이다. 필수 오류는 카드 아래 인라인 줄로 보인다.
 export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
   const queryClient = useQueryClient()
   const submittingRef = useRef(false)
   const noteRef = useRef<HTMLTextAreaElement>(null)
-  // 급여량은 숫자만 편집한다(`1.2kg` → `1.2`). `kg` 는 지울 수 없는 고정 단위다.
-  const initialFeedAmount = sanitizeFeedAmountInput(feed.feedAmount)
+  const isFloorFour = feed.floor === '4'
+  // 단위는 기록의 원래 단위로 입력칸 뒤에 고정한다(`200 g/ml`).
+  const unitLabel = feedUnitLabels[feed.unit]
+  // 급여량은 숫자만 편집한다.
+  const initialFeedAmount = formatAmountNumber(feed.feedAmount)
   // 잔량이 없는 기록(잔량 도입 전)은 빈 칸으로 시작해 저장 전에 입력받는다.
-  const initialRemainingAmount = sanitizeFeedAmountInput(feed.remainingAmount)
+  const initialRemainingAmount =
+    feed.remainingAmount === null
+      ? ''
+      : formatAmountNumber(feed.remainingAmount)
   const [feedType, setFeedType] = useState(feed.feedType)
   const [feedAmount, setFeedAmount] = useState(initialFeedAmount)
   const [remainingAmount, setRemainingAmount] = useState(initialRemainingAmount)
   const [note, setNote] = useState(feed.note)
   const [errors, setErrors] = useState<FeedFormErrors>({})
 
-  const mutation = useMutation({ mutationFn: updateFeed })
+  const mutation = useMutation({ mutationFn: updateFloorFeed })
 
   // 원래 값으로 되돌리면 바뀌지 않은 것으로 본다.
   useEffect(() => {
@@ -83,7 +93,9 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
       remainingAmount,
       note,
     }
-    const nextErrors = validateFeedForm(values)
+    const nextErrors = validateFeedForm(values, {
+      requireRemainingAmount: isFloorFour,
+    })
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       scrollToFirstFieldError()
@@ -93,22 +105,19 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
     submittingRef.current = true
     mutation.mutate(
       {
-        feedLogId: Number(feed.id),
-        // 화면에서 바꿀 수 없지만 필수 값이라 상세 응답 원본을 그대로 보낸다.
-        feedDateTime: feed.feedDateTime,
+        // 급여 시각·단위는 화면에서 바꿀 수 없어 상세 응답 원본을 그대로 보낸다.
+        feed,
         feedType: feedType.trim(),
         // 고치지 않았으면 표시용으로 반올림한 값 대신 상세 응답의 원래 숫자를 보낸다.
         feedAmount:
           feedAmount === initialFeedAmount
-            ? feed.feedAmountValue
+            ? feed.feedAmount
             : (parseFeedAmount(feedAmount) ?? 0),
         remainingAmount:
           remainingAmount === initialRemainingAmount &&
-          feed.remainingAmountValue != null
-            ? feed.remainingAmountValue
+          feed.remainingAmount != null
+            ? feed.remainingAmount
             : (parseRemainingAmount(remainingAmount) ?? 0),
-        // 화면은 kg 만 다룬다.
-        feedUnit: 'KGL',
         significant: note.trim(),
       },
       {
@@ -117,9 +126,10 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
         // 목록(staleTime 0)은 진입 시 다시 조회하고, 상세는 무효화로 다음 진입 때 다시 부른다.
         onSuccess: () => {
           onCompleted()
-          void queryClient.invalidateQueries({ queryKey: ['feeds', 'list'] })
+          void queryClient.invalidateQueries({ queryKey: feedQueryKeys.lists })
+          void queryClient.invalidateQueries({ queryKey: ['feeds', 'history'] })
           void queryClient.invalidateQueries({
-            queryKey: feedQueryKeys.detail(feed.id),
+            queryKey: feedQueryKeys.detail(feed.floor, feed.id),
           })
         },
         onError: () => {
@@ -140,11 +150,19 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
           />
         </FormFieldCard>
 
-        <FormFieldCard label="급여일시" labelSize={32} htmlFor="feed-fed-at">
+        <FormFieldCard
+          label={isFloorFour ? '급여일시' : '급여일'}
+          labelSize={32}
+          htmlFor="feed-fed-at"
+        >
           <ReadOnlyInput
             id="feed-fed-at"
             readOnly
-            value={formatFedAt(feed.fedDate, feed.fedTime)}
+            value={
+              isFloorFour
+                ? formatFedAt(feed.fedDate, feed.fedTime)
+                : formatFedDate(feed.fedDate)
+            }
           />
         </FormFieldCard>
 
@@ -177,40 +195,46 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
           error={errors.feedAmount}
           errorId={feedAmountErrorId}
         >
-          <KgAmountInput
+          <UnitAmountInput
             id="feed-amount"
+            unit={unitLabel}
             value={feedAmount}
             errorId={errors.feedAmount ? feedAmountErrorId : undefined}
             onChange={setFeedAmount}
           />
         </FormFieldCard>
 
-        <FormFieldCard
-          label="잔량"
-          labelSize={32}
-          htmlFor="remaining-amount"
-          error={errors.remainingAmount}
-          errorId={remainingAmountErrorId}
-        >
-          <KgAmountInput
-            id="remaining-amount"
-            value={remainingAmount}
-            errorId={
-              errors.remainingAmount ? remainingAmountErrorId : undefined
-            }
-            onChange={setRemainingAmount}
-          />
-        </FormFieldCard>
+        {isFloorFour && (
+          <>
+            <FormFieldCard
+              label="잔량"
+              labelSize={32}
+              htmlFor="remaining-amount"
+              error={errors.remainingAmount}
+              errorId={remainingAmountErrorId}
+            >
+              <UnitAmountInput
+                id="remaining-amount"
+                unit={unitLabel}
+                value={remainingAmount}
+                errorId={
+                  errors.remainingAmount ? remainingAmountErrorId : undefined
+                }
+                onChange={setRemainingAmount}
+              />
+            </FormFieldCard>
 
-        <FormFieldCard label="특이사항" labelSize={32} htmlFor="feed-note">
-          <NoteInput
-            ref={noteRef}
-            id="feed-note"
-            maxLength={1000}
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-          />
-        </FormFieldCard>
+            <FormFieldCard label="특이사항" labelSize={32} htmlFor="feed-note">
+              <NoteInput
+                ref={noteRef}
+                id="feed-note"
+                maxLength={1000}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+              />
+            </FormFieldCard>
+          </>
+        )}
       </Fields>
 
       <Footer>
@@ -229,21 +253,29 @@ export function FeedForm({ feed, onCompleted, onDirtyChange }: FeedFormProps) {
   )
 }
 
-interface KgAmountInputProps {
+interface UnitAmountInputProps {
   id: string
+  /** 고정 단위 표기(`g/ml`·`kg/l`) */
+  unit: string
   value: string
   /** 오류가 있을 때만 넘긴다. */
   errorId?: string
   onChange: (value: string) => void
 }
 
-// 급여량·잔량 칸. 숫자만 편집한다(`1.2kg` → `1.2`). `kg` 는 지울 수 없는 고정 단위다.
-function KgAmountInput({ id, value, errorId, onChange }: KgAmountInputProps) {
+// 급여량·잔량 칸. 숫자만 편집한다(`200 g/ml` → `200`). 단위는 지울 수 없는 고정 글자다.
+function UnitAmountInput({
+  id,
+  unit,
+  value,
+  errorId,
+  onChange,
+}: UnitAmountInputProps) {
   const unitId = `${id}-unit`
 
   return (
     <AmountBox htmlFor={id}>
-      {/* 입력 폭을 글자만큼 맞춰 `kg` 가 숫자 바로 뒤에 붙게 한다(Figma `1.2kg`). */}
+      {/* 입력 폭을 글자만큼 맞춰 단위가 숫자 바로 뒤에 붙게 한다(Figma `200 g/ml`). */}
       <AmountSizer>
         <AmountMirror aria-hidden="true">{value || ' '}</AmountMirror>
         <AmountInput
@@ -261,7 +293,7 @@ function KgAmountInput({ id, value, errorId, onChange }: KgAmountInputProps) {
           }
         />
       </AmountSizer>
-      <AmountUnit id={unitId}>kg</AmountUnit>
+      <AmountUnit id={unitId}>{unit}</AmountUnit>
     </AmountBox>
   )
 }
@@ -311,7 +343,7 @@ const AmountBox = styled.label`
 `
 
 // 보이지 않는 복제 글자가 폭을 정하고, 입력은 그 위에 겹친다.
-// 입력을 흐름에서 빼야 입력 자체의 기본 폭이 끼어들지 않는다(한 글자일 때 `kg` 앞이 벌어진다).
+// 입력을 흐름에서 빼야 입력 자체의 기본 폭이 끼어들지 않는다(한 글자일 때 단위 앞이 벌어진다).
 const AmountSizer = styled.span`
   position: relative;
   display: inline-block;
@@ -336,8 +368,10 @@ const AmountInput = styled.input`
   font: inherit;
 `
 
+// Figma `200 g/ml` — 숫자와 단위 사이 한 칸.
 const AmountUnit = styled.span`
   flex: 0 0 auto;
+  margin-left: 0.25em;
 `
 
 // 대상 개체·급여일시·급여자 값은 Figma 에서 textGuide 다(편집 가능한 값은 textStrong).

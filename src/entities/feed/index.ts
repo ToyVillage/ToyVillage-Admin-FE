@@ -1,16 +1,19 @@
 export type {
-  AnimalSpecies,
+  FeedFloor,
   FeedHistoryRecord,
   FeedRecord,
   FeedRecordDetail,
+  FeedUnit,
 } from './model/types'
-export { animalSpeciesList, animalTaxonomicBySpecies } from './model/types'
+export { feedFloorLabels, feedFloors } from './model/types'
 export {
+  feedUnitLabels,
+  formatAmountNumber,
   formatAnimalLabel,
   formatFedAt,
   formatFedDate,
-  formatFeedAmount,
-  formatFeedLabel,
+  formatFeedQuantity,
+  formatNote,
 } from './model/format'
 export { feedQueryKeys } from './model/queryKeys'
 export {
@@ -26,17 +29,26 @@ export {
   type FeedDeleteInput,
   type FeedUpdateInput,
 } from './api/feedMutations'
+export {
+  deleteFloorFeed,
+  getFloorFeedDetail,
+  getFloorFeedHistory,
+  getFloorFeeds,
+  updateFloorFeed,
+  type FloorFeedUpdateInput,
+} from './api/feedFloorApi'
 export type {
   AnimalTaxonomic,
   FeedLogMessageResponse,
   FeedLogUpdateRequest,
   FeedQueryAllRequest,
   FeedQueryRequest,
+  FeedUnitCode,
 } from './api/types'
-export { AnimalSpeciesBadge } from './ui/AnimalSpeciesBadge'
+export { FeedFloorBadge } from './ui/FeedFloorBadge'
 export {
   FeedHistoryTable,
   feedHistoryTableMinWidth,
 } from './ui/FeedHistoryTable'
-export { FeedRecordCard } from './ui/FeedRecordCard'
+export { FeedRecordFields } from './ui/FeedRecordFields'
 export { FeedTable, feedTableMinWidth } from './ui/FeedTable'
