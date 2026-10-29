@@ -1,20 +1,4 @@
-import type { FeedFloor } from '@/entities/feed'
-
-// 4층과 5층은 서로 다른 API 라 라우트로 층을 구분한다.
-export function feedRecordPath(floor: FeedFloor, feedLogId: string): string {
-  return floor === '4'
-    ? `/feeds/${feedLogId}`
-    : `/feeds/fifth-floor/${feedLogId}`
-}
-
-export function feedAnimalHistoryPath(
-  floor: FeedFloor,
-  animalManageId: number | string,
-): string {
-  return floor === '4'
-    ? `/feeds/animals/${animalManageId}`
-    : `/feeds/fifth-floor/animals/${animalManageId}`
-}
+export { feedAnimalHistoryPath, feedRecordPath } from '@/entities/feed'
 
 export const feedListPath = '/feeds'
 
@@ -33,6 +17,9 @@ export interface FeedNavState {
   returnState?: FeedNavState
 }
 
+// 이동 state 가 없을 때 매번 새 객체를 만들지 않는다(useCallback 의존성이 매 렌더 바뀌지 않게).
+const emptyFeedNavState: FeedNavState = {}
+
 export function readFeedNavState(state: unknown): FeedNavState {
-  return (state as FeedNavState | null) ?? {}
+  return (state as FeedNavState | null) ?? emptyFeedNavState
 }

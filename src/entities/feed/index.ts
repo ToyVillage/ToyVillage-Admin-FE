@@ -16,6 +16,7 @@ export {
   formatNote,
 } from './model/format'
 export { feedQueryKeys } from './model/queryKeys'
+export { feedAnimalHistoryPath, feedRecordPath } from './model/paths'
 export {
   getFeedDetail,
   getFeedHistory,
