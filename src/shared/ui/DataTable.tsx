@@ -165,6 +165,7 @@ interface DataTableProps {
   columns?: DataTableColumn[]
   onRowClick?: (id: string) => void
   rowTestId?: string
+  headerTestId?: string
   search?: DataTableSearch
   sort?: DataTableSort
   selection?: DataTableSelection
@@ -187,6 +188,7 @@ export function DataTable({
   columns = defaultColumns,
   onRowClick,
   rowTestId,
+  headerTestId,
   search,
   sort,
   selection,
@@ -298,6 +300,7 @@ export function DataTable({
     <>
       <Table $offsetTop={look.offsetTop} $bordered={look.bordered}>
         <Header
+          data-testid={headerTestId}
           $height={look.headerHeight}
           $background={look.headerBackground}
           $divider={look.headerDivider ? look.dividerColor : null}
