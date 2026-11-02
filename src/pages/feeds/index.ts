@@ -1,3 +1,10 @@
 export { FeedListPage } from './FeedListPage'
-export { FeedDetailPage } from './FeedDetailPage'
-export { EditFeedPage } from './EditFeedPage'
+export {
+  FeedRecordDetailPage,
+  FifthFloorFeedRecordDetailPage,
+} from './FeedRecordDetailPage'
+export {
+  FeedAnimalHistoryPage,
+  FifthFloorFeedAnimalHistoryPage,
+} from './FeedAnimalHistoryPage'
+export { EditFeedPage, FifthFloorEditFeedPage } from './EditFeedPage'

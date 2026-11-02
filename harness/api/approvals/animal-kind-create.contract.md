@@ -9,6 +9,7 @@
 - Requested page: https://app.notion.com/04d7a4d61474821284e2818f5792f501 (같은 페이지)
 - Checked at: 2026-09-16T23:45:00+09:00
 - Exact match count: 1
+- `floor` 출처(2026-10-27): staging Swagger `createAnimalKind`(`POST /animal-manage/kind`). Notion 사본 2개(`collection://9df7a4d6-…` 2026-10-02 · `collection://5637a4d6-…` 2026-09-18) 모두 `floor` 가 없고, 위 Resolved page 는 지금 열리지 않는다(404). Swagger 를 기준으로 한다(2026-10-27 개발자 결정, 이슈 #276).
 
 ## Basic Information
 
@@ -45,6 +46,7 @@
 | `animalScientificName` | string | true | false | `"Hydrochoerus hydrochaeris"` | 학명 |
 | `animalTaxonomic` | enum | true | false | `"MAMMALS"` | 분류군 — 허용값 `MAMMALS`, `REPTILES`, `FISH`, `BIRDS` |
 | `animalDetailKind` | string | false | true | `"설치목 · 천축서과"` | 세부 분류. 미선택 시 `null`·빈 문자열 허용 |
+| `floor` | integer (INT) | true | false | `4` | 층 — 허용값 `4`, `5`(Swagger `minimum: 4`·`maximum: 5`, 2026-10-27 추가) |
 | `fileKey` | string | true | false | `"animal/capybara.png"` | 종 대표 사진. `POST /file` 업로드 후 돌려받은 key |
 | `animalLegalDesignation` | array\<integer\> (LONG[]) | false | true | `[1, 3]` | 법정지정분류 id 목록. `GET /animal-manage/legal-status`의 `animalLegalStatusId`. 미선택 시 `null`·빈 배열 허용 |
 
@@ -57,6 +59,7 @@
   "animalScientificName": "Hydrochoerus hydrochaeris",
   "animalTaxonomic": "MAMMALS",
   "animalDetailKind": "설치목 · 천축서과",
+  "floor": 4,
   "fileKey": "animal/capybara.png",
   "animalLegalDesignation": [1, 3]
 }
@@ -85,10 +88,12 @@
 
 ## Validation and Constraints
 
-- Body 필드는 5개 required, `animalDetailKind`·`animalLegalDesignation`은
+- Body 필드는 6개 required(2026-10-27 `floor` 추가), `animalDetailKind`·`animalLegalDesignation`은
   optional이다. 명세에 문자열 길이 제한은 없다.
 - optional 두 필드는 명세가 `null`·빈 값 허용을 명시해 nullable로 두었고,
   나머지는 required 특성과 예시 관측에 근거해 non-nullable로 두었다.
+- `floor` 가 없거나 4~5 밖이면 400 이다(백엔드 `AnimalKindRequest` `@NotNull`·`@Min(4)`·`@Max(5)`,
+  메시지 `층을 선택해주세요.` / `층은 4층 또는 5층만 선택할 수 있습니다.`).
 
 ## Notes
 

@@ -4,7 +4,7 @@ import {
   type AnimalManageApiHandle,
 } from './support/animal-manage-api'
 
-// 승인된 시나리오(species-form.approved.json: S1~S32, S23·S29 삭제)를 변환한 것.
+// 승인된 시나리오(species-form.approved.json: S1~S35, S29 삭제)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
 // 실제 서버 대신 `page.route` 가짜 서버(`support/animal-manage-api`)를 쓰고, 실패는 `failNext` 로 주입한다.
 // 사진 업로드는 드롭존의 숨긴 file input 에 파일을 넣는다(파일 선택 창 대체).
@@ -18,6 +18,7 @@ const legalStatusNames = [
   '천연기념물',
 ]
 const taxonGroups = ['포유류', '파충류', '조류', '어류']
+const floors = ['4층', '5층']
 
 let api: AnimalManageApiHandle
 
@@ -44,8 +45,11 @@ test('S1: 등록 화면 진입 기본 상태', async ({ page }) => {
     await expect(input).toHaveAttribute('placeholder', placeholder)
   }
 
-  await expect(page.getByRole('radio')).toHaveCount(taxonGroups.length)
+  await expect(page.getByRole('radio')).toHaveCount(
+    taxonGroups.length + floors.length,
+  )
   await expectOnlyTaxonGroupChecked(page, '포유류')
+  await expectOnlyFloorChecked(page, '4층')
 
   await expect(legalGroup(page).locator('button[aria-pressed]')).toHaveCount(
     legalStatusNames.length,
@@ -182,6 +186,7 @@ test('S9: 수정 화면 값 복원', async ({ page }) => {
   await expect(subClassificationInput(page)).toHaveValue('설치목 - 천축서과')
 
   await expectOnlyTaxonGroupChecked(page, '포유류')
+  await expectOnlyFloorChecked(page, '4층')
   await expect(
     legalGroup(page).locator('button[aria-pressed="true"]'),
   ).toHaveCount(1)
@@ -214,6 +219,29 @@ test('S10: 수정 저장 성공', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: '카피바라(수정)' }),
   ).toBeVisible()
+})
+
+test('S34: 층 단일 선택', async ({ page }) => {
+  await page.goto(createUrl)
+
+  await page.getByRole('radio', { name: '5층' }).click()
+  await expectOnlyFloorChecked(page, '5층')
+
+  await page.getByRole('radio', { name: '4층' }).click()
+  await expectOnlyFloorChecked(page, '4층')
+})
+
+test('S35: 층을 바꿔 저장', async ({ page }) => {
+  await page.goto(editUrl)
+  await expectOnlyFloorChecked(page, '4층')
+
+  await page.getByRole('radio', { name: '5층' }).click()
+  await page.getByRole('button', { name: '저장하기' }).click()
+
+  await expect(page).toHaveURL(/\/species\/1$/)
+  await expect(page.getByRole('heading', { name: '카피바라' })).toBeVisible()
+  await expect(page.getByText('5층', { exact: true })).toBeVisible()
+  await expect(page.getByText('4층', { exact: true })).toHaveCount(0)
 })
 
 test('S11: 전부 빈 채 생성 — 오류 줄 동시 표시', async ({ page }) => {
@@ -610,9 +638,14 @@ test('S32: 키보드 조작', async ({ page }) => {
   await expect(page.getByRole('radio', { name: '파충류' })).toBeFocused()
   await expectOnlyTaxonGroupChecked(page, '파충류')
 
-  // 세부 분류 → 법정지정분류. pill 마다 본문 → 삭제 순서로 들어간다.
+  // 세부 분류 → 층(분류군처럼 방향키로 옮긴다) → 법정지정분류. pill 마다 본문 → 삭제 순서로 들어간다.
   await page.keyboard.press('Tab')
   await expect(subClassificationInput(page)).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('radio', { name: '4층' })).toBeFocused()
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('radio', { name: '5층' })).toBeFocused()
+  await expectOnlyFloorChecked(page, '5층')
   await page.keyboard.press('Tab')
   await expect(legalPill(page, '지정관리 야생동물')).toBeFocused()
   await page.keyboard.press('Space')
@@ -704,6 +737,14 @@ function subClassificationInput(page: Page) {
 
 async function expectOnlyTaxonGroupChecked(page: Page, checkedName: string) {
   for (const name of taxonGroups) {
+    const radio = page.getByRole('radio', { name, exact: true })
+    if (name === checkedName) await expect(radio).toBeChecked()
+    else await expect(radio).not.toBeChecked()
+  }
+}
+
+async function expectOnlyFloorChecked(page: Page, checkedName: string) {
+  for (const name of floors) {
     const radio = page.getByRole('radio', { name, exact: true })
     if (name === checkedName) await expect(radio).toBeChecked()
     else await expect(radio).not.toBeChecked()

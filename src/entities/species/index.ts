@@ -4,12 +4,13 @@ export type {
   Photo,
   PhotoInput,
   Species,
+  SpeciesFloor,
   SpeciesListItem,
   TaxonGroup,
   UpdateSpeciesInput,
 } from './model/types'
-export { taxonGroups } from './model/types'
-export { taxonGroupLabels } from './model/labels'
+export { speciesFloors, taxonGroups } from './model/types'
+export { speciesFloorLabels, taxonGroupLabels } from './model/labels'
 export {
   formatTaxonGroupLine,
   lastSubClassification,
@@ -47,6 +48,7 @@ export type {
   AnimalMessageResponse,
 } from './api/types'
 export { LegalDesignationBadge } from './ui/LegalDesignationBadge'
+export { SpeciesFloorBadge } from './ui/SpeciesFloorBadge'
 export { SpeciesProfileCard } from './ui/SpeciesProfileCard'
 export { SpeciesTable } from './ui/SpeciesTable'
 export { TaxonGroupTabs } from './ui/TaxonGroupTabs'

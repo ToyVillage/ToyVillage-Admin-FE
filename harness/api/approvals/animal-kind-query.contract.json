@@ -129,6 +129,20 @@
               "constraints": []
             },
             {
+              "name": "floor",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": true,
+              "default": null,
+              "example": 4,
+              "description": "층. 4 또는 5. 층 필드 추가(백엔드 V18, DB `floor INT NULL`) 전에 등록한 종은 null 이다 (2026-10-28 개발자 결정, 이슈 #276 — staging 종 13개 모두 null 확인). 화면은 null 이면 뱃지를 숨기고 수정 폼은 기본값 4 로 채운다. Swagger 기준",
+              "constraints": [
+                "INT",
+                "4 또는 5, 미등록이면 null"
+              ]
+            },
+            {
               "name": "legalStatuses",
               "location": "body",
               "type": "array<object>",
@@ -457,6 +471,14 @@
           "ADMIN"
         ]
       }
+    },
+    "swagger": {
+      "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs",
+      "checkedAt": "2026-10-28T10:00:00+09:00",
+      "method": "GET",
+      "path": "/animal-manage/kind/{animalKindId}",
+      "operationId": "getAnimalKindDetail",
+      "note": "`floor` 만 Swagger 기준으로 추가했다. Notion 사본 2개(`collection://9df7a4d6-…` 2026-10-02 · `collection://5637a4d6-…` 2026-09-18) 모두 `floor` 가 없고, 위 Resolved page 는 지금 열리지 않는다(404). Swagger 를 기준으로 한다(2026-10-27 개발자 결정, 이슈 #276). 나머지 필드는 기존 Notion 기준 동결값 그대로다. 2026-10-28: staging 종 13개 모두 floor null 을 확인해 nullable 로 바꿨다."
     }
   }
 }

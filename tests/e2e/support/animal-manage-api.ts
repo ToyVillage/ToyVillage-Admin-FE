@@ -29,6 +29,7 @@ export const observationItemPattern =
 
 export type MockTaxonGroup = 'MAMMALS' | 'REPTILES' | 'BIRDS' | 'FISH'
 export type MockSex = 'WOMAN' | 'MAN' | 'UNKNOWN'
+export type MockFloor = 4 | 5
 
 export interface MockFile {
   fileName: string
@@ -42,6 +43,7 @@ export interface MockKind {
   scientificName: string
   animalTaxonomic: MockTaxonGroup
   detailKind: string | null
+  floor: MockFloor
   /** 선택된 법정지정분류 이름, 저장 순서 */
   legalDesignations: string[]
   kindImage: MockFile
@@ -128,6 +130,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Capybara',
     scientificName: 'Hydrochoerus hydrochaeris',
     animalTaxonomic: 'MAMMALS',
+    floor: 4,
     detailKind: '설치목 - 천축서과',
     legalDesignations: ['지정관리 야생동물'],
   },
@@ -137,6 +140,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Flamingo',
     scientificName: 'Phoenicopterus roseus',
     animalTaxonomic: 'BIRDS',
+    floor: 5,
     detailKind: null,
     legalDesignations: [],
   },
@@ -146,6 +150,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Asiatic black bear',
     scientificName: 'Ursus thibetanus',
     animalTaxonomic: 'MAMMALS',
+    floor: 4,
     detailKind: null,
     legalDesignations: ['멸종위기 야생생물 I급', '천연기념물'],
   },
@@ -155,6 +160,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Ring-tailed lemur',
     scientificName: 'Lemur catta',
     animalTaxonomic: 'MAMMALS',
+    floor: 4,
     detailKind: null,
     legalDesignations: [],
   },
@@ -164,6 +170,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Meerkat',
     scientificName: 'Suricata suricatta',
     animalTaxonomic: 'MAMMALS',
+    floor: 4,
     detailKind: '몽구스과',
     legalDesignations: [],
   },
@@ -173,6 +180,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Red panda',
     scientificName: 'Ailurus fulgens',
     animalTaxonomic: 'MAMMALS',
+    floor: 4,
     detailKind: '레서판다과',
     legalDesignations: [],
   },
@@ -182,6 +190,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'African spurred tortoise',
     scientificName: 'Centrochelys sulcata',
     animalTaxonomic: 'REPTILES',
+    floor: 5,
     detailKind: null,
     legalDesignations: [],
   },
@@ -191,6 +200,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Central bearded dragon',
     scientificName: 'Pogona vitticeps',
     animalTaxonomic: 'REPTILES',
+    floor: 5,
     detailKind: null,
     legalDesignations: [],
   },
@@ -200,6 +210,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Ball python',
     scientificName: 'Python regius',
     animalTaxonomic: 'REPTILES',
+    floor: 5,
     detailKind: null,
     legalDesignations: [],
   },
@@ -209,6 +220,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Blue-and-yellow macaw',
     scientificName: 'Ara ararauna',
     animalTaxonomic: 'BIRDS',
+    floor: 5,
     detailKind: '앵무과',
     legalDesignations: [],
   },
@@ -218,6 +230,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Humboldt penguin',
     scientificName: 'Spheniscus humboldti',
     animalTaxonomic: 'BIRDS',
+    floor: 5,
     detailKind: '펭귄과',
     legalDesignations: [],
   },
@@ -227,6 +240,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Clown anemonefish',
     scientificName: 'Amphiprion ocellaris',
     animalTaxonomic: 'FISH',
+    floor: 4,
     detailKind: '자리돔과',
     legalDesignations: [],
   },
@@ -236,6 +250,7 @@ const kindRows: Omit<MockKind, 'kindImage'>[] = [
     engName: 'Red-bellied piranha',
     scientificName: 'Pygocentrus nattereri',
     animalTaxonomic: 'FISH',
+    floor: 4,
     detailKind: null,
     legalDesignations: [],
   },
@@ -525,6 +540,7 @@ export async function mockAnimalManageApi(
       scientificName: kind.scientificName,
       animalTaxonomic: kind.animalTaxonomic,
       detailKind: kind.detailKind,
+      floor: kind.floor,
       // 공용 목록에서 삭제된 분류는 id 가 null 이다(BE PR #162).
       legalStatuses: kind.legalDesignations.map((name) => ({
         animalLegalStatusId:
@@ -830,6 +846,7 @@ interface KindRequest {
   animalEngName: string
   animalScientificName: string
   animalTaxonomic: MockTaxonGroup
+  floor: MockFloor
   fileKey: string
   animalDetailKind?: string | null
   animalLegalDesignation?: number[]
@@ -851,6 +868,7 @@ function kindFields(request: KindRequest, current?: MockKind) {
     scientificName: request.animalScientificName,
     animalTaxonomic: request.animalTaxonomic,
     detailKind: request.animalDetailKind ?? null,
+    floor: request.floor,
     kindImage: fileFromKey(request.fileKey, current ? [current.kindImage] : []),
   }
 }

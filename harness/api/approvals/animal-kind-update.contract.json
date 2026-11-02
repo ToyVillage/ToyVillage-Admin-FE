@@ -51,6 +51,7 @@
       "animalScientificName": "Hydrochoerus hydrochaeris",
       "animalTaxonomic": "MAMMALS",
       "animalDetailKind": "설치목 · 천축서과",
+      "floor": 4,
       "fileKey": "animal/capybara.png",
       "animalLegalDesignation": [
         1,
@@ -118,6 +119,20 @@
         "example": "설치목 · 천축서과",
         "description": "세부 분류 (예: 설치목 · 천축서과). 선택하지 않으면 null 또는 빈 문자열로 보낼 수 있다.",
         "constraints": []
+      },
+      {
+        "name": "floor",
+        "location": "body",
+        "type": "integer",
+        "required": true,
+        "nullable": false,
+        "default": null,
+        "example": 4,
+        "description": "층. 4 또는 5(staging Swagger minimum 4·maximum 5). Notion 명세에 없어 Swagger 기준(2026-10-27 개발자 결정, 이슈 #276)",
+        "constraints": [
+          "INT",
+          "4 이상 5 이하"
+        ]
       },
       {
         "name": "fileKey",
@@ -599,6 +614,14 @@
           "ADMIN"
         ]
       }
+    },
+    "swagger": {
+      "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs",
+      "checkedAt": "2026-10-27T21:00:00+09:00",
+      "method": "PATCH",
+      "path": "/animal-manage/kind/{animalKindId}",
+      "operationId": "updateAnimalKind",
+      "note": "`floor` 만 Swagger 기준으로 추가했다. Notion 사본 2개(`collection://9df7a4d6-…` 2026-10-02 · `collection://5637a4d6-…` 2026-09-18) 모두 `floor` 가 없고, 위 Resolved page 는 지금 열리지 않는다(404). Swagger 를 기준으로 한다(2026-10-27 개발자 결정, 이슈 #276). 나머지 필드는 기존 Notion 기준 동결값 그대로다."
     }
   }
 }

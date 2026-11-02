@@ -15,14 +15,16 @@ paths: src/pages/species, src/entities/species, src/entities/individual
 
 ## 상태와 근거
 
-- Status: Draft — 게이트 ② 결정 반영(2026-09-15), 시나리오 승인 대기
-- Last refreshed: 2026-09-15
+- Status: Draft — 게이트 ② 결정 반영(2026-09-15), 층 뱃지 추가(2026-10-27, 이슈 #276) 시나리오 재승인 대기
+- Last refreshed: 2026-10-27
 - 기준 파일은 `yot`(`P7Jhnu8qV5m9q2QJNzkwAN`), 페이지 `0:1` "토이빌리지" › 섹션 `개체관리`(`300:12759`) ›
   `개체관리 · 종 상세`(`311:12783`).
 - 상세 화면 기준: `58:8717` (`species detail`)
 - 케밥 열림: `157:11428` (메뉴 인스턴스 `157:11656`) / 종 삭제 확인 모달: `158:11676`
   (모달 인스턴스 `158:11683`, 컴포넌트 `common / 딤 + 삭제 확인 모달 (하위 데이터 포함)` `609:14119`) /
   개체 0마리 빈 상태: `71:8796` (표 `130:9541`, 섹션 헤더 `130:9560`)
+- 층 뱃지(2026-10-27 Figma 추가, 이슈 #276): `badge / 층` — `3133:26263`(상세) · `3133:26265`(케밥 열림) · `3133:26267`(삭제) · `3133:26269`(빈 상태).
+  `species basic info` 컴포넌트 밖에서 화면 위에 얹은 프레임이다. 구현은 카드 제목 줄 안에 둔다.
 - 구성 컴포넌트: `species basic info`(`1191:14902`) / `section header`(`127:9419`) / `individual list`(`130:9534`) /
   `individual / 성별 뱃지`(`161:11782`) / `kebab`(`39:8668`) / `kebab menu`(`141:9597`) / `back`(`1:10470`)
 - 참고(읽기만): 개체 삭제 모달 문구는 `common / 딤 + 삭제 확인 모달 (관찰 기록 포함)`(`610:14119`, `individual-detail` 의 `610:14132`).
@@ -46,6 +48,7 @@ paths: src/pages/species, src/entities/species, src/entities/individual
   간격·줄바꿈(Figma 는 1개만 그렸다), 개체 행 케밥 메뉴 위치(종 상세 프레임에 없다 — `species-list` `39:8913` 승계),
   토스트 규격(`species-list` 소유 `71:8888` 승계), 로딩·없는 종·검색 결과 없음 화면(프레임 없음),
   접근성·반응형 절 전체(근거 프레임 없음).
+- **층 뱃지 실측(2026-10-27)**: `get_design_context`(`3133:26263`)·`get_metadata`(`311:12783`, `1191:14978`). 원문은 `species-detail.figma.txt`(층 뱃지 부분만), map-tokens 신규 색 0개.
 
 ## 목적
 
@@ -103,6 +106,8 @@ paths: src/pages/species, src/entities/species, src/entities/individual
 
 - 좌측에 대표 사진 1장, 우측에 제목·부제·정보 6항목을 표시한다. 편집 컨트롤은 없다.
 - 제목은 국명이다(예: `카피바라`).
+- 제목 오른쪽에 층 뱃지 `{층}층` 을 붙인다(예: `4층`) (2026-10-27 Figma, 이슈 #276).
+  층이 없는(`null`) 종은 뱃지를 그리지 않는다 — 층 필드 추가 전에 등록한 종은 `null` 이다 (2026-10-28 개발자 결정, staging 13개 모두 null 확인).
 - 부제는 `{분류군} · {학명}` 이다(예: `포유류 · Hydrochoerus hydrochaeris`).
 - 정보는 2열 3행이다 — 왼쪽 열 `국명` / `분류군` / `영문명`, 오른쪽 열 `학명` / `법정지정분류` / `세부분류`.
 - 분류군 라벨: `MAMMAL` 포유류 / `REPTILE` 파충류 / `BIRD` 조류 / `FISH` 어류.
@@ -210,6 +215,8 @@ Figma 일부 텍스트가 `Inter` 로 지정돼 있지만 기존 `font.body` 로
    - 사진 260×260, radius 20px, `object-fit: cover`.
    - 정보 열(폭 940, 세로 gap 22px):
      - 제목 블록(gap 10px): 국명 40px Medium `colors.text`.
+       층 뱃지(`badge / 층` `3133:26263`, 57×34): 국명 오른쪽 16px, 세로 가운데. padding 6/14px, radius 100px,
+       배경 `colors.accentBg`(`#E8E9FF`), 글자 18px SemiBold `colors.accent`(`#4952FF`). 기존 토큰으로 충분하다.
        부제 행(gap 12px): 분류군 24px Medium `colors.textGuide` + 점 4×4 원 `colors.textFaint` + 학명 24px Medium `colors.textGuide`.
      - 정보 3행. 행마다 2열, 열 gap 24px(열 폭 458). 항목은 라벨(폭 118, 20px Medium `colors.textGuide`) + gap 16px +
        값(22px Medium `#5C5C68` — 신규 토큰 `color.textValue`), 세로 가운데 정렬.
@@ -301,6 +308,7 @@ interface Species {
   englishName: string // 영문명
   scientificName: string // 학명
   taxonGroup: TaxonGroup // 분류군
+  floor: 4 | 5 | null // 층 (2026-10-27 추가, 미등록 종은 null)
   subClassification?: string // 세부 분류 (선택, 형식 `{목} - {과}` 예: `설치목 - 천축서과`)
   legalDesignations: string[] // 법정지정분류 (복수, 선택)
   photo: { fileName: string; fileKey: string; url: string } // 대표 사진 1장
@@ -400,6 +408,7 @@ interface Individual {
 - `BackLink { to }`(`src/shared/ui`) — 기존 재사용. `to="/species"`.
 - `SpeciesProfileCard { species, action }` — **신규**(`src/entities/species/ui`). Figma `species basic info`(`1191:14902`).
   사진(`photo.url`, alt `{국명} 사진`) + 제목·부제 + 정보 6항목. 우상단 케밥은 `action: ReactNode` 로 받는다(메뉴 상태는 페이지 소유).
+- `SpeciesFloorBadge { floor }` — `src/entities/species/ui`(2026-10-27 추가). 제목 옆 층 뱃지.
 - `LegalDesignationBadge { label }` — **신규**(`src/entities/species/ui`). 법정지정분류 표시 뱃지.
   폼의 추가·제거 chip(`LegalDesignationField`, `species-form` 소유)과 다르다.
 - `SectionHeader { title, count?, unit?, action? }` — 공용(`src/shared/ui`). develop 의 `feed-detail` 이 먼저 만든
@@ -455,7 +464,7 @@ interface Individual {
 
 개체 표 기본 정렬은 최신순(id 큰 순)이다.
 
-- S1: `/species/1` 진입 → `뒤로가기`, 제목 `카피바라`, 부제 `포유류 · Hydrochoerus hydrochaeris`, 정보 6항목 라벨,
+- S1: `/species/1` 진입 → `뒤로가기`, 제목 `카피바라` 와 층 뱃지 `4층`, 부제 `포유류 · Hydrochoerus hydrochaeris`, 정보 6항목 라벨,
   `개체 3마리`, 표 3행(두리 → 미미 → 동식이)이 보인다.
 - S2: 표 컬럼이 `이름` `성별` `출생연도` 이고 1행 값이 `두리` / `수컷` / `2021년` 이다.
 - S3: 종 2 진입 → 성별 뱃지에 `수컷` / `암컷` / `미상` 이 구분돼 보인다.
@@ -489,6 +498,7 @@ interface Individual {
 - S31: 법정지정분류·세부 분류가 없는 종(종 2) → `분류군` 값은 `조류`, `법정지정분류`·`세부분류` 값 자리에 `—` 가 보인다.
 - S32: 키보드만으로 케밥 열기·항목 실행·행 진입·검색·페이지 이동을 수행할 수 있다.
 - S33: `/species/1` 프로필 카드 → `분류군` 값 `포유류 · 설치목 · 천축서과`, `세부분류` 값 `천축서과` 가 보인다.
+- S34: 층이 5층인 종 2 → 제목 `플라밍고` 옆 층 뱃지가 `5층` 이다.
 
 ## 결정 사항
 
@@ -496,6 +506,7 @@ interface Individual {
 - 한 페이지 10행이다 (2026-09-15 Figma·저장소 근거 판단: `task-list` 결정 승계, Figma 는 3행만 그렸다).
 - `분류군` 값은 `{분류군 라벨} · {세부 분류의 ' - ' → ' · '}`, `세부분류` 값은 ` - ` 로 나눈 마지막 조각이다. 세부 분류가 비면 분류군 줄은 라벨만, 세부분류 줄은 `—` 다 (2026-09-15 개발자 결정).
 - 종 1 fixture 세부 분류는 `설치목 - 천축서과` 다 (2026-09-15 개발자 결정).
+- 층 뱃지는 제목 오른쪽 16px 에 둔다. Figma 는 카드 컴포넌트 밖에 얹었지만 국명 길이와 함께 움직여야 해서 제목 줄 안에 넣는다 (2026-10-27 Figma·저장소 근거 판단: `3133:26263` 위치가 국명 끝 +16px). 층이 없는(`null`) 종은 뱃지를 숨긴다 (2026-10-28 개발자 결정 — staging 종 13개 모두 `floor: null`, Figma 에 해당 상태 없음).
 - `법정지정분류` 가 비면 `—` 를 보인다 (2026-09-15 Figma·저장소 근거 판단: 같은 개체관리 화면(`individual-detail` 기타정보·첨부)의 빈 값 표기 `—`).
 - 섹션 헤더 `N마리` 는 검색과 무관한 전체 개체 수다 (2026-09-15 Figma·저장소 근거 판단: Figma `개체 3마리` 는 전체 수, 검색은 표만 좁힌다).
 - 검색 placeholder 는 Figma 그대로 두고 검색 대상은 개체명(부분 일치, 앞뒤 공백 제거, 입력 즉시, 1페이지 리셋)이다 (2026-09-15 Figma·저장소 근거 판단: 종 상세의 개체는 모두 같은 국명이라 국명 검색이 의미 없다).

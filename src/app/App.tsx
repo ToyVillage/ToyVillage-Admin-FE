@@ -251,6 +251,13 @@ const routes: RouteObject[] = [
             ),
           },
           {
+            path: '/activity',
+            element: lazyPage(
+              () => import('@/pages/activity/ActivityPage'),
+              'ActivityPage',
+            ),
+          },
+          {
             path: '/feeds',
             element: lazyPage(
               () => import('@/pages/feeds/FeedListPage'),
@@ -260,8 +267,29 @@ const routes: RouteObject[] = [
           {
             path: '/feeds/:id',
             element: lazyPage(
-              () => import('@/pages/feeds/FeedDetailPage'),
-              'FeedDetailPage',
+              () => import('@/pages/feeds/FeedRecordDetailPage'),
+              'FeedRecordDetailPage',
+            ),
+          },
+          {
+            path: '/feeds/fifth-floor/:id',
+            element: lazyPage(
+              () => import('@/pages/feeds/FeedRecordDetailPage'),
+              'FifthFloorFeedRecordDetailPage',
+            ),
+          },
+          {
+            path: '/feeds/animals/:animalId',
+            element: lazyPage(
+              () => import('@/pages/feeds/FeedAnimalHistoryPage'),
+              'FeedAnimalHistoryPage',
+            ),
+          },
+          {
+            path: '/feeds/fifth-floor/animals/:animalId',
+            element: lazyPage(
+              () => import('@/pages/feeds/FeedAnimalHistoryPage'),
+              'FifthFloorFeedAnimalHistoryPage',
             ),
           },
           {
@@ -269,6 +297,13 @@ const routes: RouteObject[] = [
             element: lazyPage(
               () => import('@/pages/feeds/EditFeedPage'),
               'EditFeedPage',
+            ),
+          },
+          {
+            path: '/feeds/fifth-floor/:id/edit',
+            element: lazyPage(
+              () => import('@/pages/feeds/EditFeedPage'),
+              'FifthFloorEditFeedPage',
             ),
           },
           {
@@ -393,6 +428,13 @@ const routes: RouteObject[] = [
             element: lazyPage(
               () => import('@/pages/settings/accounts/StaffAccountsPage'),
               'StaffAccountsPage',
+            ),
+          },
+          {
+            path: '/settings/excel-download',
+            element: lazyPage(
+              () => import('@/pages/settings/excel-download/ExcelDownloadPage'),
+              'ExcelDownloadPage',
             ),
           },
           // 계정 생성은 목록 화면의 모달로 옮겼다. 옛 주소는 목록으로 보낸다.

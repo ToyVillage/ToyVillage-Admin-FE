@@ -1,0 +1,291 @@
+{
+  "apiId": "APP_ALL_ACTIVITIES_FEED_LOG_QUERY_FIFTH_FLOOR",
+  "name": "전체 활동 날짜별 5층 급여일지 조회",
+  "description": "앱 관리자가 전체 활동에서 그날 5층 급여일지 전체를 조회",
+  "method": "GET",
+  "path": "/all-activities/feed-log/fifth-floor",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "앱 access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [],
+  "queryParameters": [
+    {
+      "name": "date",
+      "location": "query",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "2026-10-20",
+      "description": "조회 날짜(YYYY-MM-DD)",
+      "constraints": [
+        "format: date"
+      ]
+    }
+  ],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "조회 성공",
+        "noContent": false,
+        "body": {
+          "type": "array<object>",
+          "nullable": false,
+          "description": "FifthFloorFeedLogResponse[]",
+          "fields": [
+            {
+              "name": "feedLogId",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "급여일지 id(행 key)",
+              "constraints": [
+                "format: int64"
+              ]
+            },
+            {
+              "name": "animalKind",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "이구아나",
+              "description": "일반명(종 이름)",
+              "constraints": []
+            },
+            {
+              "name": "animalName",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "초록",
+              "description": "개체명",
+              "constraints": []
+            },
+            {
+              "name": "animalDeleted",
+              "location": "body",
+              "type": "boolean",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": false,
+              "description": "개체 삭제 여부. 화면은 구분 없이 표시한다",
+              "constraints": []
+            },
+            {
+              "name": "feedType",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "청경채",
+              "description": "먹이 종류",
+              "constraints": []
+            },
+            {
+              "name": "feedAmount",
+              "location": "body",
+              "type": "number",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 150,
+              "description": "급여량",
+              "constraints": [
+                "format: float"
+              ]
+            },
+            {
+              "name": "feedUnit",
+              "location": "body",
+              "type": "enum",
+              "allowedValues": [
+                "GML",
+                "KGL"
+              ],
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "GML",
+              "description": "급여량 단위. GML→g/ml, KGL→kg/l",
+              "constraints": []
+            },
+            {
+              "name": "staffName",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "이승현",
+              "description": "급여자 이름",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 403,
+        "description": "인증 토큰이 없거나 유효하지 않음, 또는 접근 권한 없음 (Swagger에 body 스키마 없음)",
+        "noContent": true,
+        "body": null
+      },
+      {
+        "status": 405,
+        "description": "Method Not Allowed",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 405,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-10-28T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "Internal Server Error",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-10-28T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "apiIdMatchCount": 0,
+    "checkedAt": "2026-10-29T00:00:00.000Z",
+    "swagger": {
+      "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs",
+      "operationId": "getFifthFloorFeedLogs",
+      "method": "GET",
+      "path": "/all-activities/feed-log/fifth-floor",
+      "checkedAt": "2026-10-29T00:00:00.000Z"
+    },
+    "note": "Notion에 없음(검색 `전체 활동`·`ALL_ACTIVITIES` 0건). 제안 API ID. 개발자가 준 staging Swagger `all-activities-controller`만 기준(2026-10-29 개발자 지시)"
+  }
+}

@@ -1,4 +1,9 @@
-import { taxonGroups, type TaxonGroup } from '../model/types'
+import {
+  speciesFloors,
+  taxonGroups,
+  type SpeciesFloor,
+  type TaxonGroup,
+} from '../model/types'
 import type { AnimalKindImageResponse, AnimalMessageResponse } from './types'
 
 // 개체관리 API(종·개체·관찰)가 함께 쓰는 응답 검사.
@@ -26,6 +31,11 @@ export function isMessageResponse(
 // 개명 전 값(`MAMMAL` 등)이 통과하면 분류군 라벨 조회가 빈 값이 된다.
 export function isTaxonGroup(value: unknown): value is TaxonGroup {
   return taxonGroups.some((taxonGroup) => taxonGroup === value)
+}
+
+// 4·5 밖의 값은 형식 오류다. null(층 미등록)은 호출부가 따로 허용한다.
+export function isSpeciesFloor(value: unknown): value is SpeciesFloor {
+  return speciesFloors.some((floor) => floor === value)
 }
 
 /** 개체관리 조회가 404 로 실패했다. 그 외 실패는 not-found 가 아니라 조회 오류로 보인다. */

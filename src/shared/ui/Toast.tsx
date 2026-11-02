@@ -17,6 +17,8 @@ interface ToastProps {
   onDismiss: () => void
   // Figma에 시간 규격이 없어 화면 공통 기본값으로 둔다.
   duration?: number
+  /** 문구 길이에 맞춰 폭을 늘린다(Figma `excel / 토스트`). 기본은 440px 고정. */
+  fitContent?: boolean
 }
 
 const defaultDuration = 3000
@@ -27,6 +29,7 @@ export function Toast({
   message,
   onDismiss,
   duration = defaultDuration,
+  fitContent = false,
 }: ToastProps) {
   // 사라질 때도 올라가며 없어지도록, 표시 시간이 끝나면 먼저 나가는 애니메이션을 켜고
   // 그 길이만큼 지난 뒤에 화면에서 내린다.
@@ -56,8 +59,9 @@ export function Toast({
     <Container
       role={variant === 'error' ? 'alert' : 'status'}
       $leaving={leaving}
+      $fitContent={fitContent}
     >
-      <Row>
+      <Row $fitContent={fitContent}>
         <Icon viewBox="0 0 40 40" aria-hidden="true" $variant={variant}>
           {variant === 'success' ? (
             <path d="M20 3.333C10.795 3.333 3.333 10.795 3.333 20S10.795 36.667 20 36.667 36.667 29.205 36.667 20 29.205 3.333 20 3.333Zm-3.333 25L8.333 20l2.35-2.35 5.984 5.967L29.317 11.05l2.35 2.367-15 15Z" />
@@ -72,7 +76,7 @@ export function Toast({
   )
 }
 
-const Container = styled.div<{ $leaving: boolean }>`
+const Container = styled.div<{ $leaving: boolean; $fitContent: boolean }>`
   position: fixed;
   top: 32px;
   right: 48px;
@@ -80,6 +84,13 @@ const Container = styled.div<{ $leaving: boolean }>`
   display: flex;
   flex-direction: column;
   width: min(calc(100vw - 96px), 440px);
+  ${({ $fitContent }) =>
+    $fitContent &&
+    `
+    width: fit-content;
+    min-width: min(calc(100vw - 96px), 440px);
+    max-width: calc(100vw - 96px);
+  `}
   padding: 20px 24px;
   border-radius: 12px;
   background: ${({ theme }) => theme.colors.surface};
@@ -92,10 +103,10 @@ const Container = styled.div<{ $leaving: boolean }>`
     both;
 `
 
-const Row = styled.div`
+const Row = styled.div<{ $fitContent: boolean }>`
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: ${({ $fitContent }) => ($fitContent ? '12px' : '24px')};
 `
 
 // Figma 토스트 아이콘 색은 결과에 따라 갈린다(성공 초록 / 실패 빨강).

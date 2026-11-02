@@ -8,6 +8,7 @@ import {
 import { taxonGroupLabels } from '../model/labels'
 import type { Species } from '../model/types'
 import { LegalDesignationBadge } from './LegalDesignationBadge'
+import { SpeciesFloorBadge } from './SpeciesFloorBadge'
 
 interface SpeciesProfileCardProps {
   species: Species
@@ -53,7 +54,12 @@ export function SpeciesProfileCard({
       <Photo src={species.photo.url} alt={`${species.koreanName} 사진`} />
       <Info>
         <Titles>
-          <Title>{species.koreanName}</Title>
+          <TitleRow>
+            <Title>{species.koreanName}</Title>
+            {species.floor !== null && (
+              <SpeciesFloorBadge floor={species.floor} />
+            )}
+          </TitleRow>
           <Subtitle>
             {taxonGroupLabels[species.taxonGroup]}
             {/* 점은 장식이다. 글자는 크기 0 으로 두어 복사·텍스트 비교에서만 구분자로 남긴다. */}
@@ -137,6 +143,15 @@ const Titles = styled.div`
   flex-direction: column;
   gap: 10px;
   padding-right: 60px;
+`
+
+// Figma 층 뱃지(3133:26263)는 국명 끝에서 16px, 세로 가운데다. 국명이 길면 다음 줄로 내려간다.
+// 층이 없는(null) 종은 뱃지를 그리지 않는다.
+const TitleRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
 `
 
 const Title = styled.h1`

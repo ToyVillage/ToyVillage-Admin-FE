@@ -1,11 +1,10 @@
 import { isAxiosError } from 'axios'
 import { api } from '@/shared/api/axios'
-import { storedFileUrl } from '@/shared/api/fileStorage'
-import { formatFeedAmount, formatRemainingAmount } from '../model/format'
 import type {
   FeedHistoryRecord,
   FeedRecord,
   FeedRecordDetail,
+  FeedUnit,
 } from '../model/types'
 import type {
   FeedLogAdminDetailResponse,
@@ -22,11 +21,10 @@ export interface FeedListPage {
   totalPageSize: number
 }
 
-// 목록은 날짜로 조회하고 분류 탭은 `animalTaxonomic` 으로 서버가 거른다.
+// 4층 급여 목록(`GET /feed-log/admin`). 날짜로 조회하고 분류는 거르지 않는다.
 // 표의 열이 모두 목록 응답에 있어 행별 추가 조회가 없다.
 export async function getFeeds({
   date,
-  animalTaxonomic = null,
   page,
   size,
 }: FeedQueryAllRequest): Promise<FeedListPage> {
@@ -34,12 +32,7 @@ export async function getFeeds({
   assertPaging(page, size)
 
   const { data } = await api.get<unknown>('/feed-log/admin', {
-    params: {
-      date,
-      animalTaxonomic: animalTaxonomic ?? undefined,
-      page,
-      size,
-    },
+    params: { date, page, size },
   })
 
   if (!isFeedLogListResponse(data)) {
@@ -52,11 +45,14 @@ export async function getFeeds({
 
       return {
         id: String(item.feedLogId),
+        floor: '4',
         animalType: item.animalKind,
         animalName: item.animalName,
         feedType: item.feedType,
-        feedAmount: formatFeedAmount(item.feedAmount),
-        remainingAmount: formatRemainingAmount(item.remainingAmount ?? null),
+        feedAmount: item.feedAmount,
+        remainingAmount: item.remainingAmount ?? null,
+        unit: readUnit(item.feedUnit),
+        note: item.significant ?? '',
         feederName: item.staffName,
         fedDate,
         fedTime,
@@ -71,7 +67,7 @@ export function isFeedNotFoundError(error: unknown): boolean {
   return isAxiosError(error) && error.response?.status === 404
 }
 
-// 상세는 급여 기록 한 건과 그 개체의 급여 이력이다.
+// 4층 급여 기록 상세(`GET /feed-log/admin/{feedLogId}`).
 export async function getFeedDetail({
   feedLogId,
 }: FeedQueryRequest): Promise<FeedRecordDetail> {
@@ -83,33 +79,27 @@ export async function getFeedDetail({
     throw new Error('급여 상세 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  const history = await getFeedHistory(data.animalId)
   const { fedDate, fedTime } = splitFeedDateTime(data.feedDateTime)
 
   return {
     id: String(feedLogId),
+    floor: '4',
     animalManageId: data.animalId,
-    feedDateTime: data.feedDateTime,
-    feedAmountValue: data.feedAmount,
-    remainingAmountValue: data.remainingAmount ?? null,
+    fedAtValue: data.feedDateTime,
     animalType: data.animalKind,
     animalName: data.animalName,
     feedType: data.feedType,
-    feedAmount: formatFeedAmount(data.feedAmount),
-    remainingAmount: formatRemainingAmount(data.remainingAmount ?? null),
+    feedAmount: data.feedAmount,
+    remainingAmount: data.remainingAmount ?? null,
+    unit: readUnit(data.feedUnit),
+    note: data.significant ?? '',
     feederName: data.staffName,
     fedDate,
     fedTime,
-    note: data.significant ?? '',
-    // 응답은 `fileName`·`fileKey` 만 준다. 개체·종 사진과 같은 규칙으로 URL 을 만든다.
-    animalPhotoUrl: data.animalImageUrl
-      ? storedFileUrl(data.animalImageUrl.fileKey)
-      : undefined,
-    history,
   }
 }
 
-// 개체의 급여 이력. 최신 급여가 맨 앞이다.
+// 4층 개체별 급여 이력(`GET /feed-log/admin/history/{animalManageId}`). 최신 급여가 맨 앞이다.
 // 이력이 없으면(404) 빈 배열이다. 그 밖의 실패(500·네트워크·형식 오류)는 그대로 올린다 —
 // 불러오지 못한 것을 '이력 없음'으로 보여주지 않는다.
 export async function getFeedHistory(
@@ -127,28 +117,40 @@ export async function getFeedHistory(
     throw new Error('급여 이력 조회 응답 형식이 올바르지 않습니다.')
   }
 
-  return data.feedLogs
-    .map((item) => {
-      const { fedDate, fedTime } = splitFeedDateTime(item.feedDateTime)
+  return (
+    data.feedLogs
+      .map((item) => {
+        const { fedDate, fedTime } = splitFeedDateTime(item.feedDateTime)
 
-      return {
-        record: {
-          id: String(item.feedLogId),
-          fedDate,
-          fedTime,
-          feederName: item.staffName,
-          feedType: item.feedType,
-          feedAmount: formatFeedAmount(item.feedAmount),
-          remainingAmount: formatRemainingAmount(item.remainingAmount ?? null),
-          note: item.significant ?? '',
-        },
-        feedDateTime: item.feedDateTime,
-      }
-    })
-    // 최신 급여가 위로 온다(서버 정렬 명세 없음).
-    // 오프셋이 붙은 값과 안 붙은 값이 섞여도 되도록 시각으로 견준다.
-    .sort((left, right) => toEpoch(right.feedDateTime) - toEpoch(left.feedDateTime))
-    .map((item) => item.record)
+        return {
+          record: {
+            id: String(item.feedLogId),
+            floor: '4' as const,
+            fedDate,
+            fedTime,
+            feederName: item.staffName,
+            feedType: item.feedType,
+            feedAmount: item.feedAmount,
+            remainingAmount: item.remainingAmount ?? null,
+            unit: readUnit(item.feedUnit),
+            note: item.significant ?? '',
+          },
+          feedDateTime: item.feedDateTime,
+        }
+      })
+      // 최신 급여가 위로 온다(서버 정렬 명세 없음).
+      // 오프셋이 붙은 값과 안 붙은 값이 섞여도 되도록 시각으로 견준다.
+      .sort(
+        (left, right) =>
+          toEpoch(right.feedDateTime) - toEpoch(left.feedDateTime),
+      )
+      .map((item) => item.record)
+  )
+}
+
+// 단위 도입 전 기록은 `feedUnit` 이 없다. 그때는 kg 만 쓰던 시절이라 `KGL` 로 본다.
+function readUnit(value: FeedUnit | undefined): FeedUnit {
+  return value ?? 'KGL'
 }
 
 /**
@@ -219,6 +221,10 @@ function isNullableString(value: unknown): boolean {
   return value === null || value === undefined || typeof value === 'string'
 }
 
+function isOptionalUnit(value: unknown): boolean {
+  return value === undefined || value === 'GML' || value === 'KGL'
+}
+
 // 잔량은 나중에 추가된 필드라 그 전 기록은 null 이거나 빠져 올 수 있다.
 function isNullableNumber(value: unknown): boolean {
   return value === null || value === undefined || typeof value === 'number'
@@ -243,7 +249,9 @@ function isFeedLogListResponse(value: unknown): value is FeedLogListResponse {
         typeof feedLog.feedType === 'string' &&
         typeof feedLog.feedAmount === 'number' &&
         isNullableNumber(feedLog.remainingAmount) &&
-        typeof feedLog.feedDateTime === 'string'
+        isOptionalUnit(feedLog.feedUnit) &&
+        typeof feedLog.feedDateTime === 'string' &&
+        isNullableString(feedLog.significant)
       )
     }) &&
     Number.isInteger(response.totalPageSize)
@@ -265,6 +273,7 @@ function isFeedLogAdminDetailResponse(
     typeof detail.feedType === 'string' &&
     typeof detail.feedAmount === 'number' &&
     isNullableNumber(detail.remainingAmount) &&
+    isOptionalUnit(detail.feedUnit) &&
     typeof detail.feedDateTime === 'string' &&
     isNullableString(detail.significant)
   )
@@ -289,6 +298,7 @@ function isFeedLogHistoryResponse(
         typeof feedLog.feedType === 'string' &&
         typeof feedLog.feedAmount === 'number' &&
         isNullableNumber(feedLog.remainingAmount) &&
+        isOptionalUnit(feedLog.feedUnit) &&
         typeof feedLog.feedDateTime === 'string' &&
         isNullableString(feedLog.significant)
       )

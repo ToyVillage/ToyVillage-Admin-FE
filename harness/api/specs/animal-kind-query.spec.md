@@ -38,6 +38,9 @@ real_server:
     기존 빈 값 표시 유지), 법정지정분류 `legalStatuses`(`[{ animalLegalStatusId, kind }]` — BE PR #162, 삭제된 분류는 id `null`, 화면은 `kind`만 표시, 빈 배열
     가능), 마리수 `animalCount`,
     사진 `kindImage.fileKey`(`storedFileUrl` 재사용).
+- 2026-10-27(이슈 #276): 층 `floor`(4 또는 5)를 종 상세 제목 옆 뱃지와 수정 폼 초기값에 쓴다.
+  Swagger 기준이다. 층 필드 추가 전에 등록한 종은 `null` 이다(2026-10-28 staging 13개 모두 null 확인) —
+  상세는 뱃지를 숨기고 수정 폼은 기본값 `4` 로 채운다(개발자 결정).
 - 종 수정 화면은 이 응답으로 폼 초기값을 채운다.
 - URL의 `:speciesId`를 path parameter `animalKindId`로 보낸다.
 

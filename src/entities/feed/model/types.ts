@@ -1,68 +1,50 @@
-// 개체 분류. 목록 화면의 탭 순서와 같다(Figma `animal species` 1443:15023).
-export const animalSpeciesList = ['포유류', '파충류', '조류', '어류'] as const
-export type AnimalSpecies = (typeof animalSpeciesList)[number]
+// 먹이 급여는 층마다 앱 입력 양식이 다르다(Linear TOY-67).
+// 4층: 급여 일시·먹이 종류·급여량·잔량·특이사항 / 5층: 급여 날짜·먹이 종류·급여량
+export const feedFloors = ['4', '5'] as const
+export type FeedFloor = (typeof feedFloors)[number]
 
-// 탭 라벨 → 목록 조회의 `animalTaxonomic` query 값.
-export const animalTaxonomicBySpecies = {
-  포유류: 'MAMMALS',
-  파충류: 'REPTILES',
-  조류: 'BIRDS',
-  어류: 'FISH',
-} as const satisfies Record<AnimalSpecies, string>
+/** 층 탭·뱃지 라벨 */
+export const feedFloorLabels = {
+  '4': '4층',
+  '5': '5층',
+} as const satisfies Record<FeedFloor, string>
 
-// 급여 기록 한 건. 목록 표의 `대상 개체`/`먹이 종류 · 급여량`/`잔량`/`급여자`/`급여일시` 열에 대응한다.
+/** 앱이 고르는 급여량·잔량 단위. `GML` = g/ml, `KGL` = kg/l */
+export type FeedUnit = 'GML' | 'KGL'
+
+// 목록 표의 행. 5층에는 급여 시각·잔량·특이사항이 없다(빈 값).
 export interface FeedRecord {
   id: string
-  /**
-   * 개체 분류. 급여 API 응답에는 없고 목록에서 고른 분류 탭에서 온다.
-   * `전체` 탭이거나 상세로 바로 들어오면 비어 있어 분류 뱃지를 그리지 않는다.
-   */
-  species?: AnimalSpecies
-  /** 종. `표범` */
+  floor: FeedFloor
+  /** 일반명(종). `카피바라` */
   animalType: string
-  /** 개체명. `레오` */
+  /** 개체명. `동식이` */
   animalName: string
-  /** 먹이 종류. `생닭` */
+  /** 먹이 종류. `염소사료` */
   feedType: string
-  /** 급여량 표기. 명세는 실수라 `1.2kg` 형태다. */
-  feedAmount: string
-  /** 잔량 표기. `0.2kg` 형태이고, 값이 없는 기록은 빈 문자열이다. */
-  remainingAmount: string
-  feederName: string
-  /** YYYY-MM-DD */
-  fedDate: string
-  /** HH:mm */
-  fedTime: string
-}
-
-// 상세 화면 아래 `급여 이력` 표의 행.
-export interface FeedHistoryRecord {
-  id: string
-  /** YYYY-MM-DD */
-  fedDate: string
-  /** HH:mm */
-  fedTime: string
-  feederName: string
-  feedType: string
-  feedAmount: string
-  /** 잔량 표기. 값이 없는 기록은 빈 문자열이다. */
-  remainingAmount: string
-  /** 특이사항. 이력 응답의 `significant` 다. 값이 없으면 빈 문자열이다. */
+  feedAmount: number
+  /** 잔량. 5층이거나 잔량 도입 전 기록은 null 이다. */
+  remainingAmount: number | null
+  unit: FeedUnit
+  /** 특이사항. 없으면 빈 문자열이다(5층은 항상 빈 문자열). */
   note: string
+  feederName: string
+  /** YYYY-MM-DD */
+  fedDate: string
+  /** HH:mm. 5층은 빈 문자열이다. */
+  fedTime: string
 }
 
-// `/feeds/:id` 상세. 급여 기록 하나와 그 개체의 급여 이력이다.
+// 개체별 급여 이력 표의 행.
+export type FeedHistoryRecord = Omit<FeedRecord, 'animalType' | 'animalName'>
+
+// 급여 기록 상세·수정 화면.
 export interface FeedRecordDetail extends FeedRecord {
-  /** 개체 id(`animalManageId`). 급여 이력 조회의 키다. */
+  /** 개체 id(`animalManageId`). 개체별 급여 이력의 키다. */
   animalManageId: number
-  /** 상세 응답의 `feedDateTime` 원본. 수정 요청에 그대로 보낸다(필수 값). */
-  feedDateTime: string
-  /** 상세 응답의 `feedAmount` 원본(kg). `feedAmount` 표기는 소수 둘째 자리로 반올림돼 있다. */
-  feedAmountValue: number
-  /** 상세 응답의 `remainingAmount` 원본(kg). 값이 없는 기록은 null 이다. */
-  remainingAmountValue: number | null
-  /** 특이사항. 상세 응답의 `significant` 다. 값이 없으면 빈 문자열이다. */
-  note: string
-  animalPhotoUrl?: string
-  history: FeedHistoryRecord[]
+  /**
+   * 수정 요청에 그대로 보내는 급여 시각 원본. 4층은 상세 응답의 `feedDateTime`,
+   * 5층은 `feedDate` 다(화면에서 바꾸지 않는다).
+   */
+  fedAtValue: string
 }

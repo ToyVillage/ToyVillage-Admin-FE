@@ -3,7 +3,7 @@
 ## 승인 기준
 
 - `PATCH /animal-manage/kind/{animalKindId}`, Bearer, role `ADMIN`
-- body는 생성과 같은 필드(필수 5개 재전송, 선택 2개)
+- body는 생성과 같은 필드(필수 6개 재전송 — 2026-10-27 `floor` 추가, 선택 2개)
 - 성공 200 `{ message }`, 오류 400/401/403/404(종·fileKey·법정지정분류)/500
 - 실제 서버 테스트 disabled
 
@@ -46,3 +46,10 @@
 - 서버 목록에 없는 법정지정분류 저장값: 선택된 채 두고 저장 시 다시 생성한다.
 - 관찰 필드명: api 계층에서 매핑한다(모델 필드명 유지).
 - 퍼블리싱 문서(species-list·species-detail·species-form) 수정·재승인은 구현 전에 한다.
+
+## 층 추가 (2026-10-27, 이슈 #276)
+
+- Contract 변경: 필수 `floor` 재전송. 값은 폼의 층 선택(초기값은 상세 응답 `floor`).
+- `src/entities/species/api/types.ts` — `AnimalKindUpdateRequest.floor: SpeciesFloor`
+- `src/features/species-form/ui/SpeciesForm.tsx` — `animal-kind-create` 와 같은 공통 body
+- `tests/e2e/api/animal-kind-update.spec.ts` — Mock S1 body·S9

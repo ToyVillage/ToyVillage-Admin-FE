@@ -1,15 +1,18 @@
 {
   "feature": "animal-kind-query",
   "apiId": "ANIMAL_KIND_QUERY",
-  "approvedAt": "2026-10-08T07:13:31.217Z",
+  "approvedAt": "2026-10-28T07:20:59.789Z",
   "approvedBy": "yunho09",
-  "taskSpecHash": "a288f131c11ee5c399e571874d2cfc4bc249278350565217b6f1c704dc23d554",
-  "contractHash": "ec5f15b2a2b3b796f10fdeba3b25ee988486690bdbed03c3ff7c10c4a347f838",
-  "contractMarkdownHash": "2c1bccb57cb17568bf39b8ab36a694a261bb3a5bc73691258fb592b09136e18b",
-  "planHash": "036041284dc5c782d95a0bd9c893c9201a09a3146eb29d03b9554d8d8ff1ed33",
-  "scenarioHash": "c52ebb736808d0818e3f868446f992f6e3da41a2c1255c3eb08f3232ada24c5e",
-  "testHash": "541d96088ab0bd901d321e344d54ef46b8b8f92658ce0c5e90b9e3c87cbd2245",
+  "approvedCommit": "6a6cd41570bc790d8b858deafca4df58ba52365f",
+  "taskSpecHash": "7fbb5b901ca272a459954d619a9f12b7e07ab34ad41b62f4bf7b3b82743db266",
+  "contractHash": "b84235fc0945fc90ac715a1385dfd743e88e50f48168b1fa955ad3461340e473",
+  "contractMarkdownHash": "abd6a1a0c29a016f8afd5a521bdb2ee66ee30a83a64d8b3c6cc39ccda7e2d02e",
+  "planHash": "4a2fc1383e5906338443deb8538f432383bb6fda5ab07410db218cb23d43a1a8",
+  "scenarioHash": "803443f2bd19fd6a741420cc018996d7f3221fa40549850966bb53ba1c516d81",
+  "testHash": "8ec186ec884a0925a0e7ddaa00789f6819d7e7b6a107c86cf31af48b1f3eb9f0",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-10-08T07:13:31.400Z"
+  "testApprovedAt": "2026-10-28T07:21:00.871Z",
+  "testApprovedBy": "yunho09",
+  "testApprovedCommit": "6a6cd41570bc790d8b858deafca4df58ba52365f"
 }

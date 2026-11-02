@@ -1,11 +1,13 @@
-import type { AnimalSpecies } from './types'
+import type { FeedFloor } from './types'
 
-// 목록은 날짜·분류·페이지로 조회한다. 서버가 분류를 걸러 주므로 key 에 함께 둔다.
+// 4층과 5층은 서로 다른 API 라 같은 id 가 두 층에 있을 수 있다. key 에 층을 둔다.
 export const feedQueryKeys = {
   all: ['feeds'] as const,
-  list: (date: string, species: AnimalSpecies | null, page: number) =>
-    ['feeds', 'list', { date, species, page }] as const,
-  detail: (feedLogId: string) => ['feeds', 'detail', feedLogId] as const,
-  history: (animalManageId: string) =>
-    ['feeds', 'history', animalManageId] as const,
+  lists: ['feeds', 'list'] as const,
+  list: (date: string, floor: FeedFloor, page: number) =>
+    ['feeds', 'list', { date, floor, page }] as const,
+  detail: (floor: FeedFloor, feedLogId: string) =>
+    ['feeds', 'detail', floor, feedLogId] as const,
+  history: (floor: FeedFloor, animalManageId: string) =>
+    ['feeds', 'history', floor, animalManageId] as const,
 }

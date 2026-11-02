@@ -1,0 +1,22 @@
+{
+  "feature": "activity",
+  "approvedAt": "2026-10-29T01:35:01.042Z",
+  "approvedBy": "kimjihwan8",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13"
+  ],
+  "scenarioHash": "bff3a88661ab0d213b327e3f57d094e674838ba29df335842f8b3d2d3308c0ff",
+  "e2eHash": "06a39a1e75e206c497e7d02abdc6b8eb16f2f658f7cba455d112bcdbf9a4c0cc"
+}

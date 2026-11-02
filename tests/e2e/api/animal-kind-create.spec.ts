@@ -54,6 +54,7 @@ test('S1: 선택값을 포함해 업로드 후 종을 생성하고 목록으로 
     animalScientificName: 'Hydrochoerus hydrochaeris',
     animalTaxonomic: 'MAMMALS',
     animalDetailKind: '설치목 - 천축서과',
+    floor: 4,
     animalLegalDesignation: [1],
     fileKey: '2026/09/17/upload-1_new.png',
   })
@@ -144,6 +145,16 @@ test('S9: 201 이 아닌 성공 status 는 실패로 본다', async ({ page }) =
   await submitButton(page).click()
 
   await expectFormKept(page)
+})
+
+test('S10: 고른 층을 floor 로 보낸다', async ({ page }) => {
+  await fillRequired(page)
+  await page.getByRole('radio', { name: '5층' }).click()
+
+  await submitButton(page).click()
+
+  await expect(page).toHaveURL(/\/species$/)
+  expect(createRequest().body).toMatchObject({ floor: 5 })
 })
 
 function createRequest() {

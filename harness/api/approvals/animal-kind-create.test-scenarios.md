@@ -12,7 +12,7 @@
 - Mock request: `POST /file` → `POST /animal-manage/kind` body
   `{ "animalName": "카피바라", "animalEngName": "Capybara",
   "animalScientificName": "Hydrochoerus hydrochaeris", "animalTaxonomic": "MAMMALS",
-  "animalDetailKind": "설치목 - 천축서과", "animalLegalDesignation": [1],
+  "animalDetailKind": "설치목 - 천축서과", "floor": 4, "animalLegalDesignation": [1],
   "fileKey": "animal/new.png" }`
 - 기대 결과: 업로드 1회·생성 1회, `/species` 이동 + `create-success` 토스트, 목록 GET 재요청
 
@@ -55,6 +55,11 @@
 
 - Mock response: HTTP 200 성공 body
 - 기대 결과: S4와 같은 실패 표시
+
+## Mock S10 — 층 전송 (2026-10-27, 이슈 #276)
+
+- 사용자 동작: 필수값을 채우고 층 `5층` 선택 → 생성
+- 기대 결과: body `floor: 5`(층을 고르지 않으면 S1 처럼 기본값 `4`)
 
 ## Staging R1
 

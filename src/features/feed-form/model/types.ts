@@ -2,9 +2,9 @@
 export interface FeedFormValues {
   /** 입력 원문(검증·제출 시 trim) */
   feedType: string
-  /** 입력 원문(숫자만). 단위 `kg` 는 입력칸 밖에 고정으로 붙는다. */
+  /** 입력 원문(숫자만). 단위는 입력칸 밖에 고정으로 붙는다. */
   feedAmount: string
-  /** 입력 원문(숫자만). 급여량과 같이 `kg` 가 입력칸 밖에 고정으로 붙는다. */
+  /** 입력 원문(숫자만). 4층만 쓴다. */
   remainingAmount: string
   /** 입력 원문(제출 시 trim). 선택 항목이다. */
   note: string

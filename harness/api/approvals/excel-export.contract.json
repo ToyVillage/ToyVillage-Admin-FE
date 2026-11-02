@@ -1,0 +1,377 @@
+{
+  "apiId": "EXCEL_EXPORT",
+  "name": "엑셀 내보내기",
+  "description": "선택한 항목과 기간의 데이터를 엑셀 또는 압축 파일로 내려받는다",
+  "method": "GET",
+  "path": "/excel",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "앱 access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [],
+  "queryParameters": [
+    {
+      "name": "types",
+      "location": "query",
+      "type": "array<string>",
+      "allowedValues": [
+        "NOTICE",
+        "TASK",
+        "WORK_REPORT",
+        "RESERVATION",
+        "TEAM_MEMBER",
+        "ANIMAL",
+        "WORK_LOG",
+        "FEED_LOG",
+        "FIFTH_FLOOR_FEED_LOG",
+        "ANIMAL_OBSERVATION",
+        "DOCUMENT"
+      ],
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "TASK",
+      "description": "내보낼 항목. 중복은 서버가 제거한다",
+      "constraints": [
+        "1개 이상",
+        "`types=A&types=B` 형식으로 보낸다"
+      ]
+    },
+    {
+      "name": "mode",
+      "location": "query",
+      "type": "enum",
+      "allowedValues": [
+        "SHEET",
+        "ZIP"
+      ],
+      "required": false,
+      "nullable": false,
+      "default": "SHEET",
+      "example": "SHEET",
+      "description": "SHEET = xlsx 한 파일(항목별 시트), ZIP = 항목별 xlsx와 첨부파일 원본",
+      "constraints": []
+    },
+    {
+      "name": "startDate",
+      "location": "query",
+      "type": "string",
+      "required": false,
+      "nullable": false,
+      "default": null,
+      "example": "2026-10-01",
+      "description": "시작일. 없으면 하한 없음",
+      "constraints": [
+        "format: date",
+        "endDate 이하"
+      ]
+    },
+    {
+      "name": "endDate",
+      "location": "query",
+      "type": "string",
+      "required": false,
+      "nullable": false,
+      "default": null,
+      "example": "2026-10-31",
+      "description": "종료일. 없으면 상한 없음",
+      "constraints": [
+        "format: date",
+        "startDate 이상"
+      ]
+    }
+  ],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "파일 본문",
+        "noContent": false,
+        "body": {
+          "type": "string",
+          "nullable": false,
+          "description": "xlsx 또는 zip 바이너리. 화면은 Blob으로 받는다",
+          "fields": []
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 400,
+        "description": "시작일이 종료일보다 늦음(EXCEL_EXPORT_INVALID_DATE_RANGE) 또는 항목 없음(EXCEL_EXPORT_TYPE_REQUIRED)",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "시작일은 종료일보다 늦을 수 없습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 400,
+              "description": "HTTP 상태 코드",
+              "constraints": [
+                "format: int32"
+              ]
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": [
+                "format: date-time"
+              ]
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "시작일은 종료일보다 늦을 수 없습니다.",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 403,
+        "description": "인증 토큰이 없거나 유효하지 않음, 또는 접근 권한 없음",
+        "noContent": true,
+        "body": null
+      },
+      {
+        "status": 405,
+        "description": "지원하지 않는 메서드",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 405,
+              "description": "HTTP 상태 코드",
+              "constraints": [
+                "format: int32"
+              ]
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": [
+                "format: date-time"
+              ]
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 413,
+        "description": "최대 건수 초과(EXCEL_EXPORT_TOO_LARGE) 또는 첨부파일 총용량 초과(EXCEL_EXPORT_ATTACHMENT_TOO_LARGE)",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "엑셀 내보내기 최대 건수를 초과했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 413,
+              "description": "HTTP 상태 코드",
+              "constraints": [
+                "format: int32"
+              ]
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": [
+                "format: date-time"
+              ]
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "엑셀 내보내기 최대 건수를 초과했습니다.",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "내부 서버 오류",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP 상태 코드",
+              "constraints": [
+                "format: int32"
+              ]
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-01-01T12:00:00",
+              "description": "발생 시각",
+              "constraints": [
+                "format: date-time"
+              ]
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 설명",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "apiIdMatchCount": 0,
+    "swagger": {
+      "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs",
+      "operationId": "export",
+      "method": "GET",
+      "path": "/excel",
+      "checkedAt": "2026-11-02T05:55:04.065Z"
+    }
+  }
+}

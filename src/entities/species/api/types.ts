@@ -1,4 +1,4 @@
-import type { TaxonGroup } from '../model/types'
+import type { SpeciesFloor, TaxonGroup } from '../model/types'
 
 export interface AnimalKindImageResponse {
   fileName: string
@@ -43,6 +43,8 @@ export interface AnimalKindQueryResponse {
   scientificName: string
   animalTaxonomic: TaxonGroup
   detailKind: string | null
+  /** 층 필드 추가 전에 등록한 종은 null (백엔드 V18 마이그레이션이 채우지 않았다) */
+  floor: SpeciesFloor | null
   legalStatuses: AnimalKindLegalStatusResponse[]
   animalCount: number
   kindImage: AnimalKindImageResponse
@@ -53,6 +55,7 @@ export interface AnimalKindCreateRequest {
   animalEngName: string
   animalScientificName: string
   animalTaxonomic: TaxonGroup
+  floor: SpeciesFloor
   fileKey: string
   /** 빈 값이면 생략한다. */
   animalDetailKind?: string
@@ -66,6 +69,7 @@ export interface AnimalKindUpdateRequest {
   animalEngName: string
   animalScientificName: string
   animalTaxonomic: TaxonGroup
+  floor: SpeciesFloor
   fileKey: string
   animalDetailKind: string | null
   animalLegalDesignation: number[]

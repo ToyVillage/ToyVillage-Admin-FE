@@ -1,269 +1,254 @@
-import { expect, test as base, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import {
-  feedAdminDetailPattern,
+  mockAnimalManageApi,
+  storedFilePattern,
+} from './support/animal-manage-api'
+import {
+  feedHistoryPattern,
   mockFeedApi,
-  type FeedApiHandle,
+  mockFeedLog,
+  todayIsoDate,
 } from './support/feed-api'
 
-// `관찰 및 특이사항 보러가기` 링크가 종 id 를 얻으려고 개체 상세를 함께 조회한다.
-// 공용 `mockFeedApi` 에 넣으면 개체관리 스펙의 가짜 서버를 덮어쓰므로 여기서만 건다.
-const animalManagePattern = /^https:\/\/[^/]+\/animal-manage\/(\d+)(?:\?.*)?$/
-
-// 승인된 시나리오(feed-detail.approved.json)를 변환한 것.
+// 승인된 시나리오(feed-detail.approved.json: S1~S11, 2026-10-28 개체별 급여 이력)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 먹이 급여 API 연동 이후 mock 데이터 대신 `support/feed-api` 의 page.route mock 을 쓴다.
-// 실제 서버는 호출하지 않는다.
+// 개체는 `support/animal-manage-api`(동식이 = 1, 딸기 = 10), 4층 이력은 `support/feed-api` 의 page.route mock,
+// 5층 이력도 `support/feed-api` 의 page.route mock(개체 10 — 오늘·어제 2건)이다.
 
-const test = base.extend<{ feedApi: FeedApiHandle }>({
-  feedApi: [
-    async ({ page }, runTest) => {
-      const handle = await mockFeedApi(page)
+const historyLogs = [
+  mockFeedLog({
+    feedLogId: 1,
+    feedDateTime: '2026-09-03T09:30:00',
+  }),
+  mockFeedLog({
+    feedLogId: 2,
+    feedType: '단배추',
+    feedAmount: 1500,
+    remainingAmount: 0,
+    significant: '',
+    name: '김수인',
+    feedDateTime: '2026-09-02T09:20:00',
+  }),
+  mockFeedLog({
+    feedLogId: 3,
+    remainingAmount: 20,
+    significant: '',
+    name: '박도현',
+    feedDateTime: '2026-09-01T09:15:00',
+  }),
+]
 
-      // 개체 사진은 파일 서버에서 받는다. e2e 의 파일 서버 주소는 실제로 닿지 않아
-      // 그대로 두면 `ProfilePhoto` 가 `사진 없음` 으로 넘어간다. 1x1 png 로 고정한다.
-      await page.route(
-        (url) => url.origin === 'https://cdn.e2e.invalid',
-        async (route) => {
-          await route.fulfill({
-            status: 200,
-            headers: { 'access-control-allow-origin': '*' },
-            contentType: 'image/png',
-            body: Buffer.from(
-              'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-              'base64',
-            ),
-          })
-        },
-      )
+const rows = (page: Page) => page.getByTestId('feed-history-row')
 
-      // 개체 id 를 그대로 종 id 로 쓴다. 링크 경로만 확인하면 되므로 값 자체는 중요하지 않다.
-      await page.route(animalManagePattern, async (route) => {
-        const animalManageId = Number(
-          animalManagePattern.exec(route.request().url())?.[1] ?? '0',
-        )
-        const feed = handle.feedLogs.find(
-          (item) => item.animalId === animalManageId,
-        )
+async function headers(page: Page) {
+  const header = page.getByTestId('feed-history-header')
+  await expect(header).toBeVisible()
+  const texts = await header.locator(':scope > *').allTextContents()
+  return texts.filter((text) => text.trim() !== '')
+}
 
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            animalManageId,
-            animalName: feed?.animalName ?? '개체',
-            animalGender: 'UNKNOWN',
-            birthYear: 2020,
-            otherInfo: null,
-            animalImage: { fileName: 'photo.png', fileKey: 'photo-key' },
-            animalKindId: animalManageId * 10,
-          }),
-        })
-      })
+function cells(page: Page, index: number) {
+  return rows(page)
+    .nth(index)
+    .evaluate((row) =>
+      [...row.children].map((cell) => cell.textContent?.trim() ?? ''),
+    )
+}
 
-      await runTest(handle)
-    },
-    { auto: true },
-  ],
+function rowKebab(page: Page, index: number) {
+  return rows(page)
+    .nth(index)
+    .getByRole('button', { name: /급여 기록 메뉴/ })
+}
+
+test('S1: 4층 개체 카드', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: historyLogs })
+  await page.goto('/feeds/animals/1')
+
+  await expect(page.getByRole('heading', { name: '동식이' })).toBeVisible()
+  await expect(page.getByRole('img', { name: '동식이 사진' })).toBeVisible()
+  await expect(page.getByText('수컷')).toBeVisible()
+  await expect(page.getByText('4층', { exact: true })).toBeVisible()
+  await expect(page.getByText('2019년')).toBeVisible()
+  await expect(page.getByText('알락꼬리여우원숭이와 합사 중')).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: '관찰 및 특이사항 보러가기' }),
+  ).toBeVisible()
 })
 
-const historyRows = (page: Page) => page.getByTestId('feed-history-row')
+test('S2: 4층 급여 이력 표', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: historyLogs })
+  await page.goto('/feeds/animals/1')
 
-test('S1: 상세 진입 기본 표시', async ({ page }) => {
+  await expect(rows(page)).toHaveCount(3)
+  await expect(page.getByText('3건')).toBeVisible()
+  expect(await headers(page)).toEqual([
+    '급여일시',
+    '먹이 종류',
+    '급여량',
+    '잔량',
+    '특이사항',
+    '급여자',
+  ])
+  expect(await cells(page, 0)).toEqual([
+    '2026.09.03 09:30',
+    '염소사료',
+    '200 g/ml',
+    '100 g/ml',
+    '평소보다 식욕이 왕성함.',
+    '이승현',
+    '',
+  ])
+  expect((await cells(page, 1)).slice(0, 5)).toEqual([
+    '2026.09.02 09:20',
+    '단배추',
+    '1500 g/ml',
+    '0 g/ml',
+    '-',
+  ])
+  expect((await cells(page, 2))[0]).toBe('2026.09.01 09:15')
+})
+
+test('S3: 5층 개체와 이력', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page)
+  await page.goto('/feeds/fifth-floor/animals/10')
+
+  await expect(page.getByText('5층', { exact: true })).toBeVisible()
+  expect(await headers(page)).toEqual([
+    '급여일',
+    '먹이 종류',
+    '급여량',
+    '급여자',
+  ])
+  await expect(rows(page)).toHaveCount(2)
+  expect((await cells(page, 0))[0]).toBe(todayIsoDate().replaceAll('-', '.'))
+  expect((await cells(page, 0)).slice(1, 4)).toEqual([
+    '펠렛',
+    '15 g/ml',
+    '박도현',
+  ])
+})
+
+test('S4: 관찰 및 특이사항 보러가기', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: historyLogs })
+  await page.goto('/feeds/animals/1')
+
+  await page.getByRole('link', { name: '관찰 및 특이사항 보러가기' }).click()
+  await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
+})
+
+test('S5: 행 케밥 수정', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: historyLogs })
+  await page.goto('/feeds/animals/1')
+
+  await rowKebab(page, 0).click()
+  await page.getByRole('menuitem', { name: '수정' }).click()
+  await expect(page).toHaveURL(/\/feeds\/1\/edit$/)
+
+  await page.goto('/feeds/fifth-floor/animals/10')
+  await rowKebab(page, 0).click()
+  await page.getByRole('menuitem', { name: '수정' }).click()
+  await expect(page).toHaveURL(/\/feeds\/fifth-floor\/10\/edit$/)
+})
+
+test('S6: 행 삭제 성공', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  const api = await mockFeedApi(page, { feedLogs: historyLogs })
+  await page.goto('/feeds/animals/1')
+  await expect(rows(page)).toHaveCount(3)
+
+  await rowKebab(page, 1).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
+  await page
+    .getByRole('alertdialog')
+    .getByRole('button', { name: '확인' })
+    .click()
+
+  await expect(page.getByText('데이터 삭제에 성공했습니다')).toBeVisible()
+  await expect(rows(page)).toHaveCount(2)
+  await expect(page.getByText('2건')).toBeVisible()
+  expect(api.deletes.map(({ feedLogId }) => feedLogId)).toEqual([2])
+})
+
+test('S7: 삭제 실패', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: historyLogs, deleteStatus: 500 })
+  await page.goto('/feeds/animals/1')
+
+  await rowKebab(page, 0).click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
+  await page
+    .getByRole('alertdialog')
+    .getByRole('button', { name: '확인' })
+    .click()
+
+  await expect(page.getByText('데이터 삭제에 실패했습니다')).toBeVisible()
+  await expect(rows(page)).toHaveCount(3)
+})
+
+test('S8: 이력 없음·사진 없음', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: [] })
+  await page.route(storedFilePattern, (route) => route.abort())
+  await page.goto('/feeds/animals/1')
+
+  await expect(page.getByText('급여 이력이 없습니다.')).toBeVisible()
+  await expect(page.getByText('0건')).toBeVisible()
+  await expect(page.getByRole('img', { name: '동식이 사진' })).toBeVisible()
+})
+
+test('S9: 불러오기 실패와 다시 시도', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: historyLogs })
+  let failures = 1
+  await page.route(feedHistoryPattern, async (route) => {
+    if (failures > 0) {
+      failures -= 1
+      await route.fulfill({ status: 500, json: {} })
+      return
+    }
+    await route.fallback()
+  })
+  await page.goto('/feeds/animals/1')
+
+  await expect(page.getByText('정보를 불러오지 못했습니다')).toBeVisible()
+  await page.getByRole('button', { name: '다시 시도' }).click()
+  await expect(rows(page)).toHaveCount(3)
+})
+
+test('S10: 뒤로가기', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: historyLogs })
   await page.goto('/feeds/1')
+  await page.getByRole('button', { name: '급여 이력 보기' }).click()
+  await expect(page).toHaveURL(/\/feeds\/animals\/1$/)
 
-  await expect(page.getByRole('link', { name: '뒤로가기' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: '레오' })).toBeVisible()
-  await expect(page.getByText('급여날짜').first()).toBeVisible()
-  await expect(page.getByText('급여시간').first()).toBeVisible()
-  await expect(page.getByText('급여자').first()).toBeVisible()
-  await expect(page.getByText('먹이 종류', { exact: true })).toBeVisible()
-  await expect(page.getByText('급여량', { exact: true })).toBeVisible()
-  await expect(page.getByText('잔량', { exact: true }).first()).toBeVisible()
-  await expect(page.getByText('특이사항').first()).toBeVisible()
-  await expect(page.getByRole('heading', { name: '급여 이력' })).toBeVisible()
-})
-
-test('S1-2: 급여 기록 카드에 잔량을 kg 로 보인다', async ({ page }) => {
-  await page.goto('/feeds/4')
-
-  const card = page
-    .locator('section')
-    .filter({ has: page.getByRole('heading', { name: '우니' }) })
-  await expect(card.getByText('1.8kg', { exact: true })).toBeVisible()
-  await expect(card.getByText('0.2kg', { exact: true })).toBeVisible()
-})
-
-test('S2: 목록에서 상세로, 뒤로가기로 목록으로', async ({ page }) => {
-  await page.goto('/feeds')
-  await page.getByTestId('feed-row').first().click()
+  await page.getByRole('link', { name: '뒤로가기' }).click()
   await expect(page).toHaveURL(/\/feeds\/1$/)
 
+  await page.goto('/feeds/animals/1')
   await page.getByRole('link', { name: '뒤로가기' }).click()
   await expect(page).toHaveURL(/\/feeds$/)
 })
 
-// 상세에 다녀와도 목록의 조회 조건(조회날짜·분류·페이지)이 그대로여야 한다.
-test('S2-1: 뒤로가기하면 목록의 조회 조건이 유지된다', async ({ page }) => {
-  await page.goto('/feeds')
+test('S11: 행 클릭 이동', async ({ page }) => {
+  await mockAnimalManageApi(page)
+  await mockFeedApi(page, { feedLogs: historyLogs })
+  await page.goto('/feeds/animals/1')
 
-  await page.getByRole('button', { name: '파충류' }).click()
-  await expect(page.getByTestId('feed-row')).toHaveCount(2)
-
-  await page.getByTestId('feed-row').first().click()
-  await expect(page).toHaveURL(/\/feeds\/5$/)
-
+  await rows(page).nth(1).click()
+  await expect(page).toHaveURL(/\/feeds\/2$/)
   await page.getByRole('link', { name: '뒤로가기' }).click()
+  await expect(page).toHaveURL(/\/feeds\/animals\/1$/)
 
-  await expect(page.getByRole('button', { name: '파충류' })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  )
-  await expect(page.getByTestId('feed-row')).toHaveCount(2)
-})
-
-test('S3: 급여 이력 건수와 행 수가 일치한다', async ({ page }) => {
-  await page.goto('/feeds/1')
-
-  await expect(page.getByText('3건')).toBeVisible()
-  await expect(historyRows(page)).toHaveCount(3)
-})
-
-test('S4: 급여 이력 표의 열 구성', async ({ page }) => {
-  await page.goto('/feeds/1')
-
-  await expect(page.getByText('급여날짜').last()).toBeVisible()
-  await expect(page.getByText('급여시간').last()).toBeVisible()
-  await expect(page.getByText('급여자').last()).toBeVisible()
-  await expect(page.getByText('먹이 종류 · 급여량')).toBeVisible()
-  await expect(page.getByText('잔량', { exact: true }).last()).toBeVisible()
-  await expect(page.getByText('특이사항').last()).toBeVisible()
-})
-
-test('S4-1: 급여 이력 행마다 잔량을 보인다', async ({ page }) => {
-  await page.goto('/feeds/1')
-
-  // 최신 급여가 위다: 오늘(0) · 어제(0) · 그제(0.2).
-  await expect(historyRows(page)).toHaveCount(3)
-  await expect(
-    historyRows(page).nth(0).getByText('0kg', { exact: true }),
-  ).toBeVisible()
-  await expect(
-    historyRows(page).nth(2).getByText('0.2kg', { exact: true }),
-  ).toBeVisible()
-})
-
-test('S5: `관찰 및 특이사항 보러가기` 로 개체 상세로 간다', async ({ page }) => {
-  await page.goto('/feeds/1')
-
-  // 급여 기록 1 의 개체는 1, mock 이 주는 종 id 는 10 이다.
-  const link = page.getByRole('link', { name: /관찰 및 특이사항 보러가기/ })
-  await expect(link).toHaveAttribute(
-    'href',
-    '/species/10/individuals/1',
-  )
-
-  await link.click()
-  await expect(page).toHaveURL(/\/species\/10\/individuals\/1$/)
-  await expect(
-    page.getByRole('heading', { name: '관찰 및 특이사항' }),
-  ).toBeVisible()
-})
-
-// 급여 이력은 개체 기준이라 조회 중인 급여 기록 자신이 항상 한 건 포함된다.
-// 개체 `초코`(6)는 그 한 건뿐이다.
-test('S6: 급여 이력이 자기 자신 한 건뿐인 상태', async ({ page }) => {
-  await page.goto('/feeds/6')
-
-  await expect(page.getByText('1건')).toBeVisible()
-  await expect(historyRows(page)).toHaveCount(1)
-})
-
-// 급여날짜는 열 폭이 모자라 말줄임되면 안 된다.
-test('S6-1: 급여 이력의 급여날짜는 잘리지 않는다', async ({ page }) => {
-  await page.setViewportSize({ width: 900, height: 900 })
-  await page.goto('/feeds/1')
-  await expect(historyRows(page)).toHaveCount(3)
-
-  const dateCell = historyRows(page)
-    .first()
-    .getByText(/^\d{4}\.\d{2}\.\d{2}$/)
-  const scrollWidth = await dateCell.evaluate((node) => node.scrollWidth)
-  const clientWidth = await dateCell.evaluate((node) => node.clientWidth)
-  expect(scrollWidth).toBeLessThanOrEqual(clientWidth)
-})
-
-// 개체 1(레오)의 이력은 급여 기록 1·7·8 이다. 최신(1)이 맨 위라 두 번째가 7 이다.
-test('S7: 급여 이력 행을 누르면 그 급여 기록 상세로 간다', async ({ page }) => {
-  await page.goto('/feeds/1')
-
-  await historyRows(page).nth(1).click()
-  await expect(page).toHaveURL(/\/feeds\/7$/)
-  await expect(historyRows(page)).toHaveCount(3)
-
-  // 보고 있던 기록을 다시 눌러도 그 자리에 머문다.
-  await historyRows(page).nth(1).click()
-  await expect(page).toHaveURL(/\/feeds\/7$/)
-})
-
-test('S8: 진입 시 스크롤은 맨 위다', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 600 })
-  await page.goto('/feeds')
-  await page.mouse.wheel(0, 600)
-
-  await page.getByTestId('feed-row').first().click()
-  await expect(page).toHaveURL(/\/feeds\/1$/)
-  await expect
-    .poll(() => page.evaluate(() => window.scrollY))
-    .toBeLessThanOrEqual(1)
-})
-
-// 조회 중에도 실제 카드·섹션을 그리고 값 자리만 막대로 채운다. 불러온 뒤 박스가 튀지 않는다.
-test('S9: 조회 중과 불러온 뒤의 카드·필드 위치가 같다', async ({ page }) => {
-  let release!: () => void
-  const released = new Promise<void>((resolve) => {
-    release = resolve
-  })
-  await page.route(feedAdminDetailPattern, async (route) => {
-    if (route.request().method() === 'GET') await released
-    await route.fallback()
-  })
-
-  const card = page.locator('main section').first()
-  const targets = [
-    card,
-    ...[
-      '급여날짜',
-      '급여시간',
-      '급여자',
-      '먹이 종류',
-      '급여량',
-      '잔량',
-      '특이사항',
-    ].map((label) => card.getByText(label, { exact: true })),
-    page.getByRole('heading', { name: '급여 이력' }),
-    page.getByText('관찰 및 특이사항 보러가기'),
-  ]
-  const boxes = () => Promise.all(targets.map((target) => target.boundingBox()))
-
-  await page.goto('/feeds/1')
-  const loading = page.getByRole('status', { name: '불러오는 중' })
-  await expect(loading).toBeVisible()
-  await expect(page.getByRole('heading', { name: '레오' })).toHaveCount(0)
-  const before = await boxes()
-
-  release()
-  await expect(page.getByRole('heading', { name: '레오' })).toBeVisible()
-  await expect(loading).toHaveCount(0)
-  expect(await boxes()).toEqual(before)
-})
-
-test('S17: 개체 사진을 fileKey 로 만든 URL 로 띄운다', async ({ page }) => {
-  await page.goto('/feeds/1')
-
-  // 응답의 `animalImageUrl.fileKey` 를 파일 서버 주소와 합쳐 개체 상세와 같은
-  // 사진 컴포넌트에 넘긴다.
-  await expect(page.getByRole('img', { name: '레오 사진' })).toHaveAttribute(
-    'src',
-    'https://cdn.e2e.invalid/animal%2Fleo.png',
-  )
+  await page.goto('/feeds/fifth-floor/animals/10')
+  await rows(page).first().click()
+  await expect(page).toHaveURL(/\/feeds\/fifth-floor\/10$/)
+  await page.getByRole('link', { name: '뒤로가기' }).click()
+  await expect(page).toHaveURL(/\/feeds\/fifth-floor\/animals\/10$/)
 })

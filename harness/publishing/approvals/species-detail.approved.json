@@ -1,6 +1,6 @@
 {
   "feature": "species-detail",
-  "approvedAt": "2026-09-17T00:44:47.268Z",
+  "approvedAt": "2026-10-27T15:01:33.849Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -35,8 +35,9 @@
     "S30",
     "S31",
     "S32",
-    "S33"
+    "S33",
+    "S34"
   ],
-  "scenarioHash": "06c6658d16a5e2e4b6b99e0dc5c2470994b99d76cff041cca32a61be4f5f9853",
-  "e2eHash": "edc518e985b3cf2d18d573b40bf8aedc504203ea24560c6c019a8411bca65230"
+  "scenarioHash": "24aa95ffcf427bca50b86df6f6861be3afae22ae2e219f22344e07f0d7fee19f",
+  "e2eHash": "a2eecc9ed39525865d045b9b795750101d0f14a8c0520b994e70327610a316b7"
 }

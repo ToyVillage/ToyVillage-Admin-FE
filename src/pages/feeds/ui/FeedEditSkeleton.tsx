@@ -6,35 +6,46 @@ import {
   SkeletonCard,
   SkeletonStatus,
 } from '@/shared/ui'
+import type { FeedFloor } from '@/entities/feed'
 
 interface FeedEditSkeletonProps {
   backTo: string
+  backState?: unknown
+  floor: FeedFloor
 }
 
-const labels = [
-  '대상 개체',
-  '급여일시',
-  '급여자',
-  '먹이 종류',
-  '급여량',
-  '잔량',
-  '특이사항',
-]
+// 층의 앱 입력 칸과 같은 라벨(4층 7칸, 5층 5칸).
+const labelsByFloor: Record<FeedFloor, string[]> = {
+  '4': [
+    '대상 개체',
+    '급여일시',
+    '급여자',
+    '먹이 종류',
+    '급여량',
+    '잔량',
+    '특이사항',
+  ],
+  '5': ['대상 개체', '급여일', '급여자', '먹이 종류', '급여량'],
+}
 
 // 급여 기록 수정 조회 중. 뒤로가기·제목·라벨·`저장하기` 는 실제 UI 이고
 // 부제와 입력 값 자리만 막대다. 폼과 같은 카드 간격(16)으로 두어 불러온 뒤 화면이 튀지 않는다.
-export function FeedEditSkeleton({ backTo }: FeedEditSkeletonProps) {
+export function FeedEditSkeleton({
+  backTo,
+  backState,
+  floor,
+}: FeedEditSkeletonProps) {
   return (
     <Page>
       <Content>
-        <BackLink to={backTo} />
+        <BackLink to={backTo} state={backState} />
         <SkeletonStatus>
           <Header>
             <Title>급여 기록 수정</Title>
             <Skeleton width={320} height={24} />
           </Header>
           <Cards>
-            {labels.map((label, index) => (
+            {labelsByFloor[floor].map((label, index) => (
               <SkeletonCard key={label}>
                 <FieldSkeleton
                   label={label}
