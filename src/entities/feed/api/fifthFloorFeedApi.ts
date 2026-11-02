@@ -102,7 +102,7 @@ export async function getFifthFloorFeedHistory(
         unit: item.feedUnit,
         note: '',
         feederName: item.staffName,
-        fedDate: item.feedDate,
+        fedDate: toDatePart(item.feedDate),
         fedTime: '',
       }))
       // 서버 정렬 명세가 없어 날짜 내림차순으로 맞춘다. 같은 날은 응답 순서를 지킨다(안정 정렬).
@@ -155,9 +155,14 @@ function toRecord(item: FifthFloorFeedLogListItemResponse): FeedRecord {
     unit: item.feedUnit,
     note: '',
     feederName: item.staffName,
-    fedDate: item.feedDate,
+    fedDate: toDatePart(item.feedDate),
     fedTime: '',
   }
+}
+
+// `feedDate` 는 Swagger 에서 date → date-time 으로 바뀌었다(2026-11-02). 날짜만 와도 앞 10자리가 급여일이다.
+function toDatePart(feedDate: string): string {
+  return feedDate.slice(0, 10)
 }
 
 function assertPositiveId(id: number): void {
@@ -181,7 +186,8 @@ function hasFeedFields(item: Record<string, unknown>): boolean {
     typeof item.feedType === 'string' &&
     typeof item.feedAmount === 'number' &&
     isUnit(item.feedUnit) &&
-    typeof item.feedDate === 'string'
+    typeof item.feedDate === 'string' &&
+    /^\d{4}-\d{2}-\d{2}/.test(item.feedDate)
   )
 }
 
