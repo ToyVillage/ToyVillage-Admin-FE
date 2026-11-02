@@ -45,8 +45,8 @@ const Card = styled.label`
   min-width: 0;
   min-height: 104px;
   align-items: flex-start;
-  gap: 16px;
-  padding: 24px;
+  gap: 12px;
+  padding: 24px 20px;
   border: 1px solid ${({ theme }) => theme.colors.tableHeaderStrong};
   border-radius: 16px;
   background: ${({ theme }) => theme.colors.surface};

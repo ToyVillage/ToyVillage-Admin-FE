@@ -2,19 +2,20 @@ import { expect, test, type Page } from '@playwright/test'
 
 // 승인된 시나리오(excel-download.approved.json: S1~S16)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 다운로드는 아직 mock 경계만 호출한다. 요청 횟수·내용 검증은 API 연동 때 추가한다.
+// 다운로드 요청·파일 검증은 API 연동 테스트(tests/e2e/api/excel-export.spec.ts)가 맡는다.
 
 const NOW = new Date('2026-10-20T12:00:00')
 const url = '/settings/excel-download'
 
 const targetNames = [
-  '개체관리',
-  '먹이 급여 관리',
+  '동물 리스트',
+  '관찰일지',
+  '4층 먹이 급여',
+  '5층 먹이 급여',
   '업무관리',
   '업무보고',
   '업무일지관리',
   '단체예약',
-  '휴관일 관리',
   '공지사항',
   '직원 계정 관리',
 ]
@@ -26,6 +27,8 @@ const targetCard = (page: Page, name: string) =>
   main(page).getByText(name, { exact: true })
 const selectAll = (page: Page) =>
   page.getByRole('checkbox', { name: '전체 선택' })
+const format = (page: Page, name: string) =>
+  page.getByRole('radio', { name, exact: true })
 const preset = (page: Page, name: string) =>
   page.getByRole('radio', { name, exact: true })
 const startButton = (page: Page) =>
@@ -75,6 +78,8 @@ test('S2: 첫 진입 → 항목 0개·최근 1개월·다운로드 비활성', a
   await expect(selectAll(page)).not.toBeChecked()
   await expect(selectAll(page)).toHaveJSProperty('indeterminate', false)
   await expect(preset(page, '최근 1개월')).toBeChecked()
+  await expect(format(page, '엑셀 파일 (.xlsx)')).toBeChecked()
+  await expect(summary(page).getByText('.xlsx', { exact: true })).toBeVisible()
   await expectPeriod(page, '2026. 09. 20', '2026. 10. 20')
   await expect(summary(page).getByText('0개', { exact: true })).toBeVisible()
   await expect(
@@ -87,17 +92,17 @@ test('S2: 첫 진입 → 항목 0개·최근 1개월·다운로드 비활성', a
 test('S3: 항목 카드 클릭 → 선택·해제와 개수 갱신', async ({ page }) => {
   await page.goto(url)
 
-  await targetCard(page, '개체관리').click()
+  await targetCard(page, '관찰일지').click()
 
-  await expect(target(page, '개체관리')).toBeChecked()
+  await expect(target(page, '관찰일지')).toBeChecked()
   await expect(summary(page).getByText('1개', { exact: true })).toBeVisible()
   await expect(selectAll(page)).toHaveJSProperty('indeterminate', true)
   await expect(downloadButton(page)).toBeEnabled()
   await expect(reason(page)).toHaveText('')
 
-  await targetCard(page, '개체관리').click()
+  await targetCard(page, '관찰일지').click()
 
-  await expect(target(page, '개체관리')).not.toBeChecked()
+  await expect(target(page, '관찰일지')).not.toBeChecked()
   await expect(summary(page).getByText('0개', { exact: true })).toBeVisible()
   await expect(selectAll(page)).not.toBeChecked()
   await expect(selectAll(page)).toHaveJSProperty('indeterminate', false)
@@ -105,7 +110,7 @@ test('S3: 항목 카드 클릭 → 선택·해제와 개수 갱신', async ({ pa
   await expect(reason(page)).toHaveText('항목을 1개 이상 선택해주세요')
 })
 
-test('S4: 전체 선택 → 9개 선택, 다시 클릭 → 모두 해제', async ({ page }) => {
+test('S4: 전체 선택 → 10개 선택, 다시 클릭 → 모두 해제', async ({ page }) => {
   await page.goto(url)
 
   await selectAll(page).click()
@@ -114,7 +119,7 @@ test('S4: 전체 선택 → 9개 선택, 다시 클릭 → 모두 해제', async
     await expect(target(page, name)).toBeChecked()
   }
   await expect(selectAll(page)).toBeChecked()
-  await expect(summary(page).getByText('9개', { exact: true })).toBeVisible()
+  await expect(summary(page).getByText('10개', { exact: true })).toBeVisible()
 
   await selectAll(page).click()
 
@@ -126,8 +131,8 @@ test('S4: 전체 선택 → 9개 선택, 다시 클릭 → 모두 해제', async
 
 test('S5: 일부 선택에서 전체 선택 → 모두 해제', async ({ page }) => {
   await page.goto(url)
-  await targetCard(page, '개체관리').click()
-  await targetCard(page, '먹이 급여 관리').click()
+  await targetCard(page, '관찰일지').click()
+  await targetCard(page, '4층 먹이 급여').click()
   await targetCard(page, '업무일지관리').click()
   await expect(selectAll(page)).toHaveJSProperty('indeterminate', true)
 
@@ -143,7 +148,7 @@ test('S5: 일부 선택에서 전체 선택 → 모두 해제', async ({ page })
   await expect(reason(page)).toHaveText('항목을 1개 이상 선택해주세요')
 })
 
-test('S6: 9개를 하나씩 모두 선택 → 전체 선택 상태', async ({ page }) => {
+test('S6: 10개를 하나씩 모두 선택 → 전체 선택 상태', async ({ page }) => {
   await page.goto(url)
 
   for (const name of targetNames) {
@@ -189,7 +194,7 @@ test('S8: 전체 기간 → 날짜 비활성·요약 전체 기간, 항목 선�
     summary(page).getByText('전체 기간', { exact: true }),
   ).toBeVisible()
 
-  await targetCard(page, '개체관리').click()
+  await targetCard(page, '관찰일지').click()
 
   await expect(downloadButton(page)).toBeEnabled()
 })
@@ -198,7 +203,7 @@ test('S9: 직접 선택 → 종료일 비움·시작일 달력 열림·다운로
   page,
 }) => {
   await page.goto(url)
-  await targetCard(page, '개체관리').click()
+  await targetCard(page, '관찰일지').click()
 
   await preset(page, '직접 선택').click()
 
@@ -215,7 +220,7 @@ test('S10: 달력으로 종료일 선택 → 다운로드 활성·요약 갱신'
   page,
 }) => {
   await page.goto(url)
-  await targetCard(page, '개체관리').click()
+  await targetCard(page, '관찰일지').click()
   await preset(page, '직접 선택').click()
   await page.keyboard.press('Escape')
   await expect(calendar(page, '시작일 선택')).toBeHidden()
@@ -263,7 +268,7 @@ test('S12: 종료일 달력에서 시작일보다 앞선 날짜는 고를 수 �
 
 test('S13: 시작일을 종료일 뒤로 바꾸면 종료일이 빈다', async ({ page }) => {
   await page.goto(url)
-  await targetCard(page, '개체관리').click()
+  await targetCard(page, '관찰일지').click()
 
   await startButton(page).click()
   const startCalendar = calendar(page, '시작일 선택')
@@ -301,13 +306,14 @@ test('S15: 다운로드 버튼 연속 클릭 → 오류 없이 화면 상태 유
 }) => {
   const errors: Error[] = []
   page.on('pageerror', (error) => errors.push(error))
+  await page.route(/\/excel(\?|$)/, (route) => route.abort())
   await page.goto(url)
-  await targetCard(page, '개체관리').click()
+  await targetCard(page, '관찰일지').click()
 
   await downloadButton(page).click({ clickCount: 2 })
 
   await expect(page).toHaveURL(/\/settings\/excel-download$/)
-  await expect(target(page, '개체관리')).toBeChecked()
+  await expect(target(page, '관찰일지')).toBeChecked()
   await expectPeriod(page, '2026. 09. 20', '2026. 10. 20')
   await expect(downloadButton(page)).toBeEnabled()
   expect(errors).toEqual([])
@@ -320,18 +326,24 @@ test('S16: 키보드만으로 항목·기간·날짜 선택 후 다운로드 버
 
   await selectAll(page).focus()
   await page.keyboard.press('Space')
-  await expect(summary(page).getByText('9개', { exact: true })).toBeVisible()
+  await expect(summary(page).getByText('10개', { exact: true })).toBeVisible()
 
   await page.keyboard.press('Tab')
-  await expect(target(page, '개체관리')).toBeFocused()
+  await expect(target(page, '동물 리스트')).toBeFocused()
   await page.keyboard.press('Space')
-  await expect(target(page, '개체관리')).not.toBeChecked()
-  await expect(summary(page).getByText('8개', { exact: true })).toBeVisible()
+  await expect(target(page, '동물 리스트')).not.toBeChecked()
+  await expect(summary(page).getByText('9개', { exact: true })).toBeVisible()
 
   for (let index = 1; index < targetNames.length; index += 1) {
     await page.keyboard.press('Tab')
   }
   await expect(target(page, '직원 계정 관리')).toBeFocused()
+
+  await page.keyboard.press('Tab')
+  await expect(format(page, '엑셀 파일 (.xlsx)')).toBeFocused()
+  await page.keyboard.press('ArrowRight')
+  await expect(format(page, '압축 파일 (.zip)')).toBeChecked()
+  await expect(summary(page).getByText('.zip', { exact: true })).toBeVisible()
 
   await page.keyboard.press('Tab')
   await expect(preset(page, '최근 1개월')).toBeFocused()
@@ -362,4 +374,17 @@ test('S16: 키보드만으로 항목·기간·날짜 선택 후 다운로드 버
   await page.keyboard.press('Tab')
   await expect(downloadButton(page)).toBeFocused()
   await expect(downloadButton(page)).toBeEnabled()
+})
+
+test('S17: 압축 파일 카드 클릭 → 형식과 요약 변경, 버튼 이름 유지', async ({
+  page,
+}) => {
+  await page.goto(url)
+
+  await main(page).getByText('압축 파일 (.zip)', { exact: true }).click()
+
+  await expect(format(page, '압축 파일 (.zip)')).toBeChecked()
+  await expect(format(page, '엑셀 파일 (.xlsx)')).not.toBeChecked()
+  await expect(summary(page).getByText('.zip', { exact: true })).toBeVisible()
+  await expect(downloadButton(page)).toBeVisible()
 })

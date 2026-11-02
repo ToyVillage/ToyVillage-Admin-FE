@@ -3,6 +3,8 @@ import styled from '@emotion/styled'
 
 interface ExportSummaryProps {
   selectedCount: number
+  /** 고른 파일 형식의 확장자. 예: `.xlsx` */
+  fileExtension: string
   periodLabel: string
   /** 다운로드할 수 없는 이유. 없으면 null. */
   disabledReason: string | null
@@ -13,6 +15,7 @@ interface ExportSummaryProps {
 // Figma `다운로드 요약`(2995:25265) — 선택 개수·기간과 엑셀 다운로드 버튼.
 export function ExportSummary({
   selectedCount,
+  fileExtension,
   periodLabel,
   disabledReason,
   pending,
@@ -28,9 +31,13 @@ export function ExportSummary({
           <Count>{selectedCount}개</Count>
         </InfoItem>
         <InfoItem>
+          <InfoLabel>파일 형식</InfoLabel>
+          <Count>{fileExtension}</Count>
+        </InfoItem>
+        <PeriodItem>
           <InfoLabel>기간</InfoLabel>
           <Period>{periodLabel}</Period>
-        </InfoItem>
+        </PeriodItem>
       </Info>
       <Action>
         <DownloadButton
@@ -64,17 +71,23 @@ const Card = styled.section`
   }
 `
 
+// Figma `stats`(3706:25850) — 선택한 항목과 파일 형식은 같은 너비로 나란히, 기간은 그 아래 한 줄.
 const Info = styled.dl`
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   margin: 0;
 `
 
 const InfoItem = styled.div`
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 6px;
+`
+
+const PeriodItem = styled(InfoItem)`
+  grid-column: 1 / -1;
 `
 
 const InfoLabel = styled.dt`

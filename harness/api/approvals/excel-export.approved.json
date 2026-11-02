@@ -1,0 +1,18 @@
+{
+  "feature": "excel-export",
+  "apiId": "EXCEL_EXPORT",
+  "approvedAt": "2026-11-02T08:12:38.527Z",
+  "approvedBy": "yunho09",
+  "approvedCommit": "bf9952687951dadc76691cfbd82ecbe304dc35ab",
+  "taskSpecHash": "fbf93a7f7866ccfcef2656dc315291dee4f60b2cb2d1857bb3c9b12c6ab91ac9",
+  "contractHash": "fba21d3c31a5ee759c2be6fcb476569f26fea277577a70d43695089fd1eabdf1",
+  "contractMarkdownHash": "052a94cc0be83a6598617d43395c85c6eba4a6ceec5d2323d8d4e481da7e8341",
+  "planHash": "abcc1878284764708e5ae9d39ee68dad6cbbfcf7822e899f877c3a8ed52b9741",
+  "scenarioHash": "49f88524d0bda5c41e75e0683c481594d034606cd329307c0bae004554f9be52",
+  "testHash": "6dce36532edf68b6c6481af39c749aa246a82cc593fef0a8acb3960c7de56fdb",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-11-02T08:12:40.464Z",
+  "testApprovedBy": "yunho09",
+  "testApprovedCommit": "bf9952687951dadc76691cfbd82ecbe304dc35ab"
+}
