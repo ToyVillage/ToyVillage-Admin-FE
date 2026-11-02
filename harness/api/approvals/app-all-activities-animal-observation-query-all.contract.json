@@ -1,0 +1,302 @@
+{
+  "apiId": "APP_ALL_ACTIVITIES_ANIMAL_OBSERVATION_QUERY_ALL",
+  "name": "전체 활동 날짜별 관찰일지 조회",
+  "description": "앱 관리자가 전체 활동에서 그날 관찰일지 전체를 조회",
+  "method": "GET",
+  "path": "/all-activities/animal-observation",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "앱 access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [],
+  "queryParameters": [
+    {
+      "name": "date",
+      "location": "query",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "2026-10-20",
+      "description": "조회 날짜(YYYY-MM-DD)",
+      "constraints": [
+        "format: date"
+      ]
+    }
+  ],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "조회 성공",
+        "noContent": false,
+        "body": {
+          "type": "array<object>",
+          "nullable": false,
+          "description": "AnimalObservationAllResponse[]",
+          "fields": [
+            {
+              "name": "animalObservationId",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "관찰일지 id(행 key)",
+              "constraints": [
+                "format: int64"
+              ]
+            },
+            {
+              "name": "animalManageId",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "개체 id. 화면에 쓰지 않는다",
+              "constraints": [
+                "format: int64"
+              ]
+            },
+            {
+              "name": "animalKind",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "이구아나",
+              "description": "일반명(종 이름)",
+              "constraints": []
+            },
+            {
+              "name": "animalName",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "초록",
+              "description": "개체명",
+              "constraints": []
+            },
+            {
+              "name": "animalDeleted",
+              "location": "body",
+              "type": "boolean",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": false,
+              "description": "개체 삭제 여부. 화면은 구분 없이 표시한다",
+              "constraints": []
+            },
+            {
+              "name": "createdAt",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-10-20T09:10:00",
+              "description": "작성 일시. 작성시간 열은 `HH:mm`",
+              "constraints": [
+                "format: date-time"
+              ]
+            },
+            {
+              "name": "title",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "탈피 진행 상황",
+              "description": "관찰 제목",
+              "constraints": []
+            },
+            {
+              "name": "authorName",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "이승현",
+              "description": "관찰자(작성자) 이름",
+              "constraints": []
+            },
+            {
+              "name": "fileCount",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "첨부 파일 수",
+              "constraints": [
+                "format: int64"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 403,
+        "description": "인증 토큰이 없거나 유효하지 않음, 또는 접근 권한 없음 (Swagger에 body 스키마 없음)",
+        "noContent": true,
+        "body": null
+      },
+      {
+        "status": 405,
+        "description": "Method Not Allowed",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 405,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-10-28T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "Internal Server Error",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-10-28T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "apiIdMatchCount": 0,
+    "checkedAt": "2026-10-29T00:00:00.000Z",
+    "swagger": {
+      "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs",
+      "operationId": "getAnimalObservations_1",
+      "method": "GET",
+      "path": "/all-activities/animal-observation",
+      "checkedAt": "2026-10-29T00:00:00.000Z"
+    },
+    "note": "Notion에 없음(검색 `전체 활동`·`ALL_ACTIVITIES` 0건). 제안 API ID. 개발자가 준 staging Swagger `all-activities-controller`만 기준(2026-10-29 개발자 지시)"
+  }
+}

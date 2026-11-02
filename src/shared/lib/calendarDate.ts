@@ -39,6 +39,26 @@ export function formatIsoDate(isoDate: string): string {
   return isoDate.replaceAll('-', '.')
 }
 
+/** YYYY-MM-DD 에 날수를 더한다. 달·해 경계를 넘으면 Date 가 맞춰 준다. */
+export function shiftIsoDate(isoDate: string, days: number): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  const shifted = new Date(year, month - 1, day + days)
+  return toIsoDate({
+    year: shifted.getFullYear(),
+    month: shifted.getMonth() + 1,
+    day: shifted.getDate(),
+  })
+}
+
+const weekdayLabels = ['일', '월', '화', '수', '목', '금', '토'] as const
+
+/** YYYY-MM-DD → `2026. 10. 20 (화)` — 날짜 이동 칸 표기 */
+export function formatIsoDateWithWeekday(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  const weekday = weekdayLabels[new Date(year, month - 1, day).getDay()]
+  return `${year}. ${pad(month)}. ${pad(day)} (${weekday})`
+}
+
 function pad(value: number): string {
   return String(value).padStart(2, '0')
 }
