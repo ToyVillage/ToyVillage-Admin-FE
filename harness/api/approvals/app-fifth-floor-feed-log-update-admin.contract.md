@@ -43,7 +43,7 @@
 
 | Name | Type | Required | Nullable | Example | Description |
 | --- | --- | --- | --- | --- | --- |
-| feedDate | string(date) | true | false | 2026-10-29 | 상세 응답 원본 그대로 |
+| feedDate | string(date-time) | true | false | 2026-10-29T09:00:00 | 상세 응답 원본 그대로 |
 | feedType | string(minLength 1) | true | false | 냉동새우 | 입력값 trim |
 | feedAmount | number(float) | true | false | 20 | 입력 숫자 |
 | feedUnit | enum `GML`\|`KGL` | true | false | GML | 상세 응답 원본 그대로 |
@@ -51,7 +51,7 @@
 ## Request Example
 
 ```json
-{ "feedDate": "2026-10-29", "feedType": "냉동새우", "feedAmount": 20, "feedUnit": "GML" }
+{ "feedDate": "2026-10-29T09:00:00", "feedType": "냉동새우", "feedAmount": 20, "feedUnit": "GML" }
 ```
 
 ## Success Responses
@@ -72,6 +72,8 @@
 - 화면 검증(먹이 종류·급여량 필수, 급여량 0보다 큰 숫자)을 통과해야 요청한다.
 
 ## Notes
+
+- 2026-11-02: Swagger의 `feedDate`가 `date` → `date-time`으로 바뀌어 계약을 맞췄다(나머지 차이 없음).
 
 - Swagger와 차이 없음.
 

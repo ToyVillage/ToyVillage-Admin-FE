@@ -30,7 +30,7 @@ real_server:
 # 기대 성공 동작
 
 - 상세·수정 화면 진입 시 GET `/feed-log/fifth-floor/admin/{feedLogId}`를 한 번 보낸다. 4층 API는 부르지 않는다.
-- 칸 매핑: 대상 개체=`animalKind · animalName`, 급여일=`feedDate`(`YYYY.MM.DD`), 급여자=`staffName`, 먹이 종류=`feedType`, 급여량=`feedAmount`+단위(`GML`→`g/ml`, `KGL`→`kg/l`).
+- 칸 매핑: 대상 개체=`animalKind · animalName`, 급여일=`feedDate`의 날짜 부분(`YYYY.MM.DD`) (2026-11-02 Swagger에서 `date` → `date-time`으로 바뀜. 화면은 앞 10자리 날짜만 쓰고, 날짜만 와도 받는다), 급여자=`staffName`, 먹이 종류=`feedType`, 급여량=`feedAmount`+단위(`GML`→`g/ml`, `KGL`→`kg/l`).
 - `급여 이력 보기`는 `animalId`로 `/feeds/fifth-floor/animals/{animalId}`에 간다.
 - `feedDate`·`feedUnit`은 수정 요청에 원본 그대로 쓴다. `animalImageUrl`은 쓰지 않는다. `animalDeleted`는 구분 없이 표시한다.
 
