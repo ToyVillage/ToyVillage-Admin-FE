@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMutation } from '@tanstack/react-query'
 import {
@@ -38,6 +38,8 @@ export function ExcelExportForm() {
     variant: ToastVariant
     message: string
   } | null>(null)
+  // isPending 은 다음 렌더에야 바뀌어 빠른 연속 클릭을 막지 못한다. ref 로 바로 막는다.
+  const exportingRef = useRef(false)
   const exportMutation = useMutation({
     mutationFn: async (request: ExcelExportRequest) => {
       const file = await exportExcel(toExcelExportQuery(request))
@@ -52,6 +54,9 @@ export function ExcelExportForm() {
         variant: 'error',
         message: await readExcelExportErrorMessage(error),
       })
+    },
+    onSettled: () => {
+      exportingRef.current = false
     },
   })
 
@@ -93,7 +98,10 @@ export function ExcelExportForm() {
   }
 
   function download() {
-    if (disabledReason || exportMutation.isPending) return
+    if (disabledReason || exportingRef.current || exportMutation.isPending) {
+      return
+    }
+    exportingRef.current = true
     const allPeriod = period.preset === 'all'
     setToast(null)
     exportMutation.mutate({
