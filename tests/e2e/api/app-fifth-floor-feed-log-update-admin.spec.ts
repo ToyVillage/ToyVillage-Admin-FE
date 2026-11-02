@@ -40,7 +40,7 @@ test('S1: 수정 저장', async ({ page }) => {
     feedLogId: 10,
     authorization: 'Bearer test-access-token',
     body: {
-      feedDate: todayIsoDate(),
+      feedDate: `${todayIsoDate()}T09:00:00`,
       feedType: '냉동새우',
       feedAmount: 20,
       feedUnit: 'GML',
@@ -61,7 +61,7 @@ test('S1: 수정 저장', async ({ page }) => {
   expect(api.updates).toHaveLength(0)
 })
 
-test('S2: 원본 단위·날짜를 그대로 보내고 먹이 종류 공백을 지운다', async ({
+test('S2: 원본 단위·날짜(date-time)를 그대로 보내고 먹이 종류 공백을 지운다', async ({
   page,
 }) => {
   const api = await openEdit(page, {
@@ -69,7 +69,7 @@ test('S2: 원본 단위·날짜를 그대로 보내고 먹이 종류 공백을 �
       mockFifthFloorFeedLog({
         feedAmount: 1.2,
         feedUnit: 'KGL',
-        feedDate: '2026-10-01',
+        feedDate: '2026-10-01T15:30:00',
       }),
     ],
   })
@@ -79,7 +79,7 @@ test('S2: 원본 단위·날짜를 그대로 보내고 먹이 종류 공백을 �
 
   await expect.poll(() => api.fifthFloor.updates.length).toBe(1)
   expect(api.fifthFloor.updates[0].body).toEqual({
-    feedDate: '2026-10-01',
+    feedDate: '2026-10-01T15:30:00',
     feedType: '펠렛',
     feedAmount: 1.2,
     feedUnit: 'KGL',

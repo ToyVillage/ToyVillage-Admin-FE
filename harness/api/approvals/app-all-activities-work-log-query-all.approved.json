@@ -1,0 +1,18 @@
+{
+  "feature": "app-all-activities-work-log-query-all",
+  "apiId": "APP_ALL_ACTIVITIES_WORK_LOG_QUERY_ALL",
+  "approvedAt": "2026-11-02T08:11:59.519Z",
+  "approvedBy": "kimjihwan8",
+  "approvedCommit": "bf9952687951dadc76691cfbd82ecbe304dc35ab",
+  "taskSpecHash": "c646d08543f24c121496464f4c4236bd482b7e63f4a39cd43fb6433447560b48",
+  "contractHash": "babcc666edbb9c480e32b45df7e13b2ad5fd2f69a2e1887b6ac89e7264de5359",
+  "contractMarkdownHash": "6026a196f099d031456b13daa513083305a4d887d7f4d50a193f23df4e84e369",
+  "planHash": "0dffb98d5427322f5aa975125a1aa686d1e766dc0b9e44fafb8c6ea2cff410a8",
+  "scenarioHash": "5f450eba42ead9aee6d5d8731c13959e5c409588fae93012b493a735d2d0e3cb",
+  "testHash": "9af4aa70d014af77d1d72042923cb75e33db8c914b41222cbe80b87d3029a3df",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-11-02T08:17:26.189Z",
+  "testApprovedBy": "kimjihwan8",
+  "testApprovedCommit": "bf9952687951dadc76691cfbd82ecbe304dc35ab"
+}

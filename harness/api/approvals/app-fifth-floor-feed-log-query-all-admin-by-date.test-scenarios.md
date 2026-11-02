@@ -1,6 +1,6 @@
 # API Test Scenarios — app-fifth-floor-feed-log-query-all-admin-by-date
 
-공통 사전 조건: `support/feed-api`의 `mockFeedApi`가 5층 가짜 서버를 띄운다(오늘 12건, 1행 `아로와나 · 아로 냉동새우 30 GML 박도현`).
+공통 사전 조건: 5층 `feedDate`는 `YYYY-MM-DDT09:00:00`(date-time)으로 응답한다. `support/feed-api`의 `mockFeedApi`가 5층 가짜 서버를 띄운다(오늘 12건, 1행 `아로와나 · 아로 냉동새우 30 GML 박도현`).
 2026-10-29 범위 변경: 전체 활동 시나리오(S1–S6)는 `app-all-activities-feed-log-query-fifth-floor`로 옮겼다. 번호는 그대로 둔다.
 
 ## Mock S7 — `/feeds` 요청 형식

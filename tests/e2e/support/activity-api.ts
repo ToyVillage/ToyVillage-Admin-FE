@@ -1,8 +1,9 @@
 import type { Page, Route } from '@playwright/test'
 
 // 전체 활동 API mock(`all-activities-controller`).
-// 대상: GET /all-activities/feed-log/fourth-floor · /all-activities/feed-log/fifth-floor · /all-activities/animal-observation — date.
-// 실제 서버는 호출하지 않는다. 기본 데이터는 퍼블리싱 mock 이던 2026-10-20 기록(4층 22건 · 5층 24건 · 관찰일지 5건)이고
+// 대상: GET /all-activities/feed-log/fourth-floor · /all-activities/feed-log/fifth-floor · /all-activities/animal-observation
+// · /all-activities/work-log — date.
+// 실제 서버는 호출하지 않는다. 기본 데이터는 퍼블리싱 mock 이던 2026-10-20 기록(4층 22건 · 5층 24건 · 관찰일지 5건 · 업무일지 5건)이고
 // 다른 날짜는 빈 배열이다.
 
 export const floorFourFeedPattern =
@@ -11,6 +12,8 @@ export const floorFiveFeedPattern =
   /^https:\/\/[^/]+\/all-activities\/feed-log\/fifth-floor(?:\?.*)?$/
 export const observationPattern =
   /^https:\/\/[^/]+\/all-activities\/animal-observation(?:\?.*)?$/
+export const workLogPattern =
+  /^https:\/\/[^/]+\/all-activities\/work-log(?:\?.*)?$/
 
 export const activityMockDate = '2026-10-20'
 
@@ -32,6 +35,7 @@ export interface ActivityApiOptions {
   floorFour?: ListMock
   floorFive?: ListMock
   observation?: ListMock
+  workLog?: ListMock
 }
 
 export async function mockActivityApi(
@@ -42,6 +46,7 @@ export async function mockActivityApi(
     floorFour: [] as RecordedRequest[],
     floorFive: [] as RecordedRequest[],
     observation: [] as RecordedRequest[],
+    workLog: [] as RecordedRequest[],
   }
   await page.route(floorFourFeedPattern, (route) =>
     respond(route, requests.floorFour, {
@@ -59,6 +64,12 @@ export async function mockActivityApi(
     respond(route, requests.observation, {
       itemsByDate: { [activityMockDate]: defaultObservations },
       ...options.observation,
+    }),
+  )
+  await page.route(workLogPattern, (route) =>
+    respond(route, requests.workLog, {
+      itemsByDate: { [activityMockDate]: defaultWorkLogs },
+      ...options.workLog,
     }),
   )
   return requests
@@ -263,6 +274,40 @@ export const defaultObservations = observationRows.map(
       animalKind,
       animalName,
       createdAt: `${activityMockDate}T${time}:00`,
+      title,
+      authorName,
+      fileCount,
+    }),
+)
+
+/** 업무일지 응답 한 건. 넘긴 값만 덮어쓴다. */
+export function workLog(overrides: Record<string, unknown> = {}) {
+  return {
+    workLogId: 1,
+    writeAt: `${activityMockDate}T08:30:00`,
+    templateTitle: '개장 전 점검일지',
+    title: '정문·매표소 개장 전 점검',
+    authorName: '이승현',
+    fileCount: 1,
+    ...overrides,
+  }
+}
+
+// [작성시간, 양식, 제목, 작성자, 첨부 수]
+const workLogRows: [string, string, string, string, number][] = [
+  ['08:30', '개장 전 점검일지', '정문·매표소 개장 전 점검', '이승현', 1],
+  ['10:00', '오전 순찰일지', '오전 순찰 특이사항 없음', '박도현', 0],
+  ['12:40', '사육장 청소일지', '파충류관 사육장 청소', '이서준', 2],
+  ['15:00', '오후 순찰일지', '수달사 펜스 점검', '김유영', 0],
+  ['18:10', '마감일지', '마감 점검 완료', '김유영', 1],
+]
+
+export const defaultWorkLogs = workLogRows.map(
+  ([time, templateTitle, title, authorName, fileCount], index) =>
+    workLog({
+      workLogId: index + 1,
+      writeAt: `${activityMockDate}T${time}:00`,
+      templateTitle,
       title,
       authorName,
       fileCount,

@@ -30,7 +30,7 @@ real_server:
 # 기대 성공 동작
 
 - `저장하기` → 검증 통과 시 PUT 한 번. 본문 `{ feedDate, feedType, feedAmount, feedUnit }`(Swagger 필수 4개).
-  - `feedDate`: 상세 응답 `feedDate` 원본 그대로(화면에서 바꿀 수 없음)
+  - `feedDate`: 상세 응답 `feedDate` 원본 그대로(화면에서 바꿀 수 없음). 2026-11-02 Swagger에서 `date-time`으로 바뀌었다
   - `feedType`: 입력값 trim, `feedAmount`: 입력 숫자
   - `feedUnit`: 상세 응답 `feedUnit` 원본 그대로(화면에서 바꿀 수 없음)
 - 200 `{ message }` → 목록·이력·그 기록 상세를 무효화하고, 들어온 화면(목록·기록 상세·이력)으로 돌아가 `데이터 수정에 성공했습니다` 토스트(퍼블리싱 동작 그대로).

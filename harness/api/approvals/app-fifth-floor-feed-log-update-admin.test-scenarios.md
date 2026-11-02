@@ -1,6 +1,6 @@
 # API Test Scenarios — app-fifth-floor-feed-log-update-admin
 
-공통 사전 조건: `support/feed-api`의 `mockFeedApi`가 5층 가짜 서버를 함께 띄운다. 5층 기본 데이터는 퍼블리싱 mock과 같다 —
+공통 사전 조건: 5층 `feedDate`는 `YYYY-MM-DDT09:00:00`(date-time)으로 응답한다. `support/feed-api`의 `mockFeedApi`가 5층 가짜 서버를 함께 띄운다. 5층 기본 데이터는 퍼블리싱 mock과 같다 —
 오늘 12건(급여일지 id 1–12, 10번 = 오스카 · 오돌이, 개체 id 10, 펠렛 15 GML, 박도현) + 오돌이 어제 1건(id 101, 이서준).
 나머지 개체 id는 500번대. 개체 조회는 `support/animal-manage-api`. 오류 body는 Contract 형식 `{ message, status, timestamp, description }`.
 
@@ -9,14 +9,14 @@
 ## Mock S1 — 수정 저장
 
 - 사용자 동작: 먹이 종류 `냉동새우`, 급여량 `20` → 저장
-- Mock request: PUT `/feed-log/fifth-floor/admin/10`, Bearer, body `{ "feedDate": "<오늘>", "feedType": "냉동새우", "feedAmount": 20, "feedUnit": "GML" }`
+- Mock request: PUT `/feed-log/fifth-floor/admin/10`, Bearer, body `{ "feedDate": "<오늘>T09:00:00", "feedType": "냉동새우", "feedAmount": 20, "feedUnit": "GML" }`
 - 기대 결과: PUT 1회, `/feeds/fifth-floor/10`으로 이동, `데이터 수정에 성공했습니다` 토스트, 상세가 새 값(`냉동새우`, `20 g/ml`)을 보여준다(상세 GET 재요청).
 
 ## Mock S2 — 원본 단위·날짜 유지와 공백 제거
 
-- 사전 조건: 상세 응답 `feedUnit: "KGL"`, `feedAmount: 1.2`, `feedDate: "2026-10-01"`
+- 사전 조건: 상세 응답 `feedUnit: "KGL"`, `feedAmount: 1.2`, `feedDate: "2026-10-01T15:30:00"`
 - 사용자 동작: 먹이 종류 `  펠렛 ` → 저장
-- 기대 결과: body `{ feedDate: "2026-10-01", feedType: "펠렛", feedAmount: 1.2, feedUnit: "KGL" }`
+- 기대 결과: body `{ feedDate: "2026-10-01T15:30:00", feedType: "펠렛", feedAmount: 1.2, feedUnit: "KGL" }`
 
 ## Mock S3 — 검증 실패
 

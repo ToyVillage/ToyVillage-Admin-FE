@@ -44,10 +44,11 @@ const emptyHint = {
   'work-log': '이 날짜에 올라온 업무일지가 없어요',
 } as const
 
-// 조회 실패 문구. 디자인에 없어 빈 상태 자리에 같은 꼴로 보여준다(업무일지는 아직 mock 이라 없다).
+// 조회 실패 문구. 디자인에 없어 빈 상태 자리에 같은 꼴로 보여준다.
 const failedHint = {
   feed: '먹이 급여 기록을 불러오지 못했어요. 다시 시도해 주세요.',
   observation: '관찰일지를 불러오지 못했어요. 다시 시도해 주세요.',
+  'work-log': '업무일지를 불러오지 못했어요. 다시 시도해 주세요.',
 } as const
 
 // Figma `전체 활동 · 목록`(3034:25175). 탭·날짜·층은 URL 이 소유해 새로고침·뒤로가기에서 그대로 남는다.
@@ -80,6 +81,7 @@ export function ActivityPage() {
     queryKey: activityQueryKeys.workLog(date),
     queryFn: () => getWorkLogActivities(date),
     enabled: tab === 'work-log',
+    staleTime: 0,
   })
 
   function updateParams(next: Partial<ActivityParams>) {
@@ -169,6 +171,8 @@ export function ActivityPage() {
             <ActivityTable
               columns={workLogColumns}
               rows={workLogQuery.data && toWorkLogRows(workLogQuery.data)}
+              failed={workLogQuery.isError}
+              failedTitle={failedHint['work-log']}
               emptyTitle={emptyHint['work-log']}
             />
           </LogArea>

@@ -60,7 +60,7 @@
 | feedType | string | true | false | 펠렛 | 먹이 종류 |
 | feedAmount | number(float) | true | false | 15 | 급여량 |
 | feedUnit | enum `GML`\|`KGL` | true | false | GML | `GML`→`g/ml`, `KGL`→`kg/l`. 수정 요청에 원본 |
-| feedDate | string(date) | true | false | 2026-10-29 | 급여일 `YYYY.MM.DD`. 수정 요청에 원본 |
+| feedDate | string(date-time) | true | false | 2026-10-29T09:00:00 | 급여일 `YYYY.MM.DD`(앞 10자리). 수정 요청에 원본 그대로 |
 
 ## Error Responses
 
@@ -76,6 +76,8 @@
 - `feedLogId`는 양의 정수. 아니면 요청하지 않고 `/feeds`로 돌아간다(퍼블리싱 동작).
 
 ## Notes
+
+- 2026-11-02: Swagger의 `feedDate`가 `date` → `date-time`으로 바뀌어 계약을 맞췄다(나머지 차이 없음).
 
 - Swagger와 차이 없음. 필드 필수 여부는 Swagger에 없어 5층 목록과 같이 필수로 둔다(`animalImageUrl`만 선택).
 

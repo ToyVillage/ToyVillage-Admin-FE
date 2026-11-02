@@ -30,7 +30,7 @@ real_server:
 # 기대 성공 동작
 
 - 화면 진입 시 GET `/feed-log/fifth-floor/admin/history/{animalManageId}`를 한 번 보낸다(개체 조회는 기존 그대로).
-- 열 매핑: 급여일=`feedDate`(`YYYY.MM.DD`), 먹이 종류=`feedType`, 급여량=`feedAmount`+단위, 급여자=`staffName`.
+- 열 매핑: 급여일=`feedDate`의 날짜 부분(`YYYY.MM.DD`) (2026-11-02 Swagger에서 `date` → `date-time`으로 바뀜. 화면은 앞 10자리 날짜만 쓰고, 날짜만 와도 받는다), 먹이 종류=`feedType`, 급여량=`feedAmount`+단위, 급여자=`staffName`.
 - 행 순서: `feedDate` 내림차순(최신이 위). 같은 날은 응답 순서를 따른다(4층 이력과 같은 규칙).
 - 행을 누르면 `/feeds/fifth-floor/{feedLogId}`로 간다.
 

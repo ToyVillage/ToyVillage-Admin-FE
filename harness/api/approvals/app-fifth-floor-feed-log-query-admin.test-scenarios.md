@@ -1,6 +1,6 @@
 # API Test Scenarios — app-fifth-floor-feed-log-query-admin
 
-공통 사전 조건: `support/feed-api`의 `mockFeedApi`가 5층 가짜 서버를 함께 띄운다. 5층 기본 데이터는 퍼블리싱 mock과 같다 —
+공통 사전 조건: 5층 `feedDate`는 `YYYY-MM-DDT09:00:00`(date-time)으로 응답한다. `support/feed-api`의 `mockFeedApi`가 5층 가짜 서버를 함께 띄운다. 5층 기본 데이터는 퍼블리싱 mock과 같다 —
 오늘 12건(급여일지 id 1–12, 10번 = 오스카 · 오돌이, 개체 id 10, 펠렛 15 GML, 박도현) + 오돌이 어제 1건(id 101, 이서준).
 나머지 개체 id는 500번대. 개체 조회는 `support/animal-manage-api`. 오류 body는 Contract 형식 `{ message, status, timestamp, description }`.
 
@@ -12,7 +12,7 @@
 ## Mock S2 — 칸 매핑과 단위
 
 - Mock response: 기본(오스카 · 오돌이, 펠렛 15 GML, `feedDate` 오늘, 박도현) / `{ feedAmount: 1.2, feedUnit: "KGL" }`로 바꾼 응답
-- 기대 결과: 대상 개체 `오스카 · 오돌이`, 급여일 `YYYY.MM.DD`(오늘), 급여자 `박도현`, 먹이 종류 `펠렛`, 급여량 `15 g/ml` / `1.2 kg/l`.
+- 기대 결과: `feedDate`가 `<오늘>T09:00:00`(date-time)이어도 급여일은 날짜만 `YYYY.MM.DD`(오늘). 대상 개체 `오스카 · 오돌이`, 급여자 `박도현`, 먹이 종류 `펠렛`, 급여량 `15 g/ml` / `1.2 kg/l`.
   잔량·특이사항 칸은 없다.
 
 ## Mock S3 — 급여 이력 보기

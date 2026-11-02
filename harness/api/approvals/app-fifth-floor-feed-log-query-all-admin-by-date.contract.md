@@ -54,7 +54,7 @@
 | feedLogs.feedType | string | true | false | 냉동새우 | 먹이 종류 |
 | feedLogs.feedAmount | number(float) | true | false | 30 | 급여량 |
 | feedLogs.feedUnit | enum `GML`\|`KGL` | true | false | GML | `GML`→`g/ml`, `KGL`→`kg/l` |
-| feedLogs.feedDate | string(date) | true | false | 2026-10-20 | 화면에 쓰지 않음 |
+| feedLogs.feedDate | string(date-time) | true | false | 2026-10-20T09:00:00 | 목록 열에는 쓰지 않음 |
 | totalPageSize | integer(int32) | true | false | 1 | 총 페이지 수 |
 
 ## Error Responses
@@ -70,6 +70,8 @@
 - `date`는 `YYYY-MM-DD`.
 
 ## Notes
+
+- 2026-11-02: Swagger의 `feedDate`가 `date` → `date-time`으로 바뀌어 계약을 맞췄다(나머지 차이 없음).
 
 - Swagger와 차이 없음.
 

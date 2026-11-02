@@ -57,7 +57,7 @@
 | feedLogs.feedType | string | true | false | 펠렛 | 먹이 종류 |
 | feedLogs.feedAmount | number(float) | true | false | 15 | 급여량 |
 | feedLogs.feedUnit | enum `GML`\|`KGL` | true | false | GML | 단위 |
-| feedLogs.feedDate | string(date) | true | false | 2026-10-29 | 급여일. 화면에서 최신순 정렬 |
+| feedLogs.feedDate | string(date-time) | true | false | 2026-10-29T09:00:00 | 급여일 `YYYY.MM.DD`(앞 10자리). 화면에서 최신순 정렬 |
 
 ## Error Responses
 
@@ -73,6 +73,8 @@
 - `animalManageId`는 양의 정수.
 
 ## Notes
+
+- 2026-11-02: Swagger의 `feedDate`가 `date` → `date-time`으로 바뀌어 계약을 맞췄다(나머지 차이 없음).
 
 - Swagger와 차이 없음. 404의 뜻·정렬 기준은 Swagger에 없다.
 

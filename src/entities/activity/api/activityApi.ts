@@ -1,5 +1,4 @@
 import { api } from '@/shared/api/axios'
-import { mockActivityDate, mockWorkLogs } from '../model/mock'
 import type {
   FloorFiveFeedActivity,
   FloorFourFeedActivity,
@@ -11,6 +10,7 @@ import type {
   FloorFiveFeedLogResponse,
   FloorFourFeedLogResponse,
   ObservationResponse,
+  WorkLogResponse,
 } from './types'
 
 // 전체 활동 전용 조회(staging Swagger `all-activities-controller`). 날짜(YYYY-MM-DD)만 받고 그날 기록 전체를 배열로 돌려준다.
@@ -87,13 +87,27 @@ export async function getObservationActivities(
   )
 }
 
-// 업무일지는 `all-activities-controller` 에 API 가 없어 아직 퍼블리싱 mock 이다.
 export async function getWorkLogActivities(
   date: string,
 ): Promise<WorkLogActivity[]> {
-  const rows = date === mockActivityDate ? mockWorkLogs : []
-  return [...rows].sort((left, right) =>
-    left.writtenTime.localeCompare(right.writtenTime),
+  const workLogs = await getActivityList(
+    '/all-activities/work-log',
+    date,
+    isWorkLog,
+  )
+  return (
+    workLogs
+      .map((workLog) => ({
+        id: String(workLog.workLogId),
+        // 시간 도입 전 기록은 00:00 으로 온다. 받은 그대로 보여준다.
+        writtenTime: workLog.writeAt.slice(11, 16),
+        formName: workLog.templateTitle,
+        title: workLog.title,
+        writerName: workLog.authorName,
+        attachmentCount: workLog.fileCount,
+      }))
+      // 서버 정렬 명세가 없어 작성시간 오름차순으로 맞춘다.
+      .sort((left, right) => left.writtenTime.localeCompare(right.writtenTime))
   )
 }
 
@@ -152,6 +166,18 @@ function isObservation(value: unknown): value is ObservationResponse {
     typeof value.animalName === 'string' &&
     typeof value.animalDeleted === 'boolean' &&
     isDateTime(value.createdAt) &&
+    typeof value.title === 'string' &&
+    typeof value.authorName === 'string' &&
+    typeof value.fileCount === 'number'
+  )
+}
+
+function isWorkLog(value: unknown): value is WorkLogResponse {
+  return (
+    isRecord(value) &&
+    typeof value.workLogId === 'number' &&
+    isDateTime(value.writeAt) &&
+    typeof value.templateTitle === 'string' &&
     typeof value.title === 'string' &&
     typeof value.authorName === 'string' &&
     typeof value.fileCount === 'number'
