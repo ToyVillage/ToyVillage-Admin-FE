@@ -13,7 +13,7 @@ interface ExportTargetGridProps {
   onToggleAll: () => void
 }
 
-// Figma `항목 선택`(2995:25179) — 제목·전체 선택과 항목 9개 격자.
+// Figma `항목 선택`(2995:25179) — 제목·전체 선택과 항목 10개 격자.
 export function ExportTargetGrid({
   selectedTargets,
   onToggle,
@@ -94,10 +94,11 @@ const SelectAll = styled.label`
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px 20px;
 
-  @media (max-width: 1320px) {
+  /* 본문이 1320px 보다 좁아지면 5열에서 긴 항목 이름이 줄바꿈된다. */
+  @media (max-width: 1384px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

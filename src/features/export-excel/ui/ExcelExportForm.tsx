@@ -3,9 +3,15 @@ import styled from '@emotion/styled'
 import { useMutation } from '@tanstack/react-query'
 import {
   excelExportTargetOptions,
-  requestMockExcelExport,
+  exportExcel,
+  readExcelExportErrorMessage,
+  toExcelExportQuery,
+  type ExcelExportMode,
+  type ExcelExportRequest,
   type ExcelExportTarget,
 } from '@/entities/excel-export'
+import { downloadFile, Toast, type ToastVariant } from '@/shared/ui'
+import { createExportFileName, exportFileExtensions } from '../lib/exportFileName'
 import {
   applyPeriodPreset,
   formatPeriodSummary,
@@ -13,11 +19,12 @@ import {
   type ExportPeriod,
   type ExportPeriodPreset,
 } from '../lib/exportPeriod'
+import { ExportFormatField } from './ExportFormatField'
 import { ExportPeriodField } from './ExportPeriodField'
 import { ExportSummary } from './ExportSummary'
 import { ExportTargetGrid } from './ExportTargetGrid'
 
-// 엑셀 다운로드 화면의 항목·기간 선택과 다운로드 요청.
+// 엑셀 다운로드 화면의 항목·파일 형식·기간 선택과 다운로드 요청.
 // 다른 화면에 갔다 오면 처음 상태로 돌아간다(선택을 저장하지 않음).
 export function ExcelExportForm() {
   const [selectedTargets, setSelectedTargets] = useState<ExcelExportTarget[]>(
@@ -26,8 +33,27 @@ export function ExcelExportForm() {
   const [period, setPeriod] = useState<ExportPeriod>(() =>
     initialExportPeriod(),
   )
-  // 실제 API 연동 전에는 mock 경계만 호출한다.
-  const exportMutation = useMutation({ mutationFn: requestMockExcelExport })
+  const [mode, setMode] = useState<ExcelExportMode>('SHEET')
+  const [toast, setToast] = useState<{
+    variant: ToastVariant
+    message: string
+  } | null>(null)
+  const exportMutation = useMutation({
+    mutationFn: async (request: ExcelExportRequest) => {
+      const file = await exportExcel(toExcelExportQuery(request))
+      downloadFile(createExportFileName(request), file)
+    },
+    // Figma `엑셀 다운로드 · 토스트`(2983:25078).
+    onSuccess: () => {
+      setToast({ variant: 'success', message: '엑셀 파일을 내려받았습니다' })
+    },
+    onError: async (error) => {
+      setToast({
+        variant: 'error',
+        message: await readExcelExportErrorMessage(error),
+      })
+    },
+  })
 
   const disabledReason = getDisabledReason(selectedTargets.length, period)
 
@@ -69,10 +95,12 @@ export function ExcelExportForm() {
   function download() {
     if (disabledReason || exportMutation.isPending) return
     const allPeriod = period.preset === 'all'
+    setToast(null)
     exportMutation.mutate({
       targets: selectedTargets,
       startDate: allPeriod ? null : period.startDate,
       endDate: allPeriod ? null : period.endDate,
+      mode,
     })
   }
 
@@ -83,6 +111,7 @@ export function ExcelExportForm() {
         onToggle={toggleTarget}
         onToggleAll={toggleAllTargets}
       />
+      <ExportFormatField value={mode} onChange={setMode} />
       <Bottom>
         <ExportPeriodField
           period={period}
@@ -92,12 +121,21 @@ export function ExcelExportForm() {
         />
         <ExportSummary
           selectedCount={selectedTargets.length}
+          fileExtension={exportFileExtensions[mode]}
           periodLabel={formatPeriodSummary(period)}
           disabledReason={disabledReason}
           pending={exportMutation.isPending}
           onDownload={download}
         />
       </Bottom>
+      {toast && (
+        <Toast
+          variant={toast.variant}
+          message={toast.message}
+          fitContent
+          onDismiss={() => setToast(null)}
+        />
+      )}
     </Form>
   )
 }
