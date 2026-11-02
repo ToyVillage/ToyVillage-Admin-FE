@@ -1,13 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
-import {
-  feedListPattern,
-  mockFeedApi,
-  todayIsoDate,
-} from '../support/feed-api'
+import { feedListPattern, mockFeedApi, todayIsoDate } from '../support/feed-api'
 
 // 대상: GET /feed-log/admin?date&animalTaxonomic&page&size.
-// 표의 네 열이 모두 목록 응답에 있어 행별 추가 조회가 없다는 점과
-// 분류 탭이 서버 필터로 나간다는 점을 계약으로 고정한다. 실제 서버는 호출하지 않는다.
+// 표의 열이 모두 목록 응답에 있어 행별 추가 조회가 없다는 점과
+// 분류 필터를 보내지 않는다는 점(2026-10-28 4층·5층 탭 수정안)을 고정한다. 실제 서버는 호출하지 않는다.
 
 const rows = (page: Page) => page.getByTestId('feed-row')
 
@@ -39,7 +35,7 @@ test('S1: 진입 시 date=오늘 · page=1 · size=10 으로 한 번만 조회�
   expect(api.requests.adminDetail).toBe(0)
 })
 
-test('S2: 분류 탭을 누르면 animalTaxonomic 으로 다시 조회한다', async ({
+test('S2: 층 탭은 분류를 보내지 않고, 5층 탭은 4층 목록을 다시 부르지 않는다', async ({
   page,
 }) => {
   const taxonomics: (string | null)[] = []
@@ -54,17 +50,14 @@ test('S2: 분류 탭을 누르면 animalTaxonomic 으로 다시 조회한다', a
   await page.goto('/feeds')
   await expect(rows(page)).toHaveCount(10)
 
-  await page.getByRole('button', { name: '파충류' }).click()
-  await expect(rows(page)).toHaveCount(2)
+  await page.getByRole('button', { name: '5층' }).click()
+  await expect(page).toHaveURL(/floor=5/)
+  await expect(rows(page).first()).toContainText('아로와나')
+  expect(taxonomics).toEqual([null])
 
-  await page.getByRole('button', { name: '조류' }).click()
-  await expect(rows(page)).toHaveCount(2)
-
-  await page.getByRole('button', { name: '전체' }).click()
+  await page.getByRole('button', { name: '4층' }).click()
   await expect(rows(page)).toHaveCount(10)
-
-  // 요청은 화면 갱신보다 늦게 기록될 수 있어 개수가 찰 때까지 기다린다.
-  await expect.poll(() => taxonomics).toEqual([null, 'REPTILES', 'BIRDS', null])
+  expect(taxonomics.every((value) => value === null)).toBe(true)
 })
 
 test('S3: 총 페이지 수는 서버 응답(totalPageSize)을 따른다', async ({
@@ -139,7 +132,7 @@ test('S4-1: UTC 로 온 급여일시를 현지 시각으로 표시한다', async
   const minute = String(expected.getMinutes()).padStart(2, '0')
   await expect(rows(page).first()).toContainText(`${hour}:${minute}`)
   await expect(rows(page).first()).toContainText('관리자')
-  await expect(rows(page).first()).toContainText('0.1kg')
+  await expect(rows(page).first()).toContainText('0.1 kg/l')
 })
 
 test('S5: 목록 응답 형식이 명세와 다르면 빈 목록이 아니라 오류를 알린다', async ({

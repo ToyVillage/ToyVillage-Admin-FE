@@ -3,15 +3,14 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  animalSpeciesList,
-  animalTaxonomicBySpecies,
-  deleteFeed,
+  deleteFloorFeed,
+  feedFloorLabels,
   feedQueryKeys,
   formatAnimalLabel,
   FeedTable,
   feedTableMinWidth,
-  getFeeds,
-  type AnimalSpecies,
+  getFloorFeeds,
+  type FeedFloor,
   type FeedRecord,
 } from '@/entities/feed'
 import {
@@ -30,6 +29,7 @@ import {
   toIsoDate,
   type CalendarDate,
 } from '@/shared/lib'
+import { feedRecordPath } from './ui/feedRoutes'
 
 // Figma 표 높이(552 = 헤더 52 + 행 92 × 4 + 페이지네이션) 기준.
 const TABLE_PAGE_SIZE = 10
@@ -49,8 +49,8 @@ const toastByKey: Record<
   'delete-error': { variant: 'error', message: '데이터 삭제에 실패했습니다' },
 }
 
-const allTabLabel = '전체'
-const tabs = [allTabLabel, ...animalSpeciesList]
+// 층 탭(Figma `animal species` 1443:15023). 4층과 5층은 앱 입력 양식이 달라 표의 열이 다르다.
+const floorTabs = [feedFloorLabels['4'], feedFloorLabels['5']]
 
 export function FeedListPage() {
   const navigate = useNavigate()
@@ -66,35 +66,44 @@ export function FeedListPage() {
   // 행별 `⋮` 버튼. 삭제 모달을 닫은 뒤 초점을 되돌리는 데 쓴다.
   const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>())
   const focusFrame = useFocusFrame()
-  const deleteMutation = useMutation({ mutationFn: deleteFeed })
+  const deleteMutation = useMutation({
+    mutationFn: (feed: FeedRecord) =>
+      deleteFloorFeed(feed.floor, Number(feed.id)),
+  })
   // 조회 조건은 URL 이 소유한다. 상세에 다녀오거나 새로고침해도 그대로 남는다.
   const [searchParams, setSearchParams] = useSearchParams()
 
   const isoDate = readIsoDateParam(searchParams)
   const date = toCalendarDate(isoDate)
-  const tab = readTab(searchParams)
+  // 알 수 없는 값은 4층으로 본다.
+  const floor: FeedFloor = searchParams.get('floor') === '5' ? '5' : '4'
   const page = readPageParam(searchParams)
-  // 탭 목록은 프론트 상수다. `전체` 는 분류를 보내지 않는다.
-  const species: AnimalSpecies | null =
-    tab === allTabLabel ? null : (tab as AnimalSpecies)
 
-  // 조회날짜·분류가 바뀌면 첫 페이지로 되돌린다.
+  // 조회날짜·층이 바뀌면 첫 페이지로 되돌린다.
   function setDate(next: CalendarDate) {
-    updateParams({ date: toIsoDate(next), tab, page: 1 })
+    updateParams({ date: toIsoDate(next), floor, page: 1 })
   }
 
-  function setTab(next: string) {
-    updateParams({ date: isoDate, tab: next, page: 1 })
+  function setFloor(label: string) {
+    updateParams({
+      date: isoDate,
+      floor: label === feedFloorLabels['5'] ? '5' : '4',
+      page: 1,
+    })
   }
 
   function setPage(next: number) {
-    updateParams({ date: isoDate, tab, page: next })
+    updateParams({ date: isoDate, floor, page: next })
   }
 
-  function updateParams(next: { date: string; tab: string; page: number }) {
+  function updateParams(next: {
+    date: string
+    floor: FeedFloor
+    page: number
+  }) {
     const params = new URLSearchParams()
     params.set('date', next.date)
-    if (next.tab !== allTabLabel) params.set('tab', next.tab)
+    if (next.floor === '5') params.set('floor', '5')
     if (next.page > 1) params.set('page', String(next.page))
     setSearchParams(params, { replace: true })
   }
@@ -102,26 +111,21 @@ export function FeedListPage() {
   // 서버 페이지네이션이다. 급여 목록은 화면과 같은 1-based 로 보낸다
   // (다른 목록은 0-based 다 — 개발자 결정).
   const feedsQuery = useQuery({
-    queryKey: feedQueryKeys.list(isoDate, species, page),
+    queryKey: feedQueryKeys.list(isoDate, floor, page),
     queryFn: () =>
-      getFeeds({
-        date: isoDate,
-        animalTaxonomic: species && animalTaxonomicBySpecies[species],
-        page,
-        size: TABLE_PAGE_SIZE,
-      }),
+      getFloorFeeds(floor, { date: isoDate, page, size: TABLE_PAGE_SIZE }),
     // 급여 내역은 다른 직원이 계속 추가하므로 전역 staleTime(60초) 캐시를 쓰지 않는다.
     staleTime: 0,
     // 페이지를 넘기는 동안 직전 응답을 유지한다. 없으면 `totalPageSize` 가 잠시
     // 사라져 총 페이지 수가 현재 페이지로 줄었다가 되돌아온다.
-    // 단, 조회날짜·분류가 바뀐 경우에는 버린다 — 새 조건을 기다리는 동안 이전
+    // 단, 조회날짜·층이 바뀐 경우에는 버린다 — 새 조건을 기다리는 동안 이전
     // 조건의 행이 남아 있으면 그 행을 눌러 엉뚱한 상세로 들어갈 수 있다.
     placeholderData: (previousData, previousQuery) => {
       const previousFilter = previousQuery?.queryKey[2] as
-        { date: string; species: AnimalSpecies | null } | undefined
+        { date: string; floor: FeedFloor } | undefined
       if (!previousFilter) return undefined
       if (previousFilter.date !== isoDate) return undefined
-      if (previousFilter.species !== species) return undefined
+      if (previousFilter.floor !== floor) return undefined
 
       return previousData
     },
@@ -175,27 +179,25 @@ export function FeedListPage() {
     const target = deleteTarget
 
     setDeleting(true)
-    deleteMutation.mutate(
-      { feedLogId: Number(target.id) },
-      {
-        onSuccess: async () => {
-          // 지운 기록의 상세는 무효화하지 않고 지운다(다시 조회하면 404).
-          queryClient.removeQueries({
-            queryKey: feedQueryKeys.detail(target.id),
-          })
-          await queryClient.invalidateQueries({ queryKey: ['feeds', 'list'] })
-          setDeleting(false)
-          setDeleteTarget(null)
-          setLocalToast('delete-success')
-        },
-        onError: () => {
-          setDeleting(false)
-          setDeleteTarget(null)
-          setLocalToast('delete-error')
-          focusMenuTrigger(target.id)
-        },
+    deleteMutation.mutate(target, {
+      onSuccess: async () => {
+        // 지운 기록의 상세는 무효화하지 않고 지운다(다시 조회하면 404).
+        queryClient.removeQueries({
+          queryKey: feedQueryKeys.detail(target.floor, target.id),
+        })
+        void queryClient.invalidateQueries({ queryKey: ['feeds', 'history'] })
+        await queryClient.invalidateQueries({ queryKey: feedQueryKeys.lists })
+        setDeleting(false)
+        setDeleteTarget(null)
+        setLocalToast('delete-success')
       },
-    )
+      onError: () => {
+        setDeleting(false)
+        setDeleteTarget(null)
+        setLocalToast('delete-error')
+        focusMenuTrigger(target.id)
+      },
+    })
   }
 
   // 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
@@ -214,21 +216,26 @@ export function FeedListPage() {
       <Content>
         <Heading>
           <Title>먹이 급여 관리</Title>
-          <Subtitle>포유류·파충류·조류·어류별 먹이 급여 내역</Subtitle>
+          <Subtitle>4층·5층별 먹이 급여 내역</Subtitle>
         </Heading>
 
         <DateFilter value={date} onChange={setDate} />
 
-        <CategoryTabs categories={tabs} active={tab} onSelect={setTab} />
+        <CategoryTabs
+          categories={floorTabs}
+          active={feedFloorLabels[floor]}
+          onSelect={setFloor}
+        />
 
         <TableArea data-testid="feed-table-scroll">
           <FeedTable
+            floor={floor}
             feeds={feeds}
             loading={feedsQuery.isPending}
-            // 상세의 뒤로가기와 분류 뱃지가 이 조회 조건을 쓴다.
+            // 상세의 뒤로가기가 이 조회 조건으로 돌아온다.
             onRowClick={(id) =>
-              navigate(`/feeds/${id}`, {
-                state: { listSearch: location.search, species },
+              navigate(feedRecordPath(floor, id), {
+                state: { listSearch: location.search },
               })
             }
             pagination={pagination}
@@ -247,8 +254,8 @@ export function FeedListPage() {
                   {
                     label: '수정',
                     onSelect: () =>
-                      navigate(`/feeds/${feed.id}/edit`, {
-                        state: { listSearch: location.search },
+                      navigate(`${feedRecordPath(floor, feed.id)}/edit`, {
+                        state: { listSearch: location.search, from: 'list' },
                       }),
                   },
                   {
@@ -280,12 +287,6 @@ export function FeedListPage() {
       )}
     </Page>
   )
-}
-
-// 알 수 없는 값은 기본 탭으로 본다.
-function readTab(params: URLSearchParams): string {
-  const value = params.get('tab')
-  return value && tabs.includes(value) ? value : allTabLabel
 }
 
 const StatePage = styled.main`
@@ -341,13 +342,13 @@ const Subtitle = styled.p`
   line-height: 1.2;
 `
 
-// DataTable 의 기본 margin-top(20)에 12를 더해 Figma 의 탭바-표 간격 32를 맞춘다.
+// DataTable 의 기본 margin-top(20)에 14를 더해 Figma 의 탭-표 간격 34(탭 @380+46, 표 @460)를 맞춘다.
 // 화면이 열 폭 합계보다 좁아지면 표만 가로로 스크롤한다(열이 표 밖으로 새지 않게).
 // 넓은 화면에서는 스크롤 영역을 두지 않는다 — 마지막 행의 케밥 메뉴가 표 아래로 나가야 한다.
 // 기준은 본문 좌우 여백(64)에 세로 스크롤바 폭(Windows 약 17px)을 더한 뷰포트 폭이다.
 const TableArea = styled.div`
   width: 100%;
-  margin-top: 12px;
+  margin-top: 14px;
 
   > * {
     min-width: ${feedTableMinWidth}px;

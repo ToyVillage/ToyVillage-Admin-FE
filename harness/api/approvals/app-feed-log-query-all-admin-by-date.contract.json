@@ -1,0 +1,410 @@
+{
+  "apiId": "APP_FEED_LOG_QUERY_ALL_ADMIN_BY_DATE",
+  "name": "관리자 날짜별 급여일지 목록 조회",
+  "description": "앱 관리자가 날짜별 4층 급여일지 목록을 페이지로 조회",
+  "method": "GET",
+  "path": "/feed-log/admin",
+  "authentication": {
+    "required": true,
+    "type": "Bearer",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "contentType": "application/json",
+  "headers": [
+    {
+      "name": "Authorization",
+      "location": "header",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "Bearer <access-token>",
+      "description": "앱 access token",
+      "constraints": [
+        "Bearer scheme"
+      ]
+    }
+  ],
+  "pathParameters": [],
+  "queryParameters": [
+    {
+      "name": "date",
+      "location": "query",
+      "type": "string",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": "2026-10-20",
+      "description": "조회 날짜(YYYY-MM-DD)",
+      "constraints": [
+        "format: date"
+      ]
+    },
+    {
+      "name": "animalTaxonomic",
+      "location": "query",
+      "type": "enum",
+      "required": false,
+      "nullable": false,
+      "default": null,
+      "example": null,
+      "description": "분류 필터. `/feeds`는 보내지 않는다(4층·5층 탭 수정안)",
+      "constraints": [],
+      "allowedValues": [
+        "MAMMALS",
+        "REPTILES",
+        "FISH",
+        "BIRDS"
+      ]
+    },
+    {
+      "name": "page",
+      "location": "query",
+      "type": "integer",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": 1,
+      "description": "페이지 번호. 1-based(개발자 결정). `/feeds` URL page",
+      "constraints": [
+        "format: int32",
+        "minimum: 0"
+      ]
+    },
+    {
+      "name": "size",
+      "location": "query",
+      "type": "integer",
+      "required": true,
+      "nullable": false,
+      "default": null,
+      "example": 10,
+      "description": "페이지 크기. `/feeds` 목록은 10",
+      "constraints": [
+        "format: int32",
+        "minimum: 1"
+      ]
+    },
+    {
+      "name": "sort",
+      "location": "query",
+      "type": "array<string>",
+      "required": false,
+      "nullable": false,
+      "default": null,
+      "example": null,
+      "description": "정렬. 보내지 않는다(정렬 기준 명세 없음)",
+      "constraints": []
+    }
+  ],
+  "requestBody": null,
+  "responses": {
+    "success": [
+      {
+        "status": 200,
+        "description": "조회 성공",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "FeedLogAdminQueryListResponse",
+          "fields": [
+            {
+              "name": "feedLogs",
+              "location": "body",
+              "type": "array<object>",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": null,
+              "description": "그날 급여일지 목록(이 페이지)",
+              "constraints": [],
+              "fields": [
+                {
+                  "name": "feedLogId",
+                  "location": "body",
+                  "type": "integer",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": 1,
+                  "description": "급여일지 id",
+                  "constraints": [
+                    "format: int64"
+                  ]
+                },
+                {
+                  "name": "staffName",
+                  "location": "body",
+                  "type": "string",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "이승현",
+                  "description": "급여자 이름",
+                  "constraints": []
+                },
+                {
+                  "name": "animalKind",
+                  "location": "body",
+                  "type": "string",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "이구아나",
+                  "description": "일반명(종 이름)",
+                  "constraints": []
+                },
+                {
+                  "name": "animalName",
+                  "location": "body",
+                  "type": "string",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "초록",
+                  "description": "개체명",
+                  "constraints": []
+                },
+                {
+                  "name": "animalDeleted",
+                  "location": "body",
+                  "type": "boolean",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": false,
+                  "description": "개체 삭제 여부. 화면은 구분 없이 표시한다(개발자 결정)",
+                  "constraints": []
+                },
+                {
+                  "name": "feedType",
+                  "location": "body",
+                  "type": "string",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "청경채",
+                  "description": "먹이 종류",
+                  "constraints": []
+                },
+                {
+                  "name": "feedAmount",
+                  "location": "body",
+                  "type": "number",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": 150,
+                  "description": "급여량",
+                  "constraints": [
+                    "format: float"
+                  ]
+                },
+                {
+                  "name": "remainingAmount",
+                  "location": "body",
+                  "type": "number",
+                  "required": true,
+                  "nullable": true,
+                  "default": null,
+                  "example": 20,
+                  "description": "잔량. 잔량 도입 전 기록은 null일 수 있다(`/feeds` 연동과 같은 가정)",
+                  "constraints": [
+                    "format: float"
+                  ]
+                },
+                {
+                  "name": "feedUnit",
+                  "location": "body",
+                  "type": "enum",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "GML",
+                  "description": "급여량·잔량 단위. GML→g/ml, KGL→kg/l",
+                  "constraints": [],
+                  "allowedValues": [
+                    "GML",
+                    "KGL"
+                  ]
+                },
+                {
+                  "name": "feedDateTime",
+                  "location": "body",
+                  "type": "datetime",
+                  "required": true,
+                  "nullable": false,
+                  "default": null,
+                  "example": "2026-10-20T08:40:00",
+                  "description": "급여 일시",
+                  "constraints": [
+                    "format: date-time"
+                  ]
+                },
+                {
+                  "name": "significant",
+                  "location": "body",
+                  "type": "string",
+                  "required": false,
+                  "nullable": true,
+                  "default": null,
+                  "example": "탈피 진행 중",
+                  "description": "특이사항. **Swagger 목록 응답에 없음** — 백엔드 추가 요청 중(개발자 결정 2026-10-28). 없거나 null이면 `-`",
+                  "constraints": []
+                }
+              ]
+            },
+            {
+              "name": "totalPageSize",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 1,
+              "description": "총 페이지 수",
+              "constraints": [
+                "format: int32"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "status": 403,
+        "description": "인증 토큰이 없거나 유효하지 않음, 또는 접근 권한 없음 (Swagger에 body 스키마 없음)",
+        "noContent": true,
+        "body": null
+      },
+      {
+        "status": 405,
+        "description": "Method Not Allowed",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 405,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-10-28T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "지원하지 않는 메서드 형식입니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      },
+      {
+        "status": 500,
+        "description": "Internal Server Error",
+        "noContent": false,
+        "body": {
+          "type": "object",
+          "nullable": false,
+          "description": "공통 오류 응답",
+          "fields": [
+            {
+              "name": "message",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 메시지",
+              "constraints": []
+            },
+            {
+              "name": "status",
+              "location": "body",
+              "type": "integer",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": 500,
+              "description": "HTTP status",
+              "constraints": []
+            },
+            {
+              "name": "timestamp",
+              "location": "body",
+              "type": "datetime",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "2026-10-28T12:00:00",
+              "description": "발생 시각",
+              "constraints": []
+            },
+            {
+              "name": "description",
+              "location": "body",
+              "type": "string",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "내부 서버 오류가 발생했습니다.",
+              "description": "오류 상세",
+              "constraints": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "apiIdMatchCount": 0,
+    "checkedAt": "2026-10-28T08:21:49.360Z",
+    "swagger": {
+      "swaggerUrl": "https://api-stag.toyvillage.kr/v3/api-docs",
+      "operationId": "getFeedLogList_1",
+      "method": "GET",
+      "path": "/feed-log/admin",
+      "checkedAt": "2026-10-28T08:21:49.360Z"
+    },
+    "note": "Notion 행 1건(https://app.notion.com/p/590e8d82a45083c4a0fd010bd90cc5f0)이 있으나 개발자 지시(2026-10-28)로 Swagger만 기준으로 삼는다"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "feature": "feed-edit",
-  "approvedAt": "2026-10-06T01:53:11.997Z",
+  "approvedAt": "2026-10-28T10:12:30.356Z",
   "approvedBy": "kimjihwan8",
   "scenarioIds": [
     "S1",
@@ -9,17 +9,13 @@
     "S4",
     "S5",
     "S6",
-    "S6-1",
     "S7",
     "S8",
     "S9",
     "S10",
     "S11",
-    "S12",
-    "S13",
-    "S14",
-    "S15"
+    "S12"
   ],
-  "scenarioHash": "7091441cad40cfb71f7ecf4ff400ebe4076c7eca6c19587b5abf76c3fab00041",
-  "e2eHash": "73efc12676c78a6f7aae4b64121335d844d96889fafe73d906e73345e3c74b63"
+  "scenarioHash": "ec9c9fdb8db6adcefe065049214db1f7df14823c9e69605bc7bda0be1a60b67e",
+  "e2eHash": "beeb8b3ccfaf5fdac3aa01f9a2de300d875e86a2a78283538c0d66ba8f8ab705"
 }

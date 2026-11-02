@@ -153,10 +153,10 @@ test('S8: 수정 후 상세 재조회', async ({ page }) => {
   await expect
     .poll(() => api.requests.adminDetail)
     .toBeGreaterThan(detailRequests)
-  // 캐시된 옛 값(생닭 1.2kg)이 아니라 수정한 값이 상세에 보인다.
+  // 캐시된 옛 값(생닭 1.2 kg/l)이 아니라 수정한 값이 상세에 보인다.
   const main = page.getByRole('main')
   await expect(main.getByText('닭가슴살').first()).toBeVisible()
-  await expect(main.getByText('2.5kg').first()).toBeVisible()
+  await expect(main.getByText('2.5 kg/l').first()).toBeVisible()
   await expect(main.getByText('잔반 조금 남김').first()).toBeVisible()
   await expect(main.getByText('생닭')).toHaveCount(0)
 })

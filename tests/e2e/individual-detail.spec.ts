@@ -243,7 +243,7 @@ test('S17: 먹이 급여 기록 확인하기 이동', async ({ page }) => {
   })
   await feedingButton.click()
 
-  await expect(page).toHaveURL(/\/feeds\/1$/)
+  await expect(page).toHaveURL(/\/feeds\/animals\/1$/)
   await page.getByRole('link', { name: '뒤로가기' }).click()
   await expect(page).toHaveURL(/\/species\/1\/individuals\/1$/)
 })
