@@ -30,7 +30,10 @@ function mockFeedsFifthFloor(page: Page) {
   return mockFeedApi(page, {
     fifthFloorFeedLogs: mockFifthFloorFeedLogs.map((log) => ({
       ...log,
-      feedDate: log.feedDate === todayIsoDate() ? FEEDS_TODAY : log.feedDate,
+      feedDate:
+        log.feedDate.slice(0, 10) === todayIsoDate()
+          ? FEEDS_TODAY
+          : log.feedDate,
     })),
   })
 }

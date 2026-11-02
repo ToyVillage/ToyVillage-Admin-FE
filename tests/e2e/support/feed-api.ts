@@ -306,7 +306,7 @@ export interface MockFifthFloorFeedLog {
   feedAmount: number
   feedUnit: 'GML' | 'KGL'
   staffName: string
-  /** `YYYY-MM-DD` */
+  /** `YYYY-MM-DD` 또는 `YYYY-MM-DDTHH:mm:ss`. 응답은 Swagger(2026-11-02)처럼 date-time 으로 보낸다. */
   feedDate: string
 }
 
@@ -597,7 +597,7 @@ async function mockFifthFloorRoutes(
     const size = Number(query.get('size') ?? 10)
     const number = Number(query.get('page') ?? 1)
     const matched = fifth.feedLogs.filter(
-      (item) => item.feedDate === query.get('date'),
+      (item) => item.feedDate.slice(0, 10) === query.get('date'),
     )
 
     await json(route, 200, {
@@ -625,7 +625,7 @@ async function mockFifthFloorRoutes(
         feedType: item.feedType,
         feedAmount: item.feedAmount,
         feedUnit: item.feedUnit,
-        feedDate: item.feedDate,
+        feedDate: toFeedDateTime(item.feedDate),
       })),
     })
   })
@@ -702,9 +702,14 @@ async function mockFifthFloorRoutes(
       feedType: target.feedType,
       feedAmount: target.feedAmount,
       feedUnit: target.feedUnit,
-      feedDate: target.feedDate,
+      feedDate: toFeedDateTime(target.feedDate),
     })
   })
+}
+
+// 날짜만 넣은 기록은 오전 9시 date-time 으로 응답한다.
+function toFeedDateTime(feedDate: string): string {
+  return feedDate.includes('T') ? feedDate : `${feedDate}T09:00:00`
 }
 
 function toFifthFloorListItem(item: MockFifthFloorFeedLog) {
@@ -717,7 +722,7 @@ function toFifthFloorListItem(item: MockFifthFloorFeedLog) {
     feedType: item.feedType,
     feedAmount: item.feedAmount,
     feedUnit: item.feedUnit,
-    feedDate: item.feedDate,
+    feedDate: toFeedDateTime(item.feedDate),
   }
 }
 

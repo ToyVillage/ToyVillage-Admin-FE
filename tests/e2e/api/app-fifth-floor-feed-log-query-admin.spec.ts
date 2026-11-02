@@ -42,7 +42,9 @@ test('S1: 상세를 Bearer 토큰으로 1회 요청하고 4층 API 는 부르지
   expect(api.requests.history).toBe(0)
 })
 
-test('S2: 응답 필드를 칸에 매핑하고 단위를 붙인다', async ({ page }) => {
+test('S2: 응답 필드를 칸에 매핑하고 단위를 붙인다(급여일은 date-time 의 날짜만)', async ({
+  page,
+}) => {
   await mockFeedApi(page)
   await page.goto('/feeds/fifth-floor/10')
 
