@@ -46,3 +46,14 @@ export interface ObservationResponse {
   authorName: string
   fileCount: number
 }
+
+/** `GET /all-activities/work-log` 배열 항목 (APP_ALL_ACTIVITIES_WORK_LOG_QUERY_ALL) */
+export interface WorkLogResponse {
+  workLogId: number
+  /** `YYYY-MM-DDTHH:mm:ss`. 시간 도입 전 기록은 `T00:00:00` 이다. */
+  writeAt: string
+  templateTitle: string
+  title: string
+  authorName: string
+  fileCount: number
+}
