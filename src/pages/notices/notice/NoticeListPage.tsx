@@ -111,7 +111,7 @@ export function NoticeListPage() {
     const keyword = query.trim().toLowerCase()
     const matchingNotices = keyword
       ? byCategory.filter((notice) =>
-          `${notice.title} ${noticeCategoryLabel(notice.teams)} ${notice.date}`
+          `${notice.title} ${noticeCategoryLabel(notice.teams)} ${notice.date.slice(0, 10)}`
             .toLowerCase()
             .includes(keyword),
         )
