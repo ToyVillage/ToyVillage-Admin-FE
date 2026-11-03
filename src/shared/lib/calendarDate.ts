@@ -34,9 +34,9 @@ export function toIsoDate(date: CalendarDate): string {
   return `${date.year}-${pad(date.month)}-${pad(date.day)}`
 }
 
-/** YYYY-MM-DD → YYYY.MM.DD — 표의 `날짜` 열 표기 */
+/** YYYY-MM-DD → YYYY.MM.DD — 표의 `날짜` 열 표기. 뒤에 시간이 붙어 있으면 버린다. */
 export function formatIsoDate(isoDate: string): string {
-  return isoDate.replaceAll('-', '.')
+  return isoDate.slice(0, 10).replaceAll('-', '.')
 }
 
 /** YYYY-MM-DD 에 날수를 더한다. 달·해 경계를 넘으면 Date 가 맞춰 준다. */
