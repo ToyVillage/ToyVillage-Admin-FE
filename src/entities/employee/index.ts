@@ -17,3 +17,17 @@ export type {
   AppAdminMessageResponse,
 } from './api/types'
 export { StaffAccountTable } from './ui/StaffAccountTable'
+export { filterByNameOrUsername } from './model/filterByNameOrUsername'
+export type {
+  AssignableEmployee,
+  MiddleManager,
+} from './model/middleManager'
+export { middleManagerQueryKeys } from './model/middleManager'
+export {
+  assignMiddleManagers,
+  getAssignableEmployees,
+  getMiddleManagers,
+  releaseMiddleManager,
+} from './api/middleManagerApi'
+export { EmployeeIdentity } from './ui/EmployeeIdentity'
+export { MiddleManagerTable } from './ui/MiddleManagerTable'
