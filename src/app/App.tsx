@@ -431,6 +431,13 @@ const routes: RouteObject[] = [
             ),
           },
           {
+            path: '/settings/permissions',
+            element: lazyPage(
+              () => import('@/pages/settings/permissions/PermissionsPage'),
+              'PermissionsPage',
+            ),
+          },
+          {
             path: '/settings/excel-download',
             element: lazyPage(
               () => import('@/pages/settings/excel-download/ExcelDownloadPage'),
