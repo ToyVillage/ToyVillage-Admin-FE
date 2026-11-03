@@ -24,6 +24,11 @@ body,
   min-height: 100%;
 }
 
+/* 검색 입력에 브라우저가 그리는 지우기 X 를 숨긴다. Figma 검색창에는 없다. */
+input[type='search']::-webkit-search-cancel-button {
+  display: none;
+}
+
 /* 모션 최소화를 켠 사용자에게는 전환과 애니메이션을 즉시 끝낸다.
    (길이만 0 으로 줄이고 최종 상태는 그대로 두어 레이아웃이 깨지지 않게 한다.) */
 @media (prefers-reduced-motion: reduce) {

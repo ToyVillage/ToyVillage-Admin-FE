@@ -3,12 +3,13 @@ import styled from '@emotion/styled'
 import { formatIsoDate } from '@/shared/lib'
 import {
   DataTable,
-  type DataTableAppearance,
   type DataTableColumn,
   type DataTablePagination,
   type DataTableRow,
 } from '@/shared/ui'
 import type { StaffAccount } from '../model/staffAccount'
+import { EmployeeIdentity } from './EmployeeIdentity'
+import { employeeTableAppearance } from './employeeTableAppearance'
 
 interface StaffAccountTableProps {
   accounts: StaffAccount[]
@@ -20,24 +21,6 @@ interface StaffAccountTableProps {
   /** 행 우측 케밥 메뉴. 메뉴 동작(초기화·삭제)은 페이지가 소유한다. */
   renderRowAction: (account: StaffAccount) => ReactNode
   loading?: boolean
-}
-
-// Figma `staff card`(2440:24803) — 테두리 없는 흰 카드, 머리행 60 · 행 96,
-// 머리행 아래부터 행마다 좌우 40 안쪽 구분선(#F0F0F3).
-const appearance: DataTableAppearance = {
-  offsetTop: 0,
-  bordered: false,
-  headerHeight: 60,
-  headerBackground: 'surface',
-  headerFontSize: 18,
-  headerFontWeight: 500,
-  headerColor: 'optionMuted',
-  rowHeight: 96,
-  dividerColor: 'listDivider',
-  dividerInset: 40,
-  align: 'left',
-  paginationPlacement: 'inside',
-  headerDivider: true,
 }
 
 // Figma 열 고정폭: 이름 560 / 비밀번호 300 / 계정 생성일 380 / 케밥 80.
@@ -60,16 +43,9 @@ export function StaffAccountTable({
       width: 560,
       render: (row) => {
         const account = accountById.get(row.id)
-        if (!account) return null
-        return (
-          <Identity>
-            <Avatar aria-hidden="true">{account.name.slice(0, 1)}</Avatar>
-            <Names>
-              <Name>{account.name}</Name>
-              <Username>{account.username}</Username>
-            </Names>
-          </Identity>
-        )
+        return account ? (
+          <EmployeeIdentity name={account.name} username={account.username} />
+        ) : null
       },
     },
     {
@@ -123,7 +99,7 @@ export function StaffAccountTable({
           pagination={pagination}
           footerStart={<Total>총 {total}명</Total>}
           emptyLabel={emptyLabel}
-          appearance={appearance}
+          appearance={employeeTableAppearance}
           loading={loading}
           loadingRows={5}
         />
@@ -142,52 +118,6 @@ const TableScroll = styled.div`
 
 const TableFrame = styled.div`
   min-width: 1320px;
-`
-
-const Identity = styled.div`
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 16px;
-`
-
-const Avatar = styled.span`
-  display: inline-flex;
-  width: 52px;
-  height: 52px;
-  flex: 0 0 52px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 100px;
-  background: ${({ theme }) => theme.colors.accentBg};
-  color: ${({ theme }) => theme.colors.accent};
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.2;
-`
-
-const Names = styled.div`
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 4px;
-`
-
-const Name = styled.span`
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 1.2;
-`
-
-const Username = styled.span`
-  overflow: hidden;
-  color: ${({ theme }) => theme.colors.optionMuted};
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 `
 
 // 셀 래퍼가 세로 flex 라 배지가 열 폭으로 늘어나지 않게 자기 폭만 차지한다.

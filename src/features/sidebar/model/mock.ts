@@ -82,7 +82,7 @@ export const mockSidebarGroups: SidebarGroup[] = [
         label: '직원 계정 관리',
         to: '/settings/accounts',
       },
-      { id: 'permissions', label: '권한 관리' },
+      { id: 'permissions', label: '권한 관리', to: '/settings/permissions' },
       // Figma 사이드바(1:12061)에는 없다. 2026-10-27 설정 하위로 추가하기로 결정.
       {
         id: 'excel-download',

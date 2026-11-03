@@ -5,6 +5,7 @@ import {
   StaffAccountTable,
   deleteStaffAccount,
   employeeQueryKeys,
+  filterByNameOrUsername,
   getStaffAccounts,
   resetStaffAccountPassword,
   staffAccountQueryKeys,
@@ -20,13 +21,13 @@ import { readPageParam, useListSearchParams } from '@/shared/lib'
 import {
   DeleteConfirmationDialog,
   KebabMenu,
+  OutlinedSearchField,
   PageHeader,
   PillButton,
   Toast,
   useFocusFrame,
   type ToastVariant,
 } from '@/shared/ui'
-import searchIcon from '@/shared/ui/assets/search-material.svg'
 
 type PendingAction = { kind: 'reset' | 'delete'; account: StaffAccount }
 
@@ -88,7 +89,10 @@ export function StaffAccountsPage() {
     return () => clearTimeout(timer)
   }, [query, keyword, update])
 
-  const matchedAccounts = filterAccounts(accountsQuery.data ?? [], keyword)
+  const matchedAccounts = filterByNameOrUsername(
+    accountsQuery.data ?? [],
+    keyword,
+  )
   const pageCount = Math.max(1, Math.ceil(matchedAccounts.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount)
   const pageAccounts = matchedAccounts.slice(
@@ -200,16 +204,14 @@ export function StaffAccountsPage() {
           }
         />
 
-        <Search>
-          <SearchIcon src={searchIcon} alt="" aria-hidden="true" />
-          <SearchInput
-            type="search"
+        <SearchArea>
+          <OutlinedSearchField
             value={query}
             placeholder="이름 또는 아이디 검색"
-            aria-label="이름 또는 아이디 검색"
-            onChange={(event) => setQuery(event.target.value)}
+            ariaLabel="이름 또는 아이디 검색"
+            onChange={setQuery}
           />
-        </Search>
+        </SearchArea>
 
         <TableArea>
           <StaffAccountTable
@@ -298,21 +300,6 @@ export function StaffAccountsPage() {
   )
 }
 
-// 이름 또는 아이디에 검색어가 든 계정(대소문자 무시).
-function filterAccounts(
-  accounts: StaffAccount[],
-  keyword: string,
-): StaffAccount[] {
-  const needle = keyword.trim().toLowerCase()
-  if (!needle) return accounts
-
-  return accounts.filter(
-    (account) =>
-      account.name.toLowerCase().includes(needle) ||
-      account.username.toLowerCase().includes(needle),
-  )
-}
-
 const StatePage = styled.main`
   display: grid;
   min-height: 100vh;
@@ -350,47 +337,9 @@ const Content = styled.div`
   }
 `
 
-const Search = styled.label`
-  display: flex;
+const SearchArea = styled.div`
   width: min(100%, 400px);
-  height: 52px;
-  align-items: center;
-  gap: 10px;
   margin-top: 40px;
-  padding: 0 20px;
-  border: 1px solid ${({ theme }) => theme.colors.tableHeaderStrong};
-  border-radius: 8px;
-  background: ${({ theme }) => theme.colors.surface};
-
-  &:focus-within {
-    border-color: ${({ theme }) => theme.colors.accent};
-  }
-`
-
-const SearchIcon = styled.img`
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-`
-
-const SearchInput = styled.input`
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: ${({ theme }) => theme.colors.textStrong};
-  font: inherit;
-  font-size: 20px;
-  font-weight: 500;
-
-  &::placeholder {
-    color: ${({ theme }) => theme.colors.textFaint};
-  }
-
-  &::-webkit-search-cancel-button {
-    cursor: pointer;
-  }
 `
 
 const TableArea = styled.div`
