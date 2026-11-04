@@ -1,10 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
+import { mockEmployeeApi, permissionEmployees } from './support/employee-api'
 
 // 승인된 시나리오(permissions.approved.json: S1~S16, S18)를 변환한 것.
 // AI는 이 파일을 재도출하지 않는다(동결). 실패 시 코드를 수정한다.
-// 목록·지정·해제는 퍼블리싱 mock 이라 네트워크를 쓰지 않고, 새로고침하면 초기값으로 돌아간다.
+// 직원 조회와 권한 변경은 `support/employee-api` 가짜 서버로 받는다. 실패 처리는 API 테스트가 맡는다.
 
-const NOW = new Date('2026-11-03T12:00:00')
 const url = '/settings/permissions'
 const searchLabel = '이름 또는 아이디 검색'
 const candidates = ['박도현', '최민지', '정하윤', '오세훈', '한지민']
@@ -25,7 +25,7 @@ const dialog = (page: Page) =>
 const dialogSearch = (page: Page) =>
   dialog(page).getByRole('searchbox', { name: searchLabel })
 const candidate = (page: Page, name: string) =>
-  dialog(page).getByRole('checkbox', { name })
+  dialog(page).getByRole('radio', { name })
 const candidateRow = (page: Page, name: string) =>
   dialog(page).getByText(name, { exact: true })
 const dialogButton = (page: Page, name: string) =>
@@ -36,6 +36,9 @@ const confirmButton = (page: Page, name: string) =>
   confirmDialog(page).getByRole('button', { name, exact: true })
 
 async function openList(page: Page) {
+  await mockEmployeeApi(page, {
+    employees: permissionEmployees.map((item) => ({ ...item })),
+  })
   await page.goto(url)
   await expect(row(page, '김수인')).toBeVisible()
 }
@@ -45,11 +48,12 @@ async function openDialog(page: Page) {
   await expect(dialog(page)).toBeVisible()
 }
 
-async function assign(page: Page, names: string[]) {
+async function assign(page: Page, name: string) {
   await openDialog(page)
-  for (const name of names) await candidateRow(page, name).click()
-  await dialogButton(page, `${names.length}명 지정하기`).click()
+  await candidateRow(page, name).click()
+  await dialogButton(page, '지정하기').click()
   await expect(dialog(page)).toBeHidden()
+  await expect(row(page, name)).toBeVisible()
 }
 
 async function release(page: Page, name: string) {
@@ -59,12 +63,10 @@ async function release(page: Page, name: string) {
   await expect(row(page, name)).toHaveCount(0)
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.clock.setFixedTime(NOW)
-})
-
 test('S1: 사이드바에서 권한 관리 진입', async ({ page }) => {
-  await page.route(/^https:\/\//, (route) => route.abort())
+  await mockEmployeeApi(page, {
+    employees: permissionEmployees.map((item) => ({ ...item })),
+  })
   await page.goto('/')
 
   await page.getByRole('button', { name: '사이드바 열기' }).click()
@@ -91,19 +93,18 @@ test('S2: 첫 진입 목록', async ({ page }) => {
 
   const main = page.getByRole('main')
   await expect(main.getByText('이름', { exact: true })).toBeVisible()
-  await expect(main.getByText('지정일', { exact: true })).toBeVisible()
+  await expect(main.getByText('지정일', { exact: true })).toHaveCount(0)
 
   await expect(rows(page)).toHaveCount(3)
   const expected = [
-    ['김수인', 'suin.kim', '2026.07.03'],
-    ['이승현', 'seunghyun.lee', '2026.09.01'],
-    ['이지아', 'jia.lee', '2026.10.20'],
+    ['김수인', 'suin.kim'],
+    ['이승현', 'seunghyun.lee'],
+    ['이지아', 'jia.lee'],
   ]
-  for (const [index, values] of expected.entries()) {
-    for (const value of values) {
-      await expect(rows(page).nth(index)).toContainText(value)
-    }
-    await expect(releaseTrigger(page, values[0])).toBeVisible()
+  for (const [index, [name, username]] of expected.entries()) {
+    await expect(rows(page).nth(index)).toContainText(name)
+    await expect(rows(page).nth(index)).toContainText(username)
+    await expect(releaseTrigger(page, name)).toBeVisible()
   }
 
   await expect(total(page, 3)).toBeVisible()
@@ -137,7 +138,7 @@ test('S4: 지정 모달 기본 상태', async ({ page }) => {
   ).toBeVisible()
   await expect(dialogSearch(page)).toBeFocused()
 
-  await expect(dialog(page).getByRole('checkbox')).toHaveCount(5)
+  await expect(dialog(page).getByRole('radio')).toHaveCount(5)
   for (const name of candidates) {
     await expect(candidate(page, name)).not.toBeChecked()
   }
@@ -148,40 +149,36 @@ test('S4: 지정 모달 기본 상태', async ({ page }) => {
   await expect(dialogButton(page, '지정하기')).toBeDisabled()
 })
 
-test('S5: 직원 선택과 버튼 문구', async ({ page }) => {
+test('S5: 한 명만 선택', async ({ page }) => {
   await openList(page)
   await openDialog(page)
 
   await candidateRow(page, '박도현').click()
-  await candidateRow(page, '최민지').click()
 
   await expect(candidate(page, '박도현')).toBeChecked()
-  await expect(candidate(page, '최민지')).toBeChecked()
-  await expect(dialogButton(page, '2명 지정하기')).toBeEnabled()
+  await expect(dialogButton(page, '지정하기')).toBeEnabled()
 
   await candidateRow(page, '최민지').click()
-  await expect(dialogButton(page, '1명 지정하기')).toBeEnabled()
 
-  await candidateRow(page, '박도현').click()
-  await expect(dialogButton(page, '지정하기')).toBeDisabled()
+  await expect(candidate(page, '최민지')).toBeChecked()
+  await expect(candidate(page, '박도현')).not.toBeChecked()
+  await expect(dialog(page).getByRole('radio', { checked: true })).toHaveCount(
+    1,
+  )
 })
 
 test('S6: 지정 완료', async ({ page }) => {
   await openList(page)
   await openDialog(page)
   await candidateRow(page, '박도현').click()
-  await candidateRow(page, '최민지').click()
 
-  await dialogButton(page, '2명 지정하기').click()
+  await dialogButton(page, '지정하기').click()
 
   await expect(dialog(page)).toBeHidden()
   await expect(page.getByText('권한 부여에 성공했습니다')).toBeVisible()
-  await expect(rows(page)).toHaveCount(5)
-  await expect(rows(page).nth(3)).toContainText('박도현')
-  await expect(rows(page).nth(3)).toContainText('2026.11.03')
-  await expect(rows(page).nth(4)).toContainText('최민지')
-  await expect(rows(page).nth(4)).toContainText('2026.11.03')
-  await expect(total(page, 5)).toBeVisible()
+  await expect(row(page, '박도현')).toBeVisible()
+  await expect(rows(page)).toHaveCount(4)
+  await expect(total(page, 4)).toBeVisible()
 })
 
 test('S7: 모달 검색과 선택 유지', async ({ page }) => {
@@ -191,17 +188,23 @@ test('S7: 모달 검색과 선택 유지', async ({ page }) => {
   await candidateRow(page, '박도현').click()
   await dialogSearch(page).fill('sehun')
 
-  await expect(dialog(page).getByRole('checkbox')).toHaveCount(1)
+  await expect(dialog(page).getByRole('radio')).toHaveCount(1)
   await expect(candidate(page, '오세훈')).toBeVisible()
-  await expect(dialogButton(page, '1명 지정하기')).toBeEnabled()
+  await expect(dialogButton(page, '지정하기')).toBeEnabled()
 
+  await dialogSearch(page).fill('')
+
+  await expect(dialog(page).getByRole('radio')).toHaveCount(5)
+  await expect(candidate(page, '박도현')).toBeChecked()
+
+  await dialogSearch(page).fill('sehun')
   await candidateRow(page, '오세훈').click()
   await dialogSearch(page).fill('')
 
-  await expect(dialog(page).getByRole('checkbox')).toHaveCount(5)
-  await expect(candidate(page, '박도현')).toBeChecked()
   await expect(candidate(page, '오세훈')).toBeChecked()
-  await expect(dialogButton(page, '2명 지정하기')).toBeEnabled()
+  await expect(dialog(page).getByRole('radio', { checked: true })).toHaveCount(
+    1,
+  )
 })
 
 test('S8: 지정 모달 닫기', async ({ page }) => {
@@ -282,7 +285,7 @@ test('S11: 해제 완료', async ({ page }) => {
 
 test('S12: 지정·해제가 후보 목록에 반영된다', async ({ page }) => {
   await openList(page)
-  await assign(page, ['박도현'])
+  await assign(page, '박도현')
   await release(page, '김수인')
 
   await openDialog(page)
@@ -325,12 +328,12 @@ test('S15: 모달 검색 결과 없음', async ({ page }) => {
   await dialogSearch(page).fill('없는사람')
 
   await expect(dialog(page).getByText('검색결과가 없습니다')).toBeVisible()
-  await expect(dialogButton(page, '1명 지정하기')).toBeEnabled()
+  await expect(dialogButton(page, '지정하기')).toBeEnabled()
 })
 
 test('S16: 지정할 수 있는 직원이 없음', async ({ page }) => {
   await openList(page)
-  await assign(page, candidates)
+  for (const name of candidates) await assign(page, name)
   await expect(total(page, 8)).toBeVisible()
 
   await openDialog(page)
@@ -351,7 +354,7 @@ test('S18: 키보드로 모달 조작', async ({ page }) => {
   await page.keyboard.press('Space')
 
   await expect(candidate(page, '박도현')).toBeChecked()
-  const submit = dialogButton(page, '1명 지정하기')
+  const submit = dialogButton(page, '지정하기')
   await expect(submit).toBeEnabled()
 
   await submit.focus()

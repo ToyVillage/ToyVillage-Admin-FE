@@ -2,20 +2,25 @@ import type { Page, Route } from '@playwright/test'
 
 // 직원 계정 API(app-admin-controller) 가짜 서버.
 // 대상: GET·POST /app/admin/employees, PATCH /app/admin/employees/{id}/password,
-//       DELETE /app/admin/employees/{id}.
+//       PATCH /app/admin/employees/{id}/role, DELETE /app/admin/employees/{id}.
 // 실제 서버는 호출하지 않으며, 그 밖의 https 요청은 abort 한다.
 
 export const employeeCreatePattern =
   /^https:\/\/[^/]+\/app\/admin\/employees(?:\?.*)?$/
 export const employeePasswordPattern =
   /^https:\/\/[^/]+\/app\/admin\/employees\/(\d+)\/password(?:\?.*)?$/
+export const employeeRolePattern =
+  /^https:\/\/[^/]+\/app\/admin\/employees\/(\d+)\/role(?:\?.*)?$/
 export const employeeItemPattern =
   /^https:\/\/[^/]+\/app\/admin\/employees\/(\d+)(?:\?.*)?$/
+
+export type MockEmployeeRole = 'APP_ADMIN' | 'MIDDLE_ADMIN' | 'EMPLOYEE'
 
 export interface MockEmployee {
   id: number
   username: string
   name: string
+  role: MockEmployeeRole
   /** YYYY-MM-DD */
   createAt: string
   passwordChanged: boolean
@@ -27,6 +32,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 1,
     name: '김수인',
     username: 'suin.kim',
+    role: 'EMPLOYEE',
     passwordChanged: true,
     createAt: '2026-07-03',
   },
@@ -34,6 +40,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 2,
     name: '이승현',
     username: 'seunghyun.lee',
+    role: 'EMPLOYEE',
     passwordChanged: true,
     createAt: '2026-06-21',
   },
@@ -41,6 +48,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 3,
     name: '이지아',
     username: 'jia.lee',
+    role: 'EMPLOYEE',
     passwordChanged: false,
     createAt: '2026-06-02',
   },
@@ -48,6 +56,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 4,
     name: '박도현',
     username: 'dohyun.park',
+    role: 'EMPLOYEE',
     passwordChanged: true,
     createAt: '2026-05-14',
   },
@@ -55,6 +64,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 5,
     name: '최민지',
     username: 'minji.choi',
+    role: 'EMPLOYEE',
     passwordChanged: false,
     createAt: '2026-09-20',
   },
@@ -62,6 +72,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 6,
     name: '정하늘',
     username: 'haneul.jung',
+    role: 'EMPLOYEE',
     passwordChanged: true,
     createAt: '2026-04-30',
   },
@@ -69,6 +80,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 7,
     name: '한서준',
     username: 'seojun.han',
+    role: 'EMPLOYEE',
     passwordChanged: true,
     createAt: '2026-04-11',
   },
@@ -76,6 +88,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 8,
     name: '윤채원',
     username: 'chaewon.yoon',
+    role: 'EMPLOYEE',
     passwordChanged: false,
     createAt: '2026-03-27',
   },
@@ -83,6 +96,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 9,
     name: '강민호',
     username: 'minho.kang',
+    role: 'EMPLOYEE',
     passwordChanged: true,
     createAt: '2026-03-08',
   },
@@ -90,6 +104,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 10,
     name: '오예린',
     username: 'yerin.oh',
+    role: 'EMPLOYEE',
     passwordChanged: true,
     createAt: '2026-02-19',
   },
@@ -97,6 +112,7 @@ export const mockEmployees: MockEmployee[] = [
     id: 11,
     name: '서지훈',
     username: 'jihoon.seo',
+    role: 'EMPLOYEE',
     passwordChanged: false,
     createAt: '2026-01-25',
   },
@@ -104,10 +120,30 @@ export const mockEmployees: MockEmployee[] = [
     id: 12,
     name: '임다은',
     username: 'daeun.lim',
+    role: 'EMPLOYEE',
     passwordChanged: true,
     createAt: '2026-01-06',
   },
 ]
+
+// 권한 관리 화면 시나리오용 8명(Figma 값). 앞 3명이 중간 관리자다.
+export const permissionEmployees: MockEmployee[] = [
+  ['김수인', 'suin.kim', 'MIDDLE_ADMIN'],
+  ['이승현', 'seunghyun.lee', 'MIDDLE_ADMIN'],
+  ['이지아', 'jia.lee', 'MIDDLE_ADMIN'],
+  ['박도현', 'dohyun.park', 'EMPLOYEE'],
+  ['최민지', 'minji.choi', 'EMPLOYEE'],
+  ['정하윤', 'hayun.jung', 'EMPLOYEE'],
+  ['오세훈', 'sehun.oh', 'EMPLOYEE'],
+  ['한지민', 'jimin.han', 'EMPLOYEE'],
+].map(([name, username, role], index) => ({
+  id: index + 1,
+  name,
+  username,
+  role: role as MockEmployeeRole,
+  createAt: '2026-01-02',
+  passwordChanged: true,
+}))
 
 export interface EmployeeCreateRequest {
   body: unknown
@@ -117,6 +153,10 @@ export interface EmployeeCreateRequest {
 export interface EmployeeTargetRequest {
   id: number
   authorization: string | undefined
+}
+
+export interface EmployeeRoleChangeRecord extends EmployeeTargetRequest {
+  body: unknown
 }
 
 export interface EmployeeApiOptions {
@@ -136,6 +176,10 @@ export interface EmployeeApiOptions {
   /** 삭제 응답. 기본 200 `{ message }` */
   deleteStatus?: number
   deleteDelay?: number
+  /** 권한 변경 응답. 기본 200 `{ message }` */
+  roleStatus?: number
+  roleBody?: unknown
+  roleDelay?: number
 }
 
 export interface EmployeeApiHandle {
@@ -145,6 +189,7 @@ export interface EmployeeApiHandle {
   lists: number
   resets: EmployeeTargetRequest[]
   deletes: EmployeeTargetRequest[]
+  roleChanges: EmployeeRoleChangeRecord[]
 }
 
 export function errorBody(status: number, message: string) {
@@ -169,6 +214,9 @@ export async function mockEmployeeApi(
     resetDelay = 0,
     deleteStatus = 200,
     deleteDelay = 0,
+    roleStatus = 200,
+    roleBody,
+    roleDelay = 0,
   }: EmployeeApiOptions = {},
 ): Promise<EmployeeApiHandle> {
   const handle: EmployeeApiHandle = {
@@ -177,6 +225,7 @@ export async function mockEmployeeApi(
     lists: 0,
     resets: [],
     deletes: [],
+    roleChanges: [],
   }
 
   await page.route(/^https:\/\//, (route) => route.abort())
@@ -207,6 +256,7 @@ export async function mockEmployeeApi(
         id: Math.max(0, ...handle.employees.map((item) => item.id)) + 1,
         username: requestBody.username ?? '',
         name: requestBody.name ?? '',
+        role: 'EMPLOYEE',
         createAt: '2026-09-28',
         // 새 계정은 초기 비밀번호(아이디와 같음) 상태다.
         passwordChanged: false,
@@ -233,6 +283,38 @@ export async function mockEmployeeApi(
       resetStatus === 200
         ? { message: '비밀번호가 초기화되었습니다.' }
         : errorBody(resetStatus, '존재하지 않는 앱 관리자입니다.'),
+    )
+  })
+
+  await page.route(employeeRolePattern, async (route) => {
+    if (route.request().method() !== 'PATCH') return route.abort()
+    const id = Number(matchId(route, employeeRolePattern))
+    const requestBody = route.request().postDataJSON() as {
+      role?: MockEmployeeRole
+    }
+    handle.roleChanges.push({
+      id,
+      body: requestBody,
+      authorization: route.request().headers().authorization,
+    })
+    await wait(roleDelay)
+    if (roleStatus !== 200) {
+      await fulfill(
+        route,
+        roleStatus,
+        errorBody(roleStatus, '존재하지 않는 앱 관리자입니다.'),
+      )
+      return
+    }
+    // 기본 성공이면 픽스처의 권한을 바꾼다(이후 목록 조회에 보인다).
+    if (roleBody === undefined && requestBody.role) {
+      const target = handle.employees.find((item) => item.id === id)
+      if (target) target.role = requestBody.role
+    }
+    await fulfill(
+      route,
+      200,
+      roleBody ?? { message: '직원 권한이 변경되었습니다.' },
     )
   })
 
