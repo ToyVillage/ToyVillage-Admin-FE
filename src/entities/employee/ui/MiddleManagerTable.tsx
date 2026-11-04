@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react'
 import styled from '@emotion/styled'
-import { formatIsoDate } from '@/shared/lib'
 import { DataTable, type DataTableColumn, type DataTableRow } from '@/shared/ui'
-import type { MiddleManager } from '../model/middleManager'
+import type { StaffAccount } from '../model/staffAccount'
 import { EmployeeIdentity } from './EmployeeIdentity'
 import { employeeTableAppearance } from './employeeTableAppearance'
 
 interface MiddleManagerTableProps {
-  managers: MiddleManager[]
+  managers: StaffAccount[]
   /** 카드 하단 왼쪽 `총 N명` 의 N(검색 조건에 맞는 전체 인원) */
   total: number
   /** `총 N명` 푸터를 보일지. 빈 상태(Figma 3832:25857)에는 푸터가 없다. */
@@ -16,11 +15,11 @@ interface MiddleManagerTableProps {
   emptyLabel?: ReactNode
   emptyMinHeight?: number
   /** 행 오른쪽 `해제` 버튼. 해제 동작은 페이지가 소유한다. */
-  renderRowAction: (manager: MiddleManager) => ReactNode
+  renderRowAction: (manager: StaffAccount) => ReactNode
   loading?: boolean
 }
 
-// Figma 열 고정폭: 이름 560 / 지정일 600 / 해제 160.
+// Figma 열 고정폭: 이름 1160 / 해제 160.
 export function MiddleManagerTable({
   managers,
   total,
@@ -38,22 +37,11 @@ export function MiddleManagerTable({
     {
       key: 'name',
       header: '이름',
-      width: 560,
+      width: 1160,
       render: (row) => {
         const manager = managerById.get(row.id)
         return manager ? (
           <EmployeeIdentity name={manager.name} username={manager.username} />
-        ) : null
-      },
-    },
-    {
-      key: 'assignedAt',
-      header: '지정일',
-      width: 600,
-      render: (row) => {
-        const manager = managerById.get(row.id)
-        return manager ? (
-          <AssignedAt>{formatIsoDate(manager.assignedAt)}</AssignedAt>
         ) : null
       },
     },
@@ -103,13 +91,6 @@ const TableScroll = styled.div`
 
 const TableFrame = styled.div`
   min-width: 1320px;
-`
-
-const AssignedAt = styled.span`
-  color: ${({ theme }) => theme.colors.textStrong};
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.2;
 `
 
 // Figma: 버튼을 열 오른쪽에 두고 오른쪽 여백 40.

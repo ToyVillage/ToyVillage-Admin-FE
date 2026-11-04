@@ -39,7 +39,7 @@
 
 ## Success Responses
 
-- `200` — 직원 목록 (EmployeeResponse 배열): `id` integer, `username` string, `name` string, `createAt` date, `passwordChanged` boolean
+- `200` — 직원 목록 (EmployeeResponse 배열): `id` integer, `username` string, `name` string, `role` enum(`APP_ADMIN`·`MIDDLE_ADMIN`·`EMPLOYEE`, 이 목록에는 뒤 둘만 옴), `createAt` date, `passwordChanged` boolean
 
 ## Error Responses
 
@@ -50,3 +50,8 @@
 | 403 | 인증 토큰이 없거나 유효하지 않음, 또는 접근 권한 없음 (Swagger에 body 스키마 없음) |
 | 405 | 지원하지 않는 메서드 형식입니다. |
 | 500 | 내부 서버 오류가 발생했습니다. |
+
+## 개정 (2026-11-04)
+
+- 백엔드 #239 가 응답에 `role` 을 추가했다(Swagger `EmployeeResponse.role`). 권한 관리 화면이 중간 관리자와 지정 후보를 나누는 데 쓴다.
+- Swagger 에 필수 여부가 없어 백엔드 `EmployeeResponse.from` 과 `AppAdmin.role` 기준으로 필수·non-null 로 둔다.

@@ -3,6 +3,8 @@ import type { StaffAccount } from '../model/staffAccount'
 import { appAdminEmployeesPath } from './employeeApi'
 import type {
   AppAdminEmployeeResponseItem,
+  AppAdminEmployeeRole,
+  AppAdminEmployeeRoleChangeRequest,
   AppAdminMessageResponse,
 } from './types'
 
@@ -21,6 +23,7 @@ export async function getStaffAccounts(): Promise<StaffAccount[]> {
     id: item.id,
     username: item.username,
     name: item.name,
+    role: item.role,
     passwordChanged: item.passwordChanged,
     createdAt: item.createAt,
   }))
@@ -35,6 +38,20 @@ export async function resetStaffAccountPassword(
     `${appAdminEmployeesPath}/${appAdminId}/password`,
   )
   return readMessage(data, '비밀번호 초기화')
+}
+
+/** 직원 권한 변경(`APP_ADMIN_EMPLOYEE_ROLE_CHANGE`, PATCH `…/{appAdminId}/role`). */
+export async function changeEmployeeRole(
+  appAdminId: number,
+  role: AppAdminEmployeeRole,
+): Promise<AppAdminMessageResponse> {
+  assertAppAdminId(appAdminId)
+  const request: AppAdminEmployeeRoleChangeRequest = { role }
+  const { data } = await api.patch<unknown>(
+    `${appAdminEmployeesPath}/${appAdminId}/role`,
+    request,
+  )
+  return readMessage(data, '직원 권한 변경')
 }
 
 /** 직원 계정 삭제(`APP_ADMIN_EMPLOYEE_DELETE`, DELETE `…/{appAdminId}`). */
@@ -74,8 +91,15 @@ function isEmployeeResponseItem(
     Number.isSafeInteger(item.id) &&
     typeof item.username === 'string' &&
     typeof item.name === 'string' &&
+    isEmployeeRole(item.role) &&
     typeof item.passwordChanged === 'boolean' &&
     typeof item.createAt === 'string' &&
     /^\d{4}-\d{2}-\d{2}$/.test(item.createAt)
+  )
+}
+
+function isEmployeeRole(value: unknown): value is AppAdminEmployeeRole {
+  return (
+    value === 'APP_ADMIN' || value === 'MIDDLE_ADMIN' || value === 'EMPLOYEE'
   )
 }

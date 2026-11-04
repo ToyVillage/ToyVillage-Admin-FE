@@ -1,6 +1,6 @@
 {
   "feature": "permissions",
-  "approvedAt": "2026-11-03T10:30:07.932Z",
+  "approvedAt": "2026-11-04T01:01:23.928Z",
   "approvedBy": "yunho09",
   "scenarioIds": [
     "S1",
@@ -21,6 +21,6 @@
     "S16",
     "S18"
   ],
-  "scenarioHash": "07ad89be756617a0f3d789fabd74e66701c247574dc48e755bb1df9224c02aac",
-  "e2eHash": "1c35544e63a5da799412852e4810b3daded4848fe75f99943d84e88762be3df0"
+  "scenarioHash": "836f9457c367ae0f6e28866a2b001e8acc9187826098917d8730fc28ef6eef3e",
+  "e2eHash": "3634951c12c8356d2b5927c1deaa2eca1a5b7837b2014c8d52180c1faad37578"
 }

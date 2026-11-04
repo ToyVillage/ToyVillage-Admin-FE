@@ -3,13 +3,12 @@ import styled from '@emotion/styled'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   MiddleManagerTable,
-  assignMiddleManagers,
+  changeEmployeeRole,
   filterByNameOrUsername,
-  getAssignableEmployees,
-  getMiddleManagers,
-  middleManagerQueryKeys,
-  releaseMiddleManager,
-  type MiddleManager,
+  getStaffAccounts,
+  staffAccountQueryKeys,
+  type AppAdminEmployeeRole,
+  type StaffAccount,
 } from '@/entities/employee'
 import { AssignMiddleManagerDialog } from '@/features/assign-middle-manager'
 import { useListSearchParams } from '@/shared/lib'
@@ -28,13 +27,18 @@ interface PageToast {
   message: string
 }
 
+interface RoleChange {
+  employeeId: number
+  role: AppAdminEmployeeRole
+}
+
 // 검색어 입력 뒤 목록에 반영하기까지 기다리는 시간(다른 목록 화면과 같다).
 const SEARCH_DEBOUNCE_MS = 200
 // URL 에 남기지 않을 기본값(검색어 없음).
 const listParamDefaults = { keyword: '' } as const
 
 // `/settings/permissions` — 권한 관리(Figma `권한 관리` 3830:25854).
-// 목록·지정·해제는 퍼블리싱 mock 이다. 실제 API 는 `/api` 스킬이 연결한다.
+// 중간 관리자와 지정 후보는 직원 조회 하나를 `role` 로 나누고, 지정·해제는 권한 변경 API 를 쓴다.
 export function PermissionsPage() {
   const queryClient = useQueryClient()
   const { values, update } = useListSearchParams(listParamDefaults)
@@ -48,7 +52,7 @@ export function PermissionsPage() {
     if (keyword !== query.trim()) setQuery(keyword)
   }
   const [assignOpen, setAssignOpen] = useState(false)
-  const [releaseTarget, setReleaseTarget] = useState<MiddleManager | null>(null)
+  const [releaseTarget, setReleaseTarget] = useState<StaffAccount | null>(null)
   const [toast, setToast] = useState<PageToast | null>(null)
   // 확인 요청부터 목록 갱신까지. mutation 의 isPending 은 onSuccess(갱신 대기) 전에 풀려
   // 그 사이 `해제` 가 다시 눌리므로 모달의 처리 중 상태를 따로 잡는다.
@@ -57,16 +61,14 @@ export function PermissionsPage() {
   const releaseTriggersRef = useRef(new Map<number, HTMLButtonElement>())
   const focusFrame = useFocusFrame()
 
-  const managersQuery = useQuery({
-    queryKey: middleManagerQueryKeys.list,
-    queryFn: getMiddleManagers,
+  const staffQuery = useQuery({
+    queryKey: staffAccountQueryKeys.list,
+    queryFn: getStaffAccounts,
   })
-  const assignableQuery = useQuery({
-    queryKey: middleManagerQueryKeys.assignable,
-    queryFn: getAssignableEmployees,
+  const roleMutation = useMutation({
+    mutationFn: ({ employeeId, role }: RoleChange) =>
+      changeEmployeeRole(employeeId, role),
   })
-  const assignMutation = useMutation({ mutationFn: assignMiddleManagers })
-  const releaseMutation = useMutation({ mutationFn: releaseMiddleManager })
 
   // 입력값은 즉시 보이고, 목록 검색어(URL)는 디바운스해 반영한다.
   useEffect(() => {
@@ -79,19 +81,26 @@ export function PermissionsPage() {
     return () => clearTimeout(timer)
   }, [query, keyword, update])
 
-  const managers = managersQuery.data ?? []
+  const staff = staffQuery.data ?? []
+  const managers = staff.filter(({ role }) => role === 'MIDDLE_ADMIN')
+  const assignableEmployees = staff.filter(({ role }) => role === 'EMPLOYEE')
   const matchedManagers = filterByNameOrUsername(managers, keyword)
   // 검색 결과가 없는 것과 구분한다. 빈 상태에는 안내 문구만 있고 `총 N명` 이 없다.
   const noManagers =
-    managersQuery.isSuccess && managers.length === 0 && keyword === ''
+    staffQuery.isSuccess && managers.length === 0 && keyword === ''
 
   const dismissToast = useCallback(() => setToast(null), [])
   const closeAssign = useCallback(() => setAssignOpen(false), [])
 
-  function invalidateMiddleManagers() {
+  // 역할은 이 화면만 쓴다. 팀 관리의 직원 목록과 팀 트리는 무효화하지 않는다.
+  function invalidateStaffAccounts() {
     return queryClient.invalidateQueries({
-      queryKey: middleManagerQueryKeys.all,
+      queryKey: staffAccountQueryKeys.list,
     })
+  }
+
+  async function submitAssign(employeeId: number) {
+    await roleMutation.mutateAsync({ employeeId, role: 'MIDDLE_ADMIN' })
   }
 
   // 모달은 곧바로 닫고 목록은 뒤에서 갱신한다. 갱신을 기다리는 동안 모달이 열려 있으면
@@ -99,7 +108,7 @@ export function PermissionsPage() {
   function handleAssigned() {
     setAssignOpen(false)
     setToast({ variant: 'success', message: '권한 부여에 성공했습니다' })
-    void invalidateMiddleManagers()
+    void invalidateStaffAccounts()
   }
 
   function focusReleaseTrigger(managerId: number) {
@@ -119,24 +128,27 @@ export function PermissionsPage() {
     const managerId = releaseTarget.id
 
     setReleasing(true)
-    releaseMutation.mutate(managerId, {
-      onSuccess: async () => {
-        await invalidateMiddleManagers()
-        setReleasing(false)
-        setReleaseTarget(null)
-        setToast({ variant: 'success', message: '권한 해제에 성공했습니다' })
+    roleMutation.mutate(
+      { employeeId: managerId, role: 'EMPLOYEE' },
+      {
+        onSuccess: async () => {
+          await invalidateStaffAccounts()
+          setReleasing(false)
+          setReleaseTarget(null)
+          setToast({ variant: 'success', message: '권한 해제에 성공했습니다' })
+        },
+        onError: () => {
+          setReleasing(false)
+          setReleaseTarget(null)
+          setToast({ variant: 'error', message: '권한 해제에 실패했습니다' })
+          focusReleaseTrigger(managerId)
+        },
       },
-      onError: () => {
-        setReleasing(false)
-        setReleaseTarget(null)
-        setToast({ variant: 'error', message: '권한 해제에 실패했습니다' })
-        focusReleaseTrigger(managerId)
-      },
-    })
+    )
   }
 
   // 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
-  if (managersQuery.isError) {
+  if (staffQuery.isError) {
     return (
       <StatePage>
         <StateCard role="alert">
@@ -170,12 +182,12 @@ export function PermissionsPage() {
 
         <TableArea>
           <MiddleManagerTable
-            loading={managersQuery.isPending}
+            loading={staffQuery.isPending}
             managers={matchedManagers}
             total={matchedManagers.length}
-            showTotal={!managersQuery.isPending && !noManagers}
+            showTotal={!staffQuery.isPending && !noManagers}
             emptyLabel={
-              managersQuery.isPending ? undefined : noManagers ? (
+              staffQuery.isPending ? undefined : noManagers ? (
                 <EmptyNotice>
                   <EmptyTitle>지정된 중간 관리자가 없어요</EmptyTitle>
                   <EmptyDescription>
@@ -206,10 +218,9 @@ export function PermissionsPage() {
 
       {assignOpen && (
         <AssignMiddleManagerDialog
-          employees={assignableQuery.data ?? []}
-          loading={assignableQuery.isPending}
-          loadFailed={assignableQuery.isError}
-          onSubmit={(employeeIds) => assignMutation.mutateAsync(employeeIds)}
+          employees={assignableEmployees}
+          loading={staffQuery.isPending}
+          onSubmit={submitAssign}
           onCancel={closeAssign}
           onAssigned={handleAssigned}
           onError={() =>

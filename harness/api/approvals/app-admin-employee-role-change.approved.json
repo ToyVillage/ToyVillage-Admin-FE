@@ -1,0 +1,18 @@
+{
+  "feature": "app-admin-employee-role-change",
+  "apiId": "APP_ADMIN_EMPLOYEE_ROLE_CHANGE",
+  "approvedAt": "2026-11-04T01:01:23.333Z",
+  "approvedBy": "yunho09",
+  "approvedCommit": "05f969006e0ecd782c8f662f3654cd6c09324ae5",
+  "taskSpecHash": "a4335b89325f9d395b4a0125002796b9c3ce4edf31ac84c42c6ad07d1b3844d9",
+  "contractHash": "54654e981ab135e1c7d576d867ece7794e254c77327924327c2703ca03a8cccb",
+  "contractMarkdownHash": "53456c8aca7c78de8aa84425b345e201d9f67a6ec8a5ed5d5094e72efb095c96",
+  "planHash": "610d90c110fa1cb6a0779d7fc7396cb7b9b8a0a93ed04e7d4523e141129cef53",
+  "scenarioHash": "d8d372365fc03510dda06b079375f3609ede4bb9a5790206ce5ccaa03823dc4e",
+  "testHash": "bb419827020c707c8954850d085b6627f8bb54d168f8626ce72534b870e1939e",
+  "realTestHash": null,
+  "realFixtureHash": null,
+  "testApprovedAt": "2026-11-04T01:08:52.668Z",
+  "testApprovedBy": "yunho09",
+  "testApprovedCommit": "05f969006e0ecd782c8f662f3654cd6c09324ae5"
+}

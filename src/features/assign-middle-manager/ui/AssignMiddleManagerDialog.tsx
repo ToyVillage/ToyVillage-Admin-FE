@@ -4,11 +4,11 @@ import styled from '@emotion/styled'
 import {
   EmployeeIdentity,
   filterByNameOrUsername,
-  type AssignableEmployee,
+  type StaffAccount,
 } from '@/entities/employee'
 import {
-  Checkbox,
   OutlinedSearchField,
+  Radio,
   fadeIn,
   motionDuration,
   motionEasing,
@@ -18,10 +18,9 @@ import {
 
 interface AssignMiddleManagerDialogProps {
   /** 아직 중간 관리자가 아닌 직원 */
-  employees: AssignableEmployee[]
+  employees: StaffAccount[]
   loading: boolean
-  loadFailed: boolean
-  onSubmit: (employeeIds: number[]) => Promise<void>
+  onSubmit: (employeeId: number) => Promise<void>
   onCancel: () => void
   /** 지정 성공. 호출부가 같은 틱에 모달을 닫고 결과를 알린다(갱신은 기다리지 않는다). */
   onAssigned: () => void
@@ -29,11 +28,10 @@ interface AssignMiddleManagerDialogProps {
   onError: (error: unknown) => void
 }
 
-// Figma `중간 관리자 지정 모달` — 기본(3832:26009) · 2명 선택(3832:26144).
+// Figma `중간 관리자 지정 모달` — 기본(3832:26009) · 선택(3832:26144). 한 번에 한 명만 고른다.
 export function AssignMiddleManagerDialog({
   employees,
   loading,
-  loadFailed,
   onSubmit,
   onCancel,
   onAssigned,
@@ -41,8 +39,9 @@ export function AssignMiddleManagerDialog({
 }: AssignMiddleManagerDialogProps) {
   const titleId = useId()
   const descriptionId = useId()
+  const radioGroupName = useId()
   const [keyword, setKeyword] = useState('')
-  const [selected, setSelected] = useState<ReadonlySet<number>>(new Set())
+  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [isPending, setIsPending] = useState(false)
   const dialogRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -51,14 +50,11 @@ export function AssignMiddleManagerDialog({
   // 호출부가 매 렌더 새 onCancel 을 넘겨도 아래 effect 가 다시 돌지 않게 ref 로 읽는다.
   const onCancelRef = useRef(onCancel)
 
-  // 걸러져 안 보이는 직원의 선택도 유지되고 함께 지정된다.
   const visibleEmployees = filterByNameOrUsername(employees, keyword)
-  const selectedIds = employees
-    .filter(({ id }) => selected.has(id))
-    .map(({ id }) => id)
+  // 걸러져 안 보여도 선택은 유지되고, 그 직원이 지정된다.
+  const hasSelection = employees.some(({ id }) => id === selectedId)
   const statusLabel = getStatusLabel({
     loading,
-    loadFailed,
     employeeCount: employees.length,
     visibleCount: visibleEmployees.length,
   })
@@ -96,26 +92,18 @@ export function AssignMiddleManagerDialog({
     }
   }, [])
 
-  function toggle(employeeId: number) {
-    setSelected((current) => {
-      const next = new Set(current)
-      if (!next.delete(employeeId)) next.add(employeeId)
-      return next
-    })
-  }
-
   function cancel() {
     if (!submittingRef.current) onCancel()
   }
 
   async function submit() {
-    if (submittingRef.current || selectedIds.length === 0) return
+    if (submittingRef.current || !hasSelection || selectedId === null) return
 
     submittingRef.current = true
     setIsPending(true)
 
     try {
-      await onSubmit(selectedIds)
+      await onSubmit(selectedId)
       submittingRef.current = false
       onAssigned()
     } catch (error) {
@@ -156,22 +144,21 @@ export function AssignMiddleManagerDialog({
           {statusLabel != null ? (
             <ListStatus role="status">{statusLabel}</ListStatus>
           ) : (
-            <EmployeeList>
+            <EmployeeList role="radiogroup" aria-labelledby={titleId}>
               {visibleEmployees.map((employee) => {
-                const checked = selected.has(employee.id)
+                const checked = employee.id === selectedId
                 return (
-                  <li key={employee.id}>
-                    <EmployeeRow $selected={checked}>
-                      <Checkbox
-                        checked={checked}
-                        onChange={() => toggle(employee.id)}
-                      />
-                      <EmployeeIdentity
-                        name={employee.name}
-                        username={employee.username}
-                      />
-                    </EmployeeRow>
-                  </li>
+                  <EmployeeRow key={employee.id} $selected={checked}>
+                    <Radio
+                      name={radioGroupName}
+                      checked={checked}
+                      onChange={() => setSelectedId(employee.id)}
+                    />
+                    <EmployeeIdentity
+                      name={employee.name}
+                      username={employee.username}
+                    />
+                  </EmployeeRow>
                 )
               })}
             </EmployeeList>
@@ -185,12 +172,10 @@ export function AssignMiddleManagerDialog({
           <SubmitButton
             type="button"
             $pending={isPending}
-            disabled={isPending || selectedIds.length === 0}
+            disabled={isPending || !hasSelection}
             onClick={() => void submit()}
           >
-            {selectedIds.length > 0
-              ? `${selectedIds.length}명 지정하기`
-              : '지정하기'}
+            지정하기
           </SubmitButton>
         </Actions>
       </Dialog>
@@ -201,19 +186,16 @@ export function AssignMiddleManagerDialog({
 
 interface StatusLabelInput {
   loading: boolean
-  loadFailed: boolean
   employeeCount: number
   visibleCount: number
 }
 
 function getStatusLabel({
   loading,
-  loadFailed,
   employeeCount,
   visibleCount,
 }: StatusLabelInput): string | null {
   if (loading) return ''
-  if (loadFailed) return '직원 목록을 불러오지 못했습니다. 다시 시도해 주세요.'
   if (employeeCount === 0) return '지정할 수 있는 직원이 없습니다'
   if (visibleCount === 0) return '검색결과가 없습니다'
   return null
@@ -271,13 +253,10 @@ const ListArea = styled.div`
   overflow-y: auto;
 `
 
-const EmployeeList = styled.ul`
+const EmployeeList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 `
 
 const EmployeeRow = styled.label<{ $selected: boolean }>`
@@ -338,7 +317,7 @@ const CancelButton = styled(DialogButton)`
   }
 `
 
-// 선택 0명(Figma 3832:26027)은 회색, 제출 중은 원래 색을 흐리게 둔다.
+// 선택 전(Figma 3832:26027)은 회색, 제출 중은 원래 색을 흐리게 둔다.
 const SubmitButton = styled(DialogButton)<{ $pending: boolean }>`
   background: ${({ theme }) => theme.colors.textStrong};
   color: ${({ theme }) => theme.colors.surface};

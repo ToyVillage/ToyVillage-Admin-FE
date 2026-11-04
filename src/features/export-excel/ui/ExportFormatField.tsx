@@ -1,7 +1,7 @@
 import { useId } from 'react'
 import styled from '@emotion/styled'
 import type { ExcelExportMode } from '@/entities/excel-export'
-import radioOnIcon from './assets/radio-on.svg'
+import { Radio } from '@/shared/ui'
 
 interface ExportFormatFieldProps {
   value: ExcelExportMode
@@ -37,7 +37,6 @@ export function ExportFormatField({ value, onChange }: ExportFormatFieldProps) {
         {formatOptions.map((option) => (
           <Option key={option.mode} data-checked={value === option.mode}>
             <Radio
-              type="radio"
               name={id}
               value={option.mode}
               checked={value === option.mode}
@@ -105,28 +104,6 @@ const Option = styled.label`
   &[data-checked='true'] {
     border-color: ${({ theme }) => theme.colors.accent};
     box-shadow: inset 0 0 0 1px ${({ theme }) => theme.colors.accent};
-  }
-`
-
-const Radio = styled.input`
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
-  margin: 0;
-  border: 2px solid ${({ theme }) => theme.colors.dialogBorder};
-  border-radius: 14px;
-  appearance: none;
-  background: ${({ theme }) => theme.colors.surface};
-  cursor: pointer;
-
-  &:checked {
-    border: 0;
-    background: url("${radioOnIcon}") center / 28px no-repeat;
-  }
-
-  &:focus-visible {
-    outline: 3px solid ${({ theme }) => theme.colors.accent};
-    outline-offset: 2px;
   }
 `
 
