@@ -16,11 +16,11 @@ paths: src/pages/settings/permissions, src/features/assign-middle-manager, src/e
 ## 상태와 근거
 
 - Status: Draft
-- Last refreshed: 2026-11-03
+- Last refreshed: 2026-11-04
 - 이슈: #289 권한 관리(중간 관리자) 퍼블리싱
 - 기준 섹션: Figma yot `3830:25854`(`권한 관리`). 하위 3개 섹션이 **한 페이지의 상태 분기**다.
   - 목록 `3830:25855` — 기본(`3830:25860`), 빈 상태(`3832:25857`)
-  - 지정 `3830:25856` — 모달 기본(`3832:25934`), 2명 선택(`3832:26069`), 성공 토스트(`3832:26206`)
+  - 지정 `3830:25856` — 모달 기본(`3832:25934`), 한 명 선택(`3832:26069`), 성공 토스트(`3832:26206`)
   - 해제 `3830:25857` — 확인 모달(`3832:26328`), 성공 토스트(`3832:26429`)
 - 부모 섹션의 다른 형제를 확인했다. `권한 관리 · 토스트` 같은 별도 섹션은 없고, 토스트는 지정·해제 섹션 안의 프레임 2개가 전부다.
 - 파일 안의 `중간 관리자` 섹션(`3156:25524`)은 iPhone 앱 화면이라 이 범위가 아니다.
@@ -33,14 +33,22 @@ paths: src/pages/settings/permissions, src/features/assign-middle-manager, src/e
   - 해제 확인 모달은 공용 모달을 그대로 쓴다(시각 차이는 비고 참고).
   - 시나리오는 페이지네이션 항목(옛 S17)을 뺀 나머지를 승인하고, 승인 스크립트 실행을 AI 에게 맡겼다.
 
+## 개정 (2026-11-04, API 연동 #291)
+
+- 지정과 해제는 `PATCH /app/admin/employees/{appAdminId}/role`(`harness/api/specs/app-admin-employee-role-change.spec.md`), 목록과 후보는 `GET /app/admin/employees` 의 `role` 로 나눈다.
+- Figma 가 함께 수정됐다(`3832:25934`). 모든 프레임에서 `지정일` 열이 빠졌고(이름 1160 / 해제 160), 지정 모달은 라디오로 한 명만 고르며 버튼 문구는 `지정하기` 로 고정이다.
+- 시나리오는 S2·S4·S5·S6·S7·S15·S18 을 이 변경에 맞춰 개정했다.
+- 목록 순서는 응답 순서 그대로다(서버는 id 오름차순).
+- 조회가 하나라 지정 모달의 별도 조회 실패 문구는 없앴다. 조회 실패는 페이지 상태 카드가 처리한다.
+
 ## 목적
 
 운영 관리자가 토이빌리지 직원 중 중간 관리자를 지정하고 해제하는 화면이다.
 
 ## 범위
 
-- 포함: `/settings/permissions` 라우트, 중간 관리자 목록(이름·아이디·지정일·해제 버튼·총 인원)과 빈 상태,
-  이름/아이디 검색, 지정 모달(검색·다중 선택), 해제 확인 모달, 결과 토스트, 사이드바 연결
+- 포함: `/settings/permissions` 라우트, 중간 관리자 목록(이름·아이디·해제 버튼·총 인원)과 빈 상태,
+  이름/아이디 검색, 지정 모달(검색·한 명 선택), 해제 확인 모달, 결과 토스트, 사이드바 연결
 - 제외: 실제 API 연동(`/api` 스킬 담당), 중간 관리자 권한에 따른 메뉴·기능 제한, 행 클릭 상세 화면(Figma 없음),
   목록 페이지네이션
 
@@ -58,13 +66,12 @@ paths: src/pages/settings/permissions, src/features/assign-middle-manager, src/e
 
 - 화면 진입 → 제목 `권한 관리`, 부제 `토이빌리지 중간 관리자 지정 및 해제`,
   오른쪽 `＋ 중간 관리자 지정` 버튼, 그 아래 검색 입력(placeholder `이름 또는 아이디 검색`), 목록 카드가 보인다.
-- 목록 머리행은 `이름` / `지정일` 과 라벨 없는 해제 열이다.
+- 목록 머리행은 `이름` 과 라벨 없는 해제 열이다.
 - 각 행은 다음을 보인다.
   - 아바타(이름 첫 글자, 파란 원) + 이름 + 그 아래 아이디
-  - 지정일 `YYYY.MM.DD`
   - `해제` 버튼
 - 카드 하단 왼쪽에 `총 N명`(검색 조건에 맞는 전체 인원)이 있다.
-- 목록은 지정일이 오래된 순서다. 새로 지정한 사람은 맨 아래에 붙는다(Figma `3832:26206`).
+- 목록은 응답 순서 그대로다.
 - 페이지를 나누지 않고 중간 관리자 전체를 한 번에 보인다.
 
 ### 빈 상태
@@ -87,19 +94,16 @@ paths: src/pages/settings/permissions, src/features/assign-middle-manager, src/e
   제목 `중간 관리자 지정`, 부제 `중간 관리자로 지정할 직원을 선택하세요`,
   검색 입력(placeholder `이름 또는 아이디 검색`), 직원 목록, `취소` / `지정하기` 버튼.
 - 모달이 열리면 검색 입력에 포커스가 간다. 검색어와 선택은 비어 있다.
-- 직원 목록은 **아직 중간 관리자가 아닌 직원**만 보인다. 각 행은 체크박스 + 아바타 + 이름 + 아이디다.
+- 직원 목록은 **아직 중간 관리자가 아닌 직원**만 보인다. 각 행은 라디오 + 아바타 + 이름 + 아이디다.
 - 목록은 5행까지 한 번에 보이고, 더 많으면 목록 안에서 세로로 스크롤한다(모달 높이는 늘지 않는다).
-- 행 어디를 눌러도 선택이 토글된다. 선택된 행은 체크박스가 켜지고 배경이 회색(`#F5F5F7`)이다.
-- 버튼 문구와 상태는 선택 인원을 따른다.
-  - 0명: `지정하기`, 비활성(회색 `#848491`)
-  - N명: `N명 지정하기`, 활성(`#36363F`)
+- 행 어디를 눌러도 그 직원이 선택된다. 한 명만 고를 수 있어 다른 행을 누르면 선택이 옮겨 간다. 선택된 행은 라디오가 켜지고 배경이 회색(`#F5F5F7`)이다.
+- 버튼 문구는 항상 `지정하기` 다. 선택이 없으면 비활성(회색 `#848491`), 있으면 활성(`#36363F`)이다.
 - 모달 검색은 이름 또는 아이디로 직원 목록을 바로 거른다(대소문자·앞뒤 공백 무시, URL 에 두지 않는다).
-  걸러져 안 보이는 직원의 선택도 유지되고 인원에 포함되며 함께 지정된다.
+  걸러져 안 보여도 선택은 유지되고, `지정하기` 를 누르면 그 직원이 지정된다.
 - 검색 결과가 없으면 목록 자리에 `검색결과가 없습니다` 를 보인다.
 - 지정할 수 있는 직원이 한 명도 없으면 목록 자리에 `지정할 수 있는 직원이 없습니다` 를 보인다.
-- 직원 목록 조회가 실패하면 "직원 없음"으로 보이지 않게 목록 자리에 `직원 목록을 불러오지 못했습니다. 다시 시도해 주세요.` 를 보인다.
-- `N명 지정하기` 클릭 → 모달이 닫히고 성공 토스트 `권한 부여에 성공했습니다` 가 뜬다.
-  지정한 직원이 목록 맨 아래에 오늘 날짜로 추가되고(모달 목록 순서대로) `총 N명` 이 늘어난다.
+- `지정하기` 클릭 → 모달이 닫히고 성공 토스트 `권한 부여에 성공했습니다` 가 뜬다.
+  목록을 다시 불러와 그 직원의 행이 추가되고 `총 N명` 이 1 늘어난다.
 - 제출 중에는 버튼을 비활성화하고 `aria-busy` 로 알리며, 중복 제출을 막는다. 제출 중에는 닫지 않는다.
 - 실패하면 모달과 선택을 그대로 두고 실패 토스트 `권한 부여에 실패했습니다` 를 띄운다.
 - `취소` / 딤 바깥 클릭 / `Escape` → 아무도 지정하지 않고 모달이 닫힌다. 다시 열면 검색어·선택은 비어 있다.
@@ -124,37 +128,16 @@ paths: src/pages/settings/permissions, src/features/assign-middle-manager, src/e
 
 ## 데이터와 API 경계
 
-```ts
-interface MiddleManager {
-  id: number
-  name: string
-  username: string
-  /** ISO 날짜(YYYY-MM-DD). 화면은 YYYY.MM.DD 로 표시한다. */
-  assignedAt: string
-}
-
-interface AssignableEmployee {
-  id: number
-  name: string
-  username: string
-}
-```
-
-- 서버 데이터는 TanStack Query 로 다룬다. 쿼리키 후보 `['middle-managers', 'list']`, `['middle-managers', 'assignable']`.
-- 퍼블리싱에서는 **mock 함수(Promise)** 를 경계로 둔다. 실제 API 연결과 교체는 `/api` 스킬이 한다.
-  - `getMiddleManagers()`, `getAssignableEmployees()`, `assignMiddleManagers(ids)`, `releaseMiddleManager(id)`
-  - 초기 데이터는 Figma 값이다. 중간 관리자 3명(김수인 `suin.kim` 2026-07-03 / 이승현 `seunghyun.lee` 2026-09-01 /
-    이지아 `jia.lee` 2026-10-20), 지정 가능 직원 5명(박도현 `dohyun.park` / 최민지 `minji.choi` / 정하윤 `hayun.jung` /
-    오세훈 `sehun.oh` / 한지민 `jimin.han`).
-  - mock 상태는 메모리에만 있어 새로고침하면 초기값으로 돌아간다.
-- 검색은 퍼블리싱 단계에서 클라이언트가 한다.
+- 조회: `getStaffAccounts`(`GET /app/admin/employees`), 쿼리키 `staffAccountQueryKeys.list`. `role` 이 `MIDDLE_ADMIN` 이면 중간 관리자, `EMPLOYEE` 면 지정 후보다.
+- 변경: `changeEmployeeRole(appAdminId, role)`. 지정은 `MIDDLE_ADMIN`, 해제는 `EMPLOYEE`.
+- 검색은 클라이언트가 한다.
 - 클라이언트 상태: 열린 모달, 해제 대상, 토스트, 모달 안 검색어·선택은 지역 상태. 목록 검색어는 URL.
 
 ## 컴포넌트 구조/props
 
 - `PermissionsPage` (pages/settings/permissions) — `/settings/permissions` 화면. URL 상태·모달·토스트를 소유한다.
 - `MiddleManagerTable { managers, total, showTotal, emptyLabel, emptyMinHeight, renderRowAction, loading }`
-  (entities/employee/ui) — 공용 `DataTable` 에 열·외형을 입힌다. 열 폭은 이름 560 / 지정일 600 / 해제 160.
+  (entities/employee/ui) — 공용 `DataTable` 에 열·외형을 입힌다. 열 폭은 이름 남는 폭 / 해제 160.
 - `EmployeeIdentity { name, username }` (entities/employee/ui) — 아바타 + 이름 + 아이디. `StaffAccountTable` 안 코드를 옮겨 세 곳이 함께 쓴다.
 - `AssignMiddleManagerDialog { employees, loading, onSubmit, onCancel, onAssigned, onError }` (features/assign-middle-manager/ui)
   — 검색·선택·제출을 자체 상태로 가진다.
@@ -165,13 +148,15 @@ interface AssignableEmployee {
   - `OutlinedSearchField { value, onChange, placeholder, ariaLabel, inputRef }`: `StaffAccountsPage` 안의 흰 테두리 검색 입력(높이 52, radius 8)을
     `shared/ui` 로 옮겨 직원 계정 관리·권한 관리 목록·지정 모달이 함께 쓴다. 폭은 호출부가 정한다(목록 400, 모달 꽉 차게).
     기존 `SearchBar` 는 높이 60·radius 44 라 규격이 달라 그대로 둔다.
+  - `Radio`(2026-11-04 추가, 승인 대상): `features/export-excel/ui/ExportFormatField` 의 라디오와 `radio-on.svg` 를 `shared/ui` 로 옮겨 지정 모달과 함께 쓴다.
+    Figma `radio / on`·`off` 28px 가 같고 에셋도 원본과 같다.
 
 ## 접근성
 
 - 검색 입력은 각각 `aria-label="이름 또는 아이디 검색"` 을 준다.
 - `해제` 버튼은 `aria-label="{이름} 중간 관리자 해제"` 다.
 - 지정 모달은 `role="dialog"` + `aria-modal` + 제목·부제 연결, 포커스를 모달 안에 가둔다.
-- 직원 행은 네이티브 체크박스를 쓰고 `label` 로 이름과 연결한다. `Space` 로 토글할 수 있다.
+- 직원 행은 같은 `name` 의 네이티브 라디오를 쓰고 `label` 로 이름과 연결한다. `Space` 와 화살표 키로 고를 수 있다.
 - 비활성 `지정하기` 는 `disabled` 다. 빈 상태·검색 결과 없음은 `role="status"` 다.
 
 ## 반응형
