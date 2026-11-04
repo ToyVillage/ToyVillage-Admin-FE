@@ -77,6 +77,22 @@
               "constraints": []
             },
             {
+              "name": "role",
+              "location": "response",
+              "type": "enum",
+              "required": true,
+              "nullable": false,
+              "default": null,
+              "example": "EMPLOYEE",
+              "description": "직원 권한. 이 목록에는 MIDDLE_ADMIN 과 EMPLOYEE 만 온다(백엔드 EMPLOYEE_ROLES). 2026-10-31 백엔드 #239 추가.",
+              "constraints": [],
+              "allowedValues": [
+                "APP_ADMIN",
+                "MIDDLE_ADMIN",
+                "EMPLOYEE"
+              ]
+            },
+            {
               "name": "createAt",
               "location": "response",
               "type": "date",
