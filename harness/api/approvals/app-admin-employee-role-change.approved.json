@@ -1,18 +1,18 @@
 {
   "feature": "app-admin-employee-role-change",
   "apiId": "APP_ADMIN_EMPLOYEE_ROLE_CHANGE",
-  "approvedAt": "2026-11-04T01:01:23.333Z",
+  "approvedAt": "2026-11-05T00:32:06.150Z",
   "approvedBy": "yunho09",
-  "approvedCommit": "05f969006e0ecd782c8f662f3654cd6c09324ae5",
-  "taskSpecHash": "a4335b89325f9d395b4a0125002796b9c3ce4edf31ac84c42c6ad07d1b3844d9",
+  "approvedCommit": "4760f69dfe29f84d66a6063a9ee451fb26571337",
+  "taskSpecHash": "8f9d454844699dbaacd7b3681b7e1033bfe2487d63c31bbe64356f9e457d6d92",
   "contractHash": "54654e981ab135e1c7d576d867ece7794e254c77327924327c2703ca03a8cccb",
   "contractMarkdownHash": "53456c8aca7c78de8aa84425b345e201d9f67a6ec8a5ed5d5094e72efb095c96",
-  "planHash": "610d90c110fa1cb6a0779d7fc7396cb7b9b8a0a93ed04e7d4523e141129cef53",
-  "scenarioHash": "d8d372365fc03510dda06b079375f3609ede4bb9a5790206ce5ccaa03823dc4e",
-  "testHash": "bb419827020c707c8954850d085b6627f8bb54d168f8626ce72534b870e1939e",
+  "planHash": "f3b6b46f9e8835933ef7d7affdefbe0d9942417aa9d4c016b788d9d842408451",
+  "scenarioHash": "064775d9c4348d9c6c91f4d974e2c76f78045a15660158e2062653b48ab7a7f4",
+  "testHash": "81689395d7b2d8c2247eea1af0addeb3faa7a9218b83c12df776ac73f007641b",
   "realTestHash": null,
   "realFixtureHash": null,
-  "testApprovedAt": "2026-11-04T01:08:52.668Z",
+  "testApprovedAt": "2026-11-05T00:35:05.411Z",
   "testApprovedBy": "yunho09",
-  "testApprovedCommit": "05f969006e0ecd782c8f662f3654cd6c09324ae5"
+  "testApprovedCommit": "4760f69dfe29f84d66a6063a9ee451fb26571337"
 }

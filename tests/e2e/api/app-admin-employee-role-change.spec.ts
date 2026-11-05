@@ -3,6 +3,7 @@ import {
   errorBody,
   mockEmployeeApi,
   permissionEmployees,
+  type EmployeeApiHandle,
   type EmployeeApiOptions,
   type MockEmployeeRole,
 } from '../support/employee-api'
@@ -94,13 +95,17 @@ test('S2: 지정 성공', async ({ page }) => {
 })
 
 for (const status of [404, 500]) {
-  test(`S3: 지정 ${status} 이면 모달과 선택을 유지한다`, async ({ page }) => {
-    await openAssign(page, { roleStatus: status })
+  test(`S3: 지정 ${status} 이면 모달과 선택을 유지하고 다시 불러온다`, async ({
+    page,
+  }) => {
+    const api = await openAssign(page, { roleStatus: status })
+    const lists = api.lists
 
     await candidateRow(page, '박도현').click()
     await submitButton(page).click()
 
     await expect(page.getByText('권한 부여에 실패했습니다')).toBeVisible()
+    await expect.poll(() => api.lists).toBeGreaterThan(lists)
     await expect(dialog(page)).toBeVisible()
     await expect(candidate(page, '박도현')).toBeChecked()
     await expect(submitButton(page)).toBeEnabled()
@@ -138,13 +143,17 @@ test('S5: 해제 취소', async ({ page }) => {
 })
 
 for (const status of [404, 500]) {
-  test(`S6: 해제 ${status} 이면 실패 토스트`, async ({ page }) => {
-    await openRelease(page, { roleStatus: status })
+  test(`S6: 해제 ${status} 이면 실패 토스트 후 다시 불러온다`, async ({
+    page,
+  }) => {
+    const api = await openRelease(page, { roleStatus: status })
+    const lists = api.lists
 
     await confirmButton(page, '해제').click()
 
     await expect(confirmDialog(page)).toBeHidden()
     await expect(page.getByText('권한 해제에 실패했습니다')).toBeVisible()
+    await expect.poll(() => api.lists).toBeGreaterThan(lists)
     await expect(row(page, '김수인')).toBeVisible()
     await expect(releaseTrigger(page, '김수인')).toBeFocused()
   })
@@ -178,7 +187,7 @@ test('S7-1: 해제 중복 제출 방지', async ({ page }) => {
   expect(api.roleChanges).toHaveLength(1)
 })
 
-test('S8: 지정 응답 형식 오류', async ({ page }) => {
+test('S8: 지정 응답 형식 오류여도 서버 상태로 맞춘다', async ({ page }) => {
   await openAssign(page, { roleBody: {} })
 
   await candidateRow(page, '박도현').click()
@@ -186,17 +195,23 @@ test('S8: 지정 응답 형식 오류', async ({ page }) => {
 
   await expect(page.getByText('권한 부여에 실패했습니다')).toBeVisible()
   await expect(dialog(page)).toBeVisible()
-  await expect(candidate(page, '박도현')).toBeChecked()
+  await expect(candidate(page, '박도현')).toHaveCount(0)
+  await expect(submitButton(page)).toBeDisabled()
+
+  await dialog(page).getByRole('button', { name: '취소', exact: true }).click()
+
+  await expect(row(page, '박도현')).toBeVisible()
 })
 
-test('S8-1: 해제 응답 형식 오류', async ({ page }) => {
+test('S8-1: 해제 응답 형식 오류여도 서버 상태로 맞춘다', async ({ page }) => {
   await openRelease(page, { roleBody: {} })
 
   await confirmButton(page, '해제').click()
 
   await expect(confirmDialog(page)).toBeHidden()
   await expect(page.getByText('권한 해제에 실패했습니다')).toBeVisible()
-  await expect(row(page, '김수인')).toBeVisible()
+  await expect(row(page, '김수인')).toHaveCount(0)
+  await expect(total(page, 2)).toBeVisible()
 })
 
 const loadError = '중간 관리자 목록을 불러오지 못했습니다. 다시 시도해 주세요.'
@@ -250,4 +265,50 @@ test('S10-1: 지정 후보가 없으면 안내 문구', async ({ page }) => {
     dialog(page).getByText('지정할 수 있는 직원이 없습니다'),
   ).toBeVisible()
   await expect(submitButton(page)).toBeDisabled()
+})
+
+// 재조회는 공통 설정대로 한 번 더 시도한다. 두 번 모두 끝난 뒤 화면을 본다.
+async function waitForFailedRefetch(
+  page: Page,
+  api: EmployeeApiHandle,
+  lists: number,
+) {
+  await expect.poll(() => api.lists).toBe(lists + 2)
+  await page.waitForTimeout(300)
+}
+
+test('S11: 해제 실패 뒤 재조회까지 실패해도 목록을 유지한다', async ({
+  page,
+}) => {
+  const api = await openRelease(page, {
+    roleStatus: 500,
+    listFailsAfterRoleChange: true,
+  })
+  const lists = api.lists
+
+  await confirmButton(page, '해제').click()
+
+  await expect(page.getByText('권한 해제에 실패했습니다')).toBeVisible()
+  await waitForFailedRefetch(page, api, lists)
+  await expect(page.getByText(loadError)).toHaveCount(0)
+  await expect(rows(page)).toHaveCount(3)
+})
+
+test('S11-1: 지정 실패 뒤 재조회까지 실패해도 모달을 유지한다', async ({
+  page,
+}) => {
+  const api = await openAssign(page, {
+    roleStatus: 500,
+    listFailsAfterRoleChange: true,
+  })
+  const lists = api.lists
+
+  await candidateRow(page, '박도현').click()
+  await submitButton(page).click()
+
+  await expect(page.getByText('권한 부여에 실패했습니다')).toBeVisible()
+  await waitForFailedRefetch(page, api, lists)
+  await expect(page.getByText(loadError)).toHaveCount(0)
+  await expect(dialog(page)).toBeVisible()
+  await expect(candidate(page, '박도현')).toBeChecked()
 })

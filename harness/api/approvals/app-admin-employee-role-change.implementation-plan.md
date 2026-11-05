@@ -46,13 +46,13 @@ export async function changeEmployeeRole(
 ## Query/Mutation과 캐시
 
 - 조회: `useQuery(staffAccountQueryKeys.list, getStaffAccounts)` 하나. 중간 관리자는 `role === 'MIDDLE_ADMIN'`, 지정 후보는 `role === 'EMPLOYEE'`, 순서는 응답 그대로(서버는 id 오름차순).
-- 변경: `useMutation(changeEmployeeRole)`. 성공 뒤 `staffAccountQueryKeys.list` 무효화.
+- 변경: `useMutation(changeEmployeeRole)`. 성공과 실패 뒤 모두 `staffAccountQueryKeys.list` 무효화.
 
 ## UI 연결
 
-- 지정 성공: 모달 닫힘, `권한 부여에 성공했습니다`. 지정 실패: 모달과 선택 유지, `권한 부여에 실패했습니다`.
-- 해제 성공: 모달 닫힘, `권한 해제에 성공했습니다`. 해제 실패: 모달 닫힘, `권한 해제에 실패했습니다`, 초점은 그 행 `해제` 버튼.
-- 조회 실패: 기존 상태 카드 `중간 관리자 목록을 불러오지 못했습니다. 다시 시도해 주세요.`
+- 지정 성공: 모달 닫힘, `권한 부여에 성공했습니다`. 지정 실패: 모달 유지, `권한 부여에 실패했습니다`, 목록 재조회. 고른 직원이 후보에 남으면 선택 유지, 빠지면 `지정하기` 비활성.
+- 해제 성공: 모달 닫힘, `권한 해제에 성공했습니다`. 해제 실패: 모달 닫힘, `권한 해제에 실패했습니다`, 목록 재조회. 행이 남으면 초점은 그 행 `해제` 버튼.
+- 첫 조회 실패: 기존 상태 카드 `중간 관리자 목록을 불러오지 못했습니다. 다시 시도해 주세요.` 재조회 실패는 카드로 바꾸지 않고 보이던 목록과 모달을 유지한다(`isError` → `isLoadingError`).
 
 ## 검증 순서
 
@@ -70,3 +70,9 @@ export async function changeEmployeeRole(
 ## 승인 결과 (2026-11-04 개발자)
 
 - API ID `APP_ADMIN_EMPLOYEE_ROLE_CHANGE`, 권한 `ADMIN`. Figma 수정에 따라 지정은 한 명씩, 지정일 열은 없다.
+
+## 재승인 (2026-11-05 개발자, #295)
+
+- PR #292 CodeRabbit 리뷰 반영: 실패 뒤에도 목록을 다시 불러온다.
+- 변경 파일: `src/pages/settings/permissions/PermissionsPage.tsx`, `tests/e2e/support/employee-api.ts`(200 이면 응답 본문과 무관하게 픽스처 `role` 변경), `tests/e2e/api/app-admin-employee-role-change.spec.ts`.
+- 계약은 바뀌지 않는다.
