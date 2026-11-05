@@ -26,7 +26,7 @@ real_server:
 
 # 기대 성공 동작
 
-- 200 배열의 각 항목 `{ id, username, name, createAt, passwordChanged }` 을 `StaffAccount { id, username, name, createdAt, passwordChanged }` 로 옮긴다. `createAt`(YYYY-MM-DD)은 표에서 `YYYY.MM.DD`.
+- 200 배열의 각 항목 `{ id, username, name, role, createAt, passwordChanged }` 을 `StaffAccount { id, username, name, createdAt, passwordChanged }` 로 옮긴다. `createAt`(YYYY-MM-DD)은 표에서 `YYYY.MM.DD`.
 - 응답 순서를 그대로 쓰고, 검색(이름·아이디)과 5행 페이지네이션은 기존대로 화면에서 한다(서버 페이징·검색 파라미터 없음).
 - 표 열은 `이름` / `비밀번호`(`passwordChanged` 가 true 면 `변경 완료`, false 면 `초기 비밀번호`) / `계정 생성일` / 케밥이다(퍼블리싱 그대로).
 
@@ -56,3 +56,7 @@ real_server:
 - Notion 에 행이 없는 조회·초기화·삭제는 개발자 지시("Swagger app-admin-controller 보고 연동")로 staging Swagger
   `/v3/api-docs/app` 를 기준으로 한다(`APP_AUTH_LOGOUT`·`APP_FEED_LOG_*_ADMIN` 선례).
 - 실제 서버 테스트는 비활성화한다.
+
+# 개정 (2026-11-04 개발자)
+
+- 백엔드 #239 가 추가한 `role` 을 계약에 넣는다. 직원 계정 관리 표에는 표시하지 않고, 권한 관리(`app-admin-employee-role-change`)가 중간 관리자와 지정 후보를 나누는 데 쓴다.

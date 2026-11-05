@@ -2,15 +2,15 @@ import { Link } from 'react-router-dom'
 import styled from '@emotion/styled'
 import { motionDuration, motionEasing } from '@/shared/ui'
 import { SidebarIcon } from './SidebarIcon'
-import type { SidebarDashboardItem } from '../model/types'
+import type { SidebarLinkItem } from '../model/types'
 
 interface SidebarItemProps {
-  item: SidebarDashboardItem
+  item: SidebarLinkItem
   active: boolean
   onClick: () => void
 }
 
-// Figma `메뉴 / 대시보드`. 아코디언이 아니라 바로 이동하는 단일 메뉴다.
+// Figma `메뉴 / 대시보드`. 아코디언이 아니라 바로 이동하는 단일 메뉴다(전체 활동도 같은 모양).
 export function SidebarItem({ item, active, onClick }: SidebarItemProps) {
   return (
     <NavItem to={item.to} onClick={onClick} $active={active}>

@@ -66,10 +66,6 @@ const Input = styled.input`
   &::placeholder {
     color: ${({ theme }) => theme.colors.textFaint};
   }
-
-  &::-webkit-search-cancel-button {
-    cursor: pointer;
-  }
 `
 
 const VisuallyHidden = styled.label`

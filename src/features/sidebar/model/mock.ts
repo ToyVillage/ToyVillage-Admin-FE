@@ -1,13 +1,12 @@
-import type { SidebarDashboardItem, SidebarGroup } from './types'
+import type { SidebarGroup, SidebarLinkItem } from './types'
 
 // 사이드바 메뉴 구성.
 
-export const mockSidebarDashboardItem: SidebarDashboardItem = {
-  id: 'dashboard',
-  label: '대시보드',
-  to: '/',
-  icon: 'dashboard',
-}
+// 아코디언 위에 놓이는 단일 메뉴. 전체 활동은 2026-11-05 업무관리 하위에서 대시보드 아래로 옮겼다.
+export const mockSidebarLinkItems: SidebarLinkItem[] = [
+  { id: 'dashboard', label: '대시보드', to: '/', icon: 'dashboard' },
+  { id: 'activity', label: '전체 활동', to: '/activity', icon: 'activity' },
+]
 
 // Figma 컴포넌트셋 `sidebar`(1:12061)의 대분류·하위 구성.
 export const mockSidebarGroups: SidebarGroup[] = [
@@ -34,7 +33,6 @@ export const mockSidebarGroups: SidebarGroup[] = [
       { id: 'task-list', label: '업무지시', to: '/tasks' },
       { id: 'task-reports', label: '업무보고', to: '/task-reports' },
       { id: 'work-logs', label: '업무일지관리', to: '/work-logs' },
-      { id: 'activity', label: '전체 활동', to: '/activity' },
     ],
   },
   {
@@ -82,7 +80,7 @@ export const mockSidebarGroups: SidebarGroup[] = [
         label: '직원 계정 관리',
         to: '/settings/accounts',
       },
-      { id: 'permissions', label: '권한 관리' },
+      { id: 'permissions', label: '권한 관리', to: '/settings/permissions' },
       // Figma 사이드바(1:12061)에는 없다. 2026-10-27 설정 하위로 추가하기로 결정.
       {
         id: 'excel-download',

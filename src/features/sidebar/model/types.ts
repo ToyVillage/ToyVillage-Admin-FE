@@ -1,4 +1,5 @@
 export type SidebarIconName =
+  | 'activity'
   | 'animal'
   | 'dashboard'
   | 'facility'
@@ -23,8 +24,8 @@ export interface SidebarGroup {
   items: SidebarSubItem[]
 }
 
-// 대시보드는 아코디언이 아니라 바로 이동하는 단일 메뉴다.
-export interface SidebarDashboardItem {
+// 대시보드·전체 활동은 아코디언이 아니라 바로 이동하는 단일 메뉴다.
+export interface SidebarLinkItem {
   id: string
   label: string
   to: string

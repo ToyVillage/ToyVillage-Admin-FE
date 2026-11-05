@@ -4,7 +4,7 @@ import type {
   ExcelExportTarget,
   ExcelExportTargetOption,
 } from '@/entities/excel-export'
-import { ExportCheckbox } from './ExportCheckbox'
+import { Checkbox } from '@/shared/ui'
 
 interface ExportTargetCardProps {
   option: ExcelExportTargetOption
@@ -24,7 +24,7 @@ export function ExportTargetCard({
 
   return (
     <Card data-checked={checked}>
-      <ExportCheckbox
+      <Checkbox
         checked={checked}
         onChange={() => onToggle(option.id)}
         labelledBy={nameId}

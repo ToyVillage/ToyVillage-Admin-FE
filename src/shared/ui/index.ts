@@ -12,6 +12,9 @@ export type {
   DataTablePagination,
 } from './DataTable'
 export { SearchBar } from './SearchBar'
+export { OutlinedSearchField } from './OutlinedSearchField'
+export { Checkbox } from './Checkbox'
+export { Radio } from './Radio'
 export { LinkButton } from './LinkButton'
 export { PillButton } from './PillButton'
 export { ActionButton } from './ActionButton'

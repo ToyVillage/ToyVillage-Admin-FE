@@ -4,7 +4,7 @@ import {
   excelExportTargetOptions,
   type ExcelExportTarget,
 } from '@/entities/excel-export'
-import { ExportCheckbox } from './ExportCheckbox'
+import { Checkbox } from '@/shared/ui'
 import { ExportTargetCard } from './ExportTargetCard'
 
 interface ExportTargetGridProps {
@@ -30,7 +30,7 @@ export function ExportTargetGrid({
       <Header>
         <Title id={titleId}>내보낼 항목</Title>
         <SelectAll>
-          <ExportCheckbox
+          <Checkbox
             checked={allSelected}
             indeterminate={someSelected}
             onChange={onToggleAll}

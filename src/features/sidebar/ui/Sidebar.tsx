@@ -14,7 +14,7 @@ import {
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
 import adminProfileImage from '@/shared/ui/assets/profile-admin.webp'
 import { useLogout } from '../model/useLogout'
-import { mockSidebarDashboardItem, mockSidebarGroups } from '../model/mock'
+import { mockSidebarGroups, mockSidebarLinkItems } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
 import { SidebarGroupSection } from './SidebarGroupSection'
 import { SidebarItem } from './SidebarItem'
@@ -96,11 +96,14 @@ export function Sidebar() {
         </Profile>
 
         <Nav aria-label="주요 메뉴">
-          <SidebarItem
-            item={mockSidebarDashboardItem}
-            active={pathname === mockSidebarDashboardItem.to}
-            onClick={close}
-          />
+          {mockSidebarLinkItems.map((item) => (
+            <SidebarItem
+              key={item.id}
+              item={item}
+              active={isLinkItemActive(pathname, item.to)}
+              onClick={close}
+            />
+          ))}
           {mockSidebarGroups.map((group) => (
             <SidebarGroupSection
               key={group.id}
@@ -124,6 +127,13 @@ export function Sidebar() {
       </Panel>
     </Layer>
   )
+}
+
+// 단일 메뉴는 경로가 같을 때만 활성이다. `/activity/` 처럼 뒤에 붙은 `/` 는 떼고 비교하되 `/` 는 그대로 둔다.
+function isLinkItemActive(pathname: string, to: string) {
+  const normalized =
+    pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
+  return (normalized || '/') === to
 }
 
 // 상세/생성 같은 하위 경로도 같은 메뉴의 범위로 본다.

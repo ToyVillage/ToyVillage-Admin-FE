@@ -8,12 +8,18 @@ export type {
 export type { StaffAccount } from './model/staffAccount'
 export { employeeQueryKeys, staffAccountQueryKeys } from './model/staffAccount'
 export {
+  changeEmployeeRole,
   deleteStaffAccount,
   getStaffAccounts,
   resetStaffAccountPassword,
 } from './api/staffAccountApi'
 export type {
   AppAdminEmployeeResponseItem,
+  AppAdminEmployeeRole,
+  AppAdminEmployeeRoleChangeRequest,
   AppAdminMessageResponse,
 } from './api/types'
 export { StaffAccountTable } from './ui/StaffAccountTable'
+export { filterByNameOrUsername } from './model/filterByNameOrUsername'
+export { EmployeeIdentity } from './ui/EmployeeIdentity'
+export { MiddleManagerTable } from './ui/MiddleManagerTable'

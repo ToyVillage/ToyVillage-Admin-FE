@@ -1,3 +1,4 @@
+import activityIcon from './assets/activity.svg'
 import animalIcon from './assets/animal.svg'
 import dashboardIcon from './assets/dashboard.svg'
 import facilityIcon from './assets/facility.svg'
@@ -9,6 +10,7 @@ import taskIcon from './assets/task.svg'
 import type { SidebarIconName } from '../model/types'
 
 export const sidebarIcons: Record<SidebarIconName, string> = {
+  activity: activityIcon,
   animal: animalIcon,
   dashboard: dashboardIcon,
   facility: facilityIcon,

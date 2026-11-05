@@ -26,3 +26,7 @@
 
 ## 재승인 (2026-09-28 개발자)
 - 백엔드가 목록 응답에 `passwordChanged` 를 추가해 비밀번호 열을 되살렸다(passwordChanged 반영). `createAt` 필드명은 그대로 쓴다.
+
+## 재승인 (2026-11-04 개발자)
+- 응답에 `role` 을 추가한다. `src/entities/employee/api/types.ts`, `src/entities/employee/api/staffAccountApi.ts`(매핑과 형식 검사), `src/entities/employee/model/staffAccount.ts`, `tests/e2e/support/employee-api.ts`(픽스처 `role`).
+- 직원 계정 관리 화면과 이 기능의 e2e 파일은 바꾸지 않는다. 권한 관리 연동은 `app-admin-employee-role-change` 에서 다룬다.

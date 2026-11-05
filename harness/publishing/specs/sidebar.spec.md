@@ -65,6 +65,9 @@ paths: src/app, src/features/sidebar, src/shared/ui
 | 라벨 | 아이콘(Figma) | 이동 |
 |------|---------------|------|
 | 대시보드 | `boxicons:blocks-filled` | `/` |
+| 전체 활동 | 달력(`shared/ui/assets/calendar.svg`, Figma 없음) | `/activity` |
+
+2026-11-05 결정: `전체 활동` 을 업무관리 하위에서 대시보드 아래 단일 메뉴로 옮겼다. 모양·활성 규칙은 대시보드와 같다(경로가 정확히 `/activity` 일 때 활성).
 
 ### 대분류 아코디언 (순서 고정)
 
@@ -75,7 +78,7 @@ paths: src/app, src/features/sidebar, src/shared/ui
 | 개체관리 | paw | 개체 카드 → `/species` · 먹이 급여 관리 → `/feeds` |
 | 시설관리 | 계단 | 점검 · 보수요청 / 공통 · 3층 / 4층 / 5층 / 6층 → 모두 화면 미구현 |
 | 재고관리 | 상자 | 식음료 / 동물 먹이 / 사육용품 / 비품 / 소모품 / 기타 → 모두 화면 미구현 |
-| 설정 | `mdi:cog` | 팀 관리 → `/settings/teams` / 직원 계정 관리 → `/settings/accounts` / 권한 관리 → 화면 미구현 |
+| 설정 | `mdi:cog` | 팀 관리 → `/settings/teams` / 직원 계정 관리 → `/settings/accounts` / 권한 관리 → `/settings/permissions` |
 
 ## 치수 (Figma)
 

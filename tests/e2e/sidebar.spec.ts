@@ -127,11 +127,11 @@ test('S8: 먹이 급여 관리로 이동', async ({ page }) => {
 test('S9: 화면이 없는 하위 항목은 비활성이다', async ({ page }) => {
   await openSidebar(page, '/notices/list')
 
-  await group(page, '설정').click()
+  await group(page, '재고관리').click()
 
-  const permissions = page.getByText('권한 관리', { exact: true })
-  await expect(permissions).toHaveAttribute('aria-disabled', 'true')
-  await expect(page.getByRole('link', { name: '권한 관리' })).toHaveCount(0)
+  const fixtures = page.getByText('비품', { exact: true })
+  await expect(fixtures).toHaveAttribute('aria-disabled', 'true')
+  await expect(page.getByRole('link', { name: '비품' })).toHaveCount(0)
 })
 
 test('S11: 현재 경로의 하위 항목이 선택 상태로 표시된다', async ({ page }) => {

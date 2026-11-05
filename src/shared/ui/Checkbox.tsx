@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import checkboxMixedIcon from './assets/checkbox-mixed.svg'
 import checkboxOnIcon from './assets/checkbox-on.svg'
 
-interface ExportCheckboxProps {
+interface CheckboxProps {
   checked: boolean
   /** 일부만 선택된 상태(가로줄). */
   indeterminate?: boolean
@@ -13,13 +13,13 @@ interface ExportCheckboxProps {
 }
 
 // Figma `checkbox / on`·`off`·`mixed`(28px). native checkbox 의 모양만 바꾼다.
-export function ExportCheckbox({
+export function Checkbox({
   checked,
   indeterminate = false,
   onChange,
   labelledBy,
   describedBy,
-}: ExportCheckboxProps) {
+}: CheckboxProps) {
   const ref = useRef<HTMLInputElement>(null)
 
   // indeterminate 는 HTML 속성이 없어 DOM 프로퍼티로만 정할 수 있다.

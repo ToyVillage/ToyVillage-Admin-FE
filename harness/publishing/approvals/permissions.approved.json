@@ -1,0 +1,26 @@
+{
+  "feature": "permissions",
+  "approvedAt": "2026-11-04T01:01:23.928Z",
+  "approvedBy": "yunho09",
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S18"
+  ],
+  "scenarioHash": "836f9457c367ae0f6e28866a2b001e8acc9187826098917d8730fc28ef6eef3e",
+  "e2eHash": "3634951c12c8356d2b5927c1deaa2eca1a5b7837b2014c8d52180c1faad37578"
+}

@@ -595,10 +595,6 @@ const SearchInput = styled.input`
   &::placeholder {
     color: ${({ theme }) => theme.colors.textFaint};
   }
-
-  &::-webkit-search-cancel-button {
-    cursor: pointer;
-  }
 `
 
 const SearchIcon = styled.img`
