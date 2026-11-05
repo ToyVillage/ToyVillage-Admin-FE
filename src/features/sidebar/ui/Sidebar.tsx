@@ -100,7 +100,7 @@ export function Sidebar() {
             <SidebarItem
               key={item.id}
               item={item}
-              active={pathname === item.to}
+              active={isLinkItemActive(pathname, item.to)}
               onClick={close}
             />
           ))}
@@ -127,6 +127,13 @@ export function Sidebar() {
       </Panel>
     </Layer>
   )
+}
+
+// 단일 메뉴는 경로가 같을 때만 활성이다. `/activity/` 처럼 뒤에 붙은 `/` 는 떼고 비교하되 `/` 는 그대로 둔다.
+function isLinkItemActive(pathname: string, to: string) {
+  const normalized =
+    pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
+  return (normalized || '/') === to
 }
 
 // 상세/생성 같은 하위 경로도 같은 메뉴의 범위로 본다.
