@@ -14,7 +14,7 @@ import {
 import chevronLeftIcon from '@/shared/ui/assets/chevron-left.svg'
 import adminProfileImage from '@/shared/ui/assets/profile-admin.webp'
 import { useLogout } from '../model/useLogout'
-import { mockSidebarDashboardItem, mockSidebarGroups } from '../model/mock'
+import { mockSidebarGroups, mockSidebarLinkItems } from '../model/mock'
 import { useSidebarStore } from '../model/useSidebarStore'
 import { SidebarGroupSection } from './SidebarGroupSection'
 import { SidebarItem } from './SidebarItem'
@@ -96,11 +96,14 @@ export function Sidebar() {
         </Profile>
 
         <Nav aria-label="주요 메뉴">
-          <SidebarItem
-            item={mockSidebarDashboardItem}
-            active={pathname === mockSidebarDashboardItem.to}
-            onClick={close}
-          />
+          {mockSidebarLinkItems.map((item) => (
+            <SidebarItem
+              key={item.id}
+              item={item}
+              active={pathname === item.to}
+              onClick={close}
+            />
+          ))}
           {mockSidebarGroups.map((group) => (
             <SidebarGroupSection
               key={group.id}
