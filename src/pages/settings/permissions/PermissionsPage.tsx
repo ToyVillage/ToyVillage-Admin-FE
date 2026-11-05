@@ -87,7 +87,7 @@ export function PermissionsPage() {
   const matchedManagers = filterByNameOrUsername(managers, keyword)
   // 검색 결과가 없는 것과 구분한다. 빈 상태에는 안내 문구만 있고 `총 N명` 이 없다.
   const noManagers =
-    staffQuery.isSuccess && managers.length === 0 && keyword === ''
+    staffQuery.data !== undefined && managers.length === 0 && keyword === ''
 
   const dismissToast = useCallback(() => setToast(null), [])
   const closeAssign = useCallback(() => setAssignOpen(false), [])
@@ -100,7 +100,13 @@ export function PermissionsPage() {
   }
 
   async function submitAssign(employeeId: number) {
-    await roleMutation.mutateAsync({ employeeId, role: 'MIDDLE_ADMIN' })
+    try {
+      await roleMutation.mutateAsync({ employeeId, role: 'MIDDLE_ADMIN' })
+    } catch (error) {
+      // 응답 형식 오류여도 서버에는 반영됐을 수 있어 실패해도 다시 불러온다.
+      void invalidateStaffAccounts()
+      throw error
+    }
   }
 
   // 모달은 곧바로 닫고 목록은 뒤에서 갱신한다. 갱신을 기다리는 동안 모달이 열려 있으면
@@ -138,6 +144,7 @@ export function PermissionsPage() {
           setToast({ variant: 'success', message: '권한 해제에 성공했습니다' })
         },
         onError: () => {
+          void invalidateStaffAccounts()
           setReleasing(false)
           setReleaseTarget(null)
           setToast({ variant: 'error', message: '권한 해제에 실패했습니다' })
@@ -147,8 +154,9 @@ export function PermissionsPage() {
     )
   }
 
-  // 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
-  if (staffQuery.isError) {
+  // 첫 조회 실패를 빈 목록으로 숨기지 않는다(다른 목록 화면과 같은 상태 카드).
+  // 재조회 실패는 카드로 바꾸지 않는다. 보던 목록과 열린 모달이 사라지면 안 된다.
+  if (staffQuery.isLoadingError) {
     return (
       <StatePage>
         <StateCard role="alert">
