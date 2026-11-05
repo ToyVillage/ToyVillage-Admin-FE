@@ -65,6 +65,9 @@ paths: src/app, src/features/sidebar, src/shared/ui
 | 라벨 | 아이콘(Figma) | 이동 |
 |------|---------------|------|
 | 대시보드 | `boxicons:blocks-filled` | `/` |
+| 전체 활동 | 달력(`shared/ui/assets/calendar.svg`, Figma 없음) | `/activity` |
+
+2026-11-05 결정: `전체 활동` 을 업무관리 하위에서 대시보드 아래 단일 메뉴로 옮겼다. 모양·활성 규칙은 대시보드와 같다(경로가 정확히 `/activity` 일 때 활성).
 
 ### 대분류 아코디언 (순서 고정)
 
