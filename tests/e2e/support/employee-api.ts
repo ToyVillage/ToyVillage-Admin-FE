@@ -180,6 +180,8 @@ export interface EmployeeApiOptions {
   roleStatus?: number
   roleBody?: unknown
   roleDelay?: number
+  /** 권한 변경 요청이 한 번이라도 온 뒤의 목록 조회를 500 으로 응답한다. */
+  listFailsAfterRoleChange?: boolean
 }
 
 export interface EmployeeApiHandle {
@@ -217,6 +219,7 @@ export async function mockEmployeeApi(
     roleStatus = 200,
     roleBody,
     roleDelay = 0,
+    listFailsAfterRoleChange = false,
   }: EmployeeApiOptions = {},
 ): Promise<EmployeeApiHandle> {
   const handle: EmployeeApiHandle = {
@@ -235,6 +238,14 @@ export async function mockEmployeeApi(
 
     if (request.method() === 'GET') {
       handle.lists += 1
+      if (listFailsAfterRoleChange && handle.roleChanges.length > 0) {
+        await fulfill(
+          route,
+          500,
+          errorBody(500, '내부 서버 오류가 발생했습니다.'),
+        )
+        return
+      }
       await fulfill(route, listStatus, listBody ?? handle.employees)
       return
     }
@@ -306,8 +317,8 @@ export async function mockEmployeeApi(
       )
       return
     }
-    // 기본 성공이면 픽스처의 권한을 바꾼다(이후 목록 조회에 보인다).
-    if (roleBody === undefined && requestBody.role) {
+    // 200 이면 응답 본문과 무관하게 서버에는 반영된 것으로 본다(이후 목록 조회에 보인다).
+    if (requestBody.role) {
       const target = handle.employees.find((item) => item.id === id)
       if (target) target.role = requestBody.role
     }
