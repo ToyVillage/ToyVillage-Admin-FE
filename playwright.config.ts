@@ -45,8 +45,13 @@ export default defineConfig({
   // 로컬 격리 실행도 CI=1 을 붙이므로(team-rules 9절) CI 가 아니라 GITHUB_ACTIONS 로 가른다.
   retries: process.env.GITHUB_ACTIONS ? 1 : 0,
   reporter: 'list',
+  // mock 기반이라 기다릴 네트워크가 없다. 요소를 못 찾으면 테스트 제한까지 버티지 않고 빨리 실패하게 한다.
+  timeout: 15_000,
+  expect: { timeout: 3_000 },
   use: {
     baseURL,
+    actionTimeout: 5_000,
+    navigationTimeout: 10_000,
     storageState: authenticatedStorageState,
     trace: 'on-first-retry',
   },
