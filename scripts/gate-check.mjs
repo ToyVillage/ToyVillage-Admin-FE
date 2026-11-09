@@ -96,17 +96,18 @@ if (requiresFunctional) {
       4,
       '시나리오 내용이 승인 이후 변경됨(scenarioHash 불일치) — 재승인 필요',
     )
-  // e2e 해시 검증 (freeze 이후에만)
-  if (data.e2eHash) {
-    const e2ePath = join(root, 'tests', 'e2e', `${feature}.spec.ts`)
-    if (!existsSync(e2ePath))
-      fail(4, `e2e 파일 없음: tests/e2e/${feature}.spec.ts`)
-    if (sha256(e2ePath) !== data.e2eHash)
-      fail(
-        4,
-        'e2e 테스트가 freeze 이후 변경됨(e2eHash 불일치) — 재승인/재freeze 필요',
-      )
-  }
+}
+
+// e2e 해시 검증 (freeze 이후에만). 정적 feature 라도 e2e 를 동결했으면 검사한다.
+const e2ePath = join(root, 'tests', 'e2e', `${feature}.spec.ts`)
+if (data.e2eHash) {
+  if (!existsSync(e2ePath))
+    fail(4, `e2e 파일 없음: tests/e2e/${feature}.spec.ts`)
+  if (sha256(e2ePath) !== data.e2eHash)
+    fail(
+      4,
+      'e2e 테스트가 freeze 이후 변경됨(e2eHash 불일치) — 재승인/재freeze 필요',
+    )
 }
 
 // 기준 이미지 해시 검증 (승인 때 기준 이미지가 있었을 때만)
@@ -136,7 +137,8 @@ if (data.visualHash) {
 
 // ④ 구현 진입: ③에서 작성한 테스트가 동결돼 있어야 한다
 if (stage === 'implement') {
-  if (requiresFunctional && !data.e2eHash)
+  // 정적 feature 라도 e2e 파일이 있으면 동결된 것만 실행되게 한다.
+  if ((requiresFunctional || existsSync(e2ePath)) && !data.e2eHash)
     fail(
       4,
       'e2e 테스트가 아직 동결되지 않음 — ③ 테스트 작성 후 approve --freeze 필요',

@@ -154,6 +154,33 @@ test('정적 feature 는 기준 이미지가 없으면 동결 없이 구현 게�
   assert.match(freeze.stderr, /동결할 테스트 없음/)
 })
 
+test('정적 feature 도 동결한 e2e 가 바뀌면 게이트가 막는다', (t) => {
+  const root = makeRepo({ functional: false })
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  addBaseline(root)
+  run(root, 'approve.mjs', ['demo', '--by', 'dev'])
+  writeFileSync(join(root, 'tests/e2e/demo.spec.ts'), '// S1\n')
+  writeFileSync(join(root, 'tests/visual/demo.visual.ts'), '// list\n')
+  assert.equal(run(root, 'approve.mjs', ['demo', '--freeze']).status, 0)
+  assert.equal(run(root, 'gate-check.mjs', ['demo']).status, 0)
+
+  writeFileSync(join(root, 'tests/e2e/demo.spec.ts'), '// changed\n')
+  const changed = run(root, 'gate-check.mjs', ['demo'])
+  assert.equal(changed.status, 4)
+  assert.match(changed.stdout, /e2eHash 불일치/)
+})
+
+test('정적 feature 라도 동결하지 않은 e2e 가 있으면 구현 게이트가 막는다', (t) => {
+  const root = makeRepo({ functional: false })
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  run(root, 'approve.mjs', ['demo', '--by', 'dev'])
+  writeFileSync(join(root, 'tests/e2e/demo.spec.ts'), '// S1\n')
+
+  const blocked = run(root, 'gate-check.mjs', ['demo', '--stage', 'implement'])
+  assert.equal(blocked.status, 4)
+  assert.match(blocked.stdout, /e2e 테스트가 아직 동결되지 않음/)
+})
+
 test('기존 notice-list 는 구현 게이트도 그대로 통과한다', () => {
   const env = { ...process.env }
   delete env.NODE_TEST_CONTEXT
