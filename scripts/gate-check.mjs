@@ -3,31 +3,42 @@
 // RUNBOOK "Sentinel 유효성 계약" + 내용 해시(#4) 구현.
 // exit 0=valid, 2=usage, 3=missing, 4=invalid.
 //
-// 사용: node scripts/gate-check.mjs <feature>
+// 사용: node scripts/gate-check.mjs <feature> [--stage implement]
+//   --stage implement: ④ 구현 진입 전. ③에서 작성한 테스트가 동결돼 있어야 통과한다.
 //
 // sentinel: harness/publishing/approvals/<feature>.approved.json
 //   { feature, approvedAt, approvedBy, scenarioIds,
 //     scenarioHash,   // harness/publishing/approvals/<feature>.scenario-draft.md 의 sha256
-//     e2eHash }        // tests/e2e/<feature>.spec.ts 의 sha256 (freeze 후, 선택)
+//     baselineHash,   // harness/publishing/baselines/<feature>/*.png 묶음 해시 (기준 이미지가 있을 때)
+//     e2eHash,        // tests/e2e/<feature>.spec.ts 의 sha256 (freeze 후)
+//     visualHash }    // tests/visual/<feature>.visual.ts 의 sha256 (freeze 후, 기준 이미지가 있을 때)
 
 import { readFileSync, existsSync } from 'node:fs'
-import { createHash } from 'node:crypto'
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
+import {
+  root,
+  sha256,
+  baselineHash,
+  visualSpecPath,
+} from './publishing-lib.mjs'
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const feature = process.argv[2]
-if (!feature) {
-  console.error('usage: node scripts/gate-check.mjs <feature>')
+if (!feature || feature.startsWith('--')) {
+  console.error(
+    'usage: node scripts/gate-check.mjs <feature> [--stage implement]',
+  )
+  process.exit(2)
+}
+const stageIndex = process.argv.indexOf('--stage')
+const stage = stageIndex >= 0 ? process.argv[stageIndex + 1] : undefined
+if (stageIndex >= 0 && stage !== 'implement') {
+  console.error('[gate-check] --stage 는 implement 만 지원한다')
   process.exit(2)
 }
 
 function fail(code, reason) {
   console.log(JSON.stringify({ feature, valid: false, reason }))
   process.exit(code)
-}
-function sha256(path) {
-  return createHash('sha256').update(readFileSync(path)).digest('hex')
 }
 
 // requires_functional_test 읽기 (spec frontmatter)
@@ -98,13 +109,54 @@ if (requiresFunctional) {
   }
 }
 
+// 기준 이미지 해시 검증 (승인 때 기준 이미지가 있었을 때만)
+const currentBaselineHash = baselineHash(feature)
+if (data.baselineHash && currentBaselineHash !== data.baselineHash)
+  fail(
+    4,
+    'Figma 기준 이미지가 승인 이후 변경됨(baselineHash 불일치) — 재승인 필요',
+  )
+if (currentBaselineHash && !data.baselineHash)
+  fail(
+    4,
+    'Figma 기준 이미지가 승인 기록에 없음 — 기준 이미지 포함해 재승인 필요',
+  )
+
+// 스크린샷 비교 테스트 해시 검증 (freeze 이후에만)
+if (data.visualHash) {
+  const visualPath = visualSpecPath(feature)
+  if (!existsSync(visualPath))
+    fail(4, `스크린샷 테스트 파일 없음: tests/visual/${feature}.visual.ts`)
+  if (sha256(visualPath) !== data.visualHash)
+    fail(
+      4,
+      '스크린샷 테스트가 freeze 이후 변경됨(visualHash 불일치) — 재승인/재freeze 필요',
+    )
+}
+
+// ④ 구현 진입: ③에서 작성한 테스트가 동결돼 있어야 한다
+if (stage === 'implement') {
+  if (requiresFunctional && !data.e2eHash)
+    fail(
+      4,
+      'e2e 테스트가 아직 동결되지 않음 — ③ 테스트 작성 후 approve --freeze 필요',
+    )
+  if (currentBaselineHash && !data.visualHash)
+    fail(
+      4,
+      '스크린샷 테스트가 아직 동결되지 않음 — ③ 테스트 작성 후 approve --freeze 필요',
+    )
+}
+
 console.log(
   JSON.stringify({
     feature,
     valid: true,
+    stage: stage ?? null,
     requiresFunctional,
     scenarioIds: data.scenarioIds,
     e2eFrozen: Boolean(data.e2eHash),
+    visualFrozen: Boolean(data.visualHash),
   }),
 )
 process.exit(0)
