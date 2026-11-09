@@ -3,21 +3,16 @@
 // durable 경로 harness/publishing/approvals/ 에 sentinel 을 만든다.
 //
 // 승인:  node scripts/approve.mjs <feature> --by <name> --scenarios S1,S2
-//        (harness/publishing/approvals/<feature>.scenario-draft.md 의 scenarioHash 계산,
-//         harness/publishing/baselines/<feature>/ 에 Figma 기준 이미지가 있으면 baselineHash 도 기록)
+//        (harness/publishing/approvals/<feature>.scenario-draft.md 의 scenarioHash 계산)
 // freeze: node scripts/approve.mjs <feature> --freeze
-//        (③에서 작성한 테스트를 동결: tests/e2e/<feature>.spec.ts 의 e2eHash,
-//         기준 이미지가 있으면 tests/visual/<feature>.visual.ts 의 visualHash 를 sentinel 에 stamp)
+//        (tests/e2e/<feature>.spec.ts 의 e2eHash 를 sentinel 에 stamp)
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
-import {
-  root,
-  sha256,
-  baselineHash,
-  visualSpecPath,
-} from './publishing-lib.mjs'
+import { createHash } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 
+const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const feature = process.argv[2]
 if (!feature || feature.startsWith('--')) {
   console.error(
@@ -30,6 +25,9 @@ function arg(name) {
   return i >= 0 ? process.argv[i + 1] : undefined
 }
 const has = (name) => process.argv.includes(name)
+function sha256(path) {
+  return createHash('sha256').update(readFileSync(path)).digest('hex')
+}
 
 const approvalsDir = join(root, 'harness', 'publishing', 'approvals')
 if (!existsSync(approvalsDir)) mkdirSync(approvalsDir, { recursive: true })
@@ -58,33 +56,17 @@ if (has('--freeze')) {
   }
   const data = JSON.parse(readFileSync(sentinelPath, 'utf8'))
   const e2ePath = join(root, 'tests', 'e2e', `${feature}.spec.ts`)
-  const visualPath = visualSpecPath(feature)
-  const hasBaseline = Boolean(baselineHash(feature))
-  if (requiresFunctional && !existsSync(e2ePath)) {
+  if (!existsSync(e2ePath)) {
     console.error(`[approve] e2e 파일 없음: tests/e2e/${feature}.spec.ts`)
     process.exit(1)
   }
-  if (hasBaseline && !existsSync(visualPath)) {
-    console.error(
-      `[approve] 스크린샷 테스트 파일 없음: tests/visual/${feature}.visual.ts`,
-    )
-    process.exit(1)
-  }
-  if (!requiresFunctional && !hasBaseline) {
-    console.error(
-      '[approve] 동결할 테스트 없음(기능 테스트·기준 이미지 모두 없음)',
-    )
-    process.exit(1)
-  }
-  if (existsSync(e2ePath)) data.e2eHash = sha256(e2ePath)
-  if (hasBaseline) data.visualHash = sha256(visualPath)
+  data.e2eHash = sha256(e2ePath)
   writeFileSync(sentinelPath, JSON.stringify(data, null, 2) + '\n')
   console.log(
     JSON.stringify({
       feature,
       frozen: true,
-      e2eHash: data.e2eHash ? data.e2eHash.slice(0, 12) : null,
-      visualHash: data.visualHash ? data.visualHash.slice(0, 12) : null,
+      e2eHash: data.e2eHash.slice(0, 12),
     }),
   )
   process.exit(0)
@@ -103,7 +85,6 @@ const sentinel = {
   approvedBy,
   scenarioIds,
   scenarioHash: null,
-  baselineHash: baselineHash(feature),
   e2eHash: null,
 }
 
